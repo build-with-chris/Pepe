@@ -54,8 +54,9 @@ function App() {
 
     <div className="bg-black text-white min-h-screen">
       {location.pathname !== '/splash' && <Navbar01Page />}
-      <Suspense fallback={null}>
-        <Routes>
+      <main className="min-h-screen">
+        <Suspense fallback={null}>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/anfragen" element={<Anfragen />} />
@@ -99,8 +100,9 @@ function App() {
           <Route path="*" element={<NotFound />} />
           <Route path="/artist-guidelines" element={<ArtistGuidlines />} />
           <Route path="/onboarding" element={<ArtistGuidlines />} />
-        </Routes>
-      </Suspense>
+          </Routes>
+        </Suspense>
+      </main>
       {!['/anfragen', '/login', '/signup', '/buchhaltung', '/profile', '/kalender', '/meine-gigs', '/meine-anfragen'].includes(location.pathname) && (
         <Suspense fallback={null}>
           <Footer />

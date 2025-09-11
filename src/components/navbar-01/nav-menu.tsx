@@ -1,31 +1,20 @@
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from "../ui/navigation-menu";
-import type { NavigationMenuProps } from "@radix-ui/react-navigation-menu";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
-import { NavLinks } from "./NavLinks";
 
-interface NavMenuExtProps extends NavigationMenuProps {
-  user?: any | null; // optional override, falls gewünscht
+interface NavMenuProps {
+  className?: string;
 }
 
-export const NavMenu = ({ user: passedUser, ...props }: NavMenuExtProps) => {
-  const { user: contextUser } = useAuth();
-  const user = passedUser !== undefined ? passedUser : contextUser;
+export const NavMenu = ({ className }: NavMenuProps) => {
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const location = useLocation();
   const loggedIn = Boolean(user);
   const isAdmin = user?.role === 'admin';
 
-  const { t } = useTranslation();
-
-
   const menuItems = useMemo(() => {
-    console.log('🧭 NavMenu - computing menuItems, isAdmin=', isAdmin, 'loggedIn=', loggedIn);
     if (isAdmin) {
       return [
         { label: t("nav.admin.dashboard"), to: '/admin' },
@@ -51,16 +40,16 @@ export const NavMenu = ({ user: passedUser, ...props }: NavMenuExtProps) => {
   }, [loggedIn, isAdmin, t]);
 
   return (
-    <NavigationMenu {...props}>
-      <NavigationMenuList className="gap-6 space-x-0 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start">
-        {menuItems.map(item => (
-          <NavigationMenuItem key={item.label}>
-            <NavigationMenuLink asChild>
-              <Link to={item.to}>{item.label}</Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-        ))}
-      </NavigationMenuList>
-    </NavigationMenu>
+    <nav className={`nav ${className || ''}`}>
+      {menuItems.map(item => (
+        <Link 
+          key={item.to}
+          to={item.to} 
+          className={`nav-link ${location.pathname === item.to ? 'active' : ''}`}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
   );
 };

@@ -35,7 +35,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
 
   return (
     <div
-      className="relative aspect-[3/4] min-h-[340px] [perspective:1000px] cursor-pointer transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg"
+      className="artist-card gpu"
       onClick={handleFlip}
     >
       <div

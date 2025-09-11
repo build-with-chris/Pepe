@@ -36,9 +36,9 @@ const Gallery23 = () => {
       <div className="container p-4 md:p-8 lg:p-10">
         <div className="relative flex flex-col items-center gap-8 md:gap-12 bg-black p-5 py-10 md:p-10 md:py-20 md:flex-row md:items-start">
           <div className="flex h-142 flex-col justify-center items-center text-center w-full md:flex-1 md:min-w-0 md:pr-10">
-            <h1 className="max-w-lg font-calSans text-white">
-              <span className="block text-3xl lg:hidden">{t("gallery23.headingMobile")}</span>
-              <span className="hidden lg:block text-4xl">{t("gallery23.headingDesktop")}</span>
+            <h1 className="h1 max-w-lg">
+              <span className="block lg:hidden">{t("gallery23.headingMobile")}</span>
+              <span className="hidden lg:block">{t("gallery23.headingDesktop")}</span>
             </h1>
             <p className="text-md mt-10 max-w-2xl text-gray-300">
               {t("gallery23.subtitle")}

@@ -318,7 +318,7 @@ const Bento1 = () => {
                     autoplay
                   />
                 </div>
-                <h3 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 text-white">{t("bento1.responsibility.title")}</h3>
+                <h3 className="h3">{t("bento1.responsibility.title")}</h3>
                 <p className="text-base md:text-lg lg:text-xl text-gray-300 ">
                   {t("bento1.responsibility.body1")}<br/>
                   {t("bento1.responsibility.body2")}
@@ -373,7 +373,7 @@ const Bento1 = () => {
           <Card className="relative col-span-1 h-60 rounded-xl border border-white/10 bg-neutral-900/80 backdrop-blur-sm transition hover:bg-neutral-900/60 
           md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-4 lg:h-[300px]">
             <CardContent className="flex h-full flex-col items-center justify-center p-6">
-              <span className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{t("bento1.values.fairnessTitle")}</span>
+              <h3 className="h3 text-center">{t("bento1.values.fairnessTitle")}</h3>
               <p className="text-gray-300 my-6 text-center text-base md:text-lg lg:text-xl">
                 {t("bento1.values.fairnessBodyPrefix")}{" "}
                 <a

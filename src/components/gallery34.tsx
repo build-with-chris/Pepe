@@ -91,7 +91,7 @@ const Gallery34 = () => {
               onClick={() => setOpenIndex((prev) => (prev === index ? null : index))}
               role="button"
               tabIndex={0}
-              className="group relative overflow-hidden rounded-3xl bg-white/5 p-4 backdrop-blur-sm border border-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/20"
+              className="card gpu cursor-pointer group"
             >
               <motion.img
                 transition={{
@@ -112,7 +112,7 @@ const Gallery34 = () => {
                   scale: hoveredIndex === index ? 1.02 : 1,
                 }}
                 src={item.img}
-                className="pointer-events-none h-72 w-full rounded-2xl object-cover"
+                className="pointer-events-none h-72 w-full object-cover"
                 alt={t(item.titleKey)}
               />
               <div
@@ -122,14 +122,14 @@ const Gallery34 = () => {
               </div>
               {openIndex === index && (
                 <div
-                  className="mt-3 rounded-2xl border border-white/10 bg-black/90 p-4 text-white shadow-xl"
+                  className="card-body"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="mb-2 flex items-center justify-between gap-4">
-                    <h3 className="text-sm font-semibold tracking-wide uppercase text-gray-200">{t(item.titleKey)}</h3>
+                    <h3 className="h4">{t(item.titleKey)}</h3>
                     <button
                       aria-label="Popover schließen"
-                      className="rounded-md p-1 text-gray-400 hover:text-white hover:bg-white/10"
+                      className="btn btn-icon-only"
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenIndex(null);

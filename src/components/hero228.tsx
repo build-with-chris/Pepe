@@ -104,11 +104,11 @@ const Hero228 = () => {
   return (
     <section className="bg-black pt-24 sm:pt-32 pb-24 sm:pb-32 text-white">
       <div className="container flex flex-col items-center justify-center gap-4 text-center">
-        <h1 className="relative z-10 mb-8 max-w-3xl text-5xl font-medium tracking-tighter text-white md:px-9 md:text-6xl leading-tight">
-          <span className="block text-3xl sm:hidden mt-2">{mobileHeading}</span>
-          <span className="hidden sm:block text-4xl md:text-5xl">{t("hero228.headingDesktopLine1")}<br />{t("hero228.headingDesktopLine2")}</span>
+        <h1 className="h1 relative z-10 mb-8 max-w-3xl md:px-9">
+          <span className="block sm:hidden mt-2">{mobileHeading}</span>
+          <span className="hidden sm:block">{t("hero228.headingDesktopLine1")}<br />{t("hero228.headingDesktopLine2")}</span>
         </h1>
-        <p className="mt-5 max-w-xl text-white/70 hidden sm:block">
+        <p className="body mt-5 max-w-xl hidden sm:block">
         {t("hero228.subtitle")}
         </p>
 

@@ -284,7 +284,7 @@ export default function Home() {
       <div className="hidden md:block">
         <div
           id="hero"
-          className="relative w-screen min-h-[85vh] bg-black overflow-hidden mt-20 -mb-10"
+          className="relative w-screen min-h-[85vh] bg-black overflow-hidden"
         >
           {/* Hero image as real element so it can be prioritized as LCP */}
           <picture>
@@ -316,7 +316,8 @@ export default function Home() {
       </div>
 
       {/* Mobile-only hero image */}
-      <div className="block md:hidden w-full flex items-center justify-center py-8 px-4">
+      <section className="section-sm block md:hidden">
+        <div className="stage-container flex items-center justify-center">
         <img
           src={pepeMobile}
           alt="Pepe"
@@ -327,149 +328,153 @@ export default function Home() {
           height={380}
           className="max-w-full h-auto"
         />
-      </div>
+        </div>
+      </section>
 
       
-          {/* Textblock 1 nach Hero */}
-          <div className="w-full mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-
-        <div ref={bentoRef} style={{ contentVisibility: 'auto', containIntrinsicSize: '1200px' }}>
-          {bentoVisible && (
-            <Suspense fallback={null}>
-              <Bento1 />
-            </Suspense>
-          )}
-        </div>
-        </div>
-  
-
-      <div className="h-px w-full max-w-none mx-auto my-16 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-
-      {/* Desktop/Tablet: horizontal layout (fixed, no resize) */}
-      <div ref={desktopSpotlightsRef} className="hidden md:block">
-        {spotlightsVisible && (
-          <Suspense fallback={null}>
-            <SpotlightsFixed spotlights={shuffledSpotlights} autoplayPlugin={autoplayPlugin} />
-          </Suspense>
-        )}
-      </div>
-
-      {/* Mobile: statische Bilder als Carousel (scroll-snap) */}
-        <div className="block md:hidden w-full mx-auto my-6 px-0">
-          <div
-            className="relative"
-            aria-label="PepeShows Highlights Carousel"
-          >
-            <div
-              ref={mobileCarouselRef}
-              className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
-            >
-              {/* Slide 1 */}
-              <div className="snap-start shrink-0 w-full px-4">
-                <img
-                  src="/images/home_1.webp"
-                  alt="PepeShows Highlight 1"
-                  width={480}
-                  height={270}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full rounded-lg object-cover"
-                />
-              </div>
-              {/* Slide 2 */}
-              <div className="snap-start shrink-0 w-full px-4">
-                <img
-                  src="/images/home_2.webp"
-                  alt="PepeShows Highlight 2"
-                  width={480}
-                  height={270}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full rounded-lg object-cover"
-                />
-              </div>
-              {/* Slide 3 */}
-              <div className="snap-start shrink-0 w-full px-4">
-                <img
-                  src="/images/home_3.webp"
-                  alt="PepeShows Highlight 3"
-                  width={480}
-                  height={270}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full rounded-lg object-cover"
-                />
+          {/* Bento Section */}
+          <section className="section">
+            <div className="stage-container">
+              <div ref={bentoRef} style={{ contentVisibility: 'auto', containIntrinsicSize: '1200px' }}>
+                {bentoVisible && (
+                  <Suspense fallback={null}>
+                    <Bento1 />
+                  </Suspense>
+                )}
               </div>
             </div>
+          </section>
 
-            {/* Dots */}
-            <div className="mt-3 flex items-center justify-center gap-2">
-              {[0,1,2].map(i => (
-                <span
-                  key={i}
-                  className={
-                    "h-1.5 rounded-full transition-all " +
-                    (i === mobileSlide ? "w-4 bg-white/80" : "w-1.5 bg-white/30")
-                  }
-                />
-              ))}
+          {/* Spotlights Section - Desktop/Tablet */}
+          <section className="section hidden md:block">
+            <div className="stage-container">
+              <div ref={desktopSpotlightsRef}>
+                {spotlightsVisible && (
+                  <Suspense fallback={null}>
+                    <SpotlightsFixed spotlights={shuffledSpotlights} autoplayPlugin={autoplayPlugin} />
+                  </Suspense>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
+          </section>
 
-      {/* Mobile: simple text block (no resizable) */}
-      <div className="block md:hidden w-full mx-auto my-6 px-4">
-        <div className="bg-black/50 rounded-lg p-6">
-          <h2 className="text-xl font-bold mb-3 text-white text-left">
-            {t("home.findArtistTitle")}
-          </h2>
-          <p className="mb-8 text-muted-foreground md:text-base lg:max-w-2xl lg:text-lg">
-            {t("home.findArtistSubtitle")}
-          </p>
-          <a href="/anfragen?skipIntro=1">
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-full transition-colors duration-200">
-              {t("home.findArtistButton")}
-            </button>
-          </a>
-  
-          <p className="mb-8 text-muted-foreground md:text-base lg:max-w-2xl lg:text-lg text-left">
-            {t("home.findArtistTime")}
-          </p>
-        </div>
-      </div>
+          {/* Mobile Carousel Section */}
+          <section className="section block md:hidden">
+            <div className="stage-container">
+              <div
+                className="relative"
+                aria-label="PepeShows Highlights Carousel"
+              >
+                <div
+                  ref={mobileCarouselRef}
+                  className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
+                >
+                  {/* Slide 1 */}
+                  <div className="snap-start shrink-0 w-full px-4">
+                    <img
+                      src="/images/home_1.webp"
+                      alt="PepeShows Highlight 1"
+                      width={480}
+                      height={270}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full rounded-lg object-cover"
+                    />
+                  </div>
+                  {/* Slide 2 */}
+                  <div className="snap-start shrink-0 w-full px-4">
+                    <img
+                      src="/images/home_2.webp"
+                      alt="PepeShows Highlight 2"
+                      width={480}
+                      height={270}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full rounded-lg object-cover"
+                    />
+                  </div>
+                  {/* Slide 3 */}
+                  <div className="snap-start shrink-0 w-full px-4">
+                    <img
+                      src="/images/home_3.webp"
+                      alt="PepeShows Highlight 3"
+                      width={480}
+                      height={270}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full rounded-lg object-cover"
+                    />
+                  </div>
+                </div>
 
-            
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-        <div ref={ctaRef} style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
-          {ctaVisible && (
-            <Suspense fallback={null}>
-              <Cta10
-                heading={t("home.cta.heading")}
-                description={t("home.cta.description")}
-                buttons={{
-                  primary: {
-                    text: t("home.cta.button"),
-                    url: "/agentur",
-                  },
-                }}
-              />
-            </Suspense>
-          )}
-        </div>
-      </div>
-      <div className="h-12 bg-gradient-to-b from-black via-gray-900 to-black" />
- 
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+                {/* Dots */}
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  {[0,1,2].map(i => (
+                    <span
+                      key={i}
+                      className={
+                        "h-1.5 rounded-full transition-all " +
+                        (i === mobileSlide ? "w-4 bg-white/80" : "w-1.5 bg-white/30")
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
 
-      <div ref={galleryRef} style={{ contentVisibility: 'auto', containIntrinsicSize: '1200px' }}>
-        {galleryVisible && (
-          <Suspense fallback={null}>
-            <Gallery23 />
-          </Suspense>
-        )}
-      </div>
-      
-      </div>
+              {/* Mobile text block */}
+              <div className="bg-black/50 rounded-lg p-6 mt-6">
+                <h2 className="h2 mb-3 text-left">
+                  {t("home.findArtistTitle")}
+                </h2>
+                <p className="body mb-8">
+                  {t("home.findArtistSubtitle")}
+                </p>
+                <a href="/anfragen?skipIntro=1">
+                  <button className="btn btn-primary w-full">
+                    {t("home.findArtistButton")}
+                  </button>
+                </a>
+                <p className="body mb-8 text-left">
+                  {t("home.findArtistTime")}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* CTA Section */}
+          <section className="section">
+            <div className="stage-container">
+              <div ref={ctaRef} style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
+                {ctaVisible && (
+                  <Suspense fallback={null}>
+                    <Cta10
+                      heading={t("home.cta.heading")}
+                      description={t("home.cta.description")}
+                      buttons={{
+                        primary: {
+                          text: t("home.cta.button"),
+                          url: "/agentur",
+                        },
+                      }}
+                    />
+                  </Suspense>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Gallery Section */}
+          <section className="section">
+            <div className="stage-container">
+              <div ref={galleryRef} style={{ contentVisibility: 'auto', containIntrinsicSize: '1200px' }}>
+                {galleryVisible && (
+                  <Suspense fallback={null}>
+                    <Gallery23 />
+                  </Suspense>
+                )}
+              </div>
+            </div>
+          </section>
       {showConsent && (
         <Suspense fallback={null}>
           <ConsentBannerLite />

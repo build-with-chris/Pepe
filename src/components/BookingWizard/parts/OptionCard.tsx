@@ -58,25 +58,24 @@ const OptionCard: React.FC<OptionCardProps> = ({
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
       className={
-        `group w-full max-w-[380px] flex flex-col items-center justify-center p-4 border rounded-lg cursor-pointer transition-all duration-150 ` +
-        `${checked || flash ? 'border-blue-600 ring-2 ring-blue-600 bg-blue-600/10' : 'border-gray-300 hover:shadow-lg'}`
+        `artist-card aspect-square hover-grow cursor-pointer transition-all ` +
+        `${checked || flash ? 'border-gold glow' : ''}`
       }
     >
-      <div className="relative w-full mb-3">
-        {/* Schwarz-Weiß (Default) */}
-        <img
-          src={imgSrc}
-          alt={label}
-          className="object-cover w-full h-44 md:h-64 lg:h-88 rounded-md"
-        />
-        {/* Farbig (Hover/Checked) */}
-        <img
-          src={colorSrc}
-          alt={label}
-          className={`object-cover w-full h-44 md:h-64 lg:h-88 rounded-md absolute inset-0 transition-opacity duration-300 ${checked || hovered ? 'opacity-100' : 'opacity-0'}`}
-        />
+      <img
+        src={imgSrc}
+        alt={label}
+        className="artist-card-image"
+      />
+      <img
+        src={colorSrc}
+        alt={label}
+        className={`artist-card-image absolute inset-0 transition-opacity duration-300 ${checked || hovered ? 'opacity-100' : 'opacity-0'}`}
+      />
+      
+      <div className="artist-card-overlay">
+        <div className="artist-card-title text-center">{label}</div>
       </div>
-      <span className="text-center font-medium select-none">{label}</span>
       {/* Visually hidden native input for forms/accessibility if needed */}
       <input type="radio" name={name} value={value} checked={checked} onChange={() => {}} className="sr-only" />
     </label>

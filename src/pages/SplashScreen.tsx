@@ -82,9 +82,9 @@ export default function SplashScreen() {
         )}
         {showPrompt && (
           <div>
-            <span className="text-white text-3xl md:text-5xl animate-pulse">
+            <h2 className="h2 animate-pulse">
               Drücke Enter
-            </span>
+            </h2>
           </div>
         )}
       </div>

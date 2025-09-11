@@ -20,44 +20,40 @@ const ArtistCardFront: React.FC<ArtistCardFrontProps> = ({ artist, onFlip }) => 
   const firstName = artist.name?.trim().split(" ")[0] || artist.name;
 
   return (
-    <div className="absolute inset-0 bg-gray-900 rounded-lg shadow-lg overflow-hidden border border-gray-800 [backface-visibility:hidden] flex flex-col">
-      {/* Bild */}
-      <div className="relative w-full aspect-[4/3] md:aspect-[16/12] bg-gray-800">
-        {artist.image ? (
-          <img
-            src={artist.image}
-            alt={artist.name}
-            className="absolute inset-0 w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-            Kein Bild
-          </div>
-        )}
-      </div>
-
-      {/* Inhalt */}
-      <div className="p-6 flex flex-col justify-between gap-3 flex-1">
-        <h2 className="text-xl font-semibold mb-2 text-white">{firstName}</h2>
-
+    <div className="artist-card-image [backface-visibility:hidden]">
+      {artist.image ? (
+        <img
+          src={artist.image}
+          alt={artist.name}
+          className="artist-card-image"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex-center text-muted-foreground">
+          Kein Bild
+        </div>
+      )}
+      
+      <div className="artist-card-overlay">
+        <div className="artist-card-title">{firstName}</div>
+        
         {quote && (
-          <p className="italic text-gray-400 mb-2 line-clamp-2">„{quote}“</p>
+          <p className="artist-card-subtitle line-clamp-2">„{quote}"</p>
         )}
 
         {/* Disziplinen als Badges */}
         {shownDisciplines.length > 0 && (
-          <div className="mt-auto flex flex-wrap gap-2 pt-3">
+          <div className="flex flex-wrap gap-2 mt-auto">
             {shownDisciplines.map((d, idx) => (
               <span
                 key={`${d}-${idx}`}
-                className="bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded"
+                className="badge badge-outline text-xs"
               >
                 {d}
               </span>
             ))}
             {extraCount > 0 && (
-              <span className="bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded">+{extraCount}</span>
+              <span className="badge badge-outline text-xs">+{extraCount}</span>
             )}
           </div>
         )}

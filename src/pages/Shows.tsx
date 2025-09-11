@@ -3,9 +3,17 @@ import { Gallery34 } from "@/components/gallery34";
 
 export default function Shows() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-            <Gallery34 />
-            <About1 />
-        </div>
+        <>
+            <section className="section">
+                <div className="stage-container">
+                    <Gallery34 />
+                </div>
+            </section>
+            <section className="section">
+                <div className="stage-container">
+                    <About1 />
+                </div>
+            </section>
+        </>
     )
 }    

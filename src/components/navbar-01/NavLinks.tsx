@@ -64,23 +64,25 @@ export const NavLinks: React.FC<NavLinksProps> = ({
     }
   }
 
-  const linkClass =
-    layout === "desktop"
-      ? "px-3 py-2 text-sm text-gray-100 hover:text-white"
-      : "block rounded-xl px-4 py-4 text-xl text-gray-100 hover:bg-white/10";
-
   return (
-    <nav className={className}>
-      {links.map((link) => (
-        <Link
-          key={link.to}
-          to={link.to}
-          className={linkClass}
-          onClick={onNavigate}
-        >
-          {link.label}
-        </Link>
-      ))}
+    <nav className={`${layout === 'desktop' ? 'nav' : ''} ${className}`}>
+      {links.map((link) => {
+        const linkClass =
+          layout === "desktop"
+            ? `nav-link ${location.pathname === link.to ? 'active' : ''}`
+            : `block rounded-xl px-4 py-4 text-xl text-gray-100 hover:bg-white/10 ${location.pathname === link.to ? 'text-white bg-white/10' : ''}`;
+        
+        return (
+          <Link
+            key={link.to}
+            to={link.to}
+            className={linkClass}
+            onClick={onNavigate}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
       {user && (
         <Link
           to="/profile"

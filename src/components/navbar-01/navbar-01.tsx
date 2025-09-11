@@ -80,37 +80,33 @@ const Navbar01Page = () => {
         } ${location.pathname === '/home' && lastY <= 60 ? 'bg-black backdrop-blur' : (isHomeOrArtists ? 'bg-black/50 backdrop-blur' : 'bg-black/90 backdrop-blur')}
         `}
       >
-        <div className="h-full flex items-center justify-between max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="stage-container h-full flex items-center justify-between">
           <Logo />
 
           {/* Desktop Menu */}
           <NavMenu className="hidden lg:block" />
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {user ? (
-              <div className="hidden lg:block w-auto max-w-xs">
+              <div className="hidden lg:block">
                 <Button
                   variant="secondary"
-                  className="text-sm px-3 py-1.5 md:text-base md:px-5 md:py-2.5"
                   onClick={handleLogout}
                 >
                   {t("nav.logout")}
                 </Button>
               </div>
             ) : (
-              <div className="hidden lg:block w-auto max-w-xs">
+              <div className="hidden lg:block">
                 <Link to="/anfragen">
-                  <Button
-                    variant="secondary"
-                    className="text-sm px-3 py-1.5 md:text-base md:px-5 md:py-2.5"
-                  >
+                  <Button variant="secondary">
                     {t("nav.booking")}
                   </Button>
                 </Link>
               </div>
             )}
             {/* Language Switcher (desktop) */}
-            <div className="hidden lg:flex items-center gap-2 text-white">
+            <div className="hidden lg:flex items-center gap-3 text-white">
               <button
                 onClick={() => changeLanguage("de")}
                 className={`text-xs md:text-sm px-2 py-1 rounded ${i18n.language?.startsWith("de") ? "underline" : "opacity-80 hover:opacity-100"}`}

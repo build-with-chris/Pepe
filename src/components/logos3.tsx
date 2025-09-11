@@ -76,9 +76,9 @@ const Logos3 = ({
     <section className="bg-black text-white lg:pt-10 pb-20 mb-10 overflow-hidden">
       <div className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-5xl px-4">
         <div className="w-full flex justify-center">
-          <h1 className="my-6 text-xl sm:text-2xl lg:text-4xl font-bold text-center text-white">
+          <h2 className="h2 text-center">
             {t("logos3.heading")}
-          </h1>
+          </h2>
         </div>
         <div className="pt-8 md:pt-12 lg:pt-16">
           <div className="relative mx-auto flex items-center justify-center w-full max-w-none">
