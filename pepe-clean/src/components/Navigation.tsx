@@ -84,9 +84,6 @@ export default function Navigation({ className = '' }: NavigationProps) {
               </button>
             </div>
 
-            <button className="btn btn-ghost btn-xs">
-              Login
-            </button>
             <Link to="/anfragen" className="btn btn-primary btn-xs">
               {t('nav.booking')}
             </Link>
@@ -157,9 +154,6 @@ export default function Navigation({ className = '' }: NavigationProps) {
               </div>
               
               <div className="pt-6 space-y-3">
-                <button className="btn btn-ghost btn-xs w-full">
-                  Login
-                </button>
                 <Link to="/anfragen" className="btn btn-primary btn-xs w-full" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.booking')}
                 </Link>

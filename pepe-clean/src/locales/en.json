@@ -600,6 +600,29 @@
       "cta": "Let’s talk",
       "images": { "1": "Gala evenings", "2": "Anniversaries", "3": "Corporate events", "4": "Festivals", "5": "LED Shows" }
     },
+  "gallery": {
+    "subtitle": "Discover our artists in action",
+    "accordion": {
+      "artists": {
+        "title": "Curtain up for our artists",
+        "content": "Experience the fascinating world of circus and artistry. Our talented artists bring magic, elegance and excitement to every stage. From breathtaking acrobatics to poetic pantomime performances – each performance is a unique experience."
+      },
+      "ensemble": {
+        "title": "Our Artists",
+        "content": "An international ensemble of experienced performers who bring their passion and skill to every show. Each artist has been carefully selected and brings their own artistic vision."
+      },
+      "categories": {
+        "title": "Show Categories",
+        "content": "From intimate solo acts to grand ensemble performances. Our diverse categories include acrobatics, theater, magic, fire shows and variety – the right format for every occasion."
+      }
+    },
+    "cta": {
+      "kicker": "EXPERIENCE IT LIVE",
+      "title": "Book Your Show",
+      "description": "These impressions show only a small part of our capabilities. Experience the full magic live at your event."
+    }
+  },
+  
     "gallery34": {
     "hint": "Click for details",
     "items": {
@@ -709,6 +732,36 @@
         "heading": "PepeShows – more than just an artist agency",
         "description": "We create commercial shows, promote culture, and run our own base.\nThis way we combine experience, network, and passion – making PepeShows true experts for unforgettable experiences.",
         "button": "To the agency"
+      },
+      "categories": {
+        "title": "Show Categories",
+        "subtitle": "Our Repertoire",
+        "items": {
+          "solo": {
+            "title": "Solo Performance",
+            "description": "Individual Artists in Top Form"
+          },
+          "duo": {
+            "title": "Duo Acts", 
+            "description": "Perfect Synchronization"
+          },
+          "variete": {
+            "title": "Varieté",
+            "description": "Diverse Entertainment"
+          },
+          "concept": {
+            "title": "Concept Shows",
+            "description": "Thematic Performances"
+          },
+          "corporate": {
+            "title": "Corporate Events",
+            "description": "Business Entertainment"
+          },
+          "special": {
+            "title": "Special Events",
+            "description": "Customized Performances"
+          }
+        }
       }
     },
   

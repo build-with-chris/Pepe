@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
 
 interface Artist {
@@ -13,7 +14,144 @@ interface Artist {
 
 export default function Home() {
   const [artists, setArtists] = useState<Artist[]>([])
+  const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [loading, setLoading] = useState(true)
+  const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
+  const [isStackPaused, setIsStackPaused] = useState(false)
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  const handleArtistClick = (artistId: number) => {
+    navigate(`/kuenstler?flip=${artistId}`)
+  }
+
+  // Create disciplines from artists data
+  const createDisciplinesFromArtists = (artistsData: Artist[]) => {
+    const disciplineMap = new Map<string, { artists: Artist[], count: number }>()
+    
+    // Collect all unique disciplines with their artists
+    artistsData.forEach(artist => {
+      artist.disciplines?.forEach(discipline => {
+        const normalizedDiscipline = discipline.trim()
+        if (!disciplineMap.has(normalizedDiscipline)) {
+          disciplineMap.set(normalizedDiscipline, { artists: [], count: 0 })
+        }
+        const disciplineData = disciplineMap.get(normalizedDiscipline)!
+        disciplineData.artists.push(artist)
+        disciplineData.count += 1
+      })
+    })
+
+    // Convert to array and shuffle randomly
+    const allDisciplines = Array.from(disciplineMap.entries())
+    const shuffled = allDisciplines.sort(() => Math.random() - 0.5)
+    
+    // Take random 6 disciplines
+    const randomDisciplines = shuffled
+      .slice(0, 6)
+      .map(([discipline, data]) => {
+        // Create different versions for different purposes
+        const normalizedName = discipline.trim()
+        const lowerCaseName = normalizedName.toLowerCase()
+        
+        // Try different translation key formats
+        const possibleKeys = [
+          `artists.disciplines.${lowerCaseName.replace(/[\s-]+/g, '')}`,
+          `artists.disciplines.${normalizedName.replace(/[\s-]+/g, '')}`,
+          `artists.disciplines.${lowerCaseName}`,
+        ]
+        
+        // Find first working translation
+        let translatedName = normalizedName
+        for (const key of possibleKeys) {
+          const translation = t(key)
+          if (translation && translation !== key) {
+            translatedName = translation
+            break
+          }
+        }
+        
+        // Map to correct image path - check various naming conventions
+        let imagePath = ''
+        
+        // Common discipline to image mappings
+        const imageMapping: Record<string, string> = {
+          'contemporary dance': 'Contemporary_Dance',
+          'chinese pole': 'Chinese_Pole',
+          'cyr-wheel': 'Cyr-Wheel',
+          'cyr wheel': 'Cyr-Wheel',
+          'hula hoop': 'Hula_Hoop',
+          'bodenakrobatik': 'Bodenakrobatik',
+          'breakdance': 'Breakdance',
+          'handstand': 'Handstand',
+          'jonglage': 'Jonglage',
+          'luftakrobatik': 'Luftakrobatik',
+          'moderation': 'Moderation',
+          'pantomime': 'Pantomime',
+          'partnerakrobatik': 'Partnerakrobatik',
+          'zauberer': 'Zauberer',
+          'zauberei': 'Zauberer'
+        }
+        
+        // Try to find matching image
+        const searchKey = lowerCaseName
+        if (imageMapping[searchKey]) {
+          imagePath = `/images/disciplines/${imageMapping[searchKey]}.webp`
+        } else {
+          // Fallback: try with underscores for multi-word disciplines
+          const fallbackName = normalizedName.replace(/\s+/g, '_')
+          imagePath = `/images/disciplines/${fallbackName}.webp`
+        }
+
+        // Create dynamic description based on actual artists
+        const artistCount = data.count
+        const sampleArtists = data.artists.slice(0, 3).map(a => a.name).join(', ')
+        const description = `${artistCount} erfahrene Künstler in unserem Netzwerk beherrschen ${translatedName}. ${sampleArtists.length > 0 ? `Darunter: ${sampleArtists}` : ''} Erleben Sie diese Kunst auf höchstem Niveau.`
+        
+        return {
+          id: lowerCaseName.replace(/[\s-]+/g, ''),
+          name: translatedName,
+          image: imagePath,
+          description: description,
+          artistCount: artistCount
+        }
+      })
+
+    return randomDisciplines
+  }
+
+  // Auto-cycle through disciplines (pause when user interacts)
+  useEffect(() => {
+    if (isStackPaused || disciplines.length === 0) return
+    
+    const interval = setInterval(() => {
+      setExpandedDiscipline(prev => (prev + 1) % disciplines.length)
+    }, 3000)
+    
+    return () => clearInterval(interval)
+  }, [disciplines.length, isStackPaused])
+
+  // Reset expanded discipline when disciplines change
+  useEffect(() => {
+    if (disciplines.length > 0) {
+      setExpandedDiscipline(0)
+    }
+  }, [disciplines])
+
+  const handleDisciplineClick = (index: number) => {
+    setExpandedDiscipline(index)
+    setIsStackPaused(true)
+    // Resume auto-cycling after 8 seconds
+    setTimeout(() => setIsStackPaused(false), 8000)
+  }
+
+  const handleStackMouseEnter = () => {
+    setIsStackPaused(true)
+  }
+
+  const handleStackMouseLeave = () => {
+    setIsStackPaused(false)
+  }
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -22,7 +160,22 @@ export default function Home() {
         const response = await fetch(`${baseUrl}/api/artists`)
         if (response.ok) {
           const data = await response.json()
-          setArtists(data.slice(0, 6)) // Show only first 6 artists on home page
+          // Shuffle artists randomly and take only 4
+          const shuffled = data.sort(() => 0.5 - Math.random())
+          setArtists(shuffled.slice(0, 4))
+          
+          // Create disciplines from all artists data
+          const dynamicDisciplines = createDisciplinesFromArtists(data)
+          setDisciplines(dynamicDisciplines.length > 0 ? dynamicDisciplines : [
+            // Fallback disciplines if database is empty
+            {
+              id: 'zauberer',
+              name: t('artists.disciplines.zauberer') || 'Zauberei',
+              image: '/images/disciplines/Zauberer.webp',
+              description: 'Magische Momente und Illusionen für jedes Publikum.',
+              artistCount: 0
+            }
+          ])
         }
       } catch (error) {
         console.error('Failed to fetch artists:', error)
@@ -32,13 +185,44 @@ export default function Home() {
     }
 
     fetchArtists()
-  }, [])
+  }, [t])
 
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return ''
     if (imageUrl.startsWith('http')) return imageUrl
     const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
     return `${baseUrl}${imageUrl}`
+  }
+
+  // Helper functions for discipline accordion content
+  const getDisciplineSpecialties = (disciplineId: string): string => {
+    const specialties: Record<string, string> = {
+      'zauberer': 'Close-Up Magic, Bühnenillusionen, mentale Magie und interaktive Tricks',
+      'luftakrobatik': 'Vertikaltuch, Aerial Hoop, Trapez und freihängende Akrobatik',
+      'handstand': 'Ein-Hand-Handstand, Cane-Balance, Adagio und Kraft-Akrobatik',
+      'jonglage': 'Objekt-Manipulation, LED-Jonglage, Feuer-Jonglage und Comedy-Jonglage',
+      'pantomime': 'Stumme Komödie, Charakterspiel, Interaktion und emotionales Theater',
+      'partnerakrobatik': 'Adagio, Hebungen, menschliche Pyramiden und synchrone Bewegungen',
+      'bodenakrobatik': 'Akrobatische Sprünge, Rollen, Handstände und dynamische Sequenzen',
+      'contemporaryDance': 'Moderne Choreografie, expressive Bewegung und künstlerischer Tanz',
+      'breakdance': 'Power Moves, Freezes, Toprock und Battle-orientierte Performance'
+    }
+    return specialties[disciplineId] || 'Professionelle Technik, jahrelange Erfahrung und einzigartige Performance-Qualität'
+  }
+
+  const getDisciplineApplications = (disciplineId: string): string => {
+    const applications: Record<string, string> = {
+      'zauberer': 'Gala-Dinner, Firmenevents, Hochzeiten, Meet & Greet, Tischzauberei',
+      'luftakrobatik': 'Große Bühnen, Hotels, Messen, Gala-Shows, Outdoor-Events',
+      'handstand': 'Kompakte Räume, Cocktail-Empfänge, Gala-Highlights, Corporate Events',
+      'jonglage': 'Street Performance, Bühnen-Shows, Kinder-Events, LED-Shows, Outdoor',
+      'pantomime': 'Theater, Comedy-Shows, Straßenfeste, Kinder-Unterhaltung, Interaktives',
+      'partnerakrobatik': 'Romantische Events, Hochzeiten, Gala-Abende, Tanz-Performances',
+      'bodenakrobatik': 'Sport-Events, Jugend-Shows, Schulveranstaltungen, Competitions',
+      'contemporaryDance': 'Kulturelle Events, Kunstgalerien, moderne Hochzeiten, Corporate',
+      'breakdance': 'Urban Events, Jugend-Kultur, Battles, Street-Festivals, Hip-Hop-Shows'
+    }
+    return applications[disciplineId] || 'Vielseitig einsetzbar für Events aller Art - von intimen Feiern bis zu großen Shows'
   }
 
   return (
@@ -60,19 +244,16 @@ export default function Home() {
         <div className="hero-content-wrapper">
           <div className="stage-container">
             <div className="hero-content">
-              <div className="overline mb-6">Theater • Performance • Kunst</div>
-              <h1 className="display-1 display-gradient mb-8">
-                Die Bühne gehört
-                <br />
-                den Geschichten
+              <div className="overline mb-6">{t('bento1.hero.title')}</div>
+              <h1 className="hero-title-elegant display-gradient mb-8">
+                {t('about1.hero.title')}
               </h1>
               <p className="lead mb-12 max-w-3xl mx-auto">
-                Erleben Sie außergewöhnliche Theaterstücke und Performances 
-                mit den talentiertesten Künstlern der Stadt. 
+                {t('about1.hero.subtitle')}
               </p>
               <div className="hero-actions">
                 <Link to="/anfragen" className="btn btn-primary btn-xl">
-                  Show buchen
+                  {t('about1.next.cta.assistant')}
                 </Link>
                 <Link to="/shows" className="btn btn-secondary btn-lg">
                   Shows entdecken
@@ -88,98 +269,210 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Booking Assistant Section */}
-      <section className="section bg-gradient-dark">
+      {/* Mission Statement */}
+      <section className="section">
         <div className="stage-container">
-          <div className="section-header text-center mb-16">
-            <div className="overline text-pepe-gold">Unser Service</div>
-            <h2 className="h2 mb-6">Booking Assistent</h2>
-            <p className="body-lg max-w-3xl mx-auto">
-              In nur 3 Schritten zur perfekten Show. Unser intelligenter 
-              Booking-Assistent führt Sie durch den gesamten Prozess.
+          <div className="text-center mb-16">
+            <div className="overline text-pepe-gold mb-4">{t('about1.mission.kicker')}</div>
+            <p className="h2 max-w-4xl mx-auto">
+              {t('about1.mission.body')}
             </p>
           </div>
+        </div>
+      </section>
 
-          <div className="booking-features">
-            <div className="booking-card">
-              <div className="booking-card-number">1</div>
-              <h3 className="h3 mb-4">Event Details</h3>
-              <p className="body">
-                Teilen Sie uns Art, Datum und Ort Ihrer Veranstaltung mit.
-              </p>
-            </div>
-            <div className="booking-card">
-              <div className="booking-card-number">2</div>
-              <h3 className="h3 mb-4">Show-Auswahl</h3>
-              <p className="body">
-                Wählen Sie aus unserem vielfältigen Programm die passende Performance.
-              </p>
-            </div>
-            <div className="booking-card">
-              <div className="booking-card-number">3</div>
-              <h3 className="h3 mb-4">Angebot erhalten</h3>
-              <p className="body">
-                Erhalten Sie innerhalb von 24h ein maßgeschneidertes Angebot.
-              </p>
-            </div>
-          </div>
+      {/* Bento Grid Section */}
+      <section className="section bg-pepe-ink">
+        <div className="stage-container">
+          <div className="bento-grid-square">
+            {/* Main Circus Tent Card - Square Format */}
+            <Link to="/anfragen" className="bento-card-square bento-card-main-square bento-clickable">
+              <div className="bento-card-bg">
+                <img 
+                  src="/images/Bento1/CircusTent.png" 
+                  alt="Circuszelt mit Luftartistin"
+                  className="bento-main-image"
+                />
+                <div className="bento-spotlight-left"></div>
+                <div className="bento-spotlight-right"></div>
+                <div className="bento-gradient-overlay"></div>
+              </div>
+              <div className="bento-card-header">
+                <h2 className="bento-title">{t('bento1.hero.title')}</h2>
+                <div className="bento-sparkles">
+                  <Buhnenzauber />
+                </div>
+              </div>
+              <div className="bento-destination-tag">
+                <span>Booking Assistant</span>
+              </div>
+            </Link>
 
-          <div className="text-center mt-12">
-            <Link to="/anfragen" className="btn btn-primary btn-lg">
-              Jetzt Booking starten
+            {/* Booking Assistant Card - Square Format */}
+            <Link to="/anfragen" className="bento-card-square bento-card-cta-square bento-clickable">
+              <div className="bento-card-content">
+                <p className="bento-cta-text">
+                  {t('bento1.cta.body')}
+                </p>
+                <div className="btn btn-primary btn-lg">
+                  {t('bento1.cta.btnStart')}
+                  <svg className="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+              <div className="bento-destination-tag">
+                <span>Booking starten</span>
+              </div>
+            </Link>
+
+            {/* Innovative Concepts Card - Square Format */}
+            <Link to="/shows" className="bento-card-square bento-card-image-square bento-clickable">
+              <div className="bento-card-bg">
+                <img 
+                  src="/images/Bento1/Burn.webp" 
+                  alt="Innovative show concepts"
+                  className="bento-bg-image"
+                />
+                <div className="bento-image-overlay"></div>
+              </div>
+              <div className="bento-card-header">
+                <h3 className="bento-title">{t('bento1.third.title')}</h3>
+              </div>
+              <div className="bento-destination-tag">
+                <span>Shows entdecken</span>
+              </div>
+            </Link>
+
+            {/* Captivating Artistry Slider Card - Square Format */}
+            <Link to="/kuenstler" className="bento-card-square bento-card-slider-square bento-clickable">
+              <div className="bento-card-bg">
+                <img 
+                  src="/images/Bento1/Slider1.webp" 
+                  alt="Show impression"
+                  className="bento-bg-image active"
+                />
+                <img 
+                  src="/images/Bento1/Slider2.webp" 
+                  alt="Show impression"
+                  className="bento-bg-image"
+                />
+                <img 
+                  src="/images/Bento1/Slider3.webp" 
+                  alt="Show impression"
+                  className="bento-bg-image"
+                />
+                <div className="bento-image-overlay"></div>
+              </div>
+              <div className="bento-card-header">
+                <h3 className="bento-title">{t('bento1.middle.title')}</h3>
+              </div>
+              <div className="bento-destination-tag">
+                <span>Künstler ansehen</span>
+              </div>
+            </Link>
+
+            {/* Taking Responsibility Card - Square Format */}
+            <Link to="/team" className="bento-card-square bento-card-responsibility-square bento-clickable">
+              <div className="bento-card-content">
+                <div className="responsibility-icon">
+                  <div className="circular-progress"></div>
+                </div>
+                <h3 className="bento-title">{t('bento1.responsibility.title')}</h3>
+                <p className="bento-text">
+                  {t('bento1.responsibility.body1')}<br/>
+                  {t('bento1.responsibility.body2')}
+                </p>
+              </div>
+              <div className="bento-destination-tag">
+                <span>Unser Team</span>
+              </div>
+            </Link>
+
+            {/* 100% Fairness Card - Square Format */}
+            <Link to="/referenzen" className="bento-card-square bento-card-fairness-square bento-clickable">
+              <div className="bento-card-content">
+                <h3 className="bento-title">{t('bento1.values.fairnessTitle')}</h3>
+                <p className="bento-text">
+                  {t('bento1.values.fairnessBodyPrefix')} <span className="text-pepe-gold">{t('bento1.values.linkText')}</span>.
+                </p>
+                <div className="artist-avatars">
+                  <img src="/images/Slider/Artist1.webp" alt="Artist 1" className="avatar" />
+                  <img src="/images/Slider/Artist2.webp" alt="Artist 2" className="avatar" />
+                  <img src="/images/Slider/Artist3.webp" alt="Artist 3" className="avatar" />
+                  <img src="/images/Slider/Artist4.webp" alt="Artist 4" className="avatar" />
+                  <img src="/images/Slider/Artist5.webp" alt="Artist 5" className="avatar" />
+                </div>
+              </div>
+              <div className="bento-destination-tag">
+                <span>Referenzen</span>
+              </div>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Featured Artists */}
+      {/* Find the Perfect Showact Section */}
       <section className="section">
         <div className="stage-container">
           <div className="section-header text-center mb-16">
-            <div className="overline">Unsere Stars</div>
-            <h2 className="h2 mb-6">Featured Artists</h2>
-            <p className="body-lg max-w-3xl mx-auto">
-              Entdecken Sie die talentiertesten Künstler unseres Ensembles
+            <h2 className="h1 mb-6">{t('home.findArtistTitle')}</h2>
+            <p className="body-lg max-w-3xl mx-auto mb-8">
+              {t('home.findArtistSubtitle')}
             </p>
+            <div className="text-center mb-12">
+              <Link to="/anfragen" className="btn btn-primary btn-xl">
+                {t('home.findArtistButton')}
+              </Link>
+              <p className="text-sm text-pepe-t64 mt-4">{t('home.findArtistTime')}</p>
+            </div>
           </div>
-          
+
+          {/* Featured Artists Preview */}
           {loading ? (
             <div className="text-center py-12">
-              <div className="body">Künstler werden geladen...</div>
+              <div className="body">{t('artists.loading')}</div>
             </div>
           ) : (
-            <div className="artist-grid">
+            <div className="artist-preview-grid">
               {artists.map((artist) => (
-                <div key={artist.id} className="artist-card">
-                  <div className="artist-card-image">
+                <div 
+                  key={artist.id} 
+                  className="artist-preview-item"
+                  onClick={() => handleArtistClick(artist.id)}
+                >
+                  <div className="artist-preview-card-image">
                     {artist.profile_image_url ? (
                       <img 
                         src={resolveImageUrl(artist.profile_image_url)}
                         alt={artist.name}
-                        className="w-full h-full object-cover"
+                        className="artist-square-image"
                       />
                     ) : (
-                      <div className="w-full h-full bg-pepe-ink flex items-center justify-center">
-                        <span className="text-pepe-t64">Kein Bild</span>
+                      <div className="artist-image-placeholder">
+                        <span className="text-4xl">🎭</span>
                       </div>
                     )}
                   </div>
-                  <div className="artist-card-overlay">
-                    <div className="artist-card-content">
-                      <h3 className="h3 mb-2">{artist.name}</h3>
-                      <div className="label mb-3">
-                        {artist.disciplines?.join(', ') || 'Künstler'}
-                      </div>
+                  <div className="artist-preview-info">
+                    <h4 className="artist-preview-name">{artist.name}</h4>
+                    <div className="artist-preview-badges">
+                      {artist.disciplines?.slice(0, 3).map((discipline, index) => (
+                        <span key={index} className="artist-discipline-tag">
+                          {discipline}
+                        </span>
+                      )) || <span className="artist-discipline-tag">Künstler</span>}
+                      {(artist.disciplines?.length || 0) > 3 && (
+                        <span className="artist-discipline-tag-more">+{(artist.disciplines?.length || 0) - 3}</span>
+                      )}
                     </div>
-                    <Link to="/kuenstler" className="btn btn-ghost btn-sm">
-                      Mehr erfahren
-                    </Link>
                   </div>
                 </div>
               ))}
             </div>
           )}
-          
+
           <div className="text-center mt-12">
             <Link to="/kuenstler" className="btn btn-secondary btn-lg">
               Alle Künstler ansehen
@@ -188,57 +481,158 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Show Categories */}
+      {/* PepeShows - More than Artist Agency */}
       <section className="section bg-pepe-ink">
         <div className="stage-container">
-          <div className="section-header text-center mb-16">
-            <div className="overline">Unser Repertoire</div>
-            <h2 className="h2 mb-6">Show-Kategorien</h2>
+          <div className="text-center mb-16">
+            <h2 className="display-2 mb-8">
+              {t('home.cta.heading')}
+            </h2>
+            <p className="lead max-w-4xl mx-auto">
+              {t('home.cta.description')}
+            </p>
           </div>
-
-          <div className="category-grid">
-            <Link to="/shows" className="category-card">
-              <div className="category-icon">🎭</div>
-              <h3 className="h3 mb-3">Solo Performance</h3>
-              <p className="body-sm">Einzelkünstler in Bestform</p>
-            </Link>
-            <Link to="/shows" className="category-card">
-              <div className="category-icon">👥</div>
-              <h3 className="h3 mb-3">Duo Acts</h3>
-              <p className="body-sm">Perfekte Synchronisation</p>
-            </Link>
-            <Link to="/shows" className="category-card">
-              <div className="category-icon">🎪</div>
-              <h3 className="h3 mb-3">Varieté</h3>
-              <p className="body-sm">Vielfältiges Entertainment</p>
-            </Link>
-            <Link to="/shows" className="category-card">
-              <div className="category-icon">🎨</div>
-              <h3 className="h3 mb-3">Konzeptshow</h3>
-              <p className="body-sm">Thematische Performances</p>
+          <div className="text-center">
+            <Link to="/team" className="btn btn-secondary btn-lg">
+              {t('home.cta.button')}
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* Excellence Section with Animated Disciplines */}
+      <section className="section">
+        <div className="stage-container">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+            <div>
+              <h2 className="display-2 mb-6">Wir glauben nicht an Mittelmaß – bei uns gibt es Exzellenz.</h2>
+              <p className="body-lg mb-12">
+                Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.
+              </p>
+            </div>
+            <div 
+              className="discipline-stack"
+              onMouseEnter={handleStackMouseEnter}
+              onMouseLeave={handleStackMouseLeave}
+            >
+              {disciplines.map((discipline, index) => (
+                <div 
+                  key={discipline.id} 
+                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
+                  style={{ '--index': index } as React.CSSProperties}
+                  onMouseEnter={() => handleDisciplineClick(index)}
+                >
+                  {/* Text-only display for closed cards */}
+                  <div className="discipline-text-only">
+                    {discipline.name}
+                  </div>
+                  
+                  {/* Image container for active card */}
+                  <div className="discipline-image-container">
+                    <img 
+                      src={discipline.image} 
+                      alt={discipline.name}
+                      className="discipline-image"
+                    />
+                  </div>
+                  
+                  {/* Enhanced Overlay content for active card */}
+                  <div className="discipline-overlay">
+                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
+                    <p className="discipline-description text-white/90 mb-6">
+                      {discipline.description}
+                    </p>
+                    
+                    {/* Additional accordion-like content */}
+                    <div className="discipline-details space-y-4">
+                      <div className="detail-item">
+                        <h4 className="text-pepe-gold font-semibold mb-2">✨ Besonderheiten</h4>
+                        <p className="text-sm text-white/80">
+                          {getDisciplineSpecialties(discipline.id)}
+                        </p>
+                      </div>
+                      
+                      <div className="detail-item">
+                        <h4 className="text-pepe-gold font-semibold mb-2">🎭 Einsatzgebiete</h4>
+                        <p className="text-sm text-white/80">
+                          {getDisciplineApplications(discipline.id)}
+                        </p>
+                      </div>
+                      
+                      <div className="detail-item">
+                        <h4 className="text-pepe-gold font-semibold mb-2">👥 Verfügbare Künstler</h4>
+                        <p className="text-sm text-white/80">
+                          {discipline.artistCount} {discipline.artistCount === 1 ? 'Künstler' : 'Künstler'} in unserem Netzwerk
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Client Logos */}
+          <div className="text-center mb-8" style={{ marginTop: '200px' }}>
+            <h3 className="h2 mb-12">{t('logos3.heading')}</h3>
+          </div>
+          <div className="logo-strip" style={{ marginBottom: '200px' }}>
+            <div className="logo-item">
+              <img src="/images/Logos/Porsche.png" alt="Porsche" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/google.svg" alt="Google" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/mcdonalds.svg" alt="McDonald's" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/astrazeneca.svg" alt="AstraZeneca" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/tollwood.svg" alt="Tollwood Festival" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/european-championships.svg" alt="European Championships" className="client-logo" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Next Steps CTA */}
+      <section className="section-large text-center bg-gradient-dark">
+        <div className="stage-container">
+          <div className="overline text-pepe-gold mb-4">{t('about1.next.kicker')}</div>
+          <h2 className="display-2 mb-8">{t('about1.next.title')}</h2>
+          <p className="lead mb-12 max-w-3xl mx-auto">
+            {t('about1.next.body')}
+          </p>
+          <div className="cta-actions">
+            <Link to="/anfragen" className="btn btn-primary btn-xl">
+              {t('about1.next.cta.assistant')}
+            </Link>
+            <Link to="/kontakt" className="btn btn-ghost btn-lg">
+              {t('about1.next.cta.consult')}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA with Agency Info */}
       <section className="section-large text-center">
         <div className="stage-container">
           <h2 className="display-2 mb-8">
-            Bereit für Ihre
-            <br />
-            <span className="text-pepe-gold">unvergessliche Show?</span>
+            {t('home.cta.heading')}
           </h2>
           <p className="lead mb-12 max-w-3xl mx-auto">
-            Lassen Sie uns gemeinsam Ihre Veranstaltung zu einem 
-            außergewöhnlichen Erlebnis machen.
+            {t('home.cta.description')}
           </p>
           <div className="cta-actions">
             <Link to="/anfragen" className="btn btn-primary btn-xl">
               Jetzt anfragen
             </Link>
             <Link to="/kontakt" className="btn btn-ghost btn-lg">
-              Kontakt aufnehmen
+              {t('home.cta.button')}
             </Link>
           </div>
         </div>

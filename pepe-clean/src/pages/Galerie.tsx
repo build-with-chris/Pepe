@@ -430,12 +430,14 @@ export default function Galerie() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Content Column */}
             <div className="text-center lg:text-left">
-              <h2 className="display-2 mb-6">
+              <h2 className="display-2 mb-8">
                 {t('hero135.heading') || 'Vorhang auf für unsere Artisten'}
               </h2>
-              <p className="body-lg mb-8 max-w-lg mx-auto lg:mx-0">
-                {t('hero135.subtitle') || 'Ein Vorgeschmack auf unsere Artisten – voller Energie, Kreativität und Leidenschaft. Klick auf Play für die volle Show auf YouTube.'}
-              </p>
+              <div className="video-text-wrapper">
+                <p className="body-xl leading-relaxed mb-12 max-w-2xl mx-auto lg:mx-0">
+                  {t('hero135.subtitle') || 'Ein Vorgeschmack auf unsere Artisten – voller Energie, Kreativität und Leidenschaft. Klick auf Play für die volle Show auf YouTube.'}
+                </p>
+              </div>
             </div>
             
             {/* Video Column */}
@@ -445,16 +447,18 @@ export default function Galerie() {
                 onClick={() => setIsVideoModalOpen(true)}
               >
                 <div className="video-preview-wrapper">
-                  <video
-                    className="video-preview"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  >
-                    <source src="/videos/Vorschauloop.webm" type="video/webm" />
-                    <source src="/videos/Vorschauloop.mp4" type="video/mp4" />
-                  </video>
+                  {/* YouTube Thumbnail as Placeholder */}
+                  <div className="video-thumbnail-container">
+                    <img 
+                      src="https://img.youtube.com/vi/dXHLaIkezTM/maxresdefault.jpg"
+                      alt="PepeShows Showreel Vorschau"
+                      className="video-preview-thumbnail"
+                      onError={(e) => {
+                        // Fallback to standard quality if maxres not available
+                        (e.target as HTMLImageElement).src = "https://img.youtube.com/vi/dXHLaIkezTM/hqdefault.jpg"
+                      }}
+                    />
+                  </div>
                   
                   {/* Play Button Overlay */}
                   <div className="video-play-overlay">

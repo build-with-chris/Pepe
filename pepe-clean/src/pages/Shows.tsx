@@ -1,237 +1,288 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 interface Show {
   id: number
   title: string
   description: string
-  image: string
+  image_url?: string
   category: string
   price?: string
   duration?: string
+  created_at?: string
 }
 
-const showsData: Show[] = [
-  {
-    id: 1,
-    title: "Solo Performance",
-    description: "Individuelle Kunstdarbietungen unserer talentiertesten Einzelkünstler",
-    image: "/images/Galerie34/Solo.webp",
-    category: "Solo",
-    price: "ab 800€",
-    duration: "20-45 Min"
-  },
-  {
-    id: 2,
-    title: "Duo Acts",
-    description: "Harmonische Zusammenspiele zweier Künstler in perfekter Synchronisation",
-    image: "/images/Galerie34/Duo.webp", 
-    category: "Duo",
-    price: "ab 1.200€",
-    duration: "25-50 Min"
-  },
-  {
-    id: 3,
-    title: "Konzeptshow",
-    description: "Thematische Shows mit durchdachtem Konzept und roter Faden",
-    image: "/images/Galerie34/Konzeptshow.webp",
-    category: "Konzept",
-    price: "ab 2.000€",
-    duration: "45-90 Min"
-  },
-  {
-    id: 4,
-    title: "Varieté Abend",
-    description: "Klassisches Varieté mit verschiedenen Acts und Moderation",
-    image: "/images/Galerie34/Variete.webp",
-    category: "Varieté",
-    price: "ab 3.500€",
-    duration: "90-120 Min"
-  },
-  {
-    id: 5,
-    title: "Walkact",
-    description: "Mobile Performances die zwischen den Gästen stattfinden",
-    image: "/images/Galerie34/Walkact.webp",
-    category: "Walkact",
-    price: "ab 600€",
-    duration: "flexibel"
-  },
-  {
-    id: 6,
-    title: "Firmenfeier Special",
-    description: "Maßgeschneiderte Shows für Firmenevents und Betriebsfeiern",
-    image: "/images/Galerie34/Firmenfeier.webp",
-    category: "Corporate",
-    price: "auf Anfrage",
-    duration: "anpassbar"
-  }
-]
-
 export default function Shows() {
+  const [shows, setShows] = useState<Show[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [expandedShow, setExpandedShow] = useState<number | null>(null)
+  const { t } = useTranslation()
 
-  const categories = Array.from(new Set(showsData.map(show => show.category)))
+  useEffect(() => {
+    const fetchShows = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        const response = await fetch(`${baseUrl}/api/shows`)
+        if (response.ok) {
+          const data = await response.json()
+          setShows(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch shows:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchShows()
+  }, [])
+
+  const resolveImageUrl = (imageUrl?: string) => {
+    if (!imageUrl) return ''
+    if (imageUrl.startsWith('http')) return imageUrl
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+    return `${baseUrl}${imageUrl}`
+  }
+
+  const categories = Array.from(new Set(shows.map(show => show.category)))
   
   const filteredShows = selectedCategory 
-    ? showsData.filter(show => show.category === selectedCategory)
-    : showsData
-
-  const toggleExpand = (showId: number) => {
-    setExpandedShow(expandedShow === showId ? null : showId)
-  }
+    ? shows.filter(show => show.category === selectedCategory)
+    : shows
 
   return (
     <main>
       {/* Hero Section */}
-      <section className="section-hero">
+      <section className="section-hero bg-gradient-dark">
         <div className="stage-container">
-          <div className="hero-content text-center max-w-4xl mx-auto">
-            <div className="overline mb-6">Unser Programm</div>
-            <h1 className="h1 display-gradient mb-8">
-              Shows &amp; Aufführungen
+          <div className="hero-content text-center max-w-4xl mx-auto py-16">
+            <div className="overline text-pepe-gold mb-6">{t('hero37.kicker')}</div>
+            <h1 className="display-1 display-gradient mb-8">
+              {t('hero37.title')}
             </h1>
-            <p className="lead mb-12">
-              Von intimen Solo-Performances bis hin zu großen Varieté-Abenden - 
-              entdecken Sie unser vielfältiges Show-Portfolio für jeden Anlass.
+            <p className="lead mb-12 max-w-3xl mx-auto">
+              {t('hero37.subtitle')}
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Filter Section */}
-      <section className="section-compact">
-        <div className="stage-container">
-          <div className="text-center mb-12">
-            <h2 className="h2 mb-8">Shows nach Kategorie</h2>
-            <div className="flex flex-wrap justify-center gap-3 mb-6">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`btn btn-sm ${!selectedCategory ? 'btn-primary' : 'btn-ghost'}`}
-              >
-                Alle Shows
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`btn btn-sm ${
-                    selectedCategory === category ? 'btn-primary' : 'btn-ghost'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+            <div className="hero-actions">
+              <Link to="/anfragen" className="btn btn-primary btn-xl">
+                {t('hero37.cta.requestShow')}
+              </Link>
+              <Link to="/kontakt" className="btn btn-ghost btn-lg">
+                {t('hero37.cta.bookConsult')}
+              </Link>
             </div>
-            <p className="body">
-              {filteredShows.length} Shows verfügbar
-              {selectedCategory && ` in Kategorie "${selectedCategory}"`}
-            </p>
           </div>
         </div>
       </section>
 
-      {/* Shows Grid */}
+      {/* Show Formats Overview from gallery34 */}
       <section className="section">
         <div className="stage-container">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredShows.map((show) => (
-              <div key={show.id} className="card p-0 overflow-hidden">
-                <div className="aspect-video bg-pepe-ink">
-                  <img
-                    src={show.image}
-                    alt={show.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTYxNjE2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJpbGQgd2lyZCBnZWxhZGVuPC90ZXh0Pjwvc3ZnPg=='
-                    }}
-                  />
-                </div>
-                
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="label mb-2">{show.category}</div>
-                      <h3 className="h3 mb-3">{show.title}</h3>
-                    </div>
-                    <button
-                      onClick={() => toggleExpand(show.id)}
-                      className="btn btn-ghost btn-sm ml-4"
-                      aria-label={expandedShow === show.id ? 'Details schließen' : 'Details öffnen'}
-                    >
-                      {expandedShow === show.id ? '−' : '+'}
-                    </button>
+          <div className="section-header text-center mb-16">
+            <h2 className="h1 mb-6">Unsere Show-Formate</h2>
+            <p className="body-lg max-w-3xl mx-auto">
+              Von kurzem Solo-Act bis abendfüllendem Varieté - entdecken Sie unsere professionellen Show-Formate.
+            </p>
+            <div className="text-center mt-6">
+              <span className="overline text-pepe-gold">{t('gallery34.hint')}</span>
+            </div>
+          </div>
+
+          <div className="show-formats-grid">
+            {Array.from({ length: 6 }, (_, i) => i + 1).map((num) => {
+              const item = t(`gallery34.items.${num}`, { returnObjects: true }) as any
+              if (!item || typeof item === 'string') return null
+              
+              // Map images based on show format number (matching old Gallery34)
+              const imageMap: { [key: number]: string } = {
+                1: '/images/Galerie34/Solo.webp',
+                2: '/images/Galerie34/Duo.webp', 
+                3: '/images/Galerie34/Konzeptshow.webp',
+                4: '/images/Galerie34/Variete.webp',
+                5: '/images/Galerie34/Zauberer.webp',
+                6: '/images/Galerie34/Feuershow.webp'
+              }
+              
+              return (
+                <div key={num} className="show-format-card">
+                  <div className="show-format-image">
+                    <img 
+                      src={imageMap[num]} 
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  
-                  <p className="body-sm mb-4 line-clamp-2">
-                    {show.description}
-                  </p>
-                  
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="caption">
-                      <div>Preis: {show.price}</div>
-                      <div>Dauer: {show.duration}</div>
-                    </div>
+                  <div className="show-format-content">
+                    <div className="show-format-meta mb-2">{item.desc}</div>
+                    <h3 className="h2 mb-4">{item.title}</h3>
+                    {item.details && Array.isArray(item.details) && (
+                      <ul className="show-format-features mb-6">
+                        {item.details.map((detail: string, index: number) => (
+                          <li key={index}>{detail}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <Link to="/anfragen" className="btn btn-primary btn-sm">
+                      Format anfragen
+                    </Link>
                   </div>
-                  
-                  {expandedShow === show.id && (
-                    <div className="border-t border-pepe-line pt-4 mt-4">
-                      <h4 className="h4 mb-3">Details zur Show</h4>
-                      <div className="space-y-3">
-                        <div>
-                          <div className="label mb-1">Beschreibung</div>
-                          <p className="body-sm">
-                            {show.description} Diese Show kann individuell an Ihre 
-                            Veranstaltung angepasst werden. Sprechen Sie uns für 
-                            spezielle Wünsche gerne an.
-                          </p>
-                        </div>
-                        <div>
-                          <div className="label mb-1">Technische Anforderungen</div>
-                          <p className="body-sm">
-                            Grundlegende Beleuchtung, Musikanlage nach Absprache, 
-                            Mindestbühnenfläche variiert je nach Act.
-                          </p>
-                        </div>
-                        <div>
-                          <div className="label mb-1">Buchung</div>
-                          <p className="body-sm">
-                            Mindestvorlaufzeit: 2 Wochen. Für kurzfristige Anfragen 
-                            kontaktieren Sie uns direkt.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="pt-4">
-                        <a href="/anfragen" className="btn btn-primary btn-sm">
-                          Show anfragen
-                        </a>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* Call-to-Action */}
-      <section className="section-large">
-        <div className="stage-container">
-          <div className="cta-content text-center">
-            <h2 className="h2 mb-6">Individuelle Show gewünscht?</h2>
-            <p className="body-lg mb-12 max-w-3xl mx-auto">
-              Wir entwickeln gerne eine maßgeschneiderte Show für Ihre 
-              Veranstaltung. Lassen Sie uns über Ihre Vorstellungen sprechen.
-            </p>
-            <div className="cta-actions">
-              <a href="/anfragen" className="btn btn-primary btn-lg mr-4">
-                Individuelle Anfrage
-              </a>
-              <a href="/kontakt" className="btn btn-secondary btn-lg">
-                Beratung vereinbaren
-              </a>
+      {/* Available Shows from Database */}
+      {!loading && shows.length > 0 && (
+        <section className="section">
+          <div className="stage-container">
+            <div className="section-header text-center mb-16">
+              <h2 className="h1 mb-6">Verfügbare Shows</h2>
+              <p className="body-lg max-w-3xl mx-auto">
+                Entdecken Sie unser aktuelles Show-Portfolio aus der Datenbank.
+              </p>
             </div>
+
+            {/* Filter Section */}
+            {categories.length > 0 && (
+              <div className="filter-section mb-12">
+                <h3 className="h3 text-center mb-8">Shows nach Kategorie</h3>
+                <div className="filter-buttons">
+                  <button
+                    onClick={() => setSelectedCategory('')}
+                    className={`filter-btn ${!selectedCategory ? 'active' : ''}`}
+                  >
+                    Alle Shows
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`filter-btn ${
+                        selectedCategory === category ? 'active' : ''
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-center mt-6">
+                  <div className="results-count">
+                    <span className="label">
+                      {filteredShows.length} Shows verfügbar
+                      {selectedCategory && ` in Kategorie "${selectedCategory}"`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Shows Grid - Artist Card Style */}
+            <div className="show-grid-enhanced">
+              {filteredShows.map((show) => (
+                <div key={show.id} className="show-card-artist-style">
+                  <div className="show-card-image-compact">
+                    {show.image_url ? (
+                      <img 
+                        src={resolveImageUrl(show.image_url)}
+                        alt={show.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="show-placeholder">
+                        <div className="placeholder-icon">🎬</div>
+                        <span className="placeholder-text">Kein Bild verfügbar</span>
+                      </div>
+                    )}
+                    {show.category && (
+                      <div className="show-category-overlay">
+                        <div className="show-category-compact">
+                          <span className="category-tag-compact">
+                            {show.category}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="show-card-content-compact">
+                    <div className="show-meta-compact">
+                      <h3 className="h3 mb-2 text-left">{show.title}</h3>
+                      {show.duration && (
+                        <div className="show-duration">
+                          <span className="duration-badge">
+                            {show.duration}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {show.description && (
+                      <div className="show-description-compact">
+                        <p className="body-sm line-clamp-2 text-left">{show.description}</p>
+                      </div>
+                    )}
+                    <div className="show-actions">
+                      <Link to="/anfragen" className="btn btn-primary btn-sm">
+                        Show anfragen
+                      </Link>
+                      {show.price && (
+                        <span className="show-price text-pepe-gold font-medium">
+                          {show.price}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <section className="section">
+          <div className="stage-container">
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p className="body mt-4">Shows werden geladen...</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Empty State */}
+      {!loading && shows.length === 0 && (
+        <section className="section">
+          <div className="stage-container">
+            <div className="empty-state">
+              <div className="empty-icon">🎬</div>
+              <h3 className="h3 mb-4">Keine Shows verfügbar</h3>
+              <p className="body-sm mb-6">Derzeit sind keine Shows in der Datenbank verfügbar.</p>
+              <Link to="/anfragen" className="btn btn-primary">
+                Individuelle Anfrage stellen
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Call-to-Action */}
+      <section className="section-large text-center bg-gradient-dark">
+        <div className="stage-container">
+          <div className="overline text-pepe-gold mb-4">{t('about1.next.kicker')}</div>
+          <h2 className="display-2 mb-8">{t('about1.next.title')}</h2>
+          <p className="lead mb-12 max-w-3xl mx-auto">
+            {t('about1.next.body')}
+          </p>
+          <div className="cta-actions">
+            <Link to="/anfragen" className="btn btn-primary btn-xl">
+              {t('about1.next.cta.assistant')}
+            </Link>
+            <Link to="/kontakt" className="btn btn-ghost btn-lg">
+              {t('about1.next.cta.consult')}
+            </Link>
           </div>
         </div>
       </section>

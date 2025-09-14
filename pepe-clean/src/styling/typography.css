@@ -434,6 +434,78 @@ li:last-child {
   .display-2 { font-size: var(--text-4xl); }
 }
 
+/* ===== Mobile Responsive Typography ===== */
+
+@media (max-width: 768px) {
+  .h1, h1 {
+    font-size: var(--text-3xl);
+    line-height: var(--leading-tight);
+  }
+  
+  .h2, h2 {
+    font-size: var(--text-2xl);
+    line-height: var(--leading-tight);
+  }
+  
+  .h3, h3 {
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+  }
+  
+  .h4, h4 {
+    font-size: var(--text-lg);
+    line-height: var(--leading-snug);
+  }
+  
+  .display-1 {
+    font-size: var(--text-4xl);
+    line-height: var(--leading-tight);
+  }
+  
+  .display-2 {
+    font-size: var(--text-3xl);
+    line-height: var(--leading-tight);
+  }
+  
+  .lead {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+  
+  /* Bento titles mobile */
+  .bento-card-square .bento-title {
+    font-size: var(--text-xl) !important;
+    line-height: var(--leading-tight) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .h1, h1 {
+    font-size: var(--text-2xl);
+  }
+  
+  .h2, h2 {
+    font-size: var(--text-xl);
+  }
+  
+  .h3, h3 {
+    font-size: var(--text-lg);
+  }
+  
+  .display-1 {
+    font-size: var(--text-3xl);
+  }
+  
+  .display-2 {
+    font-size: var(--text-2xl);
+  }
+  
+  /* Bento titles extra small mobile */
+  .bento-card-square .bento-title {
+    font-size: var(--text-lg) !important;
+  }
+}
+
 /* ===== Print Styles ===== */
 
 @media print {

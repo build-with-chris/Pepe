@@ -99,7 +99,7 @@ export function StepContent({
       return (
         <div className="wizard-step">
           <h3 className="wizard-step-title">Welcher Performance-Stil gefällt Ihnen?</h3>
-          <p className="wizard-step-subtitle">Wählen Sie die Art der Darbietung für Ihr Event</p>
+          <p className="wizard-step-subtitle">Wählen Sie eine oder mehrere Arten der Darbietung für Ihr Event</p>
           
           <div className="choice-grid choice-grid-large">
             {performanceStyles.map((style) => (
@@ -109,8 +109,17 @@ export function StepContent({
                 label={style.label}
                 description={style.description}
                 value={style.value}
-                selected={formData.performanceStyle === style.value}
-                onSelect={(value) => onUpdate('performanceStyle', value)}
+                selected={Array.isArray(formData.performanceStyle) ? formData.performanceStyle.includes(style.value) : formData.performanceStyle === style.value}
+                onSelect={(value) => {
+                  const currentStyles = Array.isArray(formData.performanceStyle) ? formData.performanceStyle : []
+                  if (currentStyles.includes(value)) {
+                    // Remove if already selected
+                    onUpdate('performanceStyle', currentStyles.filter(s => s !== value))
+                  } else {
+                    // Add to selection
+                    onUpdate('performanceStyle', [...currentStyles, value])
+                  }
+                }}
               />
             ))}
           </div>
@@ -121,9 +130,9 @@ export function StepContent({
       return (
         <div className="wizard-step">
           <h3 className="wizard-step-title">Wo findet Ihre Veranstaltung statt?</h3>
-          <p className="wizard-step-subtitle">Indoor oder Outdoor - das beeinflusst die Performance-Möglichkeiten</p>
+          <p className="wizard-step-subtitle">Veranstaltungsort und technische Anforderungen</p>
           
-          <div className="choice-grid">
+          <div className="choice-grid mb-8">
             {venueTypes.map((venue) => (
               <ChoiceCard
                 key={venue.value}
@@ -135,6 +144,46 @@ export function StepContent({
                 onSelect={(value) => onUpdate('venueType', value)}
               />
             ))}
+          </div>
+
+          <div className="form-compact">
+            <div className="form-row mb-6">
+              <div className="form-field">
+                <label className="form-label">Veranstaltungsadresse *</label>
+                <input
+                  type="text"
+                  value={formData.eventAddress || ''}
+                  onChange={(e) => onUpdate('eventAddress', e.target.value)}
+                  placeholder="Straße, PLZ Ort"
+                  className="form-input"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h4 className="form-section-title">Technische Anforderungen</h4>
+              <div className="checkbox-group">
+                <label className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={formData.needsLight || false}
+                    onChange={(e) => onUpdate('needsLight', e.target.checked)}
+                    className="checkbox-input"
+                  />
+                  <span className="checkbox-label">Professionelle Beleuchtung benötigt</span>
+                </label>
+                <label className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={formData.needsSound || false}
+                    onChange={(e) => onUpdate('needsSound', e.target.checked)}
+                    className="checkbox-input"
+                  />
+                  <span className="checkbox-label">Professionelle Beschallung benötigt</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       )
@@ -159,6 +208,37 @@ export function StepContent({
               </div>
               
               <div className="form-field">
+                <label className="form-label">Uhrzeit der Veranstaltung *</label>
+                <input
+                  type="time"
+                  className="input"
+                  value={formData.eventTime}
+                  onChange={(e) => onUpdate('eventTime', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="form-row">
+              <div className="form-field">
+                <label className="form-label">Gewünschte Show-Dauer *</label>
+                <select
+                  className="input"
+                  value={formData.duration}
+                  onChange={(e) => onUpdate('duration', e.target.value)}
+                  required
+                >
+                  <option value="">Bitte wählen...</option>
+                  <option value="15min">15 Minuten</option>
+                  <option value="30min">30 Minuten</option>
+                  <option value="45min">45 Minuten</option>
+                  <option value="60min">60 Minuten</option>
+                  <option value="90min">90 Minuten</option>
+                  <option value="120min">120 Minuten</option>
+                </select>
+              </div>
+              
+              <div className="form-field">
                 <label className="form-label">Geschätzte Anzahl Gäste *</label>
                 <input
                   type="number"
@@ -171,20 +251,38 @@ export function StepContent({
               </div>
             </div>
             
-            <div className="form-field">
-              <label className="form-label">Budgetrahmen</label>
-              <select
-                className="input"
-                value={formData.budget}
-                onChange={(e) => onUpdate('budget', e.target.value)}
-              >
-                <option value="">Bitte wählen...</option>
-                {budgetRanges.map((range) => (
-                  <option key={range.value} value={range.value}>
-                    {range.label}
-                  </option>
-                ))}
-              </select>
+            <div className="form-row">
+              <div className="form-field">
+                <label className="form-label">Budgetrahmen</label>
+                <select
+                  className="input"
+                  value={formData.budget}
+                  onChange={(e) => onUpdate('budget', e.target.value)}
+                >
+                  <option value="">Bitte wählen...</option>
+                  {budgetRanges.map((range) => (
+                    <option key={range.value} value={range.value}>
+                      {range.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-field">
+                <label className="form-label">Planungsstand *</label>
+                <select
+                  className="input"
+                  value={formData.planningStatus}
+                  onChange={(e) => onUpdate('planningStatus', e.target.value)}
+                  required
+                >
+                  <option value="">Bitte wählen...</option>
+                  <option value="just_browsing">Schaue mich nur um</option>
+                  <option value="early_planning">Frühe Planungsphase</option>
+                  <option value="in_planning">Konkret in Planung</option>
+                  <option value="urgent">Dringend - Event bald</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

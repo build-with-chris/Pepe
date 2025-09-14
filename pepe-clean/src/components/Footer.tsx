@@ -1,6 +1,18 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useState } from 'react'
+import { Instagram } from 'lucide-react'
 
 export default function Footer() {
+  const { t } = useTranslation()
+  const [email, setEmail] = useState('')
+  
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Newsletter subscription logic here
+    alert('Newsletter-Anmeldung erfolgreich!')
+    setEmail('')
+  }
   return (
     <footer className="footer">
       <div className="stage-container">
@@ -8,43 +20,80 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="footer-brand">
             <h3 className="h3 mb-3">Pepe Shows</h3>
-            <p className="body-sm">
+            <p className="body-sm mb-6">
               Ihre Bühne für außergewöhnliche Theatererlebnisse
             </p>
+            
+            {/* Newsletter */}
+            <div className="footer-newsletter">
+              <h4 className="footer-newsletter-title">{t('footer.newsletter.title')}</h4>
+              <form onSubmit={handleNewsletterSubmit} className="newsletter-form">
+                <div className="newsletter-input-group">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t('footer.newsletter.placeholder')}
+                    className="newsletter-input"
+                    required
+                  />
+                  <button type="submit" className="newsletter-btn">
+                    {t('footer.newsletter.button')}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
           
-          {/* Quick Links */}
+          {/* Main Links */}
           <div className="footer-links">
             <div className="footer-group">
-              <h4 className="footer-title">Navigation</h4>
+              <h4 className="footer-title">{t('footer.navigation')}</h4>
               <div className="footer-link-group">
-                <Link to="/" className="footer-link">Home</Link>
+                <Link to="/shows" className="footer-link">{t('footer.mainLinks.showsAndFormate')}</Link>
                 <Link to="/kuenstler" className="footer-link">Künstler</Link>
-                <Link to="/shows" className="footer-link">Shows</Link>
                 <Link to="/galerie" className="footer-link">Galerie</Link>
+                <Link to="/faq" className="footer-link">FAQ</Link>
+                <Link to="/kontakt" className="footer-link">{t('footer.mainLinks.kontakt')}</Link>
               </div>
             </div>
             
             <div className="footer-group">
               <h4 className="footer-title">Services</h4>
               <div className="footer-link-group">
-                <Link to="/anfragen" className="footer-link">Booking</Link>
-                <Link to="/kontakt" className="footer-link">Kontakt</Link>
-                <a href="#" className="footer-link">Workshops</a>
-                <a href="#" className="footer-link">Events</a>
+                <Link to="/anfragen" className="footer-link">Booking Assistent</Link>
+                <Link to="/mediamaterial" className="footer-link">{t('footer.mainLinks.mediamaterial')}</Link>
+                <Link to="/referenzen" className="footer-link">{t('footer.mainLinks.referenzen')}</Link>
+                <Link to="/team" className="footer-link">{t('footer.mainLinks.agenturUndTeam')}</Link>
+                <Link to="/login" className="footer-link">{t('footer.mainLinks.artistLogin')}</Link>
               </div>
             </div>
           </div>
           
           {/* Contact Info */}
-          <div className="footer-contact">
+          <div className="footer-group">
             <h4 className="footer-title">Kontakt</h4>
-            <div className="footer-contact-info">
-              <a href="mailto:info@pepe-shows.de" className="footer-contact-link">
+            <div className="footer-link-group">
+              <a href="mailto:info@pepe-shows.de" className="footer-link">
                 info@pepe-shows.de
               </a>
-              <a href="tel:+49123456789" className="footer-contact-link">
+              <a href="tel:+49123456789" className="footer-link">
                 +49 123 456 789
+              </a>
+              <div className="footer-link">
+                PepeDome, Ostpark München
+              </div>
+              <a 
+                href="https://www.instagram.com/pepe_arts/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-link inline-flex items-center gap-2 mt-2"
+              >
+                <Instagram className="w-4 h-4" />
+                <span>@pepe_arts</span>
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 text-white">
+                  45,4k
+                </span>
               </a>
             </div>
           </div>
@@ -53,12 +102,12 @@ export default function Footer() {
         {/* Footer Bottom */}
         <div className="footer-bottom">
           <p className="footer-copyright">
-            © 2024 Pepe Shows. Alle Rechte vorbehalten.
+            © 2024 {t('footer.copyright')}
           </p>
           <div className="footer-legal">
-            <a href="#" className="footer-legal-link">Impressum</a>
-            <a href="#" className="footer-legal-link">AGB</a>
-            <a href="#" className="footer-legal-link">Datenschutz</a>
+            <Link to="/imprint" className="footer-legal-link">{t('footer.legalLinks.impressum')}</Link>
+            <Link to="/privacy" className="footer-legal-link">{t('footer.legalLinks.datenschutz')}</Link>
+            <Link to="/terms" className="footer-legal-link">{t('footer.legalLinks.agb')}</Link>
           </div>
         </div>
       </div>

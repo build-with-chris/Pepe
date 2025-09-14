@@ -553,6 +553,29 @@
     "cta": "Lass uns reden",
     "images": { "1": "Gala-Abende", "2": "Jubiläen", "3": "Corporate events", "4": "Festivals", "5": "LED Shows" }
   },
+  "gallery": {
+    "subtitle": "Entdecke unsere Künstler in Aktion",
+    "accordion": {
+      "artists": {
+        "title": "Vorhang auf für unsere Artisten",
+        "content": "Erleben Sie die faszinierende Welt des Zirkus und der Artistik. Unsere talentierten Künstler bringen Magie, Eleganz und Spannung auf jede Bühne. Von atemberaubender Akrobatik bis hin zu poetischen Pantomime-Aufführungen – jede Performance ist ein einzigartiges Erlebnis."
+      },
+      "ensemble": {
+        "title": "Unsere Künstler",
+        "content": "Ein internationales Ensemble aus erfahrenen Performern, die ihre Leidenschaft und ihr Können in jede Show einbringen. Jeder Künstler wurde sorgfältig ausgewählt und bringt seine eigene künstlerische Vision mit."
+      },
+      "categories": {
+        "title": "Show-Kategorien",
+        "content": "Von intimen Solo-Acts bis hin zu großartigen Ensemble-Performances. Unsere vielfältigen Kategorien umfassen Akrobatik, Theater, Magie, Feuershow und Varieté – für jeden Anlass das passende Format."
+      }
+    },
+    "cta": {
+      "kicker": "ERLEBEN SIE ES LIVE",
+      "title": "Buchen Sie Ihre Show",
+      "description": "Diese Impressionen zeigen nur einen kleinen Teil unseres Könnens. Erleben Sie die volle Magie live bei Ihrer Veranstaltung."
+    }
+  },
+  
   "gallery34": {
     "hint": "Klick für Details",
     "items": {
