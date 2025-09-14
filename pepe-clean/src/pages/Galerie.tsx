@@ -17,35 +17,54 @@ interface Artist {
 export default function Galerie() {
   const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   
   // Discipline stack state from Home page
   const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
   const [isStackPaused, setIsStackPaused] = useState(false)
   
-  const galleryImages = [
+  // State for combined static and dynamic images
+  const [allImages, setAllImages] = useState<Array<{
+    id: number | string
+    src: string
+    alt: string
+    category: string
+    aspectRatio: number
+    source?: 'static' | 'database'
+  }>>([])
+
+  // Static gallery images
+  const staticGalleryImages = [
     // Show Formats
-    { id: 1, src: '/images/Galerie34/Solo.webp', alt: 'Solo Performance', category: 'Solo', aspectRatio: 4/3 },
-    { id: 2, src: '/images/Galerie34/Duo.webp', alt: 'Duo Performance', category: 'Duo', aspectRatio: 16/9 },
-    { id: 3, src: '/images/Galerie34/Variete.webp', alt: 'Varieté Show', category: 'Varieté', aspectRatio: 3/4 },
-    { id: 4, src: '/images/Galerie34/Konzeptshow.webp', alt: 'Konzept Show', category: 'Konzept', aspectRatio: 4/3 },
-    { id: 5, src: '/images/Galerie34/Zauberer.webp', alt: 'Zauber Performance', category: 'Magie', aspectRatio: 16/9 },
-    { id: 6, src: '/images/Galerie34/Feuershow.webp', alt: 'Feuer Show', category: 'Feuer', aspectRatio: 4/3 },
+    { id: 1, src: '/images/Galerie34/Solo.webp', alt: 'Solo Performance', category: 'Solo', aspectRatio: 4/3, source: 'static' as const },
+    { id: 2, src: '/images/Galerie34/Duo.webp', alt: 'Duo Performance', category: 'Duo', aspectRatio: 16/9, source: 'static' as const },
+    { id: 3, src: '/images/Galerie34/Variete.webp', alt: 'Varieté Show', category: 'Varieté', aspectRatio: 3/4, source: 'static' as const },
+    { id: 4, src: '/images/Galerie34/Konzeptshow.webp', alt: 'Konzept Show', category: 'Konzept', aspectRatio: 4/3, source: 'static' as const },
+    { id: 5, src: '/images/Galerie34/Zauberer.webp', alt: 'Zauber Performance', category: 'Magie', aspectRatio: 16/9, source: 'static' as const },
+    { id: 6, src: '/images/Galerie34/Feuershow.webp', alt: 'Feuer Show', category: 'Feuer', aspectRatio: 4/3, source: 'static' as const },
     // Akrobatik & Artistik
-    { id: 7, src: '/images/posters/Handstand-768.webp', alt: 'Handstand Akrobatik', category: 'Akrobatik', aspectRatio: 3/4 },
-    { id: 8, src: '/images/posters/Cyr 5-768.webp', alt: 'Cyr Wheel Performance', category: 'Akrobatik', aspectRatio: 3/4 },
-    { id: 9, src: '/images/posters/Chienise Pole-768.webp', alt: 'Chinese Pole', category: 'Akrobatik', aspectRatio: 3/4 },
-    { id: 10, src: '/images/posters/Hula-768.webp', alt: 'Hula Hoop Performance', category: 'Artistik', aspectRatio: 3/4 },
-    { id: 11, src: '/images/posters/Contortion-768.webp', alt: 'Contortion', category: 'Akrobatik', aspectRatio: 3/4 },
-    { id: 12, src: '/images/posters/LED CYR Blackbox-768.webp', alt: 'LED Cyr Wheel', category: 'Akrobatik', aspectRatio: 16/9 },
+    { id: 7, src: '/images/posters/Handstand-768.webp', alt: 'Handstand Akrobatik', category: 'Akrobatik', aspectRatio: 3/4, source: 'static' as const },
+    { id: 8, src: '/images/posters/Cyr 5-768.webp', alt: 'Cyr Wheel Performance', category: 'Akrobatik', aspectRatio: 3/4, source: 'static' as const },
+    { id: 9, src: '/images/posters/Chienise Pole-768.webp', alt: 'Chinese Pole', category: 'Akrobatik', aspectRatio: 3/4, source: 'static' as const },
+    { id: 10, src: '/images/posters/Hula-768.webp', alt: 'Hula Hoop Performance', category: 'Artistik', aspectRatio: 3/4, source: 'static' as const },
+    { id: 11, src: '/images/posters/Contortion-768.webp', alt: 'Contortion', category: 'Akrobatik', aspectRatio: 3/4, source: 'static' as const },
+    { id: 12, src: '/images/posters/LED CYR Blackbox-768.webp', alt: 'LED Cyr Wheel', category: 'Akrobatik', aspectRatio: 16/9, source: 'static' as const },
     // Theater & Pantomime
-    { id: 13, src: '/images/posters/Pantomime-768.webp', alt: 'Pantomime Performance', category: 'Theater', aspectRatio: 3/4 },
-    { id: 14, src: '/images/posters/Pantomime 2-768.webp', alt: 'Pantomime Act 2', category: 'Theater', aspectRatio: 3/4 }
+    { id: 13, src: '/images/posters/Pantomime-768.webp', alt: 'Pantomime Performance', category: 'Theater', aspectRatio: 3/4, source: 'static' as const },
+    { id: 14, src: '/images/posters/Pantomime 2-768.webp', alt: 'Pantomime Act 2', category: 'Theater', aspectRatio: 3/4, source: 'static' as const },
+    // PepeShows Impressions - New category from gallery folder
+    { id: 15, src: '/images/gallery/performance1.jpg', alt: 'PepeShows Live Performance', category: 'PepeShows Impressions', aspectRatio: 4/3, source: 'static' as const },
+    { id: 16, src: '/images/gallery/performance2.jpg', alt: 'Artist Showcase', category: 'PepeShows Impressions', aspectRatio: 16/9, source: 'static' as const },
+    { id: 17, src: '/images/gallery/performance3.jpg', alt: 'Stage Performance', category: 'PepeShows Impressions', aspectRatio: 3/4, source: 'static' as const },
+    { id: 18, src: '/images/gallery/performance4.jpg', alt: 'Event Highlight', category: 'PepeShows Impressions', aspectRatio: 4/3, source: 'static' as const },
+    { id: 19, src: '/images/gallery/performance5.jpg', alt: 'Artist in Action', category: 'PepeShows Impressions', aspectRatio: 16/9, source: 'static' as const },
+    { id: 20, src: '/images/gallery/performance6.jpg', alt: 'Show Atmosphere', category: 'PepeShows Impressions', aspectRatio: 3/4, source: 'static' as const }
   ]
 
   const filteredImages = selectedCategory 
-    ? galleryImages.filter(img => img.category === selectedCategory)
-    : galleryImages
+    ? allImages.filter(img => img.category === selectedCategory)
+    : allImages
 
   // Helper functions from Home page for discipline accordion content
   const getDisciplineSpecialties = (disciplineId: string): string => {
@@ -188,14 +207,16 @@ export default function Galerie() {
     }
   }, [disciplines.length, isStackPaused])
 
-  // Fetch artists and create disciplines
+  // Fetch artists and create disciplines + combine gallery images
   React.useEffect(() => {
-    const fetchArtists = async () => {
+    const fetchArtistsAndImages = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
         const response = await fetch(`${baseUrl}/api/artists`)
         if (response.ok) {
           const data = await response.json()
+          
+          // Create disciplines
           const dynamicDisciplines = createDisciplinesFromArtists(data)
           setDisciplines(dynamicDisciplines.length > 0 ? dynamicDisciplines : [
             // Fallback disciplines if database is empty
@@ -221,10 +242,47 @@ export default function Galerie() {
               artistCount: 0
             }
           ])
+
+          // Extract gallery images from artists
+          const dynamicImages: Array<{
+            id: string
+            src: string
+            alt: string
+            category: string
+            aspectRatio: number
+            source: 'database'
+          }> = []
+          
+          data.forEach((artist: Artist, artistIndex: number) => {
+            if (artist.gallery_urls && artist.gallery_urls.length > 0) {
+              artist.gallery_urls.forEach((url, imageIndex) => {
+                // Determine category based on artist disciplines
+                const primaryDiscipline = artist.disciplines?.[0] || 'General'
+                const category = mapDisciplineToCategory(primaryDiscipline)
+                
+                dynamicImages.push({
+                  id: `artist-${artistIndex}-${imageIndex}`,
+                  src: url,
+                  alt: `${artist.name} - ${primaryDiscipline}`,
+                  category: category,
+                  aspectRatio: 4/3, // Default aspect ratio for database images
+                  source: 'database'
+                })
+              })
+            }
+          })
+
+          // Combine static and dynamic images
+          const combinedImages = [...staticGalleryImages, ...dynamicImages]
+          setAllImages(combinedImages)
+          
+        } else {
+          // Fallback to static images only
+          setAllImages(staticGalleryImages)
         }
       } catch (error) {
         console.error('Failed to fetch artists:', error)
-        // Set fallback disciplines
+        // Set fallback disciplines and static images only
         setDisciplines([
           {
             id: 'zauberer',
@@ -248,11 +306,29 @@ export default function Galerie() {
             artistCount: 0
           }
         ])
+        setAllImages(staticGalleryImages)
       }
     }
 
-    fetchArtists()
+    fetchArtistsAndImages()
   }, [t])
+
+  // Helper function to map discipline to gallery category
+  const mapDisciplineToCategory = (discipline: string): string => {
+    const mapping: Record<string, string> = {
+      'Zauberer': 'Magie',
+      'Zauberei': 'Magie',
+      'Handstand': 'Akrobatik',
+      'Luftakrobatik': 'Akrobatik',
+      'Bodenakrobatik': 'Akrobatik',
+      'Partnerakrobatik': 'Akrobatik',
+      'Jonglage': 'Artistik',
+      'Pantomime': 'Theater',
+      'Contemporary Dance': 'Artistik',
+      'Breakdance': 'Artistik'
+    }
+    return mapping[discipline] || 'General'
+  }
 
   return (
     <main>
@@ -348,6 +424,91 @@ export default function Galerie() {
       </section>
 
 
+      {/* Video Section - "Vorhang auf für unsere Artisten" */}
+      <section className="section bg-gradient-dark">
+        <div className="stage-container">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Content Column */}
+            <div className="text-center lg:text-left">
+              <h2 className="display-2 mb-6">
+                {t('hero135.heading') || 'Vorhang auf für unsere Artisten'}
+              </h2>
+              <p className="body-lg mb-8 max-w-lg mx-auto lg:mx-0">
+                {t('hero135.subtitle') || 'Ein Vorgeschmack auf unsere Artisten – voller Energie, Kreativität und Leidenschaft. Klick auf Play für die volle Show auf YouTube.'}
+              </p>
+            </div>
+            
+            {/* Video Column */}
+            <div className="relative">
+              <div 
+                className="video-showcase-container group cursor-pointer"
+                onClick={() => setIsVideoModalOpen(true)}
+              >
+                <div className="video-preview-wrapper">
+                  <video
+                    className="video-preview"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  >
+                    <source src="/videos/Vorschauloop.webm" type="video/webm" />
+                    <source src="/videos/Vorschauloop.mp4" type="video/mp4" />
+                  </video>
+                  
+                  {/* Play Button Overlay */}
+                  <div className="video-play-overlay">
+                    <div className="video-play-button">
+                      <svg className="video-play-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                    <div className="video-play-text">
+                      {t('hero135.play.title') || 'Showreel'}
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="video-caption">
+                  Vorschau – Vollversion auf YouTube
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Video Modal */}
+      {isVideoModalOpen && (
+        <div className="video-modal-backdrop" onClick={() => setIsVideoModalOpen(false)}>
+          <div className="video-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="video-modal-header">
+              <h3 className="video-modal-title">
+                {t('hero135.dialog.title') || 'Präsentationsvideo'}
+              </h3>
+              <button 
+                className="video-modal-close"
+                onClick={() => setIsVideoModalOpen(false)}
+                aria-label="Schließen"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M6 18l12-12" />
+                </svg>
+              </button>
+            </div>
+            <div className="video-modal-content">
+              <iframe
+                className="video-modal-iframe"
+                src="https://www.youtube.com/embed/dXHLaIkezTM?autoplay=1"
+                title={t('hero135.dialog.title') || 'Präsentationsvideo'}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dynamic Image Grid */}
       <section className="section bg-pepe-ink">
         <div className="stage-container">
@@ -369,15 +530,17 @@ export default function Galerie() {
               >
                 {t('artists.filters.all') || 'All'}
               </button>
-              {Array.from(new Set(galleryImages.map(img => img.category))).map((category) => (
+              {Array.from(new Set(allImages.map(img => img.category))).map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
                   className={`gallery-filter-btn ${
                     selectedCategory === category ? 'active' : ''
+                  } ${
+                    category === 'PepeShows Impressions' ? 'pepe-impressions' : ''
                   }`}
                 >
-                  {category}
+                  {category === 'PepeShows Impressions' ? '⭐ ' : ''}{category}
                 </button>
               ))}
             </div>
