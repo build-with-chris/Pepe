@@ -158,45 +158,61 @@ export default function Kuenstler() {
 
   return (
     <main>
-      {/* Hero Section with Animated Backdrop */}
-      <section className="section-hero artist-hero-backdrop">
-        {/* Animated Background */}
-        <div className="artist-backdrop">
-          {artistImages.length > 0 && (
-            <>
-              {artistImages.map((imageUrl, index) => (
-                <div
-                  key={`${imageUrl}-${index}`}
-                  className={`backdrop-image ${index === currentImageIndex ? 'active' : ''}`}
-                >
-                  <img
-                    src={resolveBackdropImageUrl(imageUrl)}
-                    alt={`Artist ${index + 1}`}
-                    className="backdrop-img"
-                  />
-                </div>
-              ))}
-            </>
-          )}
-          <div className="backdrop-overlay"></div>
+      {/* Hero Section with Layered Animated Background */}
+      <section className="artist-hero-layered">
+        {/* Layer 1: Black Background */}
+        <div className="hero-layer-black"></div>
+        
+        {/* Layer 2: Image Slideshow */}
+        <div className="hero-layer-slideshow">
+          {artistImages.length > 0 && artistImages.map((imageUrl, index) => (
+            <div
+              key={`${imageUrl}-${index}`}
+              className={`slideshow-image ${index === currentImageIndex ? 'active' : ''}`}
+            >
+              <img
+                src={resolveBackdropImageUrl(imageUrl)}
+                alt={`Artist ${index + 1}`}
+                className="slideshow-img"
+              />
+            </div>
+          ))}
         </div>
+        
+        {/* Layer 3: Particle Effects */}
+        <div className="hero-layer-particles">
+          <div className="particle particle-1"></div>
+          <div className="particle particle-2"></div>
+          <div className="particle particle-3"></div>
+          <div className="particle particle-4"></div>
+          <div className="particle particle-5"></div>
+          <div className="particle particle-6"></div>
+          <div className="particle particle-7"></div>
+          <div className="particle particle-8"></div>
+        </div>
+        
+        {/* Layer 4: Gradient Overlay */}
+        <div className="hero-layer-gradient"></div>
 
-        <div className="stage-container">
-          <div className="hero-content text-center max-w-4xl mx-auto py-16">
-            <div className="overline text-pepe-gold mb-6">{t('artists.quote')}</div>
-            <h1 className="display-1 display-gradient mb-8">
-              {t('hero87.heading') || 'Künstler & Performer'}
-            </h1>
-            <p className="lead mb-12 max-w-3xl mx-auto">
-              {t('hero87.body') || 'Entdecken Sie die außergewöhnlichen Talente, die unsere Bühne mit Leben füllen. Jeder Künstler bringt seine einzigartige Geschichte und Leidenschaft mit.'}
-            </p>
-            <div className="hero-actions">
-              <Link to="/anfragen" className="btn btn-primary btn-xl">
-                {t('about1.next.cta.assistant')}
-              </Link>
-              <Link to="/shows" className="btn btn-ghost btn-lg">
-                Shows entdecken
-              </Link>
+        {/* Content Layer */}
+        <div className="hero-content-layer">
+          <div className="stage-container">
+            <div className="hero-content text-center max-w-4xl mx-auto">
+              <div className="overline text-pepe-gold mb-6 animate-fade-in">{t('artists.quote')}</div>
+              <h1 className="display-1 display-gradient mb-8 animate-slide-up">
+                {t('hero87.heading') || 'Künstler & Performer'}
+              </h1>
+              <p className="lead mb-12 max-w-3xl mx-auto animate-fade-in-delayed">
+                {t('hero87.body') || 'Entdecken Sie die außergewöhnlichen Talente, die unsere Bühne mit Leben füllen. Jeder Künstler bringt seine einzigartige Geschichte und Leidenschaft mit.'}
+              </p>
+              <div className="hero-actions animate-fade-in-delayed-more">
+                <Link to="/anfragen" className="btn btn-primary btn-xl">
+                  {t('about1.next.cta.assistant')}
+                </Link>
+                <Link to="/shows" className="btn btn-ghost btn-lg">
+                  Shows entdecken
+                </Link>
+              </div>
             </div>
           </div>
         </div>

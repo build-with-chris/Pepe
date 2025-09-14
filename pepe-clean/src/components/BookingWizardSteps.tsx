@@ -147,41 +147,160 @@ export function StepContent({
           </div>
 
           <div className="form-compact">
-            <div className="form-row mb-6">
-              <div className="form-field">
-                <label className="form-label">Veranstaltungsadresse *</label>
-                <input
-                  type="text"
-                  value={formData.eventAddress || ''}
-                  onChange={(e) => onUpdate('eventAddress', e.target.value)}
-                  placeholder="Straße, PLZ Ort"
-                  className="form-input"
-                  required
+            {/* Enhanced Address Section */}
+            <div className="location-input-section">
+              <h4 className="form-section-title mb-4">
+                <span className="section-icon">📍</span>
+                Veranstaltungsadresse
+              </h4>
+              <div className="form-row mb-4">
+                <div className="form-field">
+                  <label className="form-label">Straße und Hausnummer *</label>
+                  <input
+                    type="text"
+                    value={formData.street || ''}
+                    onChange={(e) => onUpdate('street', e.target.value)}
+                    placeholder="z.B. Hauptstraße 123"
+                    className="input location-input"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-row mb-6">
+                <div className="form-field" style={{flex: '0 0 30%'}}>
+                  <label className="form-label">PLZ *</label>
+                  <input
+                    type="text"
+                    value={formData.postalCode || ''}
+                    onChange={(e) => onUpdate('postalCode', e.target.value)}
+                    placeholder="12345"
+                    className="input location-input"
+                    maxLength={5}
+                    pattern="[0-9]{5}"
+                    required
+                  />
+                </div>
+                <div className="form-field" style={{flex: '1'}}>
+                  <label className="form-label">Ort *</label>
+                  <input
+                    type="text"
+                    value={formData.city || ''}
+                    onChange={(e) => onUpdate('city', e.target.value)}
+                    placeholder="z.B. Berlin"
+                    className="input location-input"
+                    required
+                  />
+                </div>
+              </div>
+              
+              {/* Optional: Additional location details */}
+              <div className="form-field mb-6">
+                <label className="form-label">Zusätzliche Ortsangaben (optional)</label>
+                <textarea
+                  value={formData.locationDetails || ''}
+                  onChange={(e) => onUpdate('locationDetails', e.target.value)}
+                  placeholder="z.B. Hintereingang, 2. Stock, Saal B"
+                  className="input location-textarea"
+                  rows={2}
                 />
               </div>
             </div>
 
-            <div className="form-section">
-              <h4 className="form-section-title">Technische Anforderungen</h4>
-              <div className="checkbox-group">
-                <label className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={formData.needsLight || false}
-                    onChange={(e) => onUpdate('needsLight', e.target.checked)}
-                    className="checkbox-input"
-                  />
-                  <span className="checkbox-label">Professionelle Beleuchtung benötigt</span>
-                </label>
-                <label className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={formData.needsSound || false}
-                    onChange={(e) => onUpdate('needsSound', e.target.checked)}
-                    className="checkbox-input"
-                  />
-                  <span className="checkbox-label">Professionelle Beschallung benötigt</span>
-                </label>
+            {/* Enhanced Technical Requirements Section */}
+            <div className="technical-requirements-section">
+              <h4 className="form-section-title mb-4">
+                <span className="section-icon">⚡</span>
+                Technische Anforderungen
+              </h4>
+              <p className="form-helper-text mb-4">
+                Wählen Sie aus, welche technische Ausstattung Sie für Ihre Veranstaltung benötigen
+              </p>
+              
+              <div className="toggle-switches-container">
+                {/* Professional Lighting Toggle */}
+                <div className="toggle-switch-item">
+                  <div className="toggle-switch-content">
+                    <div className="toggle-switch-icon">💡</div>
+                    <div className="toggle-switch-text">
+                      <h5 className="toggle-switch-title">Professionelle Beleuchtung</h5>
+                      <p className="toggle-switch-description">
+                        Scheinwerfer, Moving Heads, LED-Bars für optimale Bühnenbeleuchtung
+                      </p>
+                    </div>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.needsLight || false}
+                      onChange={(e) => onUpdate('needsLight', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+
+                {/* Professional Sound Toggle */}
+                <div className="toggle-switch-item">
+                  <div className="toggle-switch-content">
+                    <div className="toggle-switch-icon">🔊</div>
+                    <div className="toggle-switch-text">
+                      <h5 className="toggle-switch-title">Professionelle Beschallung</h5>
+                      <p className="toggle-switch-description">
+                        PA-Anlage, Mikrofone und Mischpult für kristallklaren Sound
+                      </p>
+                    </div>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.needsSound || false}
+                      onChange={(e) => onUpdate('needsSound', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+
+                {/* Stage/Floor Toggle */}
+                <div className="toggle-switch-item">
+                  <div className="toggle-switch-content">
+                    <div className="toggle-switch-icon">🎭</div>
+                    <div className="toggle-switch-text">
+                      <h5 className="toggle-switch-title">Bühnenboden / Tanzboden</h5>
+                      <p className="toggle-switch-description">
+                        Spezieller Bodenbelag für Tanz- und Akrobatik-Performances
+                      </p>
+                    </div>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.needsStageFloor || false}
+                      onChange={(e) => onUpdate('needsStageFloor', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+
+                {/* Rigging Points Toggle */}
+                <div className="toggle-switch-item">
+                  <div className="toggle-switch-content">
+                    <div className="toggle-switch-icon">🎪</div>
+                    <div className="toggle-switch-text">
+                      <h5 className="toggle-switch-title">Rigging-Punkte / Aufhängung</h5>
+                      <p className="toggle-switch-description">
+                        Befestigungspunkte für Luftakrobatik und hängende Elemente
+                      </p>
+                    </div>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.needsRigging || false}
+                      onChange={(e) => onUpdate('needsRigging', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -374,54 +493,129 @@ export function StepContent({
           <h3 className="wizard-step-title">Zusammenfassung Ihrer Buchungsanfrage</h3>
           <p className="wizard-step-subtitle">Überprüfen Sie Ihre Angaben vor dem Absenden</p>
           
-          <div className="booking-summary-compact">
-            <div className="summary-row">
-              <div className="summary-item">
-                <span className="summary-label">Veranstaltungsart:</span>
-                <span className="summary-value">
-                  {eventTypes.find(t => t.value === formData.eventType)?.label || '-'}
-                </span>
-              </div>
-              <div className="summary-item">
-                <span className="summary-label">Künstler-Anzahl:</span>
-                <span className="summary-value">
-                  {teamSizes.find(t => t.value === formData.teamSize)?.label || '-'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="summary-row">
-              <div className="summary-item">
-                <span className="summary-label">Performance-Stil:</span>
-                <span className="summary-value">
-                  {performanceStyles.find(p => p.value === formData.performanceStyle)?.label || '-'}
-                </span>
-              </div>
-              <div className="summary-item">
-                <span className="summary-label">Veranstaltungsort:</span>
-                <span className="summary-value">
-                  {venueTypes.find(v => v.value === formData.venueType)?.label || '-'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="summary-row">
-              <div className="summary-item">
-                <span className="summary-label">Datum:</span>
-                <span className="summary-value">{formData.eventDate || '-'}</span>
-              </div>
-              <div className="summary-item">
-                <span className="summary-label">Gäste:</span>
-                <span className="summary-value">{formData.guestCount || '-'}</span>
-              </div>
-            </div>
-            
-            {formData.budget && (
-              <div className="summary-row">
+          <div className="booking-summary-enhanced">
+            {/* Event Details Section */}
+            <div className="summary-section">
+              <h4 className="summary-section-title">🎭 Veranstaltungsdetails</h4>
+              <div className="summary-grid">
                 <div className="summary-item">
-                  <span className="summary-label">Budget:</span>
+                  <span className="summary-label">Veranstaltungsart:</span>
                   <span className="summary-value">
-                    {budgetRanges.find(b => b.value === formData.budget)?.label}
+                    {eventTypes.find(t => t.value === formData.eventType)?.label || '-'}
+                  </span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Datum & Zeit:</span>
+                  <span className="summary-value">
+                    {formData.eventDate || '-'} {formData.eventTime && `um ${formData.eventTime} Uhr`}
+                  </span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Anzahl Gäste:</span>
+                  <span className="summary-value">{formData.guestCount || '-'} Personen</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Show-Dauer:</span>
+                  <span className="summary-value">{formData.duration || '-'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Location Section */}
+            <div className="summary-section">
+              <h4 className="summary-section-title">📍 Veranstaltungsort</h4>
+              <div className="summary-grid">
+                <div className="summary-item">
+                  <span className="summary-label">Venue-Typ:</span>
+                  <span className="summary-value">
+                    {venueTypes.find(v => v.value === formData.venueType)?.label || '-'}
+                  </span>
+                </div>
+                <div className="summary-item full-width">
+                  <span className="summary-label">Adresse:</span>
+                  <span className="summary-value">
+                    {formData.street && formData.postalCode && formData.city ? 
+                      `${formData.street}, ${formData.postalCode} ${formData.city}` : 
+                      formData.eventAddress || '-'
+                    }
+                  </span>
+                </div>
+                {formData.locationDetails && (
+                  <div className="summary-item full-width">
+                    <span className="summary-label">Zusätzliche Angaben:</span>
+                    <span className="summary-value">{formData.locationDetails}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Performance Section */}
+            <div className="summary-section">
+              <h4 className="summary-section-title">🎪 Performance-Auswahl</h4>
+              <div className="summary-grid">
+                <div className="summary-item">
+                  <span className="summary-label">Künstler-Anzahl:</span>
+                  <span className="summary-value">
+                    {teamSizes.find(t => t.value === formData.teamSize)?.label || '-'}
+                  </span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Performance-Stil:</span>
+                  <span className="summary-value">
+                    {performanceStyles.find(p => p.value === formData.performanceStyle)?.label || '-'}
+                  </span>
+                </div>
+                {formData.selectedActs && formData.selectedActs.length > 0 && (
+                  <div className="summary-item full-width">
+                    <span className="summary-label">Ausgewählte Acts:</span>
+                    <span className="summary-value">
+                      {formData.selectedActs.join(', ')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Technical Requirements Section */}
+            <div className="summary-section">
+              <h4 className="summary-section-title">⚡ Technische Anforderungen</h4>
+              <div className="summary-tech-list">
+                {formData.needsLight && (
+                  <div className="tech-requirement-badge">
+                    💡 Professionelle Beleuchtung
+                  </div>
+                )}
+                {formData.needsSound && (
+                  <div className="tech-requirement-badge">
+                    🔊 Professionelle Beschallung
+                  </div>
+                )}
+                {formData.needsStageFloor && (
+                  <div className="tech-requirement-badge">
+                    🎭 Bühnenboden / Tanzboden
+                  </div>
+                )}
+                {formData.needsRigging && (
+                  <div className="tech-requirement-badge">
+                    🎪 Rigging-Punkte
+                  </div>
+                )}
+                {!formData.needsLight && !formData.needsSound && !formData.needsStageFloor && !formData.needsRigging && (
+                  <span className="text-pepe-t64">Keine besonderen technischen Anforderungen</span>
+                )}
+              </div>
+            </div>
+
+            {/* Budget & Planning Section */}
+            {(formData.budget || formData.planningStatus) && (
+              <div className="summary-section">
+                <h4 className="summary-section-title">💰 Budget & Planung</h4>
+                <div className="summary-grid">
+                  {formData.budget && (
+                    <div className="summary-item">
+                      <span className="summary-label">Budgetrahmen:</span>
+                      <span className="summary-value">
+                        {budgetRanges.find(b => b.value === formData.budget)?.label}
                   </span>
                 </div>
               </div>

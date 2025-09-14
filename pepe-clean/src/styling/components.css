@@ -3963,8 +3963,8 @@ textarea.input {
   min-width: auto;
 }
 
-/* ===== Artist Flip Cards ===== */
-.artist-card-flip-container {
+/* ===== Artist Flip Cards - OLD (Disabled - using new three-sided cards) ===== */
+/* .artist-card-flip-container {
   perspective: 1000px;
   height: 400px;
 }
@@ -4001,7 +4001,7 @@ textarea.input {
   transform: rotateY(180deg);
   background: var(--pepe-dark);
   border-color: var(--pepe-gold);
-}
+} */
 
 /* Front card styles - keep existing styles */
 .artist-card-front .artist-card-image {
@@ -6259,7 +6259,9 @@ textarea.input {
 /* ===== Enhanced Artist Cards with Three Sides ===== */
 .artist-card-container {
   position: relative;
-  perspective: 1200px;
+  width: 100%;
+  min-height: 520px;
+  margin-bottom: var(--space-16); /* Space for navigation */
   transition: var(--transition-all);
 }
 
@@ -6273,14 +6275,17 @@ textarea.input {
   position: relative;
   width: 100%;
   height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+  min-height: 520px;
+  border-radius: var(--radius-xl);
+  background: var(--pepe-surface);
+  border: 1px solid var(--pepe-line);
+  overflow: hidden;
 }
 
 /* Card Navigation Circles */
 .card-navigation {
   position: absolute;
-  bottom: var(--space-3);
+  bottom: -60px; /* Position below the card */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -6351,20 +6356,25 @@ textarea.input {
 /* Card Sides */
 .artist-card-side {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  backface-visibility: hidden;
-  border-radius: var(--radius-xl);
-  background: var(--pepe-surface);
-  border: 1px solid var(--pepe-line);
-  opacity: 0;
-  transform: translateZ(-50px);
-  transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+  min-height: 520px;
+  display: none; /* Hide by default */
+  overflow: hidden;
 }
 
 .artist-card-side.active {
-  opacity: 1;
-  transform: translateZ(0);
+  display: flex; /* Show only the active side */
+  flex-direction: column;
+}
+
+/* Ensure front and back sides have proper structure */
+.artist-card-side.front.active,
+.artist-card-side.back.active {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Gallery Side Specific Styling */
@@ -6508,5 +6518,443 @@ textarea.input {
   
   .gallery-nav.next {
     right: var(--space-2);
+  }
+}
+
+/* ===== Enhanced Toggle Switches for Booking Wizard ===== */
+.location-input-section,
+.technical-requirements-section {
+  background: var(--pepe-surface);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--pepe-line);
+  margin-bottom: var(--space-6);
+}
+
+.section-icon {
+  font-size: 1.5em;
+  margin-right: var(--space-2);
+  vertical-align: middle;
+}
+
+.form-section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--pepe-white);
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.form-helper-text {
+  color: var(--pepe-t64);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+}
+
+.location-input,
+.location-textarea {
+  background: var(--pepe-dark);
+  border: 1px solid var(--pepe-line);
+  color: var(--pepe-white);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  transition: var(--transition-all);
+}
+
+.location-input:focus,
+.location-textarea:focus {
+  outline: none;
+  border-color: var(--pepe-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* Toggle Switches Container */
+.toggle-switches-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.toggle-switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  background: var(--pepe-dark);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--pepe-line);
+  transition: var(--transition-all);
+}
+
+.toggle-switch-item:hover {
+  border-color: var(--pepe-gold-subtle);
+  background: var(--pepe-surface);
+}
+
+.toggle-switch-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.toggle-switch-icon {
+  font-size: 2em;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pepe-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--pepe-line);
+}
+
+.toggle-switch-text {
+  flex: 1;
+}
+
+.toggle-switch-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--pepe-white);
+  margin-bottom: var(--space-1);
+}
+
+.toggle-switch-description {
+  font-size: var(--text-sm);
+  color: var(--pepe-t64);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 32px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--pepe-line);
+  transition: var(--transition-all);
+  border-radius: 32px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 24px;
+  width: 24px;
+  left: 4px;
+  bottom: 4px;
+  background-color: var(--pepe-white);
+  transition: var(--transition-all);
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--pepe-gold);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(28px);
+}
+
+/* Enhanced Booking Summary */
+.booking-summary-enhanced {
+  background: var(--pepe-surface);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--pepe-line);
+}
+
+.summary-section {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--pepe-line);
+}
+
+.summary-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.summary-section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--pepe-white);
+  margin-bottom: var(--space-4);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.summary-item.full-width {
+  grid-column: span 2;
+}
+
+.summary-tech-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tech-requirement-badge {
+  padding: var(--space-2) var(--space-3);
+  background: var(--pepe-dark);
+  border: 1px solid var(--pepe-gold);
+  border-radius: var(--radius-full);
+  color: var(--pepe-gold);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+@media (max-width: 767px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-item.full-width {
+    grid-column: span 1;
+  }
+  
+  .toggle-switch-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .toggle-switch-item {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+}
+
+/* ===== Layered Artist Hero Section ===== */
+.artist-hero-layered {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 600px;
+  overflow: hidden;
+}
+
+/* Layer 1: Black Background */
+.hero-layer-black {
+  position: absolute;
+  inset: 0;
+  background: var(--pepe-black);
+  z-index: 1;
+}
+
+/* Layer 2: Image Slideshow */
+.hero-layer-slideshow {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.slideshow-image {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+.slideshow-image.active {
+  opacity: 0.4;
+}
+
+.slideshow-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Layer 3: Particle Effects */
+.hero-layer-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--pepe-gold);
+  border-radius: 50%;
+  opacity: 0;
+  animation: float-particle 20s infinite linear;
+}
+
+.particle-1 {
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 18s;
+}
+
+.particle-2 {
+  left: 20%;
+  animation-delay: 2s;
+  animation-duration: 22s;
+  width: 6px;
+  height: 6px;
+}
+
+.particle-3 {
+  left: 35%;
+  animation-delay: 4s;
+  animation-duration: 25s;
+}
+
+.particle-4 {
+  left: 50%;
+  animation-delay: 6s;
+  animation-duration: 20s;
+  width: 3px;
+  height: 3px;
+}
+
+.particle-5 {
+  left: 65%;
+  animation-delay: 8s;
+  animation-duration: 23s;
+}
+
+.particle-6 {
+  left: 75%;
+  animation-delay: 10s;
+  animation-duration: 19s;
+  width: 5px;
+  height: 5px;
+}
+
+.particle-7 {
+  left: 85%;
+  animation-delay: 12s;
+  animation-duration: 21s;
+}
+
+.particle-8 {
+  left: 95%;
+  animation-delay: 14s;
+  animation-duration: 24s;
+  width: 3px;
+  height: 3px;
+}
+
+@keyframes float-particle {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Layer 4: Gradient Overlay */
+.hero-layer-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.5) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  z-index: 4;
+}
+
+/* Content Layer */
+.hero-content-layer {
+  position: relative;
+  z-index: 5;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+/* Content Animations */
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 1s ease-out;
+}
+
+.animate-fade-in-delayed {
+  animation: fadeIn 1s ease-out 0.3s both;
+}
+
+.animate-fade-in-delayed-more {
+  animation: fadeIn 1s ease-out 0.6s both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 767px) {
+  .artist-hero-layered {
+    height: 80vh;
+    min-height: 500px;
+  }
+  
+  .particle {
+    width: 3px;
+    height: 3px;
+  }
+  
+  .particle-2,
+  .particle-6 {
+    width: 4px;
+    height: 4px;
   }
 }
