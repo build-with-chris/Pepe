@@ -6026,6 +6026,10 @@ textarea.input {
 }
 
 /* ===== Video Showcase Section ===== */
+.video-text-wrapper {
+  padding: var(--space-4) 0;
+}
+
 .video-showcase-container {
   position: relative;
   width: 100%;
@@ -6049,14 +6053,20 @@ textarea.input {
   border-color: var(--pepe-gold-subtle);
 }
 
-.video-preview {
+.video-thumbnail-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.video-preview-thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: var(--transition-slow);
 }
 
-.video-showcase-container:hover .video-preview {
+.video-showcase-container:hover .video-preview-thumbnail {
   transform: scale(1.02);
 }
 
@@ -6243,5 +6253,260 @@ textarea.input {
   
   .video-modal-title {
     font-size: var(--text-lg);
+  }
+}
+
+/* ===== Enhanced Artist Cards with Three Sides ===== */
+.artist-card-container {
+  position: relative;
+  perspective: 1200px;
+  transition: var(--transition-all);
+}
+
+.artist-card-container.enlarged {
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.artist-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Card Navigation Circles */
+.card-navigation {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-2);
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--pepe-line);
+}
+
+.nav-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid var(--pepe-line);
+  color: var(--pepe-t64);
+  cursor: pointer;
+  transition: var(--transition-all);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.nav-circle:hover {
+  border-color: var(--pepe-gold);
+  color: var(--pepe-gold);
+  transform: scale(1.1);
+}
+
+.nav-circle.active {
+  background: var(--pepe-gold);
+  border-color: var(--pepe-gold);
+  color: var(--pepe-ink);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+.nav-circle.enlarge-btn {
+  border-color: var(--pepe-red);
+  color: var(--pepe-red);
+}
+
+.nav-circle.enlarge-btn:hover,
+.nav-circle.enlarge-btn.active {
+  background: var(--pepe-red);
+  border-color: var(--pepe-red);
+  color: var(--pepe-white);
+}
+
+/* Material Icons Styling */
+.material-icon {
+  font-family: 'Material Icons', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+}
+
+/* Card Sides */
+.artist-card-side {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--pepe-surface);
+  border: 1px solid var(--pepe-line);
+  opacity: 0;
+  transform: translateZ(-50px);
+  transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.artist-card-side.active {
+  opacity: 1;
+  transform: translateZ(0);
+}
+
+/* Gallery Side Specific Styling */
+.artist-card-side.gallery {
+  background: var(--pepe-dark);
+}
+
+.artist-gallery-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4);
+}
+
+.gallery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--pepe-line);
+}
+
+.gallery-counter {
+  font-size: var(--text-sm);
+  color: var(--pepe-t64);
+  background: var(--pepe-surface);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--pepe-line);
+}
+
+.gallery-image-container {
+  flex: 1;
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--pepe-ink);
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: var(--transition-all);
+}
+
+/* Gallery Navigation Arrows */
+.gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--pepe-line);
+  color: var(--pepe-white);
+  cursor: pointer;
+  transition: var(--transition-all);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+
+.gallery-image-container:hover .gallery-nav {
+  opacity: 1;
+}
+
+.gallery-nav:hover {
+  background: rgba(212, 175, 55, 0.9);
+  color: var(--pepe-ink);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.gallery-nav.prev {
+  left: var(--space-3);
+}
+
+.gallery-nav.next {
+  right: var(--space-3);
+}
+
+/* Gallery Dots */
+.gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--pepe-line);
+}
+
+.gallery-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--pepe-line);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.gallery-dot:hover {
+  background: var(--pepe-gold-subtle);
+  transform: scale(1.2);
+}
+
+.gallery-dot.active {
+  background: var(--pepe-gold);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+}
+
+/* Mobile Responsive for Artist Cards */
+@media (max-width: 767px) {
+  .card-navigation {
+    bottom: var(--space-2);
+    gap: var(--space-1);
+    padding: var(--space-1-5);
+  }
+  
+  .nav-circle {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .material-icon {
+    font-size: 16px;
+  }
+  
+  .gallery-nav {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .gallery-nav.prev {
+    left: var(--space-2);
+  }
+  
+  .gallery-nav.next {
+    right: var(--space-2);
   }
 }
