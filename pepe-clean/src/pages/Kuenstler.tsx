@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import ArtistCardFinal from '@/components/ArtistCardFinal'
 import type { Artist } from '@/types/artist'
 
@@ -10,6 +10,8 @@ export default function Kuenstler() {
   const [filteredArtists, setFilteredArtists] = useState<Artist[]>([])
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('')
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
   const { t } = useTranslation()
 
   // Get all artist images for backdrop
@@ -55,6 +57,23 @@ export default function Kuenstler() {
     fetchArtists()
   }, [])
 
+  // Handle flip parameter from URL to auto-open specific artist card
+  useEffect(() => {
+    const flipParam = searchParams.get('flip')
+    if (flipParam && artists.length > 0) {
+      const artistId = parseInt(flipParam, 10)
+      if (!isNaN(artistId)) {
+        setSelectedArtistId(artistId)
+        // Scroll to the artist card after a short delay to ensure it's rendered
+        setTimeout(() => {
+          const artistElement = document.querySelector(`[data-artist-id="${artistId}"]`)
+          if (artistElement) {
+            artistElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        }, 100)
+      }
+    }
+  }, [searchParams, artists])
 
   const resolveBackdropImageUrl = (imageUrl: string) => {
     if (imageUrl.startsWith('http')) return imageUrl
@@ -238,7 +257,12 @@ export default function Kuenstler() {
           ) : (
             <div className="artist-grid-final">
               {filteredArtists.map((artist) => (
-                <ArtistCardFinal key={artist.id} artist={artist} />
+                <div key={artist.id} data-artist-id={artist.id}>
+                  <ArtistCardFinal 
+                    artist={artist} 
+                    isInitiallySelected={selectedArtistId === artist.id}
+                  />
+                </div>
               ))}
             </div>
           )}

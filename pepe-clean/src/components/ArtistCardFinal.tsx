@@ -4,10 +4,11 @@ import { getPrimaryImage, mergeGallery, normalizeInstagram } from "@/types/artis
 
 interface ArtistCardFinalProps {
   artist: Artist;
+  isInitiallySelected?: boolean;
 }
 
-const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist }) => {
-  const [currentPage, setCurrentPage] = useState<'front' | 'info' | 'gallery'>('front');
+const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySelected = false }) => {
+  const [currentPage, setCurrentPage] = useState<'front' | 'info' | 'gallery'>(isInitiallySelected ? 'info' : 'front');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isEnlarged, setIsEnlarged] = useState(false);
   
