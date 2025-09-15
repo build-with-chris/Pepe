@@ -21,18 +21,33 @@ export default function Shows() {
 
   useEffect(() => {
     const fetchShows = async () => {
-      try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
-        const response = await fetch(`${baseUrl}/api/shows`)
-        if (response.ok) {
-          const data = await response.json()
-          setShows(data)
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+      
+      // Try multiple endpoint variations
+      const endpoints = [
+        `${baseUrl}/api/shows`,
+        `${baseUrl}/shows`,
+        `${baseUrl}/api/shows/shows`,
+        `${baseUrl}/api/public/shows`
+      ]
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint)
+          if (response.ok) {
+            const data = await response.json()
+            setShows(data)
+            setLoading(false)
+            return
+          }
+        } catch (error) {
+          console.warn(`Endpoint ${endpoint} failed:`, error)
+          continue
         }
-      } catch (error) {
-        console.error('Failed to fetch shows:', error)
-      } finally {
-        setLoading(false)
       }
+      
+      console.error('All show endpoints failed')
+      setLoading(false)
     }
 
     fetchShows()
@@ -260,7 +275,7 @@ export default function Shows() {
               <div className="empty-icon">🎬</div>
               <h3 className="h3 mb-4">Keine Shows verfügbar</h3>
               <p className="body-sm mb-6">Derzeit sind keine Shows in der Datenbank verfügbar.</p>
-              <Link to="/anfragen" className="btn btn-primary">
+              <Link to="/anfragen" className="btn btn-primary btn-lg">
                 Individuelle Anfrage stellen
               </Link>
             </div>

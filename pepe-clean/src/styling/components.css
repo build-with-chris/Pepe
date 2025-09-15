@@ -30,6 +30,50 @@
   display: block;
 }
 
+/* ===== Booking Wizard Layout ===== */
+
+/* Location Step Two-Column Layout */
+.location-step-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .location-step-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.venue-cards-section {
+  /* Left column for venue cards */
+}
+
+.location-details-section {
+  /* Right column for address and toggles */
+}
+
+.choice-grid-compact {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .choice-grid-compact {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--pepe-white);
+  margin-bottom: 1rem;
+}
+
 /* ===== Button Components ===== */
 
 /* Base Button */
@@ -3372,6 +3416,65 @@ textarea.input {
 /* Section Variations */
 .section-compact {
   padding: var(--space-12) 0 var(--space-6);
+}
+
+/* Venue selection cards - Booking Wizard Step 4 */
+.venue-selection-top {
+  width: 100%;
+  margin-bottom: var(--space-6);
+}
+
+.venue-cards-row {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+}
+
+.venue-card-mini {
+  flex: 0 0 150px;
+  cursor: pointer;
+  text-align: center;
+  padding: var(--space-3);
+  border: 2px solid var(--pepe-line);
+  border-radius: var(--radius-lg);
+  background: var(--pepe-surface);
+  transition: var(--transition-all);
+}
+
+.venue-card-mini:hover {
+  border-color: var(--pepe-gold);
+  transform: translateY(-2px);
+}
+
+.venue-card-mini.selected {
+  border-color: var(--pepe-gold);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.venue-card-mini-image {
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+}
+
+.venue-card-mini-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.venue-card-mini-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--pepe-white);
+}
+
+.location-step-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
 
 .section-tight {

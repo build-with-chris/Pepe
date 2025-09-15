@@ -15,8 +15,14 @@ interface BookingData {
   // Step 4: Venue Type & Technical
   venueType: string
   eventAddress: string
+  street: string
+  postalCode: string
+  city: string
+  locationDetails: string
   needsLight: boolean
   needsSound: boolean
+  needsStageFloor: boolean
+  needsRigging: boolean
   
   // Step 5: Event Details
   eventDate: string
@@ -58,13 +64,19 @@ function transformToBackendPayload(newData: BookingData) {
     '120min': 120
   }
   
+  // Combine address fields if separate fields are used
+  const eventAddress = newData.eventAddress || 
+    (newData.street && newData.postalCode && newData.city ? 
+      `${newData.street}, ${newData.postalCode} ${newData.city}` : 
+      '')
+
   return {
     client_email: newData.email,
     client_name: `${newData.firstName} ${newData.lastName}`.trim(),
     disciplines: newData.performanceStyle,
     distance_km: 0, // Could be calculated from address in future
     duration_minutes: durationMap[newData.duration] || 30,
-    event_address: newData.eventAddress,
+    event_address: eventAddress,
     event_date: newData.eventDate,
     event_time: newData.eventTime,
     event_type: newData.eventType,
@@ -94,8 +106,14 @@ export default function BookingWizard() {
     performanceStyle: [],
     venueType: '',
     eventAddress: '',
+    street: '',
+    postalCode: '',
+    city: '',
+    locationDetails: '',
     needsLight: false,
     needsSound: false,
+    needsStageFloor: false,
+    needsRigging: false,
     eventDate: '',
     eventTime: '',
     duration: '',
@@ -113,16 +131,6 @@ export default function BookingWizard() {
   })
 
   const totalSteps = 7
-
-  const stepTitles = [
-    t('booking.eventType.heading') || 'Art der Veranstaltung',
-    t('booking.artistCount.heading') || 'Anzahl Künstler',
-    t('booking.showCategory.heading') || 'Performance Stil', 
-    t('booking.eventLocation.heading') || 'Veranstaltungsort',
-    'Event Details',
-    t('booking.contactData.heading') || 'Kontaktdaten',
-    'Überprüfung & Buchen'
-  ]
 
   const eventTypes = [
     { 
@@ -277,7 +285,7 @@ export default function BookingWizard() {
     { value: 'flexible', label: 'Flexibel/Beratung' }
   ]
 
-  const handleInputChange = (field: keyof BookingData, value: string | boolean) => {
+  const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -350,9 +358,21 @@ export default function BookingWizard() {
           teamSize: '',
           performanceStyle: [],
           venueType: '',
+          eventAddress: '',
+          street: '',
+          postalCode: '',
+          city: '',
+          locationDetails: '',
+          needsLight: false,
+          needsSound: false,
+          needsStageFloor: false,
+          needsRigging: false,
           eventDate: '',
+          eventTime: '',
+          duration: '',
           guestCount: '',
           budget: '',
+          planningStatus: '',
           firstName: '',
           lastName: '',
           email: '',
@@ -366,7 +386,7 @@ export default function BookingWizard() {
         alert('Vielen Dank für Ihre detaillierte Anfrage! Wir melden uns innerhalb von 24 Stunden bei Ihnen.')
       } else {
         // Fallback: Store locally and show error with request ID
-        const generatedRequestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        const generatedRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
         localStorage.setItem('pending-booking-request', JSON.stringify({
           id: generatedRequestId,
           ...formData,
@@ -380,7 +400,7 @@ export default function BookingWizard() {
       }
     } catch (error) {
       console.error('Critical error submitting form:', error)
-      const fallbackRequestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      const fallbackRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
       localStorage.setItem('pending-booking-request', JSON.stringify({
         id: fallbackRequestId,
         ...formData,
@@ -399,7 +419,7 @@ export default function BookingWizard() {
       case 1: return formData.eventType !== ''
       case 2: return formData.teamSize !== ''
       case 3: return formData.performanceStyle.length > 0
-      case 4: return formData.venueType !== '' && formData.eventAddress !== ''
+      case 4: return formData.venueType !== '' && (formData.eventAddress !== '' || (formData.street !== '' && formData.postalCode !== '' && formData.city !== ''))
       case 5: return formData.eventDate !== '' && formData.eventTime !== '' && formData.duration !== '' && formData.guestCount !== '' && formData.planningStatus !== ''
       case 6: return formData.firstName !== '' && formData.lastName !== '' && formData.email !== '' && formData.phone !== ''
       case 7: return formData.termsAccepted
@@ -511,7 +531,7 @@ export default function BookingWizard() {
               onClick={prevStep}
               className="btn btn-secondary btn-lg"
             >
-              {t('progress.back') || 'Zurück'}
+              Zurück
             </button>
           )}
           

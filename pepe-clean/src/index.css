@@ -9,6 +9,9 @@
 @import './styling/components.css';
 @import './styling/animations.css';
 @import './styling/particles.css';
+@import './styling/artist-card-3d.css';
+@import './styling/artist-card-compact.css';
+@import './styling/artist-card-final.css';
 
 /* ===== Base Reset ===== */
 * {
