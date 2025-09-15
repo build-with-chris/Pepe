@@ -66,3 +66,11 @@ export function normalizeInstagram(instagram?: string): string | undefined {
   const handle = raw.startsWith("@") ? raw.slice(1) : raw;
   return `https://instagram.com/${encodeURIComponent(handle)}`;
 }
+
+/**
+ * Gets the primary image URL for an artist
+ */
+export function getPrimaryImage(artist: Artist): string | undefined {
+  const imageUrl = artist.image?.trim();
+  return imageUrl || undefined;
+}

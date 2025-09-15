@@ -484,6 +484,12 @@
   transition: var(--transition-all);
 }
 
+/* GPU acceleration for smooth 3D transforms */
+.gpu {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
 .artist-card:hover {
   transform: scale(1.02);
   border-color: var(--pepe-line2);
