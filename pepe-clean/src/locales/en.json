@@ -1318,5 +1318,68 @@
       "acceptedCount": "{{count}} accepted gigs",
       "note": "Note: The earnings are based on your entered fee (artist_gage) for accepted requests."
     }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "homeButton": "Go to Homepage"
+  },
+  "myGigs": {
+    "title": "🎤 My Gigs",
+    "loading": "⏳ Loading…",
+    "upcoming": "Upcoming Gigs",
+    "past": "Past Gigs",
+    "noUpcoming": "No upcoming gigs.",
+    "noPast": "No past gigs."
+  },
+  "admin": {
+    "title": "Admin Area",
+    "welcome": "Welcome to the Admin Panel! Here you can manage settings.",
+    "sortBy": "Sort by:",
+    "loadingDashboard": "Loading dashboard data...",
+    "noOffers": "No offers found.",
+    "actions": "Actions",
+    "accept": "Accept",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete request?",
+    "requestNumber": "Request #{{id}}",
+    "client": "Client:",
+    "date": "Date:",
+    "received": "Received:",
+    "status": "Status:",
+    "sortOptions": {
+      "receivedDesc": "Received (newest first)",
+      "receivedAsc": "Received (oldest first)", 
+      "dateAsc": "Event date ascending",
+      "dateDesc": "Event date descending",
+      "statusAsc": "Status A–Z",
+      "statusDesc": "Status Z–A"
+    }
+  },
+  "artists": {
+    "title": "Artist Management (Admin)",
+    "subtitle": "Overview of all artists with status & details",
+    "search": "Search by name…",
+    "allStatus": "All Status",
+    "onlyPending": "Only Pending",
+    "onlyApproved": "Only Approved", 
+    "onlyRejected": "Only Rejected",
+    "onlyUnsubmitted": "Only Unsubmitted",
+    "pendingFirst": "Pending first",
+    "loading": "Loading artists...",
+    "noImage": "No Image",
+    "deleteArtist": "Delete Artist",
+    "deleteConfirm": "Really delete artist \"{{name}}\"?",
+    "noBio": "No bio provided.",
+    "approve": "Approve",
+    "close": "Close",
+    "contactData": "Contact Data",
+    "statusInfo": "Status",
+    "disciplines": "Disciplines",
+    "priceRange": "Price Range",
+    "availability": "Availability",
+    "noSlots": "— no slots —",
+    "gallery": "Gallery",
+    "noProfile": "No profile image"
   }
 }

@@ -1,102 +1,8 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 export default function Kontakt() {
   const { t } = useTranslation()
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    eventType: '',
-    eventDate: '',
-    guestCount: '',
-    message: ''
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
-    try {
-      // Try multiple endpoints for reliability
-      const endpoints = [
-        `${import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'}/api/contact-requests`,
-        '/api/contact-requests', 
-        'https://api.pepe-shows.com/contact-requests'
-      ]
-      
-      let success = false
-      let lastError: any = null
-      
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-              ...formData,
-              timestamp: new Date().toISOString(),
-              source: 'contact-form'
-            }),
-          })
-          
-          if (response.ok) {
-            success = true
-            break
-          } else {
-            lastError = new Error(`${endpoint}: ${response.status}`)
-          }
-        } catch (endpointError) {
-          lastError = endpointError
-          continue
-        }
-      }
-      
-      if (success) {
-        alert('Vielen Dank für Ihre Nachricht! Wir melden uns innerhalb von 24 Stunden bei Ihnen.')
-        // Reset form
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          eventType: '',
-          eventDate: '',
-          guestCount: '',
-          message: ''
-        })
-      } else {
-        // Fallback: Store locally
-        const requestId = `contact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-        localStorage.setItem('pending-contact-request', JSON.stringify({
-          id: requestId,
-          ...formData,
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }))
-        
-        alert('Ihre Nachricht wurde lokal gespeichert. Bitte kontaktieren Sie uns direkt unter info@pepe-shows.com. Ihre Anfrage-ID: ' + requestId)
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      alert('Es gab einen Fehler beim Senden Ihrer Nachricht. Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
   return (
     <main>
       {/* Hero Section */}
@@ -170,123 +76,63 @@ export default function Kontakt() {
         <div className="stage-container">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             
-            {/* Contact Form */}
+            {/* Direct Contact Options */}
             <div className="contact-form-card">
-              <h2 className="h2 mb-8">Nachricht senden</h2>
-              <form onSubmit={handleSubmit} className="contact-form">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Vorname *</label>
-                    <input 
-                      type="text" 
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className="form-input" 
-                      required 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Nachname *</label>
-                    <input 
-                      type="text" 
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="form-input" 
-                      required 
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-group">
-                  <label className="form-label">E-Mail Adresse *</label>
-                  <input 
-                    type="email" 
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="form-input" 
-                    required 
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label className="form-label">Telefon</label>
-                  <input 
-                    type="tel" 
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="form-input" 
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label className="form-label">Art der Veranstaltung</label>
-                  <select 
-                    name="eventType"
-                    value={formData.eventType}
-                    onChange={handleInputChange}
-                    className="form-input"
+              <h2 className="h2 mb-8">Direkt Kontakt aufnehmen</h2>
+              <div className="direct-contact-options">
+                <div className="contact-option-large">
+                  <div className="contact-icon-large mb-4">📧</div>
+                  <h3 className="h3 mb-3">{t('contact.email.label')}</h3>
+                  <p className="body-md mb-4">{t('contact.email.description')}</p>
+                  <a 
+                    href="mailto:info@pepe-shows.de?subject=Anfrage%20für%20Pepe%20Shows"
+                    className="btn btn-primary btn-lg w-full"
                   >
-                    <option value="">Bitte wählen...</option>
-                    <option value="hochzeit">Hochzeit</option>
-                    <option value="firmenfeier">Firmenfeier</option>
-                    <option value="geburtstag">Geburtstag</option>
-                    <option value="stadtfest">Stadtfest</option>
-                    <option value="theater">Theater/Bühne</option>
-                    <option value="incentive">Incentive Event</option>
-                    <option value="messe">Messe/Ausstellung</option>
-                    <option value="sonstiges">Sonstiges</option>
-                  </select>
+                    E-Mail schreiben
+                  </a>
+                  <p className="body-sm text-pepe-t60 mt-3">info@pepe-shows.de</p>
                 </div>
                 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Datum</label>
-                    <input 
-                      type="date" 
-                      name="eventDate"
-                      value={formData.eventDate}
-                      onChange={handleInputChange}
-                      className="form-input" 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Geschätzte Gästeanzahl</label>
-                    <input 
-                      type="number" 
-                      name="guestCount"
-                      value={formData.guestCount}
-                      onChange={handleInputChange}
-                      className="form-input" 
-                      placeholder="z.B. 100"
-                    />
-                  </div>
+                <div className="contact-option-large">
+                  <div className="contact-icon-large mb-4">📞</div>
+                  <h3 className="h3 mb-3">{t('contact.phone.label')}</h3>
+                  <p className="body-md mb-4">{t('contact.phone.description')}</p>
+                  <a 
+                    href="tel:+49123456789"
+                    className="btn btn-primary btn-lg w-full"
+                  >
+                    Jetzt anrufen
+                  </a>
+                  <p className="body-sm text-pepe-t60 mt-3">+49 123 456789</p>
                 </div>
                 
-                <div className="form-group">
-                  <label className="form-label">Ihre Nachricht *</label>
-                  <textarea 
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    className="form-textarea" 
-                    rows={6}
-                    placeholder="Beschreiben Sie uns Ihre Vorstellungen..."
-                    required
-                  ></textarea>
+                <div className="contact-option-large full-width">
+                  <div className="contact-icon-large mb-4">💬</div>
+                  <h3 className="h3 mb-3">{t('contact.chat.label')}</h3>
+                  <p className="body-md mb-4">{t('contact.chat.description')}</p>
+                  <Link 
+                    to="/anfragen"
+                    className="btn btn-primary btn-lg"
+                  >
+                    Booking Assistant nutzen
+                  </Link>
                 </div>
                 
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="btn btn-primary btn-lg submit-btn"
-                >
-                  {isSubmitting ? 'Wird gesendet...' : 'Nachricht senden'}
-                </button>
-              </form>
+                <div className="contact-option-large full-width">
+                  <div className="contact-icon-large mb-4">📍</div>
+                  <h3 className="h3 mb-3">{t('contact.office.label')}</h3>
+                  <p className="body-md mb-4">{t('contact.office.description')}</p>
+                  <a 
+                    href="https://www.google.de/maps/place/Pepe+Dome+im+Theatron+im+Ostpark/@48.1119726,11.640768,16z/data=!3m1!4b1!4m6!3m5!1s0x479ddfe1623e7b83:0x8f776b2413dcab9e!8m2!3d48.1119726!4d11.6433429!16s%2Fg%2F11dfj6w_tt?entry=ttu&g_ep=EgoyMDI1MDgxOS4wIKXMDSoASAFQAw%3D%3D"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary btn-lg"
+                  >
+                    Auf Google Maps ansehen
+                  </a>
+                  <p className="body-sm text-pepe-t60 mt-3">{t('contact.office.address')}</p>
+                </div>
+              </div>
             </div>
             
             {/* Contact Info */}

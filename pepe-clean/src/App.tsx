@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
 import ParticleBackground from './components/ParticleBackground'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Kuenstler from './pages/Kuenstler'
 import Shows from './pages/Shows'
@@ -10,16 +11,26 @@ import Kontakt from './pages/Kontakt'
 import Anfragen from './pages/Anfragen'
 import Mediamaterial from './pages/Mediamaterial'
 import Presskit from './pages/Presskit'
-import TechnicalRider from './pages/TechnicalRider'
-import Brandguide from './pages/Brandguide'
+import Pressemappe from './pages/Pressemappe'
 import Team from './pages/Team'
 import Referenzen from './pages/Referenzen'
-import FAQ from './pages/FAQ'
 import Login from './pages/Login'
+import SignUp from './components/SignUp'
 import Dashboard from './pages/Dashboard'
 import Privacy from './pages/Privacy'
 import Imprint from './pages/Imprint'
 import Terms from './pages/Terms'
+import ArtistGuidlines from './pages/ArtistGuidlines'
+import Admin from './pages/Admin'
+import Artists from './pages/Artists'
+import ProfileSetup from './pages/ProfileSetup'
+import Kalender from './pages/Kalender'
+import MyGigs from './pages/MyGigs'
+import Impressum from './pages/Impressum'
+import Datenschutz from './pages/Datenschutz'
+import AGB from './pages/AGB'
+import Agentur from './pages/Agentur'
+import NotFound from './pages/NotFound'
 import './index.css'
 
 function App() {
@@ -31,7 +42,9 @@ function App() {
       <Navigation />
       
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/kuenstler" element={<Kuenstler />} />
         <Route path="/shows" element={<Shows />} />
         <Route path="/galerie" element={<Galerie />} />
@@ -39,16 +52,75 @@ function App() {
         <Route path="/anfragen" element={<Anfragen />} />
         <Route path="/mediamaterial" element={<Mediamaterial />} />
         <Route path="/presskit" element={<Presskit />} />
-        <Route path="/technical-rider" element={<TechnicalRider />} />
-        <Route path="/brandguide" element={<Brandguide />} />
+        <Route path="/pressemappe" element={<Pressemappe />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/agentur" element={<Agentur />} />
         <Route path="/referenzen" element={<Referenzen />} />
-        <Route path="/faq" element={<FAQ />} />
+        
+        {/* Authentication routes */}
+        <Route path="/anmelden" element={<Login />} />
+        <Route path="/registrieren" element={<SignUp />} />
+        <Route path="/kuenstler-richtlinien" element={<ArtistGuidlines />} />
+        <Route path="/onboarding" element={<ArtistGuidlines />} />
+        
+        {/* Legacy English routes for backwards compatibility */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/artist-guidelines" element={<ArtistGuidlines />} />
+        
+        {/* Admin routes (protected) */}
+        <Route path="/admin" element={<ProtectedRoute />}>
+          <Route index element={<Admin />} />
+        </Route>
+        <Route path="/admin/kuenstler" element={<ProtectedRoute />}>
+          <Route index element={<Artists />} />
+        </Route>
+        
+        {/* Legacy admin route */}
+        <Route path="/admin/artists" element={<ProtectedRoute />}>
+          <Route index element={<Artists />} />
+        </Route>
+        
+        {/* User profile routes (protected) - German names */}
+        <Route path="/profil" element={<ProtectedRoute />}>
+          <Route index element={<ProfileSetup />} />
+        </Route>
+        <Route path="/kalender" element={<ProtectedRoute />}>
+          <Route index element={<Kalender />} />
+        </Route>
+        <Route path="/meine-gigs" element={<ProtectedRoute />}>
+          <Route index element={<MyGigs />} />
+        </Route>
+        
+        {/* Legacy English routes for backwards compatibility */}
+        <Route path="/profile" element={<ProtectedRoute />}>
+          <Route index element={<ProfileSetup />} />
+        </Route>
+        <Route path="/profile-setup" element={<ProtectedRoute />}>
+          <Route index element={<ProfileSetup />} />
+        </Route>
+        <Route path="/calendar" element={<ProtectedRoute />}>
+          <Route index element={<Kalender />} />
+        </Route>
+        <Route path="/gigs" element={<ProtectedRoute />}>
+          <Route index element={<MyGigs />} />
+        </Route>
+        
+        {/* Legacy dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Legal pages - German versions */}
+        <Route path="/impressum" element={<Impressum />} />
+        <Route path="/datenschutz" element={<Datenschutz />} />
+        <Route path="/agb" element={<AGB />} />
+        
+        {/* Legacy legal pages - English versions */}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/imprint" element={<Imprint />} />
         <Route path="/terms" element={<Terms />} />
+        
+        {/* 404 fallback */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       <Footer />

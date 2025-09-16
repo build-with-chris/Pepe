@@ -54,6 +54,14 @@ function transformToBackendPayload(newData: BookingData) {
     'group': 5
   }
   
+  // Map event types to backend expected values
+  const eventTypeMap: { [key: string]: string } = {
+    'firmenfeier': 'Firmenfeier',
+    'private': 'Private Feier',
+    'incentive': 'Incentive',
+    'streetshow': 'Streetshow'
+  }
+  
   // Map duration strings to minutes
   const durationMap: { [key: string]: number } = {
     '15min': 15,
@@ -79,7 +87,7 @@ function transformToBackendPayload(newData: BookingData) {
     event_address: eventAddress,
     event_date: newData.eventDate,
     event_time: newData.eventTime,
-    event_type: newData.eventType,
+    event_type: eventTypeMap[newData.eventType] || newData.eventType,
     show_type: newData.teamSize,
     is_indoor: newData.venueType === 'indoor',
     needs_light: newData.needsLight,

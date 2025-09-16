@@ -1101,6 +1101,69 @@
       "acceptedCount": "{{count}} angenommene Gigs",
       "note": "Hinweis: Die Verdienstsummen basieren auf deiner angegebenen Gage (artist_gage) für akzeptierte Anfragen."
     }
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "description": "Die Seite, die Sie suchen, existiert nicht oder wurde verschoben.",
+    "homeButton": "Zur Startseite"
+  },
+  "myGigs": {
+    "title": "🎤 Meine Gigs",
+    "loading": "⏳ Lädt…",
+    "upcoming": "Bevorstehende Gigs",
+    "past": "Vergangene Gigs",
+    "noUpcoming": "Keine bevorstehenden Gigs.",
+    "noPast": "Keine vergangenen Gigs."
+  },
+  "admin": {
+    "title": "Admin-Bereich",
+    "welcome": "Willkommen im Admin-Panel! Hier kannst du Einstellungen verwalten.",
+    "sortBy": "Sortieren nach:",
+    "loadingDashboard": "Lade Dashboard-Daten...",
+    "noOffers": "Keine Angebote gefunden.",
+    "actions": "Aktionen",
+    "accept": "Annehmen",
+    "delete": "Löschen",
+    "deleteConfirm": "Anfrage wirklich löschen?",
+    "requestNumber": "Anfrage #{{id}}",
+    "client": "Kunde:",
+    "date": "Datum:",
+    "received": "Eingegangen:",
+    "status": "Status:",
+    "sortOptions": {
+      "receivedDesc": "Eingang (neueste zuerst)",
+      "receivedAsc": "Eingang (älteste zuerst)", 
+      "dateAsc": "Eventdatum aufsteigend",
+      "dateDesc": "Eventdatum absteigend",
+      "statusAsc": "Status A–Z",
+      "statusDesc": "Status Z–A"
+    }
+  },
+  "artists": {
+    "title": "Künstlerverwaltung (Admin)",
+    "subtitle": "Übersicht aller Artists mit Status & Details",
+    "search": "Suche nach Name…",
+    "allStatus": "Alle Status",
+    "onlyPending": "Nur Pending",
+    "onlyApproved": "Nur Approved", 
+    "onlyRejected": "Nur Rejected",
+    "onlyUnsubmitted": "Nur Unsubmitted",
+    "pendingFirst": "Pending zuerst",
+    "loading": "Lade Künstler...",
+    "noImage": "Kein Bild",
+    "deleteArtist": "Artist löschen",
+    "deleteConfirm": "Artist \"{{name}}\" wirklich löschen?",
+    "noBio": "Keine Bio hinterlegt.",
+    "approve": "Approve",
+    "close": "Schließen",
+    "contactData": "Kontaktdaten",
+    "statusInfo": "Status",
+    "disciplines": "Disziplinen",
+    "priceRange": "Preisrahmen",
+    "availability": "Verfügbarkeiten",
+    "noSlots": "— keine Slots —",
+    "gallery": "Galerie",
+    "noProfile": "Kein Profilbild"
   }
 
 
