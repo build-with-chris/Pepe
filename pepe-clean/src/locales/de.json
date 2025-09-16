@@ -1164,6 +1164,25 @@
     "noSlots": "— keine Slots —",
     "gallery": "Galerie",
     "noProfile": "Kein Profilbild"
+  },
+  "agentur": {
+    "hero": {
+      "title": "Unsere Agentur",
+      "subtitle": "Erstklassige Artists für unvergessliche Events"
+    },
+    "champions": {
+      "title": "In unserem Team finden sich wahre Champions",
+      "juggling": "🥇 7-facher Jonglage-Weltmeister",
+      "cyr": "🌐 Cyr-Wheel-Weltmeisterin", 
+      "breakdance": "💃 Breakdancer aus dem Olympia-Kader",
+      "magic": "🎩 Deutscher Meister der Zauberkunst",
+      "mission": "Wir bringen sie zusammen, um Events unvergesslich zu machen – präzise, eindrucksvoll und auf höchstem Niveau."
+    },
+    "about": {
+      "title": "Über uns",
+      "leadership": "Geleitet und organisiert wird PepeShows von <span class=\"font-semibold text-white\">Michael Heiduk</span> und <span class=\"font-semibold text-white\">Christoph Hermann</span> – beide selbst Artisten aus Leidenschaft.",
+      "perspective": "Mit dieser doppelten Perspektive – <span class=\"italic text-white/90\">Künstler</span> und <span class=\"italic text-white/90\">Veranstalter</span> – wissen wir genau, worauf es ankommt: <span class=\"font-semibold text-white\">Professionalität</span>, reibungslose Abläufe und Acts, die dein Publikum begeistern."
+    }
   }
 
 

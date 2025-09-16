@@ -1381,5 +1381,24 @@
     "noSlots": "— no slots —",
     "gallery": "Gallery",
     "noProfile": "No profile image"
+  },
+  "agentur": {
+    "hero": {
+      "title": "Our Agency",
+      "subtitle": "First-class artists for unforgettable events"
+    },
+    "champions": {
+      "title": "Our team includes true champions",
+      "juggling": "🥇 7-time Juggling World Champion",
+      "cyr": "🌐 Cyr Wheel World Champion", 
+      "breakdance": "💃 Breakdancer from Olympic Squad",
+      "magic": "🎩 German Magic Champion",
+      "mission": "We bring them together to make events unforgettable – precise, impressive, and at the highest level."
+    },
+    "about": {
+      "title": "About Us",
+      "leadership": "PepeShows is led and organized by <span class=\"font-semibold text-white\">Michael Heiduk</span> and <span class=\"font-semibold text-white\">Christoph Hermann</span> – both passionate artists themselves.",
+      "perspective": "With this dual perspective – <span class=\"italic text-white/90\">artist</span> and <span class=\"italic text-white/90\">event organizer</span> – we know exactly what matters: <span class=\"font-semibold text-white\">professionalism</span>, smooth operations, and acts that captivate your audience."
+    }
   }
 }
