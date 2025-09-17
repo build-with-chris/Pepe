@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 interface Artist {
   id: number;
@@ -9,6 +10,7 @@ interface Artist {
 }
 
 export default function Agentur() {
+  const { t } = useTranslation();
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,7 @@ export default function Agentur() {
         <div className="stage-container">
           <div className="hero-content text-center">
             <h1 className="display-1 display-gradient mb-12">
-              Netzwerk von Weltklasse-Künstlern
+              {t('agentur.hero.title')}
             </h1>
             
             {/* Floating Artist Particles */}
@@ -83,34 +85,33 @@ export default function Agentur() {
       <section className="section">
         <div className="stage-container">
           <div className="section-header text-center mb-12">
-            <h2 className="h1 mb-8">In unserem Team finden sich wahre Champions</h2>
+            <h2 className="h1 mb-8">{t('agentur.champions.title')}</h2>
           </div>
 
           <div className="champion-grid">
             <div className="champion-card">
               <div className="champion-icon">🥇</div>
-              <h3 className="h3 mb-2">7-facher Jonglage-Weltmeister</h3>
+              <h3 className="h3 mb-2">{t('agentur.champions.juggling')}</h3>
             </div>
             
             <div className="champion-card">
               <div className="champion-icon">🌐</div>
-              <h3 className="h3 mb-2">Cyr-Wheel-Weltmeisterin</h3>
+              <h3 className="h3 mb-2">{t('agentur.champions.cyr_wheel')}</h3>
             </div>
             
             <div className="champion-card">
               <div className="champion-icon">💃</div>
-              <h3 className="h3 mb-2">Breakdancer aus dem Olympia-Kader</h3>
+              <h3 className="h3 mb-2">{t('agentur.champions.breakdancer')}</h3>
             </div>
             
             <div className="champion-card">
               <div className="champion-icon">🎩</div>
-              <h3 className="h3 mb-2">Deutscher Meister der Zauberkunst</h3>
+              <h3 className="h3 mb-2">{t('agentur.champions.magician')}</h3>
             </div>
           </div>
           
           <p className="lead text-center mt-12 max-w-4xl mx-auto">
-            Wir bringen sie zusammen, um Events unvergesslich zu machen – 
-            präzise, eindrucksvoll und auf höchstem Niveau.
+            {t('agentur.champions.description')}
           </p>
         </div>
       </section>
@@ -119,17 +120,18 @@ export default function Agentur() {
       <section className="section bg-pepe-ink">
         <div className="stage-container">
           <div className="section-header text-center mb-12">
-            <h2 className="h1 mb-8">Über uns</h2>
+            <h2 className="h1 mb-8">{t('agentur.about.title')}</h2>
           </div>
           
           <div className="prose-lg max-w-4xl mx-auto text-center">
             <p className="lead mb-6">
-              Geleitet und organisiert wird PepeShows von <strong className="text-pepe-gold">Michael Heiduk</strong> und 
-              <strong className="text-pepe-gold"> Christoph Hermann</strong> – beide selbst Artisten aus Leidenschaft.
+              {t('agentur.about.leadership', {
+                michael: 'Michael Heiduk',
+                christoph: 'Christoph Hermann'
+              })}
             </p>
             <p className="body-lg text-pepe-t80">
-              Mit dieser doppelten Perspektive – Künstler und Veranstalter – wissen wir genau, 
-              worauf es ankommt: Professionalität, reibungslose Abläufe und Acts, die dein Publikum begeistern.
+              {t('agentur.about.perspective')}
             </p>
           </div>
         </div>
@@ -139,31 +141,31 @@ export default function Agentur() {
       <section className="section">
         <div className="stage-container">
           <div className="section-header text-center mb-16">
-            <h2 className="display-2 mb-8">Warum PepeShows?</h2>
+            <h2 className="display-2 mb-8">{t('agentur.why.title')}</h2>
           </div>
 
           <div className="feature-cards-grid">
             <div className="feature-card gradient-purple">
               <div className="feature-icon">🎭</div>
-              <h3 className="h2 mb-4">Künstler-Expertise</h3>
+              <h3 className="h2 mb-4">{t('agentur.why.expertise.title')}</h3>
               <p className="body-lg">
-                Wir verstehen beide Seiten – als Künstler und Veranstalter.
+                {t('agentur.why.expertise.description')}
               </p>
             </div>
             
             <div className="feature-card gradient-blue">
               <div className="feature-icon">🏆</div>
-              <h3 className="h2 mb-4">Weltklasse-Niveau</h3>
+              <h3 className="h2 mb-4">{t('agentur.why.level.title')}</h3>
               <p className="body-lg">
-                Champions und Meister ihres Fachs in unserem Netzwerk.
+                {t('agentur.why.level.description')}
               </p>
             </div>
             
             <div className="feature-card gradient-green">
               <div className="feature-icon">✨</div>
-              <h3 className="h2 mb-4">Unvergessliche Shows</h3>
+              <h3 className="h2 mb-4">{t('agentur.why.shows.title')}</h3>
               <p className="body-lg">
-                Präzise, eindrucksvoll und auf höchstem Niveau.
+                {t('agentur.why.shows.description')}
               </p>
             </div>
           </div>
@@ -173,13 +175,13 @@ export default function Agentur() {
       {/* CTA Section */}
       <section className="section-large text-center bg-gradient-dark">
         <div className="stage-container">
-          <h2 className="display-2 mb-8">Lassen Sie uns Ihr Event unvergesslich machen</h2>
+          <h2 className="display-2 mb-8">{t('agentur.cta.title')}</h2>
           <div className="cta-actions">
             <Link to="/anfragen" className="btn btn-primary btn-xl">
-              Jetzt anfragen
+              {t('agentur.cta.request_button')}
             </Link>
             <Link to="/shows" className="btn btn-ghost btn-lg">
-              Shows entdecken
+              {t('agentur.cta.shows_button')}
             </Link>
           </div>
         </div>

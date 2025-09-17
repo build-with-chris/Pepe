@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function Kontakt() {
+  const { t } = useTranslation();
   return (
     <main>
       {/* Hero Section */}
@@ -8,10 +10,10 @@ export default function Kontakt() {
         <div className="stage-container">
           <div className="hero-content text-center">
             <h1 className="display-1 display-gradient mb-8">
-              Kontakt
+              {t('kontakt.hero.title')}
             </h1>
             <p className="lead mb-12 max-w-3xl mx-auto">
-              Wir sind für dich da.
+              {t('kontakt.hero.description')}
             </p>
           </div>
         </div>
@@ -21,14 +23,13 @@ export default function Kontakt() {
       <section className="section">
         <div className="stage-container">
           <div className="booking-assistant-card">
-            <h2 className="h1 text-center mb-6">Schnell & einfach zur Show</h2>
+            <h2 className="h1 text-center mb-6">{t('kontakt.booking.title')}</h2>
             <p className="body-lg text-center mb-8 max-w-3xl mx-auto">
-              Der schnellste Weg zu Ihrem Angebot: unser Booking-Assistent. 
-              Alle Infos eingeben, Angebot erhalten – einfach, unverbindlich & effizient.
+              {t('kontakt.booking.description')}
             </p>
             <div className="text-center">
               <Link to="/anfragen" className="btn btn-primary btn-xl">
-                Booking-Assistent starten
+                {t('kontakt.booking.button')}
               </Link>
             </div>
           </div>
@@ -41,23 +42,23 @@ export default function Kontakt() {
           <div className="contact-methods-grid">
             <div className="contact-method-card">
               <div className="contact-icon">📧</div>
-              <h3 className="h3 mb-3">E-Mail</h3>
+              <h3 className="h3 mb-3">{t('kontakt.methods.email.title')}</h3>
               <p className="body-sm text-pepe-t60 mb-4">
-                Auf E-Mails antworten wir in der Regel innerhalb von 24 Stunden.
+                {t('kontakt.methods.email.description')}
               </p>
               <a href="mailto:info@pepeshows.de" className="btn btn-primary">
-                E-Mail schreiben
+                {t('kontakt.methods.email.button')}
               </a>
             </div>
             
             <div className="contact-method-card">
               <div className="contact-icon">🏢</div>
-              <h3 className="h3 mb-3">Space</h3>
+              <h3 className="h3 mb-3">{t('kontakt.methods.space.title')}</h3>
               <p className="body-sm text-pepe-t60 mb-4">
-                Unser PepeDome im Ostpark München.
+                {t('kontakt.methods.space.description')}
               </p>
               <div className="contact-address mb-4">
-                <div className="body-sm">PepeDome, Ostpark München, 81735</div>
+                <div className="body-sm">{t('kontakt.methods.space.address')}</div>
               </div>
               <a 
                 href="https://maps.google.com" 
@@ -65,29 +66,29 @@ export default function Kontakt() {
                 rel="noopener noreferrer"
                 className="btn btn-secondary"
               >
-                Route planen
+                {t('kontakt.methods.space.button')}
               </a>
             </div>
             
             <div className="contact-method-card">
               <div className="contact-icon">📞</div>
-              <h3 className="h3 mb-3">Telefon</h3>
+              <h3 className="h3 mb-3">{t('kontakt.methods.phone.title')}</h3>
               <p className="body-sm text-pepe-t60 mb-4">
-                Mo–Fr, 9–17 Uhr
+                {t('kontakt.methods.phone.hours')}
               </p>
               <a href="tel:+498912345678" className="btn btn-primary">
-                Jetzt anrufen
+                {t('kontakt.methods.phone.button')}
               </a>
             </div>
             
             <div className="contact-method-card">
               <div className="contact-icon">💬</div>
-              <h3 className="h3 mb-3">Live Chat</h3>
+              <h3 className="h3 mb-3">{t('kontakt.methods.chat.title')}</h3>
               <p className="body-sm text-pepe-t60 mb-4">
-                Coming soon...
+                {t('kontakt.methods.chat.status')}
               </p>
               <button className="btn btn-secondary" disabled>
-                Coming soon
+                {t('kontakt.methods.chat.button')}
               </button>
             </div>
           </div>
@@ -98,7 +99,7 @@ export default function Kontakt() {
       <section className="section">
         <div className="stage-container">
           <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">Diese Kunden vertrauen auf Pepe</h2>
+            <h2 className="h1 mb-6">{t('kontakt.clients.title')}</h2>
           </div>
 
           <div className="clients-marquee">
@@ -125,13 +126,13 @@ export default function Kontakt() {
       {/* CTA Section */}
       <section className="section bg-gradient-dark">
         <div className="stage-container text-center">
-          <h2 className="display-2 mb-8">Bereit für Ihre Show?</h2>
+          <h2 className="display-2 mb-8">{t('kontakt.cta.title')}</h2>
           <div className="cta-actions">
             <Link to="/anfragen" className="btn btn-primary btn-xl">
-              Booking-Assistent starten
+              {t('kontakt.cta.booking_button')}
             </Link>
             <a href="mailto:info@pepeshows.de" className="btn btn-ghost btn-lg">
-              Direkte E-Mail
+              {t('kontakt.cta.email_button')}
             </a>
           </div>
         </div>

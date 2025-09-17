@@ -769,73 +769,67 @@
   
     "mediamaterial": {
       "hero": {
-        "kicker": "Media material",
-        "title": "Everything for your promo –\n in one place",
-        "subtitle": "Logos, header images, press texts and trailers. Optional discipline packs so you can promote exactly what you booked.",
-        "buttons": { "zip": "Complete media kit (ZIP)", "trailer": "YouTube trailer" }
+        "title": "Media Material",
+        "subtitle": "Everything for your promo – in one place",
+        "description": "Logos, header images, press texts and trailers. Optional discipline packs so you can promote exactly what you booked.",
+        "download_button": "Complete Media Kit (ZIP)",
+        "youtube_button": "YouTube Trailer"
       },
-      "general": { "title": "General media material" },
-      "cards": {
+      "general": {
+        "title": "General Media Material",
         "logos": {
           "title": "Logos (SVG/PNG)",
-          "desc": "Color, black, white – with/without background.",
-          "zip": "Logo pack (ZIP)",
-          "brandguide": "Brand guide (page)"
+          "description": "Color, black, white – with/without background.",
+          "download_button": "Logo Pack (ZIP)",
+          "brand_guide_button": "Brand Guide (Page)"
         },
-        "header": {
-          "title": "Title / header image",
-          "desc": "High-res header for posters, websites & social.",
-          "h169": "Header 16:9 (JPG)",
-          "h54": "Header 5:4 (JPG)"
+        "headers": {
+          "title": "Title / Header Image",
+          "description": "High-res header for posters, websites & social.",
+          "format_16_9": "Header 16:9 (JPG)",
+          "format_5_4": "Header 5:4 (JPG)"
         },
         "press": {
-          "title": "Press kit / fact sheet",
-          "desc": "Short intro, USP, contact & rider.",
-          "page": "Press kit (page)",
-          "rider": "Technical rider (page)"
+          "title": "Press Kit / Fact Sheet",
+          "description": "Short intro, USP, contact & rider.",
+          "press_button": "Press Kit (Page)",
+          "rider_button": "Technical Rider (Page)"
         },
         "trailer": {
-          "title": "Trailer (short clip)",
-          "desc": "Short preview for your channels.",
-          "webm": "Download (WEBM)",
-          "youtube": "YouTube trailer"
+          "title": "Trailer (Short Clip)",
+          "description": "Short preview for your channels.",
+          "download_button": "Download (WEBM)",
+          "youtube_button": "YouTube Trailer"
         },
         "qr": {
-          "title": "QR code to trailer",
-          "desc": "For flyers, posters & programs.",
-          "png": "QR code (PNG)",
-          "svg": "QR code (SVG)"
+          "title": "QR Code to Trailer",
+          "description": "For flyers, posters & programs.",
+          "png_button": "QR Code (PNG)",
+          "svg_button": "QR Code (SVG)"
         }
       },
       "disciplines": {
-        "title": "Disciplines – material packs",
-        "subtitle": "For targeted promo: 2–3 photos per discipline, a short text block and, if needed, a poster template.",
-        "expand": "expand",
-        "collapse": "collapse",
-        "imageAlt": "{{name}} sample image {{index}}",
-        "allZip": "All discipline packs (ZIP)",
-        "items": {
-          "cyr": {
-            "name": "Cyr wheel",
-            "teaser": "Breathtaking artistry in a rotating wheel.",
-            "zip": "Photo pack (ZIP)",
-            "copy": "Text blocks (TXT)",
-            "poster": "Poster A3 (PDF)"
-          },
-          "jonglage": {
-            "name": "Juggling",
-            "teaser": "Precision, rhythm and humor – staged in a modern way.",
-            "zip": "Photo pack (ZIP)",
-            "copy": "Text blocks (TXT)"
-          },
-          "akrobatik": {
-            "name": "Acrobatics",
-            "teaser": "Dynamic lifts and powerful solos.",
-            "zip": "Photo pack (ZIP)",
-            "copy": "Text blocks (TXT)",
-            "poster": "Poster A3 (PDF)"
-          }
+        "title": "Disciplines – Material Packs",
+        "description": "For targeted promo: 2–3 photos per discipline, a short text block and, if needed, a poster template.",
+        "expand_button": "expand",
+        "download_all_button": "All Discipline Packs (ZIP)",
+        "cyr_wheel": {
+          "title": "Cyr Wheel",
+          "description": "Breathtaking artistry in a rotating wheel."
+        },
+        "juggling": {
+          "title": "Juggling",
+          "description": "Precision, rhythm and humor – staged in a modern way."
+        },
+        "acrobatics": {
+          "title": "Acrobatics",
+          "description": "Dynamic lifts and powerful solos."
         }
+      },
+      "cta": {
+        "title": "Everything for Your Promotion",
+        "download_button": "Complete Media Kit (ZIP)",
+        "questions_button": "Questions about Material"
       }
     },
   
@@ -1384,21 +1378,180 @@
   },
   "agentur": {
     "hero": {
-      "title": "Our Agency",
-      "subtitle": "First-class artists for unforgettable events"
+      "title": "Network of World-Class Artists"
     },
     "champions": {
       "title": "Our team includes true champions",
-      "juggling": "🥇 7-time Juggling World Champion",
-      "cyr": "🌐 Cyr Wheel World Champion", 
-      "breakdance": "💃 Breakdancer from Olympic Squad",
-      "magic": "🎩 German Magic Champion",
-      "mission": "We bring them together to make events unforgettable – precise, impressive, and at the highest level."
+      "juggling": "7-time Juggling World Champion",
+      "cyr_wheel": "Cyr Wheel World Champion", 
+      "breakdancer": "Breakdancer from Olympic Squad",
+      "magician": "German Magic Champion",
+      "description": "We bring them together to make events unforgettable – precise, impressive, and at the highest level."
     },
     "about": {
       "title": "About Us",
-      "leadership": "PepeShows is led and organized by <span class=\"font-semibold text-white\">Michael Heiduk</span> and <span class=\"font-semibold text-white\">Christoph Hermann</span> – both passionate artists themselves.",
-      "perspective": "With this dual perspective – <span class=\"italic text-white/90\">artist</span> and <span class=\"italic text-white/90\">event organizer</span> – we know exactly what matters: <span class=\"font-semibold text-white\">professionalism</span>, smooth operations, and acts that captivate your audience."
+      "leadership": "PepeShows is led and organized by <strong class=\"text-pepe-gold\">{{michael}}</strong> and <strong class=\"text-pepe-gold\"> {{christoph}}</strong> – both passionate artists themselves.",
+      "perspective": "With this dual perspective – artist and event organizer – we know exactly what matters: professionalism, smooth operations, and acts that captivate your audience."
+    },
+    "why": {
+      "title": "Why PepeShows?",
+      "expertise": {
+        "title": "Artist Expertise",
+        "description": "We understand both sides – as artists and event organizers."
+      },
+      "level": {
+        "title": "World-Class Level", 
+        "description": "Champions and masters of their craft in our network."
+      },
+      "shows": {
+        "title": "Unforgettable Shows",
+        "description": "Precise, impressive, and at the highest level."
+      }
+    },
+    "cta": {
+      "title": "Let us make your event unforgettable",
+      "request_button": "Request now",
+      "shows_button": "Discover shows"
+    }
+  },
+  "team": {
+    "hero": {
+      "title": "Network of World-Class Artists",
+      "description": "We are a broad network of the best artists in their field – from 7-time juggling world champion to Cyr wheel world champion to Olympic squad breakdancer and German magic champion. Led by PepeShows Michael Heiduk and Christoph Hermann – both passionate artists themselves."
+    },
+    "champions": {
+      "title": "Our team includes true champions",
+      "juggling": "7-time Juggling World Champion",
+      "cyr_wheel": "Cyr Wheel World Champion", 
+      "breakdancer": "Breakdancer from Olympic Squad",
+      "magician": "German Magic Champion",
+      "description": "We bring them together to make events unforgettable – precise, impressive, and at the highest level."
+    },
+    "about": {
+      "title": "About Us",
+      "leadership": "PepeShows is led and organized by <strong class=\"text-pepe-gold\">{{michael}}</strong> and <strong class=\"text-pepe-gold\"> {{christoph}}</strong> – both passionate artists themselves.",
+      "perspective": "With this dual perspective – artist and event organizer – we know exactly what matters: professionalism, smooth operations, and acts that captivate your audience."
+    },
+    "cta": {
+      "title": "Our Team for Your Event",
+      "request_button": "Request now",
+      "artists_button": "Discover artists"
+    }
+  },
+  "kontakt": {
+    "hero": {
+      "title": "Contact",
+      "description": "We are here for you."
+    },
+    "booking": {
+      "title": "Quick & easy to your show",
+      "description": "The fastest way to your offer: our booking assistant. Enter all info, receive offer – simple, non-binding & efficient.",
+      "button": "Start booking assistant"
+    },
+    "methods": {
+      "email": {
+        "title": "Email",
+        "description": "We usually respond to emails within 24 hours.",
+        "button": "Write email"
+      },
+      "space": {
+        "title": "Space",
+        "description": "Our PepeDome in Ostpark Munich.",
+        "address": "PepeDome, Ostpark Munich, 81735",
+        "button": "Plan route"
+      },
+      "phone": {
+        "title": "Phone",
+        "hours": "Mon–Fri, 9–17",
+        "button": "Call now"
+      },
+      "chat": {
+        "title": "Live Chat",
+        "status": "Coming soon...",
+        "button": "Coming soon"
+      }
+    },
+    "clients": {
+      "title": "These clients trust Pepe"
+    },
+    "cta": {
+      "title": "Ready for your show?",
+      "booking_button": "Start booking assistant",
+      "email_button": "Direct email"
+    }
+  },
+  "mediamaterialNew": {
+    "hero": {
+      "title": "Media Material",
+      "subtitle": "Everything for your promo – in one place",
+      "description": "Logos, title images, press texts and trailers. Plus optional packages per discipline, so you can promote exactly what you booked.",
+      "primaryButton": "Complete Media Kit (ZIP)",
+      "secondaryButton": "YouTube Trailer"
+    },
+    "general": {
+      "title": "General Media Material",
+      "logos": {
+        "title": "Logos (SVG/PNG)",
+        "desc": "Color, black, white – with/without background.",
+        "zipButton": "Logo Pack (ZIP)",
+        "guideButton": "Brand Guide (Page)"
+      },
+      "header": {
+        "title": "Title / Header Image", 
+        "desc": "High-res headers for posters, websites & social.",
+        "button169": "Header 16:9 (JPG)",
+        "button54": "Header 5:4 (JPG)"
+      },
+      "press": {
+        "title": "Press Kit / Fact Sheet",
+        "desc": "Brief introduction, USP, contact & rider.",
+        "pressButton": "Press Kit (Page)",
+        "riderButton": "Technical Rider (Page)"
+      },
+      "trailer": {
+        "title": "Trailer (Short Clip)",
+        "desc": "Preview for your channels.",
+        "downloadButton": "Download (WEBM)",
+        "youtubeButton": "YouTube Trailer"
+      },
+      "qr": {
+        "title": "QR Code to Trailer",
+        "desc": "For flyers, posters & programs.",
+        "pngButton": "QR Code (PNG)",
+        "svgButton": "QR Code (SVG)"
+      }
+    },
+    "disciplines": {
+      "title": "Disciplines – Material Packages",
+      "subtitle": "For targeted promo: 2–3 photos per discipline, short text and possibly a poster template.",
+      "cyrWheel": {
+        "title": "Cyr Wheel",
+        "desc": "Breathtaking artistry in the rotating wheel."
+      },
+      "jonglage": {
+        "title": "Juggling", 
+        "desc": "Precision, rhythm and humor – modern staging."
+      },
+      "akrobatik": {
+        "title": "Acrobatics",
+        "desc": "Dynamic lifts and powerful solos."
+      },
+      "expandButton": "expand",
+      "allButton": "All Discipline Packages (ZIP)"
+    },
+    "cta": {
+      "title": "Everything for your promotion",
+      "primaryButton": "Complete Media Kit (ZIP)",
+      "secondaryButton": "Questions about material"
+    }
+  },
+  "referenzen": {
+    "hero": {
+      "title": "Our References"
+    },
+    "cta": {
+      "title": "Become our next reference",
+      "button": "Request now"
     }
   }
 }

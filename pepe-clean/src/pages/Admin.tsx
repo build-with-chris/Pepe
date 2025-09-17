@@ -1,7 +1,12 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDownIcon } from '@heroicons/react/24/solid';
+// import { ChevronDownIcon } from '@heroicons/react/24/solid';
+const ChevronDownIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
 
 function formatDate(value: any) {
   if (!value) return '—';

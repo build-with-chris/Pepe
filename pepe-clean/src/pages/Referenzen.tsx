@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function Referenzen() {
+  const { t } = useTranslation();
   // Nur echte Referenzen, keine erfundenen
   const references = [
     'Porsche', 'Google', 'BMW', 'Siemens',
@@ -15,7 +17,7 @@ export default function Referenzen() {
         <div className="stage-container">
           <div className="hero-content text-center">
             <h1 className="display-1 display-gradient mb-8">
-              Unsere Referenzen
+              {t('referenzen.hero.title')}
             </h1>
           </div>
         </div>
@@ -39,10 +41,10 @@ export default function Referenzen() {
       {/* CTA Section */}
       <section className="section bg-gradient-dark">
         <div className="stage-container text-center">
-          <h2 className="display-2 mb-8">Werden Sie unsere nächste Referenz</h2>
+          <h2 className="display-2 mb-8">{t('referenzen.cta.title')}</h2>
           <div className="cta-actions">
             <Link to="/anfragen" className="btn btn-primary btn-xl">
-              Jetzt anfragen
+              {t('referenzen.cta.button')}
             </Link>
           </div>
         </div>
