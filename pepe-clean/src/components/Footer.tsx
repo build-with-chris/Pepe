@@ -53,7 +53,6 @@ export default function Footer() {
                 <Link to="/shows" className="footer-link">{t('footer.mainLinks.showsAndFormate')}</Link>
                 <Link to="/kuenstler" className="footer-link">Künstler</Link>
                 <Link to="/galerie" className="footer-link">Galerie</Link>
-                <Link to="/faq" className="footer-link">FAQ</Link>
                 <Link to="/kontakt" className="footer-link">{t('footer.mainLinks.kontakt')}</Link>
               </div>
             </div>
