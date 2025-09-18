@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import logoIcon from '../assets/Logos/icon_pepe.svg'
 
 interface NavigationProps {
   className?: string
@@ -46,7 +47,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
             <Link to="/" className="nav-brand-link">
               {/* Logo SVG */}
               <img 
-                src="/src/assets/Logos/icon_pepe.svg" 
+                src={logoIcon} 
                 alt="Pepe Logo" 
                 className="nav-logo-svg"
               />

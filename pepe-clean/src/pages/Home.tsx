@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
+import heroImage from '../assets/PepeHero.webp'
 
 interface Artist {
   id: number
@@ -232,7 +233,7 @@ export default function Home() {
         {/* Background Hero Image */}
         <div className="hero-background">
           <img 
-            src="/src/assets/PepeHero.webp" 
+            src={heroImage} 
             alt="Pepe Shows Hero" 
             className="hero-image"
           />

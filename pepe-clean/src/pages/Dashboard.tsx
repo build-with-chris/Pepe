@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import logoIcon from '../assets/Logos/icon_pepe.svg'
 
 interface User {
   email: string
@@ -59,7 +60,7 @@ export default function Dashboard() {
             <div className="flex items-center">
               <Link to="/" className="flex items-center">
                 <img 
-                  src="/src/assets/Logos/icon_pepe.svg" 
+                  src={logoIcon} 
                   alt="Pepe Shows" 
                   className="h-8 w-auto mr-3"
                 />

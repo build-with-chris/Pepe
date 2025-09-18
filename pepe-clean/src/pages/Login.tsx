@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Login } from '@/components/login-form'
 import { Link } from 'react-router-dom'
+import logoIcon from '../assets/Logos/icon_pepe.svg'
 
 export default function LoginPage() {
   const { t } = useTranslation()
@@ -11,7 +12,7 @@ export default function LoginPage() {
         <div className="text-center">
           <Link to="/" className="inline-block">
             <img 
-              src="/src/assets/Logos/icon_pepe.svg" 
+              src={logoIcon} 
               alt="Pepe Shows" 
               className="mx-auto h-16 w-auto"
             />

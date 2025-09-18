@@ -9,10 +9,10 @@
 @import "tailwindcss";
 
 /* Import Complete Design System */
-@import "../styling/tokens.css";
-@import "../styling/typography.css";
-@import "../styling/animations.css";
-@import "../styling/components.css";
+@import "../styling-backup-old/tokens.css";
+@import "../styling-backup-old/typography.css";
+@import "../styling-backup-old/animations.css";
+@import "../styling-backup-old/components.css";
 /* @import "../styling/particles.css"; */
 
 /* Tailwind Configuration */
