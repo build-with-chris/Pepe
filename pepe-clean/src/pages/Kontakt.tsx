@@ -6,13 +6,13 @@ export default function Kontakt() {
   return (
     <main>
       {/* Hero Section */}
-      <section className="section-hero bg-gradient-dark">
+      <section className="section-hero-compact bg-gradient-dark">
         <div className="stage-container">
-          <div className="hero-content text-center">
-            <h1 className="display-1 display-gradient mb-8">
+          <div className="hero-content text-center py-8">
+            <h1 className="h1 display-gradient mb-4">
               {t('kontakt.hero.title')}
             </h1>
-            <p className="lead mb-12 max-w-3xl mx-auto">
+            <p className="body-lg max-w-3xl mx-auto">
               {t('kontakt.hero.description')}
             </p>
           </div>

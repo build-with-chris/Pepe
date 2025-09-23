@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
+import DisciplineAccordion, { DisciplineAccordionItem } from '../components/DisciplineAccordion'
 import heroImage from '../assets/PepeHero.webp'
 
 interface Artist {
@@ -226,6 +227,30 @@ export default function Home() {
     return applications[disciplineId] || 'Vielseitig einsetzbar für Events aller Art - von intimen Feiern bis zu großen Shows'
   }
 
+  const disciplineItems: DisciplineAccordionItem[] = disciplines.map((discipline) => ({
+    id: discipline.id,
+    name: discipline.name,
+    image: discipline.image,
+    description: discipline.description,
+    details: [
+      {
+        id: `${discipline.id}-specialties`,
+        title: t('home.disciplines.specialties'),
+        description: getDisciplineSpecialties(discipline.id),
+        icon: '✨',
+      },
+      {
+        id: `${discipline.id}-applications`,
+        title: t('home.disciplines.applications'),
+        description: getDisciplineApplications(discipline.id),
+        icon: '🎭',
+      },
+    ],
+    meta: discipline.artistCount > 0
+      ? t('home.disciplines.artistCount', { count: discipline.artistCount })
+      : t('home.disciplines.artistCountFallback'),
+  }))
+
   return (
     <main>
       {/* Hero Section - Full Viewport Height */}
@@ -245,19 +270,16 @@ export default function Home() {
         <div className="hero-content-wrapper">
           <div className="stage-container">
             <div className="hero-content">
-              <div className="overline mb-6">{t('bento1.hero.title')}</div>
-              <h1 className="hero-title-elegant display-gradient mb-8">
-                {t('about1.hero.title')}
+              <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
+              <h1 className="hero-title-elegant display-gradient mb-6">
+                {t('home.hero.title')}
               </h1>
-              <p className="lead mb-12 max-w-3xl mx-auto">
-                {t('about1.hero.subtitle')}
-              </p>
               <div className="hero-actions">
-                <Link to="/anfragen" className="btn btn-primary btn-xl">
-                  {t('about1.next.cta.assistant')}
+                <Link to="/anfragen" className="btn btn-primary btn-lg">
+                  {t('home.hero.primaryCta')}
                 </Link>
                 <Link to="/shows" className="btn btn-secondary btn-lg">
-                  Shows entdecken
+                  {t('home.hero.secondaryCta')}
                 </Link>
               </div>
             </div>
@@ -267,18 +289,6 @@ export default function Home() {
         {/* Scroll Indicator */}
         <div className="scroll-indicator">
           <div className="scroll-dot"></div>
-        </div>
-      </section>
-
-      {/* Mission Statement */}
-      <section className="section">
-        <div className="stage-container">
-          <div className="text-center mb-16">
-            <div className="overline text-pepe-gold mb-4">{t('about1.mission.kicker')}</div>
-            <p className="h2 max-w-4xl mx-auto">
-              {t('about1.mission.body')}
-            </p>
-          </div>
         </div>
       </section>
 
@@ -504,80 +514,26 @@ export default function Home() {
       {/* Excellence Section with Animated Disciplines */}
       <section className="section">
         <div className="stage-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
             <div>
-              <h2 className="display-2 mb-6">Wir glauben nicht an Mittelmaß – bei uns gibt es Exzellenz.</h2>
-              <p className="body-lg mb-12">
-                Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.
-              </p>
+              <h2 className="display-2 mb-6">{t('home.excellence.heading')}</h2>
+              <p className="body-lg mb-6">{t('home.excellence.copy')}</p>
+              <p className="body text-pepe-t64 mb-0">{t('home.excellence.note')}</p>
             </div>
-            <div 
-              className="discipline-stack"
-              onMouseEnter={handleStackMouseEnter}
-              onMouseLeave={handleStackMouseLeave}
-            >
-              {disciplines.map((discipline, index) => (
-                <div 
-                  key={discipline.id} 
-                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
-                  style={{ '--index': index } as React.CSSProperties}
-                  onMouseEnter={() => handleDisciplineClick(index)}
-                >
-                  {/* Text-only display for closed cards */}
-                  <div className="discipline-text-only">
-                    {discipline.name}
-                  </div>
-                  
-                  {/* Image container for active card */}
-                  <div className="discipline-image-container">
-                    <img 
-                      src={discipline.image} 
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
-                  </div>
-                  
-                  {/* Enhanced Overlay content for active card */}
-                  <div className="discipline-overlay">
-                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
-                    <p className="discipline-description text-white/90 mb-6">
-                      {discipline.description}
-                    </p>
-                    
-                    {/* Additional accordion-like content */}
-                    <div className="discipline-details space-y-4">
-                      <div className="detail-item">
-                        <h4 className="text-pepe-gold font-semibold mb-2">✨ Besonderheiten</h4>
-                        <p className="text-sm text-white/80">
-                          {getDisciplineSpecialties(discipline.id)}
-                        </p>
-                      </div>
-                      
-                      <div className="detail-item">
-                        <h4 className="text-pepe-gold font-semibold mb-2">🎭 Einsatzgebiete</h4>
-                        <p className="text-sm text-white/80">
-                          {getDisciplineApplications(discipline.id)}
-                        </p>
-                      </div>
-                      
-                      <div className="detail-item">
-                        <h4 className="text-pepe-gold font-semibold mb-2">👥 Verfügbare Künstler</h4>
-                        <p className="text-sm text-white/80">
-                          {discipline.artistCount} {discipline.artistCount === 1 ? 'Künstler' : 'Künstler'} in unserem Netzwerk
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DisciplineAccordion
+              items={disciplineItems}
+              expandedIndex={expandedDiscipline}
+              onToggle={handleDisciplineClick}
+              onFocus={handleStackMouseEnter}
+              onBlur={handleStackMouseLeave}
+            />
           </div>
 
           {/* Client Logos */}
-          <div className="text-center mb-8" style={{ marginTop: '200px' }}>
-            <h3 className="h2 mb-12">{t('logos3.heading')}</h3>
+          <div className="text-center mb-10">
+            <h3 className="h2 mb-8">{t('logos3.heading')}</h3>
           </div>
-          <div className="logo-strip" style={{ marginBottom: '200px' }}>
+          <div className="logo-strip">
             <div className="logo-item">
               <img src="/images/Logos/Porsche.png" alt="Porsche" className="client-logo" />
             </div>
@@ -600,6 +556,7 @@ export default function Home() {
         </div>
       </section>
 
+
       {/* Next Steps CTA */}
       <section className="section-large text-center bg-gradient-dark">
         <div className="stage-container">
@@ -615,6 +572,16 @@ export default function Home() {
             <Link to="/kontakt" className="btn btn-ghost btn-lg">
               {t('about1.next.cta.consult')}
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission Statement */}
+      <section className="section bg-pepe-ink">
+        <div className="stage-container">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="overline text-pepe-gold mb-4">{t('about1.mission.kicker')}</div>
+            <p className="h2 mb-0">{t('about1.mission.body')}</p>
           </div>
         </div>
       </section>

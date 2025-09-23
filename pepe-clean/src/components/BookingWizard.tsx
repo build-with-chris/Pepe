@@ -28,6 +28,7 @@ interface BookingData {
   eventDate: string
   eventTime: string
   duration: string
+  customDuration: string
   guestCount: string
   budget: string
   planningStatus: string
@@ -51,7 +52,8 @@ function transformToBackendPayload(newData: BookingData) {
   const teamSizeMap: { [key: string]: number } = {
     'solo': 1,
     'duo': 2, 
-    'group': 5
+    'group': 5,
+    'gruppe': 5
   }
   
   // Map event types to backend expected values
@@ -64,6 +66,8 @@ function transformToBackendPayload(newData: BookingData) {
   
   // Map duration strings to minutes
   const durationMap: { [key: string]: number } = {
+    '5min': 5,
+    '10min': 10,
     '15min': 15,
     '30min': 30,
     '45min': 45,
@@ -78,12 +82,17 @@ function transformToBackendPayload(newData: BookingData) {
       `${newData.street}, ${newData.postalCode} ${newData.city}` : 
       '')
 
+  const parsedCustomDuration = () => {
+    const minutes = parseInt(newData.customDuration, 10)
+    return Number.isFinite(minutes) && minutes > 0 ? minutes : 30
+  }
+
   return {
     client_email: newData.email,
     client_name: `${newData.firstName} ${newData.lastName}`.trim(),
     disciplines: newData.performanceStyle,
     distance_km: 0, // Could be calculated from address in future
-    duration_minutes: durationMap[newData.duration] || 30,
+    duration_minutes: durationMap[newData.duration] || parsedCustomDuration(),
     event_address: eventAddress,
     event_date: newData.eventDate,
     event_time: newData.eventTime,
@@ -125,6 +134,7 @@ export default function BookingWizard() {
     eventDate: '',
     eventTime: '',
     duration: '',
+    customDuration: '',
     guestCount: '',
     budget: '',
     planningStatus: '',
@@ -300,6 +310,10 @@ export default function BookingWizard() {
   const nextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1)
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
     }
   }
 
@@ -378,6 +392,7 @@ export default function BookingWizard() {
           eventDate: '',
           eventTime: '',
           duration: '',
+          customDuration: '',
           guestCount: '',
           budget: '',
           planningStatus: '',

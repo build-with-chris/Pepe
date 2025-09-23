@@ -132,11 +132,11 @@ export function StepContent({
           <h3 className="wizard-step-title">Wo findet Ihre Veranstaltung statt?</h3>
           <p className="wizard-step-subtitle">Veranstaltungsort und technische Anforderungen</p>
           
-          <div className="location-step-layout">
-            {/* Top: Venue type selection cards - reduced width */}
-            <div className="venue-selection-top">
+          <div className="location-step-layout-centered">
+            {/* Top: Venue type selection cards */}
+            <div className="venue-selection-section">
               <h4 className="section-title mb-4">Art der Veranstaltung</h4>
-              <div className="venue-cards-row">
+              <div className="venue-cards-row-centered">
                 {venueTypes.map((venue) => (
                   <div 
                     key={venue.value}
@@ -152,8 +152,8 @@ export function StepContent({
               </div>
             </div>
 
-            {/* Right side: Address and technical requirements */}
-            <div className="location-details-section">
+            {/* Address and technical requirements */}
+            <div className="location-details-section-centered">
               {/* Enhanced Address Section */}
               <div className="location-input-section">
                 <h4 className="form-section-title mb-4">
@@ -286,9 +286,10 @@ export function StepContent({
                 <label className="form-label">Datum der Veranstaltung *</label>
                 <input
                   type="date"
-                  className="input"
+                  className="input calendar-input"
                   value={formData.eventDate}
                   onChange={(e) => onUpdate('eventDate', e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
                   required
                 />
               </div>
@@ -308,20 +309,49 @@ export function StepContent({
             <div className="form-row">
               <div className="form-field">
                 <label className="form-label">Gewünschte Show-Dauer *</label>
-                <select
-                  className="input"
-                  value={formData.duration}
-                  onChange={(e) => onUpdate('duration', e.target.value)}
-                  required
-                >
-                  <option value="">Bitte wählen...</option>
-                  <option value="15min">15 Minuten</option>
-                  <option value="30min">30 Minuten</option>
-                  <option value="45min">45 Minuten</option>
-                  <option value="60min">60 Minuten</option>
-                  <option value="90min">90 Minuten</option>
-                  <option value="120min">120 Minuten</option>
-                </select>
+                <div className="duration-selector">
+                  <div className="duration-quick-options">
+                    <button
+                      type="button"
+                      className={`duration-btn ${formData.duration === '5min' ? 'active' : ''}`}
+                      onClick={() => onUpdate('duration', '5min')}
+                    >
+                      5 Min
+                    </button>
+                    <button
+                      type="button"
+                      className={`duration-btn ${formData.duration === '10min' ? 'active' : ''}`}
+                      onClick={() => onUpdate('duration', '10min')}
+                    >
+                      10 Min
+                    </button>
+                    <button
+                      type="button"
+                      className={`duration-btn ${formData.duration === '15min' ? 'active' : ''}`}
+                      onClick={() => onUpdate('duration', '15min')}
+                    >
+                      15 Min
+                    </button>
+                    <button
+                      type="button"
+                      className={`duration-btn ${formData.duration === 'custom' ? 'active' : ''}`}
+                      onClick={() => onUpdate('duration', 'custom')}
+                    >
+                      Andere
+                    </button>
+                  </div>
+                  {formData.duration === 'custom' && (
+                    <input
+                      type="number"
+                      className="input mt-3"
+                      placeholder="Minuten eingeben..."
+                      value={formData.customDuration}
+                      onChange={(e) => onUpdate('customDuration', e.target.value)}
+                      min="1"
+                      max="480"
+                    />
+                  )}
+                </div>
               </div>
               
               <div className="form-field">
@@ -681,30 +711,11 @@ export function StepContent({
             )}
           </div>
           
-          <div className="wizard-terms">
-            <label className="checkbox-label-large">
-              <input
-                type="checkbox"
-                checked={formData.termsAccepted}
-                onChange={(e) => onUpdate('termsAccepted', e.target.checked)}
-                required
-              />
-              <span className="checkbox-text">
-                Ich akzeptiere die <a href="#" className="link-gold">Allgemeinen Geschäftsbedingungen</a> 
-                und die <a href="#" className="link-gold">Datenschutzerklärung</a> *
-              </span>
-            </label>
-            
-            <label className="checkbox-label-large">
-              <input
-                type="checkbox"
-                checked={formData.marketingConsent}
-                onChange={(e) => onUpdate('marketingConsent', e.target.checked)}
-              />
-              <span className="checkbox-text">
-                Ich möchte über weitere Angebote und Veranstaltungen informiert werden (optional)
-              </span>
-            </label>
+          <div className="wizard-terms-summary">
+            <p className="text-sm text-pepe-t64">
+              Mit dem Absenden Ihrer Anfrage akzeptieren Sie unsere Allgemeinen Geschäftsbedingungen 
+              und Datenschutzerklärung. Ihre Anfrage wird vertraulich behandelt.
+            </p>
           </div>
         </div>
       )

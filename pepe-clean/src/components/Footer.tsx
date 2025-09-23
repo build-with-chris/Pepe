@@ -19,10 +19,21 @@ export default function Footer() {
         <div className="footer-content">
           {/* Brand Section */}
           <div className="footer-brand">
-            <h3 className="h3 mb-3">Pepe Shows</h3>
-            <p className="body-sm mb-6">
-              Ihre Bühne für außergewöhnliche Theatererlebnisse
-            </p>
+            <h3 className="h3 mb-6">Pepe Shows</h3>
+            
+            {/* Instagram */}
+            <a 
+              href="https://www.instagram.com/pepe_arts/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="footer-social-link inline-flex items-center gap-3 mb-6"
+            >
+              <Instagram className="w-4 h-4" />
+              <span>@pepe_arts</span>
+              <span className="text-xs opacity-70">
+                45,4k Follower
+              </span>
+            </a>
             
             {/* Newsletter */}
             <div className="footer-newsletter">
@@ -86,12 +97,12 @@ export default function Footer() {
                 href="https://www.instagram.com/pepe_arts/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="footer-link inline-flex items-center gap-2 mt-2"
+                className="footer-link inline-flex items-center gap-3 mt-2"
               >
-                <Instagram className="w-4 h-4" />
+                <Instagram className="w-3 h-3" />
                 <span>@pepe_arts</span>
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 text-white">
-                  45,4k
+                <span className="text-xs opacity-70">
+                  45,4k Follower
                 </span>
               </a>
             </div>

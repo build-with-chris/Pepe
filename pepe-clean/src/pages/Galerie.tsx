@@ -2,6 +2,7 @@ import { useState } from 'react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import DisciplineAccordion, { DisciplineAccordionItem } from '../components/DisciplineAccordion'
 
 
 // Artist interface for discipline creation
@@ -96,6 +97,30 @@ export default function Galerie() {
     }
     return applications[disciplineId] || 'Vielseitig einsetzbar für Events aller Art - von intimen Feiern bis zu großen Shows'
   }
+
+  const disciplineItems: DisciplineAccordionItem[] = disciplines.map((discipline) => ({
+    id: discipline.id,
+    name: discipline.name,
+    image: discipline.image,
+    description: discipline.description,
+    details: [
+      {
+        id: `${discipline.id}-specialties`,
+        title: t('home.disciplines.specialties'),
+        description: getDisciplineSpecialties(discipline.id),
+        icon: '✨',
+      },
+      {
+        id: `${discipline.id}-applications`,
+        title: t('home.disciplines.applications'),
+        description: getDisciplineApplications(discipline.id),
+        icon: '🎭',
+      },
+    ],
+    meta: discipline.artistCount > 0
+      ? t('home.disciplines.artistCount', { count: discipline.artistCount })
+      : t('home.disciplines.artistCountFallback'),
+  }))
 
   // Create disciplines from artists data
   const createDisciplinesFromArtists = (artistsData: Artist[]) => {
@@ -337,7 +362,7 @@ export default function Galerie() {
         <div className="stage-container">
           <div className="hero-content text-center max-w-4xl mx-auto py-12">
             <div className="overline text-pepe-gold mb-4">KÜNSTLER GALERIE</div>
-            <h1 className="display-2 mb-6">
+            <h1 className="h1 mb-6">
               {t('gallery14.heading') || 'Wow, not "nice".'}
             </h1>
             <p className="body-lg mb-8 max-w-2xl mx-auto">
@@ -350,75 +375,25 @@ export default function Galerie() {
       {/* Excellence Section with Discipline Stack Accordion */}
       <section className="section">
         <div className="stage-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
             <div>
-              <h2 className="display-2 mb-6">
+              <h2 className="h2 mb-6">
                 {t('gallery23.headingDesktop') || 'We don\'t believe in average – with us it\'s excellence.'}
               </h2>
-              <p className="body-lg mb-12">
+              <p className="body-lg mb-6">
                 Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.
               </p>
+              <p className="body text-pepe-t64 mb-0">
+                {t('gallery23.subtitle') || 'Wählen Sie eine Disziplin, um Referenzen, Einsätze und passende Künstler zu sehen.'}
+              </p>
             </div>
-            <div 
-              className="discipline-stack"
-              onMouseEnter={handleStackMouseEnter}
-              onMouseLeave={handleStackMouseLeave}
-            >
-              {disciplines.map((discipline, index) => (
-                <div 
-                  key={discipline.id} 
-                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
-                  style={{ '--index': index } as React.CSSProperties}
-                  onMouseEnter={() => handleDisciplineClick(index)}
-                >
-                  {/* Text-only display for closed cards */}
-                  <div className="discipline-text-only">
-                    {discipline.name}
-                  </div>
-                  
-                  {/* Image container for active card */}
-                  <div className="discipline-image-container">
-                    <img 
-                      src={discipline.image} 
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
-                  </div>
-                  
-                  {/* Enhanced Overlay content for active card */}
-                  <div className="discipline-overlay">
-                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
-                    <p className="discipline-description text-white/90 mb-6">
-                      {discipline.description}
-                    </p>
-                    
-                    {/* Additional accordion-like content */}
-                    <div className="discipline-details space-y-4">
-                      <div className="detail-item">
-                        <h4 className="text-pepe-gold font-semibold mb-2">✨ Besonderheiten</h4>
-                        <p className="text-sm text-white/80">
-                          {getDisciplineSpecialties(discipline.id)}
-                        </p>
-                      </div>
-                      
-                      <div className="detail-item">
-                        <h4 className="text-pepe-gold font-semibold mb-2">🎭 Einsatzgebiete</h4>
-                        <p className="text-sm text-white/80">
-                          {getDisciplineApplications(discipline.id)}
-                        </p>
-                      </div>
-                      
-                      <div className="detail-item">
-                        <h4 className="text-pepe-gold font-semibold mb-2">👥 Verfügbare Künstler</h4>
-                        <p className="text-sm text-white/80">
-                          {discipline.artistCount} {discipline.artistCount === 1 ? 'Künstler' : 'Künstler'} in unserem Netzwerk
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DisciplineAccordion
+              items={disciplineItems}
+              expandedIndex={expandedDiscipline}
+              onToggle={handleDisciplineClick}
+              onFocus={handleStackMouseEnter}
+              onBlur={handleStackMouseLeave}
+            />
           </div>
         </div>
       </section>
@@ -430,7 +405,7 @@ export default function Galerie() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Content Column */}
             <div className="text-center lg:text-left">
-              <h2 className="display-2 mb-8">
+              <h2 className="h2 mb-8">
                 {t('hero135.heading') || 'Vorhang auf für unsere Artisten'}
               </h2>
               <div className="video-text-wrapper">
@@ -447,16 +422,14 @@ export default function Galerie() {
                 onClick={() => setIsVideoModalOpen(true)}
               >
                 <div className="video-preview-wrapper">
-                  {/* YouTube Thumbnail as Placeholder */}
+                  {/* Autoplay Video Preview */}
                   <div className="video-thumbnail-container">
-                    <img 
-                      src="https://img.youtube.com/vi/dXHLaIkezTM/maxresdefault.jpg"
-                      alt="PepeShows Showreel Vorschau"
+                    <iframe 
+                      src="https://www.youtube.com/embed/dXHLaIkezTM?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&playlist=dXHLaIkezTM"
+                      title="PepeShows Showreel Vorschau"
                       className="video-preview-thumbnail"
-                      onError={(e) => {
-                        // Fallback to standard quality if maxres not available
-                        (e.target as HTMLImageElement).src = "https://img.youtube.com/vi/dXHLaIkezTM/hqdefault.jpg"
-                      }}
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
                     />
                   </div>
                   
@@ -646,7 +619,7 @@ export default function Galerie() {
       <section className="section-large text-center bg-gradient-dark">
         <div className="stage-container">
           <div className="overline text-pepe-gold mb-4">{t('gallery.cta.kicker') || 'EXPERIENCE IT LIVE'}</div>
-          <h2 className="display-2 mb-8">{t('gallery.cta.title') || 'Book Your Show'}</h2>
+          <h2 className="h2 mb-8">{t('gallery.cta.title') || 'Book Your Show'}</h2>
           <p className="lead mb-12 max-w-3xl mx-auto">
             {t('gallery.cta.description') || 'These impressions show only a small part of our capabilities. Experience the full magic live at your event.'}
           </p>

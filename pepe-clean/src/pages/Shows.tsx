@@ -71,14 +71,11 @@ export default function Shows() {
       {/* Hero Section */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">
-          <div className="hero-content text-center max-w-4xl mx-auto py-16">
-            <div className="overline text-pepe-gold mb-6">{t('hero37.kicker')}</div>
-            <h1 className="display-1 display-gradient mb-8">
+          <div className="hero-content text-center max-w-3xl mx-auto py-12">
+            <div className="overline text-pepe-gold mb-4">{t('hero37.kicker')}</div>
+            <h1 className="h1 display-gradient mb-6">
               {t('hero37.title')}
             </h1>
-            <p className="lead mb-12 max-w-3xl mx-auto">
-              {t('hero37.subtitle')}
-            </p>
             <div className="hero-actions">
               <Link to="/anfragen" className="btn btn-primary btn-xl">
                 {t('hero37.cta.requestShow')}
