@@ -2,7 +2,8 @@ import { useState } from 'react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import DisciplineAccordion, { DisciplineAccordionItem } from '../components/DisciplineAccordion'
+import DisciplineAccordion from '../components/DisciplineAccordion'
+import type { DisciplineAccordionItem } from '../components/DisciplineAccordion'
 
 
 // Artist interface for discipline creation

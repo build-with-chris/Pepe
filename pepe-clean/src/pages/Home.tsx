@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
-import DisciplineAccordion, { DisciplineAccordionItem } from '../components/DisciplineAccordion'
+import DisciplineAccordion from '../components/DisciplineAccordion'
+import type { DisciplineAccordionItem } from '../components/DisciplineAccordion'
 import heroImage from '../assets/PepeHero.webp'
 
 interface Artist {
