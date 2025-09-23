@@ -53,8 +53,8 @@
     }
   },
   "artists": {
-  "quote": "Wo Kunst zu Magie wird",
-  "filters": { "all": "Alle" },
+    "quote": "Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.",
+    "filters": { "all": "Alle" },
   "results_one": "{{count}} Ergebnis",
   "results_other": "{{count}} Ergebnisse",
   "loading": "Lade Künstler…",
@@ -672,6 +672,25 @@
     "subtitle": "Wir bringen Visionen auf die Bühne – professionell, individuell und mit viel Leidenschaft."
   },
   "home": {
+    "hero": {
+      "kicker": "PEPE SHOWS",
+      "title": "Spektakuläre Acts. Klar organisiert.",
+      "subtitle": "Wir bringen preisgekrönte Artistik auf Ihre Bühne – modular buchbar und perfekt abgestimmt auf Anlass, Budget und Location.",
+      "primaryCta": "Booking-Assistent starten",
+      "secondaryCta": "Shows entdecken"
+    },
+    "excellence": {
+      "heading": "Wir glauben nicht an Mittelmaß – bei uns gibt es Exzellenz.",
+      "copy": "Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.",
+      "note": "Jede Disziplin zeigt Ihnen echte Referenzen und Einsatzmöglichkeiten für Ihr Event."
+    },
+    "disciplines": {
+      "specialties": "Besonderheiten",
+      "applications": "Einsatzgebiete",
+      "artistCount": "{{count}} Künstler:in",
+      "artistCount_plural": "{{count}} Künstler:innen",
+      "artistCountFallback": "Künstler:innen aus unserem Netzwerk auf Anfrage"
+    },
     "findArtistTitle": "Finde den perfekten Showact",
     "findArtistSubtitle": "Beantworte nur wenige kurze Fragen und erhalte unverbindlich erste Vorschläge und Preise.",
     "findArtistButton": "Jetzt starten",

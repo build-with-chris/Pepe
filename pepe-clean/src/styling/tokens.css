@@ -34,6 +34,9 @@
   
   /* Secondary Warm Tones */
   --pepe-bronze: #B8860B;        /* Bronze accent for depth */
+  --pepe-bronze-hover: #C69315;  /* Hover state for bronze */
+  --pepe-bronze-active: #9C6F09; /* Active state for bronze */
+  --pepe-bronze-glow: rgba(184, 134, 11, 0.25); /* Bronze glow */
   --pepe-amber: #FFBF00;         /* Bright amber for highlights */
   --pepe-copper: #B87333;        /* Copper tone for variety */
   

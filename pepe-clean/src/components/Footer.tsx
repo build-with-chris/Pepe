@@ -26,13 +26,10 @@ export default function Footer() {
               href="https://www.instagram.com/pepe_arts/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="footer-social-link inline-flex items-center gap-3 mb-6"
+              className="footer-social-link inline-flex items-center gap-2 mb-8"
             >
-              <Instagram className="w-4 h-4" />
+              <Instagram className="w-3 h-3" />
               <span>@pepe_arts</span>
-              <span className="text-xs opacity-70">
-                45,4k Follower
-              </span>
             </a>
             
             {/* Newsletter */}
@@ -101,9 +98,6 @@ export default function Footer() {
               >
                 <Instagram className="w-3 h-3" />
                 <span>@pepe_arts</span>
-                <span className="text-xs opacity-70">
-                  45,4k Follower
-                </span>
               </a>
             </div>
           </div>

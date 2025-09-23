@@ -32,34 +32,40 @@
 
 /* ===== Booking Wizard Layout ===== */
 
-/* Location Step Centered Layout */
+/* Location Step Three-Column Layout */
 .location-step-layout-centered {
-  display: flex;
-  flex-direction: column;
-  max-width: 800px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+  max-width: 1200px;
   margin: 0 auto;
-  gap: 3rem;
 }
 
 .venue-selection-section {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .venue-cards-row-centered {
   display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.location-details-section-centered {
-  width: 100%;
+.location-address-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.technical-requirements-section {
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 768px) {
-  .venue-cards-row-centered {
-    flex-direction: column;
-    align-items: center;
+  .location-step-layout-centered {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
 }
 
@@ -4879,193 +4885,233 @@ textarea.input {
   }
 }
 
-/* Modern discipline accordion */
-.discipline-accordion {
+/* Discipline Card Stack */
+.discipline-card-stack {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.discipline-accordion-item {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 400px;
   border-radius: var(--radius-2xl);
-  background: linear-gradient(135deg, rgba(22, 22, 22, 0.95) 0%, rgba(12, 12, 12, 0.95) 100%);
   overflow: hidden;
-  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+  box-shadow: var(--shadow-2xl);
 }
 
-.discipline-accordion-item:hover {
-  border-color: rgba(212, 165, 116, 0.35);
-}
-
-.discipline-accordion-item.expanded {
-  border-color: var(--pepe-gold);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-  transform: translateY(-4px);
-}
-
-.discipline-accordion-header {
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--pepe-white);
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--font-semibold);
-  letter-spacing: var(--tracking-tight);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5) var(--space-6);
-  cursor: pointer;
-  text-align: left;
-}
-
-.discipline-accordion-header-content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex: 1;
-}
-
-.discipline-accordion-media-small {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-lg);
+.discipline-card {
+  position: relative;
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background: var(--pepe-ink);
+  cursor: default;
   overflow: hidden;
-  flex-shrink: 0;
 }
 
-.discipline-accordion-media-small img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.discipline-accordion-header:hover,
-.discipline-accordion-header:focus-visible {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.discipline-accordion-toggle {
-  display: inline-flex;
+/* Closed state - narrow text strips */
+.discipline-card:not(.active) {
+  flex: 0 0 80px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 999px;
-  background: rgba(212, 165, 116, 0.15);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  border-right: 1px solid var(--pepe-line);
+}
+
+/* Active state - full image display */
+.discipline-card.active {
+  flex: 1;
+  display: block;
+}
+
+/* Text for closed cards */
+.discipline-card:not(.active) .discipline-text-only {
+  color: var(--pepe-white);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  padding: var(--space-2);
+  transition: all 0.3s ease;
+}
+
+.discipline-card:not(.active):hover .discipline-text-only {
   color: var(--pepe-gold);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-extrabold);
-  line-height: 1;
+  transform: rotate(180deg) scale(1.05);
 }
 
-.discipline-accordion-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-6);
-  padding: 0 var(--space-6);
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 0.45s ease, opacity 0.35s ease, padding 0.35s ease;
-}
-
-.discipline-accordion-item.expanded .discipline-accordion-body {
-  padding: 0 var(--space-6) var(--space-6);
-  max-height: 1200px;
-  opacity: 1;
-}
-
-.discipline-accordion-media {
+/* Image container for active card */
+.discipline-image-container {
   position: relative;
-  border-radius: var(--radius-2xl);
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  min-height: 240px;
 }
 
-.discipline-accordion-media img {
+.discipline-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  object-position: center;
+  transition: transform 0.8s ease;
 }
 
-.discipline-accordion-item.expanded .discipline-accordion-media img {
-  transform: scale(1.02);
+/* 16:9 aspect ratio enforcement */
+.discipline-card.active .discipline-image {
+  aspect-ratio: 16/9;
+  height: auto;
+  min-height: 100%;
 }
 
-.discipline-accordion-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+.discipline-card.active .discipline-image {
+  animation: kenBurns 12s ease-in-out infinite;
 }
 
-.discipline-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-4);
+/* Overlay for active card */
+.discipline-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    rgba(0, 0, 0, 0.3) 60%,
+    transparent 100%
+  );
+  padding: var(--space-8);
+  color: var(--pepe-white);
+  transform: translateY(0);
+  transition: all 0.5s ease;
 }
 
-.discipline-detail-item {
-  display: flex;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.discipline-detail-icon {
-  font-size: var(--text-xl);
-  line-height: 1;
-}
-
-.discipline-detail-title {
+.discipline-overlay h3 {
   margin: 0;
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-2);
+  color: var(--pepe-white);
+}
+
+.discipline-description {
   font-size: var(--text-base);
-  font-weight: var(--font-semibold);
-  color: var(--pepe-gold);
+  color: var(--pepe-t80);
+  line-height: var(--leading-relaxed);
+  max-width: 600px;
 }
 
-.discipline-detail-description {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.8);
+/* Hide image elements for non-active cards */
+.discipline-card:not(.active) .discipline-image-container,
+.discipline-card:not(.active) .discipline-overlay {
+  display: none;
 }
 
-.discipline-meta {
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.7);
-  padding: var(--space-4);
-  border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(6px);
+/* Show text element only for non-active cards */
+.discipline-card.active .discipline-text-only {
+  display: none;
 }
 
-@media (min-width: 1024px) {
-  .discipline-accordion-body {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-    align-items: start;
+/* Hover effect for closed cards */
+.discipline-card:not(.active) {
+  background: linear-gradient(
+    135deg,
+    var(--pepe-ink) 0%,
+    var(--pepe-surface) 100%
+  );
+}
+
+.discipline-card:not(.active):hover {
+  background: linear-gradient(
+    135deg,
+    var(--pepe-surface) 0%,
+    var(--pepe-ink) 100%
+  );
+  border-right-color: var(--pepe-gold);
+}
+
+/* Remove last border */
+.discipline-card:last-child {
+  border-right: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .discipline-card-stack {
+    flex-direction: column;
+    height: 80vh;
+    max-height: 600px;
   }
+  
+  .discipline-card:not(.active) {
+    flex: 0 0 50px;
+    writing-mode: horizontal-tb;
+    text-orientation: initial;
+    border-right: none;
+    border-bottom: 1px solid var(--pepe-line);
+  }
+  
+  .discipline-card:not(.active) .discipline-text-only {
+    transform: none;
+    writing-mode: horizontal-tb;
+    text-align: center;
+    padding: var(--space-3);
+  }
+  
+  .discipline-card:not(.active):hover .discipline-text-only {
+    transform: scale(1.02);
+  }
+  
+  .discipline-overlay {
+    padding: var(--space-4);
+  }
+  
+  .discipline-overlay h3 {
+    font-size: var(--text-2xl);
+  }
+  
+  .discipline-description {
+    font-size: var(--text-sm);
+  }
+}
+
+/* Enhanced discipline details for accordion-like content */
+.discipline-details {
+  margin-top: var(--space-4);
+}
+
+.detail-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  border-left: 3px solid var(--pepe-gold);
+}
+
+.detail-item h4 {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.detail-item p {
+  margin: 0;
+  line-height: var(--leading-relaxed);
 }
 
 @media (max-width: 768px) {
-  .discipline-accordion-header {
-    font-size: var(--text-lg);
-    padding: var(--space-4) var(--space-5);
+  .discipline-details {
+    margin-top: var(--space-3);
   }
-
-  .discipline-accordion-toggle {
-    width: 2.25rem;
-    height: 2.25rem;
+  
+  .detail-item {
+    padding: var(--space-2);
   }
-
-  .discipline-accordion-item.expanded .discipline-accordion-body {
-    padding: 0 var(--space-4) var(--space-5);
+  
+  .detail-item h4 {
+    font-size: var(--text-xs);
+  }
+  
+  .detail-item p {
+    font-size: var(--text-xs);
   }
 }
 

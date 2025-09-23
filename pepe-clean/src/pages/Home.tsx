@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
-import DisciplineAccordion from '../components/DisciplineAccordion'
-import type { DisciplineAccordionItem } from '../components/DisciplineAccordion'
 import heroImage from '../assets/PepeHero.webp'
 
 interface Artist {
@@ -109,7 +107,7 @@ export default function Home() {
         // Create dynamic description based on actual artists
         const artistCount = data.count
         const sampleArtists = data.artists.slice(0, 3).map(a => a.name).join(', ')
-        const description = `${artistCount} erfahrene Künstler in unserem Netzwerk beherrschen ${translatedName}. ${sampleArtists.length > 0 ? `Darunter: ${sampleArtists}` : ''} Erleben Sie diese Kunst auf höchstem Niveau.`
+        const description = `${artistCount} erfahrene Künstler in unserem Netzwerk beherrschen ${translatedName}. ${sampleArtists.length > 0 ? `Darunter: ${sampleArtists}` : ''}`
         
         return {
           id: lowerCaseName.replace(/[\s-]+/g, ''),
@@ -228,29 +226,6 @@ export default function Home() {
     return applications[disciplineId] || 'Vielseitig einsetzbar für Events aller Art - von intimen Feiern bis zu großen Shows'
   }
 
-  const disciplineItems: DisciplineAccordionItem[] = disciplines.map((discipline) => ({
-    id: discipline.id,
-    name: discipline.name,
-    image: discipline.image,
-    description: discipline.description,
-    details: [
-      {
-        id: `${discipline.id}-specialties`,
-        title: t('home.disciplines.specialties'),
-        description: getDisciplineSpecialties(discipline.id),
-        icon: '✨',
-      },
-      {
-        id: `${discipline.id}-applications`,
-        title: t('home.disciplines.applications'),
-        description: getDisciplineApplications(discipline.id),
-        icon: '🎭',
-      },
-    ],
-    meta: discipline.artistCount > 0
-      ? t('home.disciplines.artistCount', { count: discipline.artistCount })
-      : t('home.disciplines.artistCountFallback'),
-  }))
 
   return (
     <main>
@@ -521,13 +496,42 @@ export default function Home() {
               <p className="body-lg mb-6">{t('home.excellence.copy')}</p>
               <p className="body text-pepe-t64 mb-0">{t('home.excellence.note')}</p>
             </div>
-            <DisciplineAccordion
-              items={disciplineItems}
-              expandedIndex={expandedDiscipline}
-              onToggle={handleDisciplineClick}
-              onFocus={handleStackMouseEnter}
-              onBlur={handleStackMouseLeave}
-            />
+            <div 
+              className="discipline-card-stack"
+              onMouseEnter={handleStackMouseEnter}
+              onMouseLeave={handleStackMouseLeave}
+            >
+              {disciplines.map((discipline, index) => (
+                <div 
+                  key={discipline.id} 
+                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
+                  style={{ '--index': index } as React.CSSProperties}
+                  onMouseEnter={() => handleDisciplineClick(index)}
+                >
+                  {/* Text-only display for closed cards */}
+                  <div className="discipline-text-only">
+                    {discipline.name}
+                  </div>
+                  
+                  {/* Image container for active card */}
+                  <div className="discipline-image-container">
+                    <img 
+                      src={discipline.image} 
+                      alt={discipline.name}
+                      className="discipline-image"
+                    />
+                  </div>
+                  
+                  {/* Enhanced Overlay content for active card */}
+                  <div className="discipline-overlay">
+                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
+                    <p className="discipline-description text-white/90 mb-6">
+                      {discipline.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Client Logos */}

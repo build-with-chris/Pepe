@@ -2,8 +2,6 @@ import { useState } from 'react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import DisciplineAccordion from '../components/DisciplineAccordion'
-import type { DisciplineAccordionItem } from '../components/DisciplineAccordion'
 
 
 // Artist interface for discipline creation
@@ -14,6 +12,7 @@ interface Artist {
   profile_image_url?: string
   bio?: string
   experience_years?: number
+  gallery_urls?: string[]
 }
 
 export default function Galerie() {
@@ -99,29 +98,6 @@ export default function Galerie() {
     return applications[disciplineId] || 'Vielseitig einsetzbar für Events aller Art - von intimen Feiern bis zu großen Shows'
   }
 
-  const disciplineItems: DisciplineAccordionItem[] = disciplines.map((discipline) => ({
-    id: discipline.id,
-    name: discipline.name,
-    image: discipline.image,
-    description: discipline.description,
-    details: [
-      {
-        id: `${discipline.id}-specialties`,
-        title: t('home.disciplines.specialties'),
-        description: getDisciplineSpecialties(discipline.id),
-        icon: '✨',
-      },
-      {
-        id: `${discipline.id}-applications`,
-        title: t('home.disciplines.applications'),
-        description: getDisciplineApplications(discipline.id),
-        icon: '🎭',
-      },
-    ],
-    meta: discipline.artistCount > 0
-      ? t('home.disciplines.artistCount', { count: discipline.artistCount })
-      : t('home.disciplines.artistCountFallback'),
-  }))
 
   // Create disciplines from artists data
   const createDisciplinesFromArtists = (artistsData: Artist[]) => {
@@ -199,7 +175,7 @@ export default function Galerie() {
           id: lowerCaseName.replace(/\s+/g, ''),
           name: translatedName,
           image: imagePath,
-          description: `${translatedName} - Eine faszinierende Disziplin für unvergessliche Auftritte.`,
+          description: `${translatedName}`,
           artistCount: data.count
         }
       })
@@ -388,13 +364,42 @@ export default function Galerie() {
                 {t('gallery23.subtitle') || 'Wählen Sie eine Disziplin, um Referenzen, Einsätze und passende Künstler zu sehen.'}
               </p>
             </div>
-            <DisciplineAccordion
-              items={disciplineItems}
-              expandedIndex={expandedDiscipline}
-              onToggle={handleDisciplineClick}
-              onFocus={handleStackMouseEnter}
-              onBlur={handleStackMouseLeave}
-            />
+            <div 
+              className="discipline-card-stack"
+              onMouseEnter={handleStackMouseEnter}
+              onMouseLeave={handleStackMouseLeave}
+            >
+              {disciplines.map((discipline, index) => (
+                <div 
+                  key={discipline.id} 
+                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
+                  style={{ '--index': index } as React.CSSProperties}
+                  onMouseEnter={() => handleDisciplineClick(index)}
+                >
+                  {/* Text-only display for closed cards */}
+                  <div className="discipline-text-only">
+                    {discipline.name}
+                  </div>
+                  
+                  {/* Image container for active card */}
+                  <div className="discipline-image-container">
+                    <img 
+                      src={discipline.image} 
+                      alt={discipline.name}
+                      className="discipline-image"
+                    />
+                  </div>
+                  
+                  {/* Enhanced Overlay content for active card */}
+                  <div className="discipline-overlay">
+                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
+                    <p className="discipline-description text-white/90 mb-6">
+                      {discipline.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

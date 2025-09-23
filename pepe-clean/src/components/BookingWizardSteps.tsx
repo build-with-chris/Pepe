@@ -133,7 +133,7 @@ export function StepContent({
           <p className="wizard-step-subtitle">Veranstaltungsort und technische Anforderungen</p>
           
           <div className="location-step-layout-centered">
-            {/* Top: Venue type selection cards */}
+            {/* Column 1: Venue type selection cards */}
             <div className="venue-selection-section">
               <h4 className="section-title mb-4">Art der Veranstaltung</h4>
               <div className="venue-cards-row-centered">
@@ -152,8 +152,8 @@ export function StepContent({
               </div>
             </div>
 
-            {/* Address and technical requirements */}
-            <div className="location-details-section-centered">
+            {/* Column 2: Address details */}
+            <div className="location-address-section">
               {/* Enhanced Address Section */}
               <div className="location-input-section">
                 <h4 className="form-section-title mb-4">

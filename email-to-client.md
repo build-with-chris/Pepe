@@ -34,7 +34,7 @@ https://pepe-clean-*.vercel.app
 
 Backend-Endpoint: `https://pepe-backend-4nid.onrender.com`
 
-Von hier können wir gerne beim Testen und Anpassen unterstützen.
+Von hier kann ich gerne beim Testen und Anpassen unterstützen.
 
 ## 📝 Buchungsanfragen:
 

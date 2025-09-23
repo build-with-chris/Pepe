@@ -201,79 +201,79 @@ export default function BookingWizard() {
   const performanceStyles = [
     {
       value: 'zauberer',
-      label: t('artists.disciplines.zauberer') || 'Zauberei',
+      label: t('disciplines.zauberer') || 'Zauberei',
       image: '/images/disciplines/Zauberer.webp',
       description: 'Magische Shows & Illusions'
     },
     {
       value: 'luftakrobatik',
-      label: t('artists.disciplines.luftakrobatik') || 'Luftakrobatik', 
+      label: t('disciplines.luftakrobatik') || 'Luftakrobatik', 
       image: '/images/disciplines/Luftakrobatik.webp',
       description: 'Aerial & Luftartistik'
     },
     {
       value: 'bodenakrobatik',
-      label: t('artists.disciplines.bodenakrobatik') || 'Bodenakrobatik',
+      label: t('disciplines.bodenakrobatik') || 'Bodenakrobatik',
       image: '/images/disciplines/Bodenakrobatik.webp',
       description: 'Floor Acrobatics & Turnen'
     },
     {
       value: 'partnerakrobatik',
-      label: t('artists.disciplines.partnerakrobatik') || 'Partnerakrobatik',
+      label: t('disciplines.partnerakrobatik') || 'Partnerakrobatik',
       image: '/images/disciplines/Partnerakrobatik.webp',
       description: 'Partner Acrobatics & Hand-to-Hand'
     },
     {
       value: 'contemporary-dance',
-      label: t('artists.disciplines.contemporaryDance') || 'Contemporary Dance',
+      label: t('disciplines.contemporaryDance') || 'Contemporary Dance',
       image: '/images/disciplines/Contemporary_Dance.webp',
       description: 'Moderner Tanz & Choreographie'
     },
     {
       value: 'breakdance',
-      label: t('artists.disciplines.breakdance') || 'Breakdance',
+      label: t('disciplines.breakdance') || 'Breakdance',
       image: '/images/disciplines/Breakdance.webp',
       description: 'Urban Dance & Hip-Hop'
     },
     {
       value: 'jonglage',
-      label: t('artists.disciplines.jonglage') || 'Jonglage',
+      label: t('disciplines.jonglage') || 'Jonglage',
       image: '/images/disciplines/Jonglage.webp',
       description: 'Artistisches Jonglieren'
     },
     {
       value: 'chinese-pole',
-      label: t('artists.disciplines.chinesePole') || 'Chinese Pole',
+      label: t('disciplines.chinesePole') || 'Chinese Pole',
       image: '/images/disciplines/Chinese_Pole.webp',
       description: 'Vertikale Artistik am Mast'
     },
     {
       value: 'cyr-wheel',
-      label: t('artists.disciplines.cyrWheel') || 'Cyr Wheel',
+      label: t('disciplines.cyrWheel') || 'Cyr Wheel',
       image: '/images/disciplines/Cyr-Wheel.webp',
       description: 'Artistik im großen Rad'
     },
     {
       value: 'hula-hoop',
-      label: t('artists.disciplines.hulaHoop') || 'Hula Hoop',
+      label: t('disciplines.hulaHoop') || 'Hula Hoop',
       image: '/images/disciplines/Hula_Hoop.webp',
       description: 'Artistisches Hula-Hoop'
     },
     {
       value: 'handstand',
-      label: t('artists.disciplines.handstand') || 'Handstand',
+      label: t('disciplines.handstand') || 'Handstand',
       image: '/images/disciplines/Handstand.webp',
       description: 'Kraft & Balance Acts'
     },
     {
       value: 'moderation',
-      label: t('artists.disciplines.moderation') || 'Moderation',
+      label: t('disciplines.moderation') || 'Moderation',
       image: '/images/disciplines/Moderation.webp', 
       description: 'Event-Moderation & Entertainment'
     },
     {
       value: 'pantomime',
-      label: t('artists.disciplines.pantomime') || 'Pantomime',
+      label: t('disciplines.pantomime') || 'Pantomime',
       image: '/images/disciplines/Pantomime/Entertainment.webp',
       description: 'Stumme Kunst & Entertainment'
     }

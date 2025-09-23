@@ -50,7 +50,7 @@
     },
   
     "artists": {
-  "quote": "Where art becomes magic",
+  "quote": "Our artists are world champions, international champions, and proven professionals in their disciplines.",
   "filters": { "all": "All" },
   "results_one": "{{count}} result",
   "results_other": "{{count}} results",
@@ -724,6 +724,25 @@
     },
   
     "home": {
+      "hero": {
+        "kicker": "PEPE SHOWS",
+        "title": "Spectacular acts. Seamlessly produced.",
+        "subtitle": "We bring award-winning artistry to your stage – modular bookings tailored to occasion, budget and venue.",
+        "primaryCta": "Start booking assistant",
+        "secondaryCta": "Explore shows"
+      },
+      "excellence": {
+        "heading": "We don’t do average – we deliver excellence.",
+        "copy": "Our performers are world champions, internationally acclaimed talents and proven experts in their disciplines.",
+        "note": "Each discipline highlights real references and where it shines best for your event."
+      },
+      "disciplines": {
+        "specialties": "Highlights",
+        "applications": "Ideal for",
+        "artistCount": "{{count}} performer",
+        "artistCount_plural": "{{count}} performers",
+        "artistCountFallback": "Performers from our network upon request"
+      },
       "findArtistTitle": "Find the perfect showact now",
       "findArtistSubtitle": "Answer just a few short questions and receive non-binding initial suggestions and prices.",
       "findArtistButton": "Start now",
