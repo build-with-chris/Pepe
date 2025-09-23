@@ -5,7 +5,7 @@ interface Artist {
   id: number;
   name: string;
   profile_image_url?: string | null;
-  image_url?: string | null; // legacy fallback
+  image_url?: string | null;
   bio?: string | null;
   email?: string | null;
   address?: string | null;
@@ -38,7 +38,6 @@ export default function KuenstlerVerwaltung() {
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  // UI state
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'unsubmitted'>('all');
   const [pendingFirst, setPendingFirst] = useState<boolean>(true);
   const [query, setQuery] = useState<string>('');
@@ -192,7 +191,6 @@ export default function KuenstlerVerwaltung() {
       const newStatus = (data?.approval_status as string) || 'approved';
       const approvedAt = (data?.approved_at as string) || new Date().toISOString();
 
-      // UI aktualisieren
       setSelected({ ...selected, approval_status: newStatus, approved_at: approvedAt });
       setArtists(prev =>
         prev.map(a => (a.id === selected.id ? { ...a, approval_status: newStatus, approved_at: approvedAt } : a))
@@ -219,7 +217,6 @@ export default function KuenstlerVerwaltung() {
         const t = await res.text();
         throw new Error(`HTTP ${res.status}: ${t}`);
       }
-      // Entferne aus Liste und ggf. Modal schließen
       setArtists(prev => prev.filter(a => a.id !== artist.id));
       if (selected?.id === artist.id) setSelected(null);
     } catch (e: any) {
@@ -324,7 +321,6 @@ export default function KuenstlerVerwaltung() {
         </div>
       </div>
 
-      {/* Detail Modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={closeDetails} />
@@ -334,29 +330,22 @@ export default function KuenstlerVerwaltung() {
                 {statusBadge(selected.approval_status)}
                 <h3 className="text-xl font-semibold">{selected.name}</h3>
               </div>
-             <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  {statusBadge(selected.approval_status)}
-                  <h3 className="text-xl font-semibold">{selected.name}</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selected.approval_status !== 'approved' && (
-                    <button
-                      onClick={approveSelected}
-                      disabled={actionLoading}
-                      className="px-3 py-1 rounded bg-green-600 hover:bg-green-500 disabled:opacity-50"
-                      title="Artist freigeben"
-                    >
-                      {actionLoading ? '…' : 'Approve'}
-                    </button>
-                  )}
-                  <button onClick={closeDetails} className="px-3 py-1 rounded bg-white/10 hover:bg-white/20">Schließen</button>
-                </div>
+              <div className="flex items-center gap-2">
+                {selected.approval_status !== 'approved' && (
+                  <button
+                    onClick={approveSelected}
+                    disabled={actionLoading}
+                    className="px-3 py-1 rounded bg-green-600 hover:bg-green-500 disabled:opacity-50"
+                    title="Artist freigeben"
+                  >
+                    {actionLoading ? '…' : 'Approve'}
+                  </button>
+                )}
+                <button onClick={closeDetails} className="px-3 py-1 rounded bg-white/10 hover:bg-white/20">Schließen</button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-6 p-4 overflow-y-auto">
-              {/* Bild + Galerie */}
               <div className="md:col-span-1 space-y-3">
                 <div className="aspect-square bg-gray-800 rounded overflow-hidden">
                   {selected.profile_image_url ? (
@@ -377,7 +366,6 @@ export default function KuenstlerVerwaltung() {
                 )}
               </div>
 
-              {/* Details */}
               <div className="md:col-span-2 space-y-4">
                 <div>
                   <div className="text-sm text-white/60">Bio</div>
@@ -421,7 +409,6 @@ export default function KuenstlerVerwaltung() {
                   </div>
                 </div>
 
-                {/* Slots */}
                 <div>
                   <div className="text-sm text-white/60">Verfügbarkeiten</div>
                   <ul className="mt-1 flex flex-wrap gap-2">

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import type {Session} from '@supabase/supabase-js';
 import type {ReactNode} from 'react';
 
@@ -18,10 +19,6 @@ interface AuthContextValue {
   setToken: (t: string | null) => void;
 }
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -31,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Ensure profiles row in Supabase is synced with backend artist id on login
   async function syncSupabaseProfileWithBackend(u: { id: string; email?: string }, accessToken: string) {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL as string;
+      const backendUrl = import.meta.env.VITE_API_URL as string;
       if (!backendUrl || !accessToken || !u?.id) return;
 
       // 1) Ensure artist exists in backend and get the id

@@ -1,131 +1,105 @@
 /* ========================================
-   Pepe Shows - Structured Design System
-   All elements follow the defined system
+   Pepe Dark Elegance - Clean Implementation
+   Core styles and design system imports
    ======================================== */
 
-/* Fonts loaded in HTML head for better performance */
+/* Import Design System */
+@import './styling/tokens.css';
+@import './styling/typography.css';
+@import './styling/components.css';
+@import './styling/animations.css';
+@import './styling/particles.css';
+@import './styling/artist-card-3d.css';
+@import './styling/artist-card-compact.css';
+@import './styling/artist-card-final.css';
 
-/* Core System Imports */
-@import "tailwindcss";
-
-/* Import Complete Design System */
-@import "../styling-backup-old/tokens.css";
-@import "../styling-backup-old/typography.css";
-@import "../styling-backup-old/animations.css";
-@import "../styling-backup-old/components.css";
-/* @import "../styling/particles.css"; */
-
-/* Tailwind Configuration */
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  /* Use Pepe Design Tokens */
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-xl: var(--radius-xl);
-  
-  /* Map to Pepe Color System */
-  --color-background: var(--pepe-black);
-  --color-foreground: var(--pepe-white);
-  --color-card: var(--pepe-ink);
-  --color-card-foreground: var(--pepe-white);
-  --color-popover: var(--pepe-surface);
-  --color-popover-foreground: var(--pepe-white);
-  --color-primary: var(--pepe-gold);
-  --color-primary-foreground: var(--pepe-black);
-  --color-secondary: var(--pepe-surface);
-  --color-secondary-foreground: var(--pepe-white);
-  --color-muted: var(--pepe-dark);
-  --color-muted-foreground: var(--pepe-t64);
-  --color-accent: var(--pepe-gold);
-  --color-accent-foreground: var(--pepe-black);
-  --color-destructive: var(--pepe-error);
-  --color-destructive-foreground: var(--pepe-white);
-  --color-border: var(--pepe-line);
-  --color-input: var(--pepe-line2);
-  --color-ring: var(--pepe-gold-glow);
-}
-
-/* ===== Base Document Setup ===== */
+/* ===== Base Reset ===== */
 * {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
-  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  background: var(--pepe-black, #000000);
-  color: var(--pepe-white, #ffffff);
-  line-height: var(--leading-normal, 1.5);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--pepe-t80);
+  background: var(--pepe-black);
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 #root {
   min-height: 100vh;
-  position: relative;
-  isolation: isolate;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ===== Essential Layout System ===== */
+/* ===== Universal Layout System ===== */
 
-/* Main layout containers */
+/* Main content offset for fixed navbar */
 main {
-  padding-top: var(--navbar-height, 80px); /* Account for fixed navbar */
-  min-height: calc(100vh - var(--navbar-height, 80px));
+  flex: 1;
+  padding-top: var(--navbar-height, 80px);
 }
 
-/* Stage Container - Universal content wrapper */
+/* Stage container - the main theater stage */
 .stage-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 var(--space-6, 24px);
-  position: relative;
-  z-index: 1;
+  padding: 0 clamp(var(--space-4), 5vw, var(--space-12));
+  width: 100%;
 }
 
-/* Section spacing system */
+/* Section spacing */
 .section {
-  padding: var(--space-16, 64px) 0;
-  border-bottom: 1px solid var(--pepe-line, rgba(255,255,255,0.1));
+  padding: var(--space-16) 0;
 }
 
-.section:last-child {
-  border-bottom: none;
+.section-hero {
+  padding: var(--space-32) 0;
+  min-height: 80vh;
 }
 
-.section-lg {
-  padding: var(--space-24, 96px) 0;
+.section-large {
+  padding: var(--space-24) 0;
 }
 
-.section-sm {
-  padding: var(--space-12, 48px) 0;
+.section-compact {
+  padding: var(--space-12) 0;
 }
 
-/* Responsive spacing */
+/* ===== Mobile Optimizations ===== */
 @media (max-width: 768px) {
-  .stage-container {
-    padding: 0 var(--space-4, 16px);
-  }
-  
   .section {
-    padding: var(--space-12, 48px) 0;
+    padding: var(--space-12) 0;
   }
   
-  .section-lg {
-    padding: var(--space-16, 64px) 0;
+  .section-hero {
+    padding: var(--space-20) 0;
+    min-height: 60vh;
   }
   
-  .section-sm {
-    padding: var(--space-8, 32px) 0;
+  .section-large {
+    padding: var(--space-16) 0;
   }
+}
+
+/* ===== Accessibility ===== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Focus indicators */
+*:focus-visible {
+  outline: 2px solid var(--pepe-gold);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }

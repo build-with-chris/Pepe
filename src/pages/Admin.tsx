@@ -1,7 +1,12 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDownIcon } from '@heroicons/react/24/solid';
+// import { ChevronDownIcon } from '@heroicons/react/24/solid';
+const ChevronDownIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
 
 function formatDate(value: any) {
   if (!value) return '—';
@@ -15,7 +20,6 @@ function formatDate(value: any) {
 }
 
 function getReceivedAt(offer: any): Date | null {
-  // Prefer the booking request's real creation timestamp
   const v =
     offer?.request_created_at ||
     offer?.booking_request_created_at ||
@@ -50,7 +54,6 @@ export default function Admin() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      // Update status locally
       setDashboardData((prev: any) => {
         if (!prev?.offers) return prev;
         return { ...prev, offers: prev.offers.map((o: any) => o.id === id ? { ...o, status: 'akzeptiert' } : o) };
@@ -66,7 +69,6 @@ export default function Admin() {
     if (!ok) return;
     const API = import.meta.env.VITE_API_URL;
 
-    // Optimistic UI: entferne sofort aus der Liste
     setDashboardData((prev: any) => {
       if (!prev?.offers) return prev;
       return { ...prev, offers: prev.offers.filter((o: any) => o.id !== id) };
@@ -81,7 +83,6 @@ export default function Admin() {
         throw new Error(`HTTP ${res.status}`);
       }
     } catch (e) {
-      // Rollback bei Fehler: neu laden
       await new Promise(r => setTimeout(r, 0));
       setLoading(true);
       try {
@@ -110,7 +111,6 @@ export default function Admin() {
       })
       .then(data => {
         console.log('🚀 Raw dashboard data:', data);
-        // Entferne Artist-Verfügbarkeiten und Slots, bevor wir die Daten setzen
         const { availabilities, artistAvailability, slots, ...filtered } = data;
         setDashboardData(filtered);
         setLoading(false);
