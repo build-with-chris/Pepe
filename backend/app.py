@@ -285,44 +285,7 @@ def healthz():
         return error_response("internal_error", f"DB unavailable: {str(e)}", 503)
 
 
-@app.route("/migrate-db-sql", methods=["POST", "GET"])
-def migrate_db_sql():
-    """TEMPORARY: Run database migrations via direct SQL. Remove after use."""
-    try:
-        # Direct SQL migration for gage calculation fields
-        sql_commands = [
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS calculated_gage INTEGER;",
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS admin_gage_override INTEGER;",
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS circus_education BOOLEAN DEFAULT FALSE;",
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS stage_experience VARCHAR(10);",
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS employment_type VARCHAR(20);",
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS awards_level VARCHAR(20);",
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS pepe_years INTEGER DEFAULT 0;",
-            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS pepe_exclusivity BOOLEAN DEFAULT FALSE;"
-        ]
-
-        results = []
-        for cmd in sql_commands:
-            try:
-                db.session.execute(text(cmd))
-                results.append(f"✓ {cmd}")
-            except Exception as e:
-                results.append(f"✗ {cmd} - Error: {str(e)}")
-
-        db.session.commit()
-
-        return jsonify({
-            "message": "Database migration completed via SQL",
-            "results": results
-        }), 200
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.exception("SQL Migration failed: %s", e)
-        return jsonify({
-            "error": f"SQL Migration failed: {str(e)}",
-            "message": "Check logs for details"
-        }), 500
+# Migration endpoint removed after successful migration
 
 
 if __name__=="__main__":
