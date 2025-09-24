@@ -1,37 +1,112 @@
-export class AppError extends Error { code?: number; details?: any; }
-export class ValidationError extends AppError { constructor(msg: string, details: any){ super(msg); this.code=422; this.details=details; } }
-export class AuthError extends AppError {}
-export class ForbiddenError extends AppError {}
-export class NotFoundError extends AppError {}
-export class ConflictError extends AppError {}
-export class NetworkError extends AppError {}
-
-export async function fetchWithRetry(url: string, options: RequestInit = {}, { timeoutMs=15000, retries=1 } = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    if (res.ok) return res;
-
-    let body: any = null;
-    try { body = await res.json(); } catch { body = { message: await res.text().catch(()=>"") }; }
-
-    const msg = body?.message || `HTTP ${res.status}`;
-    switch (res.status) {
-      case 401: throw new AuthError(msg);
-      case 403: throw new ForbiddenError(msg);
-      case 404: throw new NotFoundError(msg);
-      case 409: throw new ConflictError(msg);
-      case 422: throw new ValidationError(msg, body?.details || {});
-      default:  { const err = new AppError(msg); err.code = res.status; err.details = body?.details; throw err; }
-    }
-  } catch (e: any) {
-    if (e?.name === "AbortError") throw new NetworkError("Zeitüberschreitung – Server antwortet nicht.");
-    if (retries > 0) { await new Promise(r => setTimeout(r, 500)); return fetchWithRetry(url, options, { timeoutMs, retries: retries-1 }); }
-    if (!navigator.onLine) throw new NetworkError("Offline – bitte Internetverbindung prüfen.");
-    if (e instanceof AppError) throw e;
-    throw new NetworkError("Netzwerkfehler – Verbindung fehlgeschlagen.");
-  } finally {
-    clearTimeout(timer);
+// Custom error classes for better error handling
+export class ValidationError extends Error {
+  details: Record<string, any>;
+  
+  constructor(message: string, details: Record<string, any> = {}) {
+    super(message);
+    this.name = 'ValidationError';
+    this.details = details;
   }
+}
+
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
+export class ForbiddenError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
+}
+
+export class ConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConflictError';
+  }
+}
+
+export class NetworkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
+
+// Fetch with retry logic and error handling
+export async function fetchWithRetry(
+  url: string, 
+  options: RequestInit = {}, 
+  retries: number = 3
+): Promise<Response> {
+  let lastError: Error;
+
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      
+      // Handle different HTTP status codes
+      if (response.status === 400) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ValidationError('Validation failed', errorData);
+      }
+      
+      if (response.status === 401) {
+        throw new AuthError('Authentication failed');
+      }
+      
+      if (response.status === 403) {
+        throw new ForbiddenError('Access forbidden');
+      }
+      
+      if (response.status === 404) {
+        throw new NotFoundError('Resource not found');
+      }
+      
+      if (response.status === 409) {
+        throw new ConflictError('Resource conflict');
+      }
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Don't retry for non-network errors
+      if (error instanceof ValidationError || 
+          error instanceof AuthError || 
+          error instanceof ForbiddenError ||
+          error instanceof ConflictError ||
+          error instanceof NotFoundError) {
+        throw error;
+      }
+      
+      // If this is the last retry, throw the error
+      if (i === retries) {
+        if (error instanceof TypeError || error.message.includes('fetch')) {
+          throw new NetworkError('Network request failed');
+        }
+        throw error;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+    }
+  }
+  
+  throw lastError!;
 }

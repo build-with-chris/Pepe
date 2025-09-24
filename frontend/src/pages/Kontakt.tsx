@@ -1,66 +1,142 @@
-import { Contact7 } from "@/components/contact7";
-import { Logos3 } from "@/components/logos3";
-import { Cta10 } from "@/components/cta10";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { useTranslation } from "react-i18next";
-import { Helmet } from "react-helmet-async";
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function Kontakt() {
   const { t } = useTranslation();
   return (
-    <>
-      <Helmet>
-        <title>Kontakt – PepeShows</title>
-        <meta
-          name="description"
-          content="Nehmen Sie Kontakt mit PepeShows auf – wir beraten Sie persönlich zu Shows, Künstlern und individuellen Event-Konzepten. Jetzt Anfrage stellen oder direkt anrufen."
-        />
-      </Helmet>
-      <div className="flex flex-col items-stretch justify-center min-h-screen w-full mx-auto px-6 md:px-12 lg:px-20 gap-12">
-        <a href="/anfragen" className="w-full block">
-          <Cta10
-            buttons={{
-              primary: { text: t("contactCta.button"), url: "/anfragen" },
-            }}
-            rightAddon={
-              <DotLottieReact
-                src="https://lottie.host/2c55587e-b41b-4714-b82f-f8f8807e88f9/aLh74vbsuU.lottie"
-                loop
-                autoplay
-                style={{ width: "60px", height: "60px" }}
-              />
-            }
-          />
-        </a>
-        <div className="w-full -mt-30">
-          <Contact7 />
+    <main>
+      {/* Hero Section */}
+      <section className="section-hero-compact bg-gradient-dark">
+        <div className="stage-container">
+          <div className="hero-content text-center py-8">
+            <h1 className="h1 display-gradient mb-4">
+              {t('kontakt.hero.title')}
+            </h1>
+            <p className="body-lg max-w-3xl mx-auto">
+              {t('kontakt.hero.description')}
+            </p>
+          </div>
         </div>
-        <div className="w-full">
-          <Logos3 />
-        </div>
-      </div>
+      </section>
 
-      {/* Floating Call Button (mobile only) */}
-      <a
-        href="tel:+4915904891419"
-        className="fixed bottom-4 right-4 z-[9999] flex items-center justify-center w-14 h-14 rounded-full bg-green-500 text-white shadow-lg md:hidden"
-        aria-label={t("contactCta.callAria")}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-7 h-7"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.684l1.12 3.367a1 1 0 01-.27 1.023l-2.12 2.12a16.001 16.001 0 006.586 6.586l2.12-2.12a1 1 0 011.023-.27l3.367 1.12a1 1 0 01.684.95V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z"
-          />
-        </svg>
-      </a>
-    </>
-  );
+      {/* Booking Assistant Section */}
+      <section className="section">
+        <div className="stage-container">
+          <div className="booking-assistant-card">
+            <h2 className="h1 text-center mb-6">{t('kontakt.booking.title')}</h2>
+            <p className="body-lg text-center mb-8 max-w-3xl mx-auto">
+              {t('kontakt.booking.description')}
+            </p>
+            <div className="text-center">
+              <Link to="/anfragen" className="btn btn-primary btn-xl">
+                {t('kontakt.booking.button')}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Methods Section */}
+      <section className="section bg-pepe-ink">
+        <div className="stage-container">
+          <div className="contact-methods-grid">
+            <div className="contact-method-card">
+              <div className="contact-icon">📧</div>
+              <h3 className="h3 mb-3">{t('kontakt.methods.email.title')}</h3>
+              <p className="body-sm text-pepe-t60 mb-4">
+                {t('kontakt.methods.email.description')}
+              </p>
+              <a href="mailto:info@pepeshows.de" className="btn btn-primary">
+                {t('kontakt.methods.email.button')}
+              </a>
+            </div>
+            
+            <div className="contact-method-card">
+              <div className="contact-icon">🏢</div>
+              <h3 className="h3 mb-3">{t('kontakt.methods.space.title')}</h3>
+              <p className="body-sm text-pepe-t60 mb-4">
+                {t('kontakt.methods.space.description')}
+              </p>
+              <div className="contact-address mb-4">
+                <div className="body-sm">{t('kontakt.methods.space.address')}</div>
+              </div>
+              <a 
+                href="https://maps.google.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn btn-secondary"
+              >
+                {t('kontakt.methods.space.button')}
+              </a>
+            </div>
+            
+            <div className="contact-method-card">
+              <div className="contact-icon">📞</div>
+              <h3 className="h3 mb-3">{t('kontakt.methods.phone.title')}</h3>
+              <p className="body-sm text-pepe-t60 mb-4">
+                {t('kontakt.methods.phone.hours')}
+              </p>
+              <a href="tel:+498912345678" className="btn btn-primary">
+                {t('kontakt.methods.phone.button')}
+              </a>
+            </div>
+            
+            <div className="contact-method-card">
+              <div className="contact-icon">💬</div>
+              <h3 className="h3 mb-3">{t('kontakt.methods.chat.title')}</h3>
+              <p className="body-sm text-pepe-t60 mb-4">
+                {t('kontakt.methods.chat.status')}
+              </p>
+              <button className="btn btn-secondary" disabled>
+                {t('kontakt.methods.chat.button')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Clients Section */}
+      <section className="section">
+        <div className="stage-container">
+          <div className="section-header text-center mb-16">
+            <h2 className="h1 mb-6">{t('kontakt.clients.title')}</h2>
+          </div>
+
+          <div className="clients-marquee">
+            <div className="clients-track">
+              <div className="client-logo">Porsche</div>
+              <div className="client-logo">Google</div>
+              <div className="client-logo">McDonald's</div>
+              <div className="client-logo">AstraZeneca</div>
+              <div className="client-logo">Munich Mash</div>
+              <div className="client-logo">European Championships</div>
+              <div className="client-logo">Tollwood</div>
+              <div className="client-logo">Porsche</div>
+              <div className="client-logo">Google</div>
+              <div className="client-logo">McDonald's</div>
+              <div className="client-logo">AstraZeneca</div>
+              <div className="client-logo">Munich Mash</div>
+              <div className="client-logo">European Championships</div>
+              <div className="client-logo">Tollwood</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="section bg-gradient-dark">
+        <div className="stage-container text-center">
+          <h2 className="display-2 mb-8">{t('kontakt.cta.title')}</h2>
+          <div className="cta-actions">
+            <Link to="/anfragen" className="btn btn-primary btn-xl">
+              {t('kontakt.cta.booking_button')}
+            </Link>
+            <a href="mailto:info@pepeshows.de" className="btn btn-ghost btn-lg">
+              {t('kontakt.cta.email_button')}
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  )
 }

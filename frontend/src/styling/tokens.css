@@ -1,0 +1,298 @@
+/* ========================================
+   Pepe Shows Design Tokens
+   Core design system variables
+   ======================================== */
+
+:root {
+  /* ===== Color Palette ===== */
+  
+  /* Core Black Tones */
+  --pepe-black: #000000;
+  --pepe-dark: #111111;
+  --pepe-ink: #161616;
+  --pepe-coal: #0A0A0A;
+  --pepe-surface: #1A1A1A;
+  
+  /* Text Hierarchy */
+  --pepe-white: #FFFFFF;
+  --pepe-t80: rgba(255, 255, 255, 0.80);
+  --pepe-t64: rgba(255, 255, 255, 0.64);
+  --pepe-t48: rgba(255, 255, 255, 0.48);
+  --pepe-t32: rgba(255, 255, 255, 0.32);
+  
+  /* UI Elements */
+  --pepe-line: #333333;
+  --pepe-line2: #292929;
+  --pepe-line-light: #3A3A3A;
+  
+  /* Accent Colors - Warm Golden Theatre Lighting */
+  --pepe-gold: #D4A574;          /* Primary golden accent - warm theatre spotlight */
+  --pepe-gold-hover: #E6B887;    /* Hover state - brighter gold */
+  --pepe-gold-active: #C19A64;   /* Active/pressed state - deeper gold */
+  --pepe-gold-glow: rgba(212, 165, 116, 0.25);  /* Golden glow effect */
+  --pepe-gold-glow-strong: rgba(212, 165, 116, 0.4);  /* Strong glow */
+  
+  /* Secondary Warm Tones */
+  --pepe-bronze: #B8860B;        /* Bronze accent for depth */
+  --pepe-bronze-hover: #C69315;  /* Hover state for bronze */
+  --pepe-bronze-active: #9C6F09; /* Active state for bronze */
+  --pepe-bronze-glow: rgba(184, 134, 11, 0.25); /* Bronze glow */
+  --pepe-amber: #FFBF00;         /* Bright amber for highlights */
+  --pepe-copper: #B87333;        /* Copper tone for variety */
+  
+  /* Semantic Colors */
+  --pepe-success: #00DC82;
+  --pepe-success-bg: rgba(0, 220, 130, 0.1);
+  --pepe-warning: #FFB800;
+  --pepe-warning-bg: rgba(255, 184, 0, 0.1);
+  --pepe-error: #FF3B3B;
+  --pepe-error-bg: rgba(255, 59, 59, 0.1);
+  --pepe-info: #0096FF;
+  --pepe-info-bg: rgba(0, 150, 255, 0.1);
+  
+  /* ===== Typography ===== */
+  
+  /* Font Families */
+  --font-display: 'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', monospace;
+  
+  /* Font Sizes - Fluid Typography */
+  --text-xs: 0.75rem;                              /* 12px */
+  --text-sm: 0.875rem;                             /* 14px */
+  --text-base: 1rem;                               /* 16px */
+  --text-lg: 1.125rem;                             /* 18px */
+  --text-xl: 1.25rem;                              /* 20px */
+  --text-2xl: clamp(1.5rem, 3vw, 1.75rem);        /* 24-28px */
+  --text-3xl: clamp(1.75rem, 4vw, 2.25rem);       /* 28-36px */
+  --text-4xl: clamp(2.25rem, 5vw, 3rem);          /* 36-48px */
+  --text-5xl: clamp(3rem, 6vw, 3.75rem);          /* 48-60px */
+  --text-6xl: clamp(3.75rem, 8vw, 4.5rem);        /* 60-72px */
+  --text-7xl: clamp(4.5rem, 10vw, 6rem);          /* 72-96px */
+  
+  /* Font Weights */
+  --font-thin: 100;
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+  
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.1;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+  --leading-loose: 1.75;
+  --leading-extra: 2;
+  
+  /* Letter Spacing */
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  
+  /* ===== Spacing Scale ===== */
+  
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;   /* 2px */
+  --space-1: 0.25rem;      /* 4px */
+  --space-1-5: 0.375rem;   /* 6px */
+  --space-2: 0.5rem;       /* 8px */
+  --space-2-5: 0.625rem;   /* 10px */
+  --space-3: 0.75rem;      /* 12px */
+  --space-3-5: 0.875rem;   /* 14px */
+  --space-4: 1rem;         /* 16px */
+  --space-5: 1.25rem;      /* 20px */
+  --space-6: 1.5rem;       /* 24px */
+  --space-7: 1.75rem;      /* 28px */
+  --space-8: 2rem;         /* 32px */
+  --space-9: 2.25rem;      /* 36px */
+  --space-10: 2.5rem;      /* 40px */
+  --space-11: 2.75rem;     /* 44px */
+  --space-12: 3rem;        /* 48px */
+  --space-14: 3.5rem;      /* 56px */
+  --space-16: 4rem;        /* 64px */
+  --space-20: 5rem;        /* 80px */
+  --space-24: 6rem;        /* 96px */
+  --space-28: 7rem;        /* 112px */
+  --space-32: 8rem;        /* 128px */
+  --space-36: 9rem;        /* 144px */
+  --space-40: 10rem;       /* 160px */
+  --space-44: 11rem;       /* 176px */
+  --space-48: 12rem;       /* 192px */
+  --space-52: 13rem;       /* 208px */
+  --space-56: 14rem;       /* 224px */
+  --space-60: 15rem;       /* 240px */
+  --space-64: 16rem;       /* 256px */
+  --space-72: 18rem;       /* 288px */
+  --space-80: 20rem;       /* 320px */
+  --space-96: 24rem;       /* 384px */
+  
+  /* ===== Border Radius ===== */
+  
+  --radius-none: 0;
+  --radius-sm: 0.25rem;    /* 4px */
+  --radius-md: 0.5rem;     /* 8px */
+  --radius-lg: 0.75rem;    /* 12px */
+  --radius-xl: 1rem;       /* 16px */
+  --radius-2xl: 1.25rem;   /* 20px */
+  --radius-3xl: 1.5rem;    /* 24px */
+  --radius-full: 9999px;
+  
+  /* ===== Shadows ===== */
+  
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 12px 28px 0 rgba(0, 0, 0, 0.35);
+  --shadow-2xl: 0 24px 48px 0 rgba(0, 0, 0, 0.4);
+  --shadow-3xl: 0 32px 64px 0 rgba(0, 0, 0, 0.5);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --shadow-none: none;
+  
+  /* Glow Shadows */
+  --shadow-glow-sm: 0 0 8px var(--pepe-red-glow);
+  --shadow-glow-md: 0 0 16px var(--pepe-red-glow);
+  --shadow-glow-lg: 0 0 24px var(--pepe-red-glow);
+  --shadow-glow-xl: 0 0 40px var(--pepe-red-glow);
+  
+  /* ===== Animation ===== */
+  
+  /* Timing Functions */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* Durations */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 700ms;
+  --duration-slowest: 1000ms;
+  
+  /* ===== Z-Index Scale ===== */
+  
+  --z-negative: -1;
+  --z-0: 0;
+  --z-10: 10;
+  --z-20: 20;
+  --z-30: 30;
+  --z-40: 40;
+  --z-50: 50;
+  --z-60: 60;
+  --z-70: 70;
+  --z-80: 80;
+  --z-90: 90;
+  --z-100: 100;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-notification: 1080;
+  --z-max: 2147483647;
+  
+  /* ===== Breakpoints ===== */
+  
+  --screen-xs: 475px;
+  --screen-sm: 640px;
+  --screen-md: 768px;
+  --screen-lg: 1024px;
+  --screen-xl: 1280px;
+  --screen-2xl: 1536px;
+  --screen-3xl: 1920px;
+  
+  /* ===== Container Sizes ===== */
+  
+  --container-xs: 475px;
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  --container-3xl: 1920px;
+  --container-full: 100%;
+  
+  /* ===== Aspect Ratios ===== */
+  
+  --aspect-square: 1 / 1;
+  --aspect-video: 16 / 9;
+  --aspect-portrait: 4 / 5;
+  --aspect-landscape: 5 / 4;
+  --aspect-golden: 1.618 / 1;
+  
+  /* ===== Backdrop Filters ===== */
+  
+  --backdrop-blur-none: blur(0);
+  --backdrop-blur-sm: blur(4px);
+  --backdrop-blur-md: blur(8px);
+  --backdrop-blur-lg: blur(12px);
+  --backdrop-blur-xl: blur(16px);
+  --backdrop-blur-2xl: blur(24px);
+  --backdrop-blur-3xl: blur(40px);
+  
+  /* ===== Gradients ===== */
+  
+  --gradient-dark: linear-gradient(180deg, var(--pepe-black) 0%, var(--pepe-dark) 100%);
+  --gradient-surface: linear-gradient(180deg, var(--pepe-dark) 0%, var(--pepe-ink) 100%);
+  --gradient-text: linear-gradient(180deg, var(--pepe-white) 0%, var(--pepe-t80) 100%);
+  --gradient-red: linear-gradient(135deg, var(--pepe-red) 0%, var(--pepe-red-active) 100%);
+  --gradient-overlay: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+  --gradient-skeleton: linear-gradient(90deg, var(--pepe-ink) 25%, var(--pepe-surface) 50%, var(--pepe-ink) 75%);
+  
+  /* ===== Transitions ===== */
+  
+  --transition-none: none;
+  --transition-all: all var(--duration-normal) var(--ease-in-out);
+  --transition-colors: background-color var(--duration-normal) var(--ease-in-out), 
+                       border-color var(--duration-normal) var(--ease-in-out), 
+                       color var(--duration-normal) var(--ease-in-out), 
+                       fill var(--duration-normal) var(--ease-in-out), 
+                       stroke var(--duration-normal) var(--ease-in-out);
+  --transition-opacity: opacity var(--duration-normal) var(--ease-in-out);
+  --transition-shadow: box-shadow var(--duration-normal) var(--ease-in-out);
+  --transition-transform: transform var(--duration-normal) var(--ease-spring);
+}
+
+/* ===== Dark Mode Overrides (if needed) ===== */
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Override for light mode if needed in future */
+  }
+}
+
+/* ===== Motion Preferences ===== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+    --duration-slowest: 0ms;
+  }
+}
+
+/* ===== High Contrast Mode ===== */
+@media (prefers-contrast: high) {
+  :root {
+    --pepe-line: #555555;
+    --pepe-line2: #444444;
+    --pepe-t80: rgba(255, 255, 255, 0.95);
+    --pepe-t64: rgba(255, 255, 255, 0.85);
+  }
+}

@@ -1,260 +1,349 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import ArtistCard from "@/components/ArtistCard/ArtistCard";
-import { Hero228 } from '@/components/hero228';
-import { Hero87 } from '@/components/hero87';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { useTranslation } from "react-i18next";
-import { Helmet } from "react-helmet-async";
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link, useSearchParams } from 'react-router-dom'
+import ArtistCardFinal from '@/components/ArtistCardFinal'
+import type { Artist } from '@/types/artist'
 
-import type { Artist } from "@/types/artist";
+export default function Kuenstler() {
+  const [artists, setArtists] = useState<Artist[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filteredArtists, setFilteredArtists] = useState<Artist[]>([])
+  const [selectedDiscipline, setSelectedDiscipline] = useState<string>('')
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { t } = useTranslation()
 
-type LocalArtist = Artist & { id: number };
+  // Get all artist images for backdrop
+  const artistImages = artists
+    .filter(artist => artist.profile_image_url)
+    .map(artist => artist.profile_image_url!)
 
-function resolveImageUrl(a: any): string {
-  const candidate = (
-    a?.profile_image_url ||
-    a?.profile_image ||
-    a?.image_url ||
-    a?.image ||
-    a?.avatar ||
-    a?.picture ||
-    (a?.media && (a.media.profile || a.media.cover || a.media.url)) ||
-    ""
-  );
-  const s = String(candidate || "").trim();
-  if (!s) return "";
-  // Already absolute (http, https, or protocol-relative)
-  if (/^(https?:)?\/\//i.test(s)) return s;
-  // Leading slash → prefix API URL if available, else window origin
-  if (s.startsWith("/")) {
-    const api = import.meta.env.VITE_API_URL || "";
-    if (api) return `${api}${s}`;
-    try { return `${window.location.origin}${s}`; } catch { return s; }
-  }
-  // Otherwise return as-is (relative path handled by app)
-  return s;
-}
-
-type DisciplineKey =
-  | "zauberer"
-  | "cyrWheel"
-  | "bodenakrobatik"
-  | "luftakrobatik"
-  | "partnerakrobatik"
-  | "chinesePole"
-  | "hulaHoop"
-  | "handstand"
-  | "contemporaryDance"
-  | "breakdance"
-  | "teeterboard"
-  | "jonglage"
-  | "moderation"
-  | "pantomime";
-
-const DISCIPLINE_ITEMS: { key: DisciplineKey; match: string }[] = [
-  { key: "zauberer", match: "zauberer" },
-  { key: "cyrWheel", match: "cyr-wheel" },
-  { key: "bodenakrobatik", match: "bodenakrobatik" },
-  { key: "luftakrobatik", match: "luftakrobatik" },
-  { key: "partnerakrobatik", match: "partnerakrobatik" },
-  { key: "chinesePole", match: "chinese pole" },
-  { key: "hulaHoop", match: "hula" },
-  { key: "handstand", match: "handstand" },
-  { key: "contemporaryDance", match: "contemporary" },
-  { key: "breakdance", match: "breakdance" },
-  { key: "teeterboard", match: "teeterboard" },
-  { key: "jonglage", match: "jonglage" },
-  { key: "moderation", match: "moderation" },
-  { key: "pantomime", match: "pantomime" },
-];
-
-export default function Kuenstler(){
-  const [artists, setArtists] = useState<LocalArtist[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeFilters, setActiveFilters] = useState<DisciplineKey[]>([]);
-
-  const { t } = useTranslation();
-
-  const toggleFilter = (d: DisciplineKey) => {
-    setActiveFilters(prev =>
-      prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]
-    );
-  };
-  const clearFilters = () => setActiveFilters([]);
-
-  const matchMap = useMemo(() => Object.fromEntries(DISCIPLINE_ITEMS.map(i => [i.key, i.match])), [] as any) as Record<DisciplineKey, string>;
-
-  const filteredArtists = useMemo(() => {
-    if (!activeFilters.length) return artists;
-    const wanted = new Set(activeFilters);
-    return artists.filter(a => {
-      const discs = (a.disciplines || []).map(x => (x || "").toLowerCase());
-      return discs.some(d => Array.from(wanted).some(k => d.includes(matchMap[k])));
-    });
-  }, [artists, activeFilters, matchMap]);
-
+  // Cycle through images for backdrop
+  useEffect(() => {
+    if (artistImages.length === 0) return
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prev => (prev + 1) % artistImages.length)
+    }, 4000) // Change image every 4 seconds
+    
+    return () => clearInterval(interval)
+  }, [artistImages.length])
 
 
   useEffect(() => {
-    const baseUrl = import.meta.env.VITE_API_URL;
-    const url = `${baseUrl}/api/artists`;
-    (async () => {
+    const fetchArtists = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const rawList: any[] = Array.isArray(data) ? data : (data?.artists ?? []);
-        const mapped: LocalArtist[] = rawList.map((a) => ({
-          id: a.id,
-          name: a.name,
-          image: resolveImageUrl(a),
-          bio: a.bio ?? "",
-          disciplines: Array.isArray(a.disciplines) ? a.disciplines : [],
-          gallery: Array.isArray(a.gallery) ? a.gallery : [],
-          gallery_urls: Array.isArray(a.gallery_urls) ? a.gallery_urls : [],
-          instagram: a.instagram ?? undefined,
-        }));
-        setArtists(mapped);
-      } catch (e: any) {
-        console.error('Künstler-Laden fehlgeschlagen:', e);
-        setError(e?.message || 'Fehler beim Laden');
+        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        console.log('Fetching artists from:', `${baseUrl}/api/artists`)
+        
+        const response = await fetch(`${baseUrl}/api/artists`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        })
+        
+        console.log('Response status:', response.status)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Artists data received:', data.length, 'artists')
+          setArtists(data)
+          setFilteredArtists(data)
+        } else {
+          console.error('Failed to fetch artists, status:', response.status)
+        }
+      } catch (error) {
+        console.error('Failed to fetch artists:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    })();
-  }, []);
-
-  useEffect(() => {
-    const target = document.getElementById("kuenstler-quote");
-    if (!target) return;
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-
-    // try to find a button or link that says "Künstler kennenlernen"
-    const candidates = Array.from(document.querySelectorAll<HTMLButtonElement | HTMLAnchorElement>('button, a'));
-    const trigger = candidates.find(el => el.textContent?.trim().toLowerCase() === "künstler kennenlernen");
-
-    if (trigger) {
-      trigger.addEventListener("click", handler);
     }
 
-    return () => {
-      if (trigger) trigger.removeEventListener("click", handler);
-    };
-  }, []);
+    fetchArtists()
+  }, [])
 
-    return (
-      <div className="pt-20 md:pt-24 lg:pt-28">
-        <Helmet>
-          <title>Künstler:innen – PepeShows</title>
-          <meta
-            name="description"
-            content="Außergewöhnliche Künstler:innen, perfekt inszeniert für Ihr Publikum. Unser internationales Team aus Weltmeistern und preisgekrönten Artisten bringt Visionen mit Leidenschaft auf die Bühne – professionell und unvergesslich."
-          />
-        </Helmet>
+  // Handle flip parameter from URL to auto-open specific artist card
+  useEffect(() => {
+    const flipParam = searchParams.get('flip')
+    if (flipParam && artists.length > 0) {
+      const artistId = parseInt(flipParam, 10)
+      if (!isNaN(artistId)) {
+        setSelectedArtistId(artistId)
+        // Scroll to the artist card after a short delay to ensure it's rendered
+        setTimeout(() => {
+          const artistElement = document.querySelector(`[data-artist-id="${artistId}"]`)
+          if (artistElement) {
+            artistElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        }, 100)
+      }
+    }
+  }, [searchParams, artists])
 
-        <div className="relative h-[560px] md:h-[640px] lg:h-[800px] overflow-hidden flex items-center justify-center mb-8">
-          <Hero228 />
-          
+  const resolveBackdropImageUrl = (imageUrl: string) => {
+    if (imageUrl.startsWith('http')) return imageUrl
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+    return `${baseUrl}${imageUrl}`
+  }
+
+  // Get unique disciplines for filter buttons
+  const allDisciplines = Array.from(
+    new Set(
+      artists.flatMap(artist => artist.disciplines || [])
+    )
+  ).sort()
+
+  const handleFilter = (discipline: string) => {
+    if (discipline === selectedDiscipline) {
+      // Deselect if clicking same discipline
+      setSelectedDiscipline('')
+      setFilteredArtists(artists)
+    } else {
+      setSelectedDiscipline(discipline)
+      const filtered = artists.filter(artist => 
+        artist.disciplines?.some(d => 
+          d.toLowerCase().includes(discipline.toLowerCase())
+        )
+      )
+      setFilteredArtists(filtered)
+    }
+  }
+
+  const clearFilters = () => {
+    setSelectedDiscipline('')
+    setFilteredArtists(artists)
+  }
+
+
+  return (
+    <main>
+      {/* Hero Section with Layered Animated Background */}
+      <section className="artist-hero-layered">
+        {/* Layer 1: Black Background */}
+        <div className="hero-layer-black"></div>
+        
+        {/* Layer 2: Image Slideshow */}
+        <div className="hero-layer-slideshow">
+          {artistImages.length > 0 && artistImages.map((imageUrl, index) => (
+            <div
+              key={`${imageUrl}-${index}`}
+              className={`slideshow-image ${index === currentImageIndex ? 'active' : ''}`}
+            >
+              <img
+                src={resolveBackdropImageUrl(imageUrl)}
+                alt={`Artist ${index + 1}`}
+                className="slideshow-img"
+              />
+            </div>
+          ))}
         </div>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-white relative z-10">
-        <Hero87 />
-        <div id="kuenstler-quote" className="relative flex flex-col items-center text-center text-white my-8">
-          <div className="flex flex-row pointer-events-none absolute -top-10">
-            <DotLottieReact
-              src="https://lottie.host/e86a7557-375e-4cf6-abc0-c8f0d034b637/mQay5cJDVU.lottie"
-              loop
-              autoplay
-              style={{ width: 96, height: 96, filter: "brightness(2)" }}
-            />
-            <DotLottieReact
-              src="https://lottie.host/e86a7557-375e-4cf6-abc0-c8f0d034b637/mQay5cJDVU.lottie"
-              loop
-              autoplay
-              style={{ width: 96, height: 96, filter: "brightness(2)" }}
-            />
-            <DotLottieReact
-              src="https://lottie.host/e86a7557-375e-4cf6-abc0-c8f0d034b637/mQay5cJDVU.lottie"
-              loop
-              autoplay
-              style={{ width: 96, height: 96, filter: "brightness(2)" }}
-            />
-          </div>
-          <div className="text-xl md:text-3xl italic">
-            {t("artists.quote")}
-          </div>
+        
+        {/* Layer 3: Particle Effects */}
+        <div className="hero-layer-particles">
+          <div className="particle particle-1"></div>
+          <div className="particle particle-2"></div>
+          <div className="particle particle-3"></div>
+          <div className="particle particle-4"></div>
+          <div className="particle particle-5"></div>
+          <div className="particle particle-6"></div>
+          <div className="particle particle-7"></div>
+          <div className="particle particle-8"></div>
         </div>
+        
+        {/* Layer 4: Gradient Overlay */}
+        <div className="hero-layer-gradient"></div>
 
-          {/* Filterleiste nach Disziplin */}
-          <div className="mb-8">
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-sm px-4 py-3 sm:px-6 sm:py-4">
-              <div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {DISCIPLINE_ITEMS.map((item) => {
-                    const active = activeFilters.includes(item.key);
-                    const full = t(`artists.disciplines.${item.key}`);
-                    const short = t(`artists.disciplinesShort.${item.key}`, full);
-                    return (
-                      <button
-                        key={item.key}
-                        type="button"
-                        onClick={() => toggleFilter(item.key)}
-                        className={`px-3 py-1.5 rounded-full border text-sm whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-0 ${
-                          active
-                            ? "bg-white text-black border-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
-                            : "bg-transparent text-white border-white/20 hover:bg-white/10 hover:border-white/40"
-                        }`}
-                        aria-pressed={active}
-                      >
-                        <span className="block sm:hidden">{short}</span>
-                        <span className="hidden sm:block">{full}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-white/10 w-full flex items-center justify-center gap-4">
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className={`px-3 py-1.5 rounded-full border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-0 ${
-                      activeFilters.length === 0
-                        ? "bg-white text-black border-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
-                        : "bg-transparent text-white border-white/20 hover:bg-white/10 hover:border-white/40"
-                    }`}
-                    aria-pressed={activeFilters.length === 0}
-                  >
-                    {t("artists.filters.all")}
-                  </button>
-                  <span className="text-sm text-white/70">
-                    {t("artists.results", { count: filteredArtists.length })}
-                  </span>
-                </div>
+        {/* Content Layer */}
+        <div className="hero-content-layer">
+          <div className="stage-container">
+            <div className="hero-content text-center max-w-4xl mx-auto">
+              <div className="overline text-pepe-gold mb-6 animate-fade-in">{t('artists.quote')}</div>
+              <h1 className="display-1 display-gradient mb-8 animate-slide-up">
+                {t('hero87.heading') || 'Künstler & Performer'}
+              </h1>
+              <p className="lead mb-12 max-w-3xl mx-auto animate-fade-in-delayed">
+                {t('hero87.body') || 'Entdecken Sie die außergewöhnlichen Talente, die unsere Bühne mit Leben füllen. Jeder Künstler bringt seine einzigartige Geschichte und Leidenschaft mit.'}
+              </p>
+              <div className="hero-actions animate-fade-in-delayed-more">
+                <Link to="/anfragen" className="btn btn-primary btn-xl">
+                  {t('about1.next.cta.assistant')}
+                </Link>
+                <Link to="/shows" className="btn btn-ghost btn-lg">
+                  Shows entdecken
+                </Link>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          <section className="artist-cards grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading && (
-              <div className="col-span-full text-gray-300">{t("artists.loading")}</div>
-            )}
-            {error && (
-              <div className="col-span-full text-red-400">{error}</div>
-            )}
-            {!loading && !error && filteredArtists.length === 0 && (
-              <div className="col-span-full text-gray-300">{t("artists.empty")}</div>
-            )}
-            {!loading && !error && filteredArtists.map(artist => (
-              <ArtistCard key={artist.id} artist={artist} />
-            ))}
-          </section>
+      {/* Artists Section */}
+      <section className="section">
+        <div className="stage-container">
+          
+          <div className="section-header text-center mb-16">
+            <h2 className="h1 mb-6">Unsere Künstler</h2>
+            <p className="body-lg max-w-3xl mx-auto">
+              Lernen Sie die talentierten Persönlichkeiten kennen, die unsere Vision zum Leben erwecken.
+            </p>
           </div>
+
+          {/* Filter Section - Moved to top of cards */}
+          {!loading && allDisciplines.length > 0 && (
+            <div className="mb-16">
+              <div className="filter-section">
+                <h3 className="h3 text-center mb-8">Nach Disziplin filtern</h3>
+                <div className="filter-buttons">
+                  {allDisciplines.map((discipline) => (
+                    <button
+                      key={discipline}
+                      onClick={() => handleFilter(discipline)}
+                      className={`filter-btn ${
+                        selectedDiscipline === discipline 
+                          ? 'active' 
+                          : ''
+                      }`}
+                    >
+                      {discipline}
+                    </button>
+                  ))}
+                </div>
+                {selectedDiscipline && (
+                  <div className="text-center mt-6">
+                    <button
+                      onClick={clearFilters}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      {t('artists.filters.all')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+
+          {/* Results Count */}
+          {!loading && (
+            <div className="text-center mb-12">
+              <div className="results-count">
+                <span className="label">
+                  {filteredArtists.length} {filteredArtists.length === 1 ? 'Künstler' : 'Künstler'} 
+                  {selectedDiscipline && ` für "${selectedDiscipline}"`}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* Artists Grid */}
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p className="body mt-4">{t('artists.loading')}</p>
+            </div>
+          ) : filteredArtists.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🎭</div>
+              <h3 className="h3 mb-4">
+                {selectedDiscipline ? 
+                  `Keine Künstler für "${selectedDiscipline}" gefunden` : 
+                  t('artists.empty')
+                }
+              </h3>
+              {selectedDiscipline && (
+                <button
+                  onClick={clearFilters}
+                  className="btn btn-secondary"
+                >
+                  Alle Künstler anzeigen
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="artist-grid-final">
+              {filteredArtists.map((artist) => (
+                <div key={artist.id} data-artist-id={artist.id}>
+                  <ArtistCardFinal 
+                    artist={artist} 
+                    isInitiallySelected={selectedArtistId === artist.id}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Disciplines Showcase - Moved to bottom above CTA */}
+      <section className="section bg-pepe-ink">
+        <div className="stage-container">
+          <div className="section-header text-center mb-16">
+            <h2 className="h1 mb-6">Unsere Disziplinen</h2>
+            <p className="body-lg max-w-3xl mx-auto">
+              Von klassischer Akrobatik bis zu modernen Performances – 
+              unsere Künstler beherrschen ein breites Spektrum an Disziplinen.
+            </p>
           </div>
-    );
-  }
+
+          <div className="discipline-showcase-grid">
+            <div className="discipline-showcase-card">
+              <div className="discipline-icon">🪂</div>
+              <h3 className="h3 mb-3">{t('gallery14.items.1.title') || 'Luftakrobatik'}</h3>
+              <p className="body-sm">{t('gallery14.items.1.description') || 'Schwerelos & elegant: Luftshows, die Galas und Firmenfeiern veredeln – mit eigenem, schnell aufbaubarem Rig.'}</p>
+            </div>
+            <div className="discipline-showcase-card">
+              <div className="discipline-icon">🔥</div>
+              <h3 className="h3 mb-3">{t('gallery14.items.2.title') || 'Feuershow'}</h3>
+              <p className="body-sm">{t('gallery14.items.2.description') || 'Epische Bilder, präzise Choreo, maximale Gänsehaut – für Outdoor-Momente, die niemand vergisst.'}</p>
+            </div>
+            <div className="discipline-showcase-card">
+              <div className="discipline-icon">🎪</div>
+              <h3 className="h3 mb-3">{t('gallery14.items.3.title') || 'Jonglage & Variety'}</h3>
+              <p className="body-sm">{t('gallery14.items.3.description') || 'Tempo, Timing, Interaktion: von Close-up bis Bühne – perfekt für Übergänge & Opening-Acts.'}</p>
+            </div>
+            <div className="discipline-showcase-card">
+              <div className="discipline-icon">⭐</div>
+              <h3 className="h3 mb-3">{t('gallery14.items.4.title') || 'Custom Acts'}</h3>
+              <p className="body-sm">{t('gallery14.items.4.description') || 'Brandfarben, Produkt-Motive, Show-Dauer: Wir bauen den Act um deinen Anlass herum.'}</p>
+            </div>
+            <div className="discipline-showcase-card">
+              <div className="discipline-icon">🏢</div>
+              <h3 className="h3 mb-3">{t('gallery14.items.5.title') || 'Firmen-Events'}</h3>
+              <p className="body-sm">{t('gallery14.items.5.description') || 'Sommerfest, Weihnachtsfeier, Jubiläum – wir liefern Idee, Cast & Ablauf aus einer Hand.'}</p>
+            </div>
+            <div className="discipline-showcase-card">
+              <div className="discipline-icon">🎭</div>
+              <h3 className="h3 mb-3">{t('artists.disciplines.zauberer') || 'Zauberei'}</h3>
+              <p className="body-sm">Magische Shows und Illusionen, die Ihr Publikum in Staunen versetzen</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="section-large text-center bg-gradient-dark">
+        <div className="stage-container">
+          <div className="overline text-pepe-gold mb-4">BEREIT FÜR IHR EVENT?</div>
+          <h2 className="display-2 mb-8">Den passenden Künstler finden</h2>
+          <p className="lead mb-12 max-w-3xl mx-auto">
+            Nutzen Sie unseren Booking-Assistenten für eine maßgeschneiderte 
+            Künstlerempfehlung oder kontaktieren Sie uns direkt.
+          </p>
+          <div className="cta-actions">
+            <Link to="/anfragen" className="btn btn-primary btn-xl">
+              {t('about1.next.cta.assistant')}
+            </Link>
+            <Link to="/kontakt" className="btn btn-ghost btn-lg">
+              Direkter Kontakt
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}
