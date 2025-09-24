@@ -110,7 +110,6 @@ export default function Admin() {
         return res.json();
       })
       .then(data => {
-        console.log('🚀 Raw dashboard data:', data);
         // Entferne Artist-Verfügbarkeiten und Slots, bevor wir die Daten setzen
         const { availabilities, artistAvailability, slots, ...filtered } = data;
         setDashboardData(filtered);

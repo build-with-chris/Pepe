@@ -16,7 +16,7 @@ export default function ArtistGuidlines() {
     setSubmitting(true);
     setError(null);
     try {
-      const url = `${API_BASE}/api/artists/me/accept_guidelines`; console.log('POST', url);
+      const url = `${API_BASE}/api/artists/me/accept_guidelines`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {

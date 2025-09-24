@@ -218,7 +218,6 @@ export default function InteractivePepeParticles() {
         // debug: Animation läuft (alle 120 Frames)
         frameCount++;
         if (frameCount % 120 === 0) {
-          console.log('animation tick', particles.length);
         }
 
         animationRef.current = requestAnimationFrame(animate);
@@ -244,7 +243,6 @@ export default function InteractivePepeParticles() {
         lastMouseRef.current.time = now;
 
         updateMousePosition(e.clientX, e.clientY);
-        console.log('mouse moved to', mouseRef.current);
       };
 
       const handleTouchMove = (e: TouchEvent) => {
@@ -280,7 +278,6 @@ export default function InteractivePepeParticles() {
 
         updateMousePosition(e.clientX, e.clientY);
         // debug pointer fallback
-        // console.log('pointer moved to', mouseRef.current);
       };
       window.addEventListener('pointermove', handlePointerMove);
 

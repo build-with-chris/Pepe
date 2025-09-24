@@ -17,7 +17,6 @@ export default function SignUp() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("handleSignUp triggered", { name, email, password });
     setLoading(true);
     setMessage(null);
     const sb = await getSupabase();
@@ -31,14 +30,12 @@ export default function SignUp() {
         }
       }
     });
-    console.log("Supabase signUp result:", { data, error });
     setLoading(false);
     if (error) {
       setMessage(error.message);
     } else {
       setMessage(t("signup.success"));
       setTimeout(() => {
-        console.log("Navigating to /login after successful sign-up");
         navigate("/login");
       }, 3000);
     }

@@ -36,7 +36,6 @@ export const NavMenu = ({ user: passedUser, ...props }: NavMenuExtProps) => {
         { label: t("nav.public.contact"), to: '/kontakt' },
       ];
     }
-    console.log('🧭 NavMenu - computing menuItems, isAdmin=', isAdmin, 'loggedIn=', loggedIn);
     if (isAdmin) {
       return [
         { label: t("nav.admin.dashboard"), to: '/admin/dashboard' },
@@ -61,7 +60,6 @@ export const NavMenu = ({ user: passedUser, ...props }: NavMenuExtProps) => {
         ];
   }, [loading, loggedIn, isAdmin, t]);
 
-  console.log("NavMenu render", { user, loggedIn, isAdmin, loading, items: menuItems });
   return (
     <NavigationMenu {...props}>
       <NavigationMenuList className="gap-6 space-x-0 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start">

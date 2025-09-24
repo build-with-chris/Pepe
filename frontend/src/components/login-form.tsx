@@ -30,7 +30,6 @@ export function Login({
     e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>
   ) => {
     e.preventDefault();
-    console.log("handleSignIn triggered", { email, password });
     setLoading(true);
     const API = import.meta.env.VITE_API_URL;
     if (!API) {
@@ -63,7 +62,6 @@ export function Login({
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("Verify response:", verifyRes.status);
       const verifyJson = await verifyRes.json().catch(() => ({}));
       if (!verifyRes.ok) {
         console.error("Verify failed:", verifyJson);
@@ -114,7 +112,6 @@ export function Login({
         });
         meOk = meRes.ok;
         me = await meRes.json().catch(() => null);
-        console.log("/api/artists/me status=", meRes.status, "json=", me);
       } catch (e) {
         console.warn("/api/artists/me request error", e);
       }

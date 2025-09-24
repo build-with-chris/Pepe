@@ -78,14 +78,11 @@ const MeineAnfragen: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
-      console.log('Lade Anfragen, Token:', token);
       setLoading(true);
       setError(null);
       try {
         const url = '/api/requests/requests';
-        console.log('Fetch URL:', import.meta.env.VITE_API_URL + url);
         const data = await apiFetch(url);
-        console.log('Rohdaten von /api/requests/requests:', data);
         // Erwartet ein Array direkt oder in { requests: [...] }
         const rawList: any[] = Array.isArray(data) ? data : data.requests || [];
         const list: Anfrage[] = rawList.map((item: any) => ({
@@ -95,8 +92,6 @@ const MeineAnfragen: React.FC = () => {
         // Sort by received/created date (newest first)
         list.sort((a, b) => getReceivedAtTs(b) - getReceivedAtTs(a));
         setAnfragen(list);
-        console.log('🕵️‍♀️ Loaded requests with all fields:', list);
-        console.log('🧐 Loaded statuses:', list.map(a => a.status));
       } catch (e: any) {
         console.error('Fehler beim Laden:', e);
         setError(e.message || t('requests.errors.loadFailed', { defaultValue: 'Fehler beim Laden der Anfragen' }));
@@ -109,7 +104,6 @@ const MeineAnfragen: React.FC = () => {
 
   const filtered = anfragen.filter(a => {
     const st = String(a.status).toLowerCase();
-    console.log(`🧐 Filtering id=${a.id}, raw='${a.status}', norm='${st}', tab='${activeTab}'`);
     if (activeTab === 'aktion') {
       // Zeige nur angefragte (noch nicht beantwortete) Anfragen
       return st === 'angefragt';
@@ -153,7 +147,6 @@ const MeineAnfragen: React.FC = () => {
     // Optimistische Aktualisierung von Status und Gage
     setAnfragen(prev => prev.map(a => a.id === id ? { ...a, status: 'angeboten', artist_gage: preisNum } : a));
     try {
-      console.log('🛰️ Sende Artist-Angebot PUT payload:', { price_offered: preisNum });
       const result = await apiFetch(`/api/requests/requests/${id}/offer`, {
         method: 'PUT',
         body: JSON.stringify({ price_offered: preisNum }),

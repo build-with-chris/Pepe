@@ -217,7 +217,6 @@ const StepShowtime: React.FC<StepShowtimeProps> = ({ data, onPrev }) => {
         // 👉 Notify the wizard to clear its cached data and also clear here as a fallback
         try {
           window.dispatchEvent(new Event('booking:submitted'));
-          console.log('ℹ️ bookingData cleared after submission (Step 11)');
         } catch (e) {
           console.warn('Could not notify booking submitted:', e);
         }

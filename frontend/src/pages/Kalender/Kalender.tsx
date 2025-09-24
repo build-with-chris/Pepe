@@ -255,7 +255,6 @@ const CalendarPage: React.FC = () => {
       return;
     }
 
-    console.log('🟢 Auto-Availability: adding', iso, 'for artist', backendArtistId ?? '(current user)');
     lastEnsuredIsoRef.current = iso;
     (async () => {
       try {

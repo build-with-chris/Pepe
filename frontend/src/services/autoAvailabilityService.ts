@@ -22,7 +22,6 @@ export async function ensureOneYearAhead(params: {
   const exists = params.available.some((s) => s.date === iso);
   if (exists) return;
 
-  console.log("🟢 Auto-Availability (frontend): adding", iso, "for artist", params.artistId ?? "me");
 
   try {
     await createAvailability({
