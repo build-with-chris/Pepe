@@ -1,0 +1,62 @@
+
+
+
+tags:
+  - Artists
+summary: Get a single artist (public)
+description: Returns details of a single artist by ID. Only approved artists are accessible without authentication.
+parameters:
+  - name: artist_id
+    in: path
+    required: true
+    description: Artist ID
+    schema:
+      type: integer
+responses:
+  200:
+    description: Artist object
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email:
+              type: string
+            address:
+              type: string
+            phone_number:
+              type: string
+            disciplines:
+              type: array
+              items:
+                type: string
+            price_min:
+              type: integer
+            price_max:
+              type: integer
+            profile_image_url:
+              type: string
+            bio:
+              type: string
+            instagram:
+              type: string
+            gallery_urls:
+              type: array
+              items:
+                type: string
+  404:
+    description: Artist not found or not approved
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

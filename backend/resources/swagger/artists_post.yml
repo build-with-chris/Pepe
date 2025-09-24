@@ -1,0 +1,52 @@
+tags:
+  - Artists
+security:
+  - bearerAuth: []
+summary: Create a new artist
+description: Create a new artist. Email must be unique. Disciplines are required.
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required: [name, email, password, disciplines]
+        properties:
+          name: { type: string }
+          email: { type: string, format: email }
+          password: { type: string }
+          disciplines:
+            type: array
+            items: { type: string }
+          phone_number: { type: string }
+          address: { type: string }
+          price_min: { type: integer }
+          price_max: { type: integer }
+          is_admin: { type: boolean }
+responses:
+  201:
+    description: Artist created
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            id: { type: integer }
+  400:
+    description: Invalid input
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  409:
+    description: Email already exists
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

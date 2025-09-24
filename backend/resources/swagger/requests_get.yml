@@ -1,0 +1,27 @@
+tags:
+  - Requests
+security:
+  - bearerAuth: []
+summary: List booking requests for the current artist
+description: Returns booking requests relevant to the authenticated (approved) artist.
+responses:
+  200:
+    description: List of booking requests
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingRequest'
+  403:
+    description: Artist not approved or current user not linked to an artist
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

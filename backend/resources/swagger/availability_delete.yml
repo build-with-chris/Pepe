@@ -1,0 +1,41 @@
+tags:
+  - Availability
+security:
+  - bearerAuth: []
+summary: Delete an availability slot
+description: Delete a single availability slot by ID for the current artist (or admin).
+parameters:
+  - in: path
+    name: slot_id
+    required: true
+    description: Availability slot ID
+    schema:
+      type: integer
+responses:
+  200:
+    description: Slot deleted
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            deleted:
+              type: integer
+  400:
+    description: Invalid request
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  403:
+    description: Forbidden
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Slot not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

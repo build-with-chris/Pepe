@@ -1,0 +1,40 @@
+tags:
+  - Availability
+security:
+  - bearerAuth: []
+summary: Get availability
+description: Return all availability days for the current artist, or another artist if allowed.
+parameters:
+  - in: query
+    name: artist_id
+    required: false
+    description: Artist ID to query (must be same artist or admin)
+    schema:
+      type: integer
+responses:
+  200:
+    description: List of availability days
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/Availability'
+  400:
+    description: Invalid parameter
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  403:
+    description: Forbidden or no linked artist
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Artist not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

@@ -1,0 +1,39 @@
+tags:
+  - Requests
+security:
+  - bearerAuth: []
+summary: Update booking request status
+description: Change the status of an existing booking request.
+parameters:
+  - in: path
+    name: req_id
+    required: true
+    description: Booking request ID
+    schema:
+      type: integer
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required: [status]
+        properties:
+          status:
+            type: string
+            enum: [requested, offered, accepted, rejected, cancelled]
+responses:
+  200:
+    description: Status updated successfully
+  400:
+    description: Invalid request or status
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Request not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

@@ -1,0 +1,61 @@
+tags:
+  - Artists
+security:
+  - bearerAuth: []
+summary: Update artist by ID
+description: Update fields of an existing artist. Only the owner or an admin may update. Partial updates are allowed.
+parameters:
+  - in: path
+    name: artist_id
+    required: true
+    description: ID of the artist to update
+    schema:
+      type: integer
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          name: { type: string }
+          email: { type: string, format: email }
+          password: { type: string }
+          phone_number: { type: string }
+          address: { type: string }
+          price_min: { type: integer }
+          price_max: { type: integer }
+          disciplines:
+            type: array
+            items: { type: string }
+responses:
+  200:
+    description: Artist updated
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Artist'
+  400:
+    description: Invalid input
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  403:
+    description: Forbidden
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Artist not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

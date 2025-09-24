@@ -1,0 +1,19 @@
+tags:
+  - Artists
+security:
+  - bearerAuth: []
+summary: Get my artist profile
+description: Return the current user's artist profile including image and bio.
+responses:
+  200:
+    description: OK
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Artist'
+  403:
+    description: Current user not linked to an artist
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

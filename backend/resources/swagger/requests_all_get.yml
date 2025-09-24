@@ -1,0 +1,27 @@
+tags:
+  - Admin
+security:
+  - bearerAuth: []
+summary: List all booking requests (admin only)
+description: Returns a full list of all booking requests in the system. Admin only.
+responses:
+  200:
+    description: List of all booking requests
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingRequest'
+  403:
+    description: Forbidden – admin only
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

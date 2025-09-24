@@ -1,0 +1,35 @@
+tags:
+  - Artists
+security:
+  - bearerAuth: []
+summary: Delete an artist
+description: Delete an artist by ID. Allowed for the artist owner, admin, or orphan self.
+parameters:
+  - in: path
+    name: artist_id
+    required: true
+    description: ID of the artist to delete
+    schema:
+      type: integer
+responses:
+  200:
+    description: Artist deleted
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            deleted:
+              type: integer
+  403:
+    description: Forbidden
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Artist not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

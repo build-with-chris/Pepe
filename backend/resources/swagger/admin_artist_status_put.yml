@@ -1,0 +1,108 @@
+tags:
+  - AdminArtistStatus
+summary: Setzt den Status für einen einzelnen Artist in einer Anfrage
+description: Nur Admins dürfen diesen Status setzen.
+security:
+  - Bearer: []
+parameters:
+  - in: path
+    name: req_id
+    type: integer
+    required: true
+    description: ID der Booking-Request
+  - in: path
+    name: artist_id
+    type: integer
+    required: true
+    description: ID des Artists
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [angefragt, angeboten, akzeptiert, abgelehnt, storniert]
+consumes:
+  - application/json
+responses:
+  200:
+    description: Aktualisierter Artist-Status
+    schema:
+      type: object
+      properties:
+        artist_id:
+          type: integer
+        status:
+          type: string
+          enum: [angefragt, angeboten, akzeptiert, abgelehnt, storniert]
+  400:
+    description: Ungültige Anfrage/Artist/Status
+  403:
+    description: Nicht erlaubt
+
+
+tags:
+  - AdminArtistStatus
+security:
+  - bearerAuth: []
+summary: Set artist status for a booking request
+description: Updates the status for a single artist in a booking request. Admin only.
+parameters:
+  - in: path
+    name: req_id
+    required: true
+    description: Booking request ID
+    schema:
+      type: integer
+  - in: path
+    name: artist_id
+    required: true
+    description: Artist ID
+    schema:
+      type: integer
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required: [status]
+        properties:
+          status:
+            type: string
+            description: New status to set
+            enum: [requested, offered, accepted, rejected, cancelled]
+responses:
+  200:
+    description: Updated artist status
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            artist_id:
+              type: integer
+            status:
+              type: string
+              enum: [requested, offered, accepted, rejected, cancelled]
+  400:
+    description: Invalid request, artist, or status
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  403:
+    description: Forbidden – admin only
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Request or artist not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

@@ -1,0 +1,47 @@
+tags:
+  - AdminArtists
+security:
+  - bearerAuth: []
+summary: Approve an artist
+description: Sets approval_status to 'approved' for the given artist. Admin only.
+parameters:
+  - in: path
+    name: artist_id
+    required: true
+    description: Artist ID
+    schema:
+      type: integer
+responses:
+  200:
+    description: Artist approved
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 42
+            status:
+              type: string
+              example: approved
+            approved_at:
+              type: string
+              format: date-time
+              example: "2025-08-10T12:34:56Z"
+            approved_by:
+              type: integer
+              description: Admin ID
+              example: 7
+  403:
+    description: Forbidden – admin only
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Artist not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

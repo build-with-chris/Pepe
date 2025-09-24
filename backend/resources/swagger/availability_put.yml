@@ -1,0 +1,122 @@
+
+summary: Ersetze die Verfügbarkeiten eines Artists komplett
+description: |
+  Nimmt eine Liste von ISO-Datum-Strings (YYYY-MM-DD) und synchronisiert die Verfügbarkeiten des aktuell angemeldeten Artists.\n  Es werden nur die Differenzen angewendet: neue Tage werden hinzugefügt, nicht mehr gewünschte entfernt.
+tags:
+  - Availability
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      required:
+        - dates
+      properties:
+        dates:
+          type: array
+          items:
+            type: string
+            format: date
+          description: Liste der Tage im Format YYYY-MM-DD, die nach dem Sync verfügbar sein sollen.
+responses:
+  200:
+    description: Ergebnis der Synchronisation
+    schema:
+      type: object
+      properties:
+        added:
+          type: array
+          items:
+            type: integer
+          description: IDs der hinzugefügten Verfügbarkeits-Slots
+        removed:
+          type: array
+          items:
+            type: integer
+          description: IDs der entfernten Verfügbarkeits-Slots
+  400:
+    description: Ungültiger Request (z.B. fehlt "dates")
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+  403:
+    description: Kein verknüpfter Artist oder keine Berechtigung
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+  default:
+    description: Unerwarteter Fehler
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+tags:
+  - Availability
+security:
+  - bearerAuth: []
+summary: Replace availability dates
+description: Synchronize the current artist's availability with the given list of ISO dates (YYYY-MM-DD). Adds new dates and removes missing ones.
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required: [dates]
+        properties:
+          dates:
+            type: array
+            description: List of dates that should be available after sync
+            items:
+              type: string
+              format: date
+responses:
+  200:
+    description: Sync result
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            added:
+              type: array
+              description: IDs of created availability slots
+              items:
+                type: integer
+            removed:
+              type: array
+              description: IDs of removed availability slots
+              items:
+                type: integer
+  400:
+    description: Validation error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  403:
+    description: Forbidden or no linked artist
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

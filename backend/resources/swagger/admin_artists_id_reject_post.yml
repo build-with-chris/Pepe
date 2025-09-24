@@ -1,0 +1,61 @@
+tags:
+  - AdminArtists
+security:
+  - bearerAuth: []
+summary: Reject an artist
+description: Sets approval_status to 'rejected' for the given artist and stores an optional reason. Admin only.
+parameters:
+  - in: path
+    name: artist_id
+    required: true
+    description: Artist ID
+    schema:
+      type: integer
+requestBody:
+  required: false
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          reason:
+            type: string
+            description: Optional rejection reason
+responses:
+  200:
+    description: Artist rejected
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 42
+            status:
+              type: string
+              example: rejected
+            rejection_reason:
+              type: string
+              example: "Profile incomplete"
+            approved_at:
+              type: string
+              format: date-time
+              nullable: true
+              example: null
+            approved_by:
+              type: integer
+              nullable: true
+              example: null
+  403:
+    description: Forbidden – admin only
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Artist not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

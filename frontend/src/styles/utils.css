@@ -1,0 +1,8 @@
+/* correctly named utility file (fix for typo in existing file name) */
+.text-always-white {
+  color: white !important;
+}
+.text-always-white a {
+  color: white !important;
+  text-decoration: underline;
+}

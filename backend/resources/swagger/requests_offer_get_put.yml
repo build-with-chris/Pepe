@@ -1,0 +1,93 @@
+get:
+  tags: [Requests]
+  security:
+    - bearerAuth: []
+  summary: Get my offer for a booking request
+  parameters:
+    - in: path
+      name: req_id
+      required: true
+      description: Booking request ID
+      schema:
+        type: integer
+  responses:
+    200:
+      description: Current offer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              price_offered:
+                type: number
+                example: 1800
+              status:
+                type: string
+                example: offered
+    403:
+      description: Artist not approved yet or current user not linked to an artist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    404:
+      description: Offer not found or not permitted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+put:
+  tags: [Requests]
+  security:
+    - bearerAuth: []
+  summary: Set or update my offer for a booking request
+  parameters:
+    - in: path
+      name: req_id
+      required: true
+      description: Booking request ID
+      schema:
+        type: integer
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required: [price_offered]
+          properties:
+            price_offered:
+              type: number
+              example: 1800
+  responses:
+    200:
+      description: Offer saved
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              price_offered:
+                type: number
+                example: 1800
+              status:
+                type: string
+                example: offered
+    400:
+      description: price_offered is required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    403:
+      description: Artist not approved yet or current user not linked to an artist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    500:
+      description: Failed to set offer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

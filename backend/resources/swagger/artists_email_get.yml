@@ -1,0 +1,26 @@
+tags:
+  - Artists
+security:
+  - bearerAuth: []
+summary: Get artist by email
+description: Return a single artist by email. Authentication required.
+parameters:
+  - in: path
+    name: email
+    required: true
+    schema:
+      type: string
+      format: email
+responses:
+  200:
+    description: Artist found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Artist'
+  404:
+    description: Artist not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

@@ -1,0 +1,23 @@
+tags:
+  - Invoices
+security:
+  - bearerAuth: []
+summary: List invoices for current artist
+description: Returns all invoices stored for the authenticated artist. If no invoices exist, returns 204 with no body.
+responses:
+  200:
+    description: List of invoices
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
+  204:
+    description: No invoices found
+  401:
+    description: Unauthorized
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

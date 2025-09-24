@@ -1,0 +1,35 @@
+tags:
+  - AdminOffers
+security:
+  - bearerAuth: []
+summary: Delete an admin offer
+description: Deletes an admin-created offer by ID. Admin only.
+parameters:
+  - in: path
+    name: offer_id
+    required: true
+    description: Admin offer ID
+    schema:
+      type: integer
+responses:
+  200:
+    description: Offer deleted
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            deleted:
+              type: integer
+  403:
+    description: Forbidden – admin only
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  404:
+    description: Offer not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

@@ -1,0 +1,45 @@
+tags:
+  - Invoices
+security:
+  - bearerAuth: []
+summary: Upload invoice metadata
+description: Links a Supabase Storage invoice file to the current artist.
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required: [storage_path]
+        properties:
+          storage_path:
+            type: string
+            example: profiles/artist/123/invoices/2025-08.pdf
+          amount_cents:
+            type: integer
+            example: 25000
+          currency:
+            type: string
+            example: EUR
+          invoice_date:
+            type: string
+            format: date
+            example: 2025-08-16
+          notes:
+            type: string
+            example: Invoice for August 2025
+responses:
+  200:
+    description: Invoice successfully linked
+  400:
+    description: Invalid payload
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  401:
+    description: Unauthorized
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'

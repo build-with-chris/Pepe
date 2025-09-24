@@ -1,0 +1,53 @@
+tags:
+  - Availability
+security:
+  - bearerAuth: []
+summary: Add availability date(s)
+description: Add one or more availability days for the current artist. Accepts a single object with a date or an array of objects.
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        oneOf:
+          - type: object
+            required: [date]
+            properties:
+              date:
+                type: string
+                format: date
+          - type: array
+            items:
+              type: object
+              required: [date]
+              properties:
+                date:
+                  type: string
+                  format: date
+responses:
+  201:
+    description: Availability slot(s) added
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/Availability'
+  400:
+    description: Validation error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  403:
+    description: Forbidden or no linked artist
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
+  500:
+    description: Internal server error
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/Error'
