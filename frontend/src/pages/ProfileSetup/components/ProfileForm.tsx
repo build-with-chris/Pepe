@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { disciplinesOptions } from "@/constraints/disciplines";
 import GalleryUploader from "@/components/GalleryUploader";
 import { downscaleImage } from "@/lib/storage/upload";
+import { GageCriteriaForm } from "@/components/GageCriteriaForm";
 
 export type ProfileFormProps = {
   profile: any;
@@ -168,48 +169,17 @@ export function ProfileForm({ profile, setProfile, locked, onSubmit, fieldErrors
         )}
       </section>
 
-      {/* Preisrahmen */}
-      <section className="md:col-span-2 rounded-lg border border-gray-800 bg-gray-900 p-5 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-gray-300">{t('profileForm.sections.pricing')}</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block font-medium text-gray-300">{t('profileForm.labels.priceMin')}*</label>
-            <input
-              type="number"
-              value={profile.priceMin ?? 0}
-              onChange={(e) => setProfile({ priceMin: Number(e.target.value) })}
-              className="w-full rounded border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-400"
-              min={0}
-              required
-              disabled={locked}
-            />
-            <p className="mt-1 text-sm text-gray-400">
-              {t('profileForm.help.priceMin')}
-            </p>
-          </div>
-          <div>
-            <label className="mb-1 block font-medium text-gray-300">{t('profileForm.labels.priceMax')}*</label>
-            <input
-              type="number"
-              value={profile.priceMax ?? 0}
-              onChange={(e) => setProfile({ priceMax: Number(e.target.value) })}
-              className="w-full rounded border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-400"
-              min={profile.priceMin ?? 0}
-              required
-              disabled={locked}
-            />
-            <p className="mt-1 text-sm text-gray-400">
-              {t('profileForm.help.priceMax')}
-            </p>
-            {profile.priceMin > profile.priceMax && (
-              <p className="mt-1 text-sm text-red-400">{t('profileSetup.errors.minGtMax')}</p>
-            )}
-            {(fieldErrors.priceMin || fieldErrors.priceMax) && (
-              <p className="mt-1 text-sm text-red-400">{fieldErrors.priceMin || fieldErrors.priceMax}</p>
-            )}
-          </div>
-        </div>
-      </section>
+      {/* Gage-Berechnung */}
+      <div className="md:col-span-2">
+        <GageCriteriaForm
+          onGageUpdate={(gageInfo) => {
+            setProfile({
+              priceMin: gageInfo.min,
+              priceMax: gageInfo.max
+            });
+          }}
+        />
+      </div>
 
       {/* Profilbild (Preview) */}
       <section className="rounded-lg border border-gray-800 bg-gray-900 p-5 shadow-sm">
