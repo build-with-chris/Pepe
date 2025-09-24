@@ -378,6 +378,20 @@ def create_request():
             # Do not fail the API if email sending has issues; just log it.
             current_app.logger.exception(f"Error while sending artist notification emails: {e}")
 
+        # Send admin notification email
+        try:
+            admin_email = current_app.config.get('ADMIN_EMAIL')
+            if admin_email:
+                admin_subject = f"[Pepe Shows] Neue Buchungsanfrage #{req.id}"
+                admin_html = build_admin_new_request_email(req)
+                send_email(admin_email, admin_subject, admin_html)
+                current_app.logger.info(f"Admin notification sent for request {req.id} to {admin_email}")
+            else:
+                current_app.logger.warning("Admin email notification skipped - ADMIN_EMAIL not configured")
+        except Exception as e:
+            # Do not fail the API if admin email sending has issues; just log it.
+            current_app.logger.exception(f"Error while sending admin notification email: {e}")
+
         resp = {
             'request_id': req.id,
             'price_min': pmin,
@@ -552,6 +566,50 @@ def build_artist_new_request_email(artist, req):
         </p>
         <hr style="border:none;border-top:1px solid #e5e5e5;"/>
         <small>Diese E-Mail wurde automatisch gesendet. Bitte nicht direkt antworten.</small>
+      </body>
+    </html>
+    """
+
+
+def build_admin_new_request_email(req):
+    """Build a minimal HTML email for admin notification of new booking request."""
+    app_url = current_app.config.get('APP_URL', 'https://app.example.com')
+    date_str = req.event_date.strftime('%d.%m.%Y') if isinstance(req.event_date, datetime) else str(req.event_date)
+    city = (req.event_address.split(',')[-1].strip() if req.event_address else '')
+    price_range = None
+    try:
+        if req.price_min is not None and req.price_max is not None:
+            price_range = f"{int(req.price_min)}–{int(req.price_max)} €"
+    except Exception:
+        price_range = None
+
+    return f"""
+    <html>
+      <body style="font-family: Arial, Helvetica, sans-serif; line-height:1.5;">
+        <h2>🎭 Neue Buchungsanfrage eingegangen</h2>
+        <p>
+          <strong>Anfrage ID:</strong> #{req.id}<br/>
+          <strong>Datum:</strong> {date_str}<br/>
+          <strong>Ort:</strong> {city or '—'}<br/>
+          <strong>Event:</strong> {req.event_type or '—'}<br/>
+          <strong>Disziplin(en):</strong> {', '.join(req.show_discipline) if getattr(req, 'show_discipline', None) else '—'}<br/>
+          <strong>Teamgröße:</strong> {req.team_size or '—'}<br/>
+          <strong>Dauer:</strong> {req.duration_minutes or '—'} Minuten<br/>
+          <strong>Gäste:</strong> {req.number_of_guests or '—'}<br/>
+          <strong>Preisrahmen:</strong> {price_range or 'wird noch abgestimmt'}
+        </p>
+        <p>
+          <strong>Kundendaten:</strong><br/>
+          <strong>Name:</strong> {req.customer_name or '—'}<br/>
+          <strong>E-Mail:</strong> {req.customer_email or '—'}<br/>
+          <strong>Telefon:</strong> {req.customer_phone or '—'}
+        </p>
+        {f'<p><strong>Nachricht:</strong><br/>{req.message}</p>' if getattr(req, 'message', None) else ''}
+        <p>
+          <a href="{app_url}/admin/requests/{req.id}" style="background:#111;color:#fff;padding:10px 16px;text-decoration:none;border-radius:6px;">Anfrage verwalten</a>
+        </p>
+        <hr style="border:none;border-top:1px solid #e5e5e5;"/>
+        <small>Diese E-Mail wurde automatisch gesendet.</small>
       </body>
     </html>
     """

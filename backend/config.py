@@ -31,6 +31,7 @@ class Config:
     SMTP_USER = os.getenv("SMTP_USER")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
     SMTP_FROM = os.getenv("SMTP_FROM") or SMTP_USER
+    ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
 
     # --- Swagger / OpenAPI Settings ---
