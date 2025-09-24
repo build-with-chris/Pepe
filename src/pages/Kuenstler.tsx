@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import ArtistCardFinal from '@/components/ArtistCardFinal'
 import type { Artist } from '@/types/artist'
+import { mockArtists } from '@/data/mockArtists'
 
 export default function Kuenstler() {
   const [artists, setArtists] = useState<Artist[]>([])
@@ -56,13 +57,15 @@ export default function Kuenstler() {
           setFilteredArtists(data)
         } else {
           console.error('Failed to fetch artists, status:', response.status)
-          // Use mock data as fallback when API is down
-          const mockArtists: Artist[] = []
+          console.log('Using mock data as fallback')
           setArtists(mockArtists)
           setFilteredArtists(mockArtists)
         }
       } catch (error) {
         console.error('Failed to fetch artists:', error)
+        console.log('Using mock data as fallback due to error')
+        setArtists(mockArtists)
+        setFilteredArtists(mockArtists)
       } finally {
         setLoading(false)
       }

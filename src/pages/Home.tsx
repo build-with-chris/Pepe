@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
 import heroImage from '../assets/PepeHero.webp'
+import { mockArtists } from '@/data/mockArtists'
 
 interface Artist {
   id: number
@@ -185,9 +186,23 @@ export default function Home() {
               artistCount: 0
             }
           ])
+        } else {
+          console.error('Failed to fetch artists, status:', response.status)
+          console.log('Using mock data as fallback')
+          const shuffled = mockArtists.sort(() => 0.5 - Math.random())
+          setArtists(shuffled.slice(0, 4))
+          
+          const dynamicDisciplines = createDisciplinesFromArtists(mockArtists)
+          setDisciplines(dynamicDisciplines)
         }
       } catch (error) {
         console.error('Failed to fetch artists:', error)
+        console.log('Using mock data as fallback due to error')
+        const shuffled = mockArtists.sort(() => 0.5 - Math.random())
+        setArtists(shuffled.slice(0, 4))
+        
+        const dynamicDisciplines = createDisciplinesFromArtists(mockArtists)
+        setDisciplines(dynamicDisciplines)
       } finally {
         setLoading(false)
       }
