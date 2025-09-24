@@ -284,5 +284,23 @@ def healthz():
         return error_response("internal_error", f"DB unavailable: {str(e)}", 503)
 
 
+@app.post("/run-migrations-temp")
+def run_migrations_temp():
+    """TEMPORARY: Run database migrations without auth. Remove after use."""
+    try:
+        from flask_migrate import upgrade
+
+        # Run migrations
+        upgrade()
+
+        return jsonify({
+            "message": "Database migration completed successfully"
+        }), 200
+
+    except Exception as e:
+        app.logger.exception("Migration failed: %s", e)
+        return error_response("internal_error", f"Migration failed: {str(e)}", 500)
+
+
 if __name__=="__main__":
     app.run(debug=True)
