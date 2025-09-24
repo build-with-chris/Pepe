@@ -540,13 +540,16 @@ def build_artist_new_request_email(artist, req):
     date_str = req.event_date.strftime('%d.%m.%Y') if isinstance(req.event_date, datetime) else str(req.event_date)
     city = (req.event_address.split(',')[-1].strip() if req.event_address else '')
 
-    # Fix price range formatting
-    price_range = None
+    # Show artist's recommended gage instead of customer price
+    artist_gage_range = None
     try:
-        if req.price_min is not None and req.price_max is not None:
-            price_range = f"{int(req.price_min)}–{int(req.price_max)} €"
+        # Use artist's calculated gage range (price_min/max are the artist's gage ±20%)
+        if hasattr(artist, 'price_min') and hasattr(artist, 'price_max') and artist.price_min and artist.price_max:
+            artist_gage_range = f"{int(artist.price_min)}–{int(artist.price_max)} €"
+        elif hasattr(artist, 'calculated_gage') and artist.calculated_gage:
+            artist_gage_range = f"{int(artist.calculated_gage)} €"
     except Exception:
-        price_range = None
+        artist_gage_range = None
 
     # Fix disciplines formatting - handle both list and string cases
     disciplines_str = '—'
@@ -646,12 +649,13 @@ def build_artist_new_request_email(artist, req):
               </div>
             </div>
 
-            <!-- Price Card -->
+            <!-- Artist Gage Card -->
             <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: center;">
-              <h3 style="margin: 0 0 10px 0; color: white; font-size: 16px;">💰 Preisrahmen</h3>
+              <h3 style="margin: 0 0 10px 0; color: white; font-size: 16px;">💰 Deine empfohlene Gage</h3>
               <div style="color: white; font-size: 24px; font-weight: 700;">
-                {price_range or 'wird noch abgestimmt'}
+                {artist_gage_range or 'noch nicht berechnet'}
               </div>
+              {f'<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Basierend auf deinen Kriterien</p>' if artist_gage_range else ''}
             </div>
 
             <!-- Call to Action -->
