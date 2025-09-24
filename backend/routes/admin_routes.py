@@ -635,3 +635,24 @@ def recalculate_all_gages():
     except Exception as e:
         logger.exception('Failed to recalculate all gages')
         return error_response('internal_error', f'Failed to recalculate gages: {str(e)}', 500)
+
+
+@admin_bp.route('/migrate-database', methods=['POST'])
+@jwt_required()
+def migrate_database():
+    """Run database migrations manually (admin only)."""
+    try:
+        from flask_migrate import upgrade
+        from flask import current_app
+
+        # Run migrations
+        with current_app.app_context():
+            upgrade()
+
+        return jsonify({
+            'message': 'Database migration completed successfully'
+        }), 200
+
+    except Exception as e:
+        logger.exception('Failed to run database migration')
+        return error_response('internal_error', f'Migration failed: {str(e)}', 500)
