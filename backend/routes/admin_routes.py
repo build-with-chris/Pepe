@@ -562,3 +562,76 @@ def dashboard():
             for r in offers
         ]
     }), 200
+
+
+# ===== ADMIN GAGE MANAGEMENT ENDPOINTS =====
+
+@admin_bp.route('/artists/<int:artist_id>/gage-override', methods=['PUT'])
+@jwt_required()
+def set_artist_gage_override(artist_id):
+    """Set admin override for artist gage."""
+    try:
+        data = request.get_json() or {}
+        override_gage = data.get('override_gage')
+
+        if override_gage is not None and (not isinstance(override_gage, int) or override_gage < 0):
+            return error_response('bad_request', 'Override gage must be a positive integer or null', 400)
+
+        updated_artist = artist_mgr.set_admin_gage_override(artist_id, override_gage)
+
+        if not updated_artist:
+            return error_response('not_found', 'Artist not found', 404)
+
+        return jsonify({
+            'message': 'Admin gage override updated successfully',
+            'artist_id': updated_artist.id,
+            'admin_override': updated_artist.admin_gage_override,
+            'calculated_gage': updated_artist.calculated_gage,
+            'current_range': {
+                'min': updated_artist.price_min,
+                'max': updated_artist.price_max
+            }
+        }), 200
+
+    except Exception as e:
+        logger.exception('Failed to set admin gage override')
+        return error_response('internal_error', f'Failed to set gage override: {str(e)}', 500)
+
+
+@admin_bp.route('/artists/<int:artist_id>/gage-calculation', methods=['GET'])
+@jwt_required()
+def get_artist_gage_calculation(artist_id):
+    """Get detailed gage calculation breakdown for any artist (admin only)."""
+    try:
+        breakdown = artist_mgr.calculate_artist_gage(artist_id)
+        if not breakdown:
+            return error_response('not_found', 'Artist not found', 404)
+
+        return jsonify(breakdown), 200
+
+    except Exception as e:
+        logger.exception('Failed to get artist gage calculation')
+        return error_response('internal_error', f'Failed to get gage calculation: {str(e)}', 500)
+
+
+@admin_bp.route('/gage/recalculate-all', methods=['POST'])
+@jwt_required()
+def recalculate_all_gages():
+    """Recalculate gages for all artists (admin only)."""
+    try:
+        data = request.get_json() or {}
+        limit = data.get('limit')  # Optional limit for testing
+
+        if limit is not None and (not isinstance(limit, int) or limit <= 0):
+            return error_response('bad_request', 'Limit must be a positive integer', 400)
+
+        results = artist_mgr.recalculate_all_gages(limit=limit)
+
+        return jsonify({
+            'message': 'Gage recalculation completed',
+            'summary': results
+        }), 200
+
+    except Exception as e:
+        logger.exception('Failed to recalculate all gages')
+        return error_response('internal_error', f'Failed to recalculate gages: {str(e)}', 500)

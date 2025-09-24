@@ -4,6 +4,7 @@ from datetime import date
 from managers.discipline_manager import DisciplineManager
 from datetime import date, timedelta
 from managers.availability_manager import AvailabilityManager
+from services.gage_calculator import GageCalculator
 from sqlalchemy.exc import IntegrityError
 import logging
 logger = logging.getLogger(__name__)
@@ -233,6 +234,148 @@ class ArtistManager:
             self.db.session.add(artist)
             self.db.session.commit()
             return artist
+        except Exception:
+            self.db.session.rollback()
+            raise
+
+    def update_gage_criteria(self, artist_id, **criteria):
+        """
+        Updates gage calculation criteria for an artist and recalculates gage.
+
+        Args:
+            artist_id: Artist ID
+            **criteria: Gage criteria fields (circus_education, stage_experience, etc.)
+
+        Returns:
+            dict: Updated artist data with calculated gage
+        """
+        try:
+            artist = self.get_artist(artist_id)
+            if not artist:
+                return None
+
+            # Update criteria fields
+            for field, value in criteria.items():
+                if hasattr(artist, field):
+                    setattr(artist, field, value)
+
+            # Calculate and set new gage
+            calculated_gage = GageCalculator.calculate_gage(artist)
+            artist.calculated_gage = calculated_gage
+
+            # Update price_min/max to calculated value (unless admin override exists)
+            if not artist.admin_gage_override:
+                # ±20% spread as requested
+                spread = int(calculated_gage * 0.2)
+                artist.price_min = calculated_gage - spread
+                artist.price_max = calculated_gage + spread
+
+            self.db.session.commit()
+            return artist
+
+        except Exception:
+            self.db.session.rollback()
+            raise
+
+    def calculate_artist_gage(self, artist_id):
+        """
+        Calculates gage for an artist without updating the database.
+
+        Returns:
+            dict: Gage calculation breakdown
+        """
+        artist = self.get_artist(artist_id)
+        if not artist:
+            return None
+
+        return GageCalculator.get_gage_breakdown(artist)
+
+    def recalculate_all_gages(self, limit=None):
+        """
+        Recalculates gages for all artists (admin function).
+
+        Args:
+            limit: Optional limit for number of artists to process
+
+        Returns:
+            dict: Summary of recalculated gages
+        """
+        try:
+            query = Artist.query
+            if limit:
+                query = query.limit(limit)
+            artists = query.all()
+
+            updated_count = 0
+            results = []
+
+            for artist in artists:
+                old_gage = artist.calculated_gage
+                new_gage = GageCalculator.calculate_gage(artist)
+
+                if old_gage != new_gage:
+                    artist.calculated_gage = new_gage
+                    # Only update price range if no admin override
+                    if not artist.admin_gage_override:
+                        spread = int(new_gage * 0.2)
+                        artist.price_min = new_gage - spread
+                        artist.price_max = new_gage + spread
+                    updated_count += 1
+
+                results.append({
+                    'artist_id': artist.id,
+                    'artist_name': artist.name,
+                    'old_gage': old_gage,
+                    'new_gage': new_gage,
+                    'updated': old_gage != new_gage
+                })
+
+            self.db.session.commit()
+
+            return {
+                'total_artists': len(artists),
+                'updated_count': updated_count,
+                'results': results
+            }
+
+        except Exception:
+            self.db.session.rollback()
+            raise
+
+    def set_admin_gage_override(self, artist_id, override_gage):
+        """
+        Sets admin override for artist gage.
+
+        Args:
+            artist_id: Artist ID
+            override_gage: Override gage in EUR (set to None to remove override)
+
+        Returns:
+            Artist: Updated artist object
+        """
+        try:
+            artist = self.get_artist(artist_id)
+            if not artist:
+                return None
+
+            artist.admin_gage_override = override_gage
+
+            # Update price range to override value
+            if override_gage:
+                spread = int(override_gage * 0.2)
+                artist.price_min = override_gage - spread
+                artist.price_max = override_gage + spread
+            else:
+                # Recalculate based on criteria
+                calculated_gage = GageCalculator.calculate_gage(artist)
+                artist.calculated_gage = calculated_gage
+                spread = int(calculated_gage * 0.2)
+                artist.price_min = calculated_gage - spread
+                artist.price_max = calculated_gage + spread
+
+            self.db.session.commit()
+            return artist
+
         except Exception:
             self.db.session.rollback()
             raise

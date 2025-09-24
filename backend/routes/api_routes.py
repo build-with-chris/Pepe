@@ -915,3 +915,119 @@ def list_invoices():
     except Exception as e:
         logger.exception('Failed to list invoices')
         return error_response('internal_error', f'Failed to list invoices: {str(e)}', 500)
+
+
+# ===== GAGE CALCULATION ENDPOINTS =====
+
+@api_bp.route('/artists/me/gage-criteria', methods=['PUT'])
+@jwt_required()
+def update_my_gage_criteria():
+    """Update gage calculation criteria for the current artist."""
+    user_id, artist = get_current_user()
+    if not artist:
+        return error_response('forbidden', 'Current user not linked to an artist', 403)
+
+    try:
+        data = request.get_json() or {}
+
+        # Validate allowed fields
+        allowed_fields = {
+            'circus_education', 'stage_experience', 'employment_type',
+            'awards_level', 'pepe_years', 'pepe_exclusivity'
+        }
+
+        criteria = {k: v for k, v in data.items() if k in allowed_fields}
+
+        if not criteria:
+            return error_response('bad_request', 'No valid gage criteria provided', 400)
+
+        # Validate field values
+        if 'stage_experience' in criteria:
+            valid_exp = ['0-2', '3-5', '6-10', '10+']
+            if criteria['stage_experience'] not in valid_exp:
+                return error_response('bad_request', f'Invalid stage_experience. Must be one of: {valid_exp}', 400)
+
+        if 'employment_type' in criteria:
+            valid_emp = ['vollzeit', 'teilzeit', 'hobby']
+            if criteria['employment_type'] not in valid_emp:
+                return error_response('bad_request', f'Invalid employment_type. Must be one of: {valid_emp}', 400)
+
+        if 'awards_level' in criteria:
+            valid_awards = ['international', 'national', 'regional', 'lokal', 'keine']
+            if criteria['awards_level'] not in valid_awards:
+                return error_response('bad_request', f'Invalid awards_level. Must be one of: {valid_awards}', 400)
+
+        # Update criteria and calculate gage
+        updated_artist = artist_mgr.update_gage_criteria(artist.id, **criteria)
+
+        if not updated_artist:
+            return error_response('internal_error', 'Failed to update gage criteria', 500)
+
+        return jsonify({
+            'message': 'Gage criteria updated successfully',
+            'artist_id': updated_artist.id,
+            'calculated_gage': updated_artist.calculated_gage,
+            'price_range': {
+                'min': updated_artist.price_min,
+                'max': updated_artist.price_max
+            },
+            'admin_override': updated_artist.admin_gage_override
+        }), 200
+
+    except Exception as e:
+        logger.exception('Failed to update gage criteria')
+        return error_response('internal_error', f'Failed to update gage criteria: {str(e)}', 500)
+
+
+@api_bp.route('/artists/me/gage-calculation', methods=['GET'])
+@jwt_required()
+def get_my_gage_calculation():
+    """Get detailed gage calculation breakdown for the current artist."""
+    user_id, artist = get_current_user()
+    if not artist:
+        return error_response('forbidden', 'Current user not linked to an artist', 403)
+
+    try:
+        breakdown = artist_mgr.calculate_artist_gage(artist.id)
+        if not breakdown:
+            return error_response('not_found', 'Artist not found', 404)
+
+        return jsonify(breakdown), 200
+
+    except Exception as e:
+        logger.exception('Failed to get gage calculation')
+        return error_response('internal_error', f'Failed to get gage calculation: {str(e)}', 500)
+
+
+@api_bp.route('/artists/me/gage-criteria', methods=['GET'])
+@jwt_required()
+def get_my_gage_criteria():
+    """Get current gage criteria for the artist."""
+    user_id, artist = get_current_user()
+    if not artist:
+        return error_response('forbidden', 'Current user not linked to an artist', 403)
+
+    try:
+        return jsonify({
+            'artist_id': artist.id,
+            'criteria': {
+                'circus_education': artist.circus_education,
+                'stage_experience': artist.stage_experience,
+                'employment_type': artist.employment_type,
+                'awards_level': artist.awards_level,
+                'pepe_years': artist.pepe_years,
+                'pepe_exclusivity': artist.pepe_exclusivity
+            },
+            'gage_info': {
+                'calculated_gage': artist.calculated_gage,
+                'admin_override': artist.admin_gage_override,
+                'current_range': {
+                    'min': artist.price_min,
+                    'max': artist.price_max
+                }
+            }
+        }), 200
+
+    except Exception as e:
+        logger.exception('Failed to get gage criteria')
+        return error_response('internal_error', f'Failed to get gage criteria: {str(e)}', 500)

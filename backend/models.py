@@ -47,7 +47,17 @@ class Artist(UserMixin, db.Model):
     is_admin       = db.Column(db.Boolean, default=False)
     price_min      = db.Column(db.Integer, default=700)
     price_max      = db.Column(db.Integer, default=900)
+    calculated_gage = db.Column(db.Integer, nullable=True)  # Algorithmically calculated gage
+    admin_gage_override = db.Column(db.Integer, nullable=True)  # Admin can override calculated gage
     supabase_user_id = db.Column(db.String(255), unique=True, nullable=True)
+
+    # New gage calculation criteria
+    circus_education = db.Column(db.Boolean, default=False)  # Staatlich anerkannte Zirkusschule
+    stage_experience = db.Column(db.String(10), nullable=True)  # '0-2', '3-5', '6-10', '10+'
+    employment_type = db.Column(db.String(20), nullable=True)  # 'vollzeit', 'teilzeit', 'hobby'
+    awards_level = db.Column(db.String(20), nullable=True)  # 'international', 'national', 'regional', 'lokal', 'keine'
+    pepe_years = db.Column(db.Integer, default=0)  # Jahre bei Pepe
+    pepe_exclusivity = db.Column(db.Boolean, default=False)  # Exklusiv für Pepe
 
     # Admin-Freigabe
     approval_status  = db.Column(db.String(20), nullable=False, server_default='unsubmitted')  # unsubmitted | pending | approved | rejected
