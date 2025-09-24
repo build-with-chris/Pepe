@@ -117,6 +117,7 @@ if not allowed_patterns:
     allowed_patterns = [
         "http://localhost:5173",
         "https://pepeshows.de",
+        "https://*.vercel.app",  # allow Vercel preview domains via wildcard
     ]
 
 def _pattern_to_regex_fragment(p: str) -> str:
