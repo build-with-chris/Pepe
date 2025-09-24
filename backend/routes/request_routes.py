@@ -535,10 +535,12 @@ def send_push(artist, message):
 
 
 def build_artist_new_request_email(artist, req):
-    """Build a minimal HTML email for a new booking request."""
+    """Build a beautifully styled HTML email for a new booking request."""
     app_url = current_app.config.get('APP_URL', 'https://app.example.com')
     date_str = req.event_date.strftime('%d.%m.%Y') if isinstance(req.event_date, datetime) else str(req.event_date)
     city = (req.event_address.split(',')[-1].strip() if req.event_address else '')
+
+    # Fix price range formatting
     price_range = None
     try:
         if req.price_min is not None and req.price_max is not None:
@@ -546,26 +548,133 @@ def build_artist_new_request_email(artist, req):
     except Exception:
         price_range = None
 
+    # Fix disciplines formatting - handle both list and string cases
+    disciplines_str = '—'
+    try:
+        disciplines = getattr(req, 'show_discipline', None)
+        if disciplines:
+            if isinstance(disciplines, list):
+                disciplines_str = ', '.join(disciplines)
+            elif isinstance(disciplines, str):
+                # If it's a string, don't split it character by character
+                disciplines_str = disciplines
+    except Exception:
+        disciplines_str = '—'
+
     artist_name = getattr(artist, 'name', 'Künstler:in')
+
+    # Map event types to icons
+    event_icons = {
+        'hochzeit': '💒',
+        'geburtstag': '🎂',
+        'firmenfeier': '🏢',
+        'festival': '🎪',
+        'theater': '🎭',
+        'gala': '✨',
+        'private feier': '🎉',
+        'corporate event': '🏢'
+    }
+    event_icon = event_icons.get((req.event_type or '').lower(), '🎪')
 
     return f"""
     <html>
-      <body style="font-family: Arial, Helvetica, sans-serif; line-height:1.5;">
-        <h2>Neue Anfrage für dich, {artist_name}!</h2>
-        <p>
-          <strong>Datum:</strong> {date_str}<br/>
-          <strong>Ort:</strong> {city or '—'}<br/>
-          <strong>Event:</strong> {req.event_type or '—'}<br/>
-          <strong>Disziplin(en):</strong> {', '.join(req.show_discipline) if getattr(req, 'show_discipline', None) else '—'}<br/>
-          <strong>Teamgröße:</strong> {req.team_size or '—'}<br/>
-          <strong>Dauer:</strong> {req.duration_minutes or '—'} Minuten<br/>
-          <strong>Preisrahmen:</strong> {price_range or 'wird noch abgestimmt'}
-        </p>
-        <p>
-          <a href="{app_url}/meine-anfragen" style="background:#111;color:#fff;padding:10px 16px;text-decoration:none;border-radius:6px;">Zu meinen Anfragen</a>
-        </p>
-        <hr style="border:none;border-top:1px solid #e5e5e5;"/>
-        <small>Diese E-Mail wurde automatisch gesendet. Bitte nicht direkt antworten.</small>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f8fafc;">
+        <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
+
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">
+              🎭 Neue Anfrage für dich!
+            </h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">
+              Hallo {artist_name} 👋
+            </p>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 30px 20px;">
+
+            <!-- Event Info Card -->
+            <div style="background: #f1f5f9; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+              <h3 style="margin: 0 0 15px 0; color: #334155; font-size: 18px; display: flex; align-items: center;">
+                {event_icon} Event-Details
+              </h3>
+              <div style="display: grid; gap: 8px;">
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">📅</span>
+                  <strong style="color: #475569; min-width: 80px; margin-right: 8px;">Datum:</strong>
+                  <span style="color: #334155;">{date_str}</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">📍</span>
+                  <strong style="color: #475569; min-width: 80px; margin-right: 8px;">Ort:</strong>
+                  <span style="color: #334155;">{city or '—'}</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">{event_icon}</span>
+                  <strong style="color: #475569; min-width: 80px; margin-right: 8px;">Event:</strong>
+                  <span style="color: #334155;">{req.event_type or '—'}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Performance Details Card -->
+            <div style="background: #fef7cd; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+              <h3 style="margin: 0 0 15px 0; color: #92400e; font-size: 18px; display: flex; align-items: center;">
+                🎪 Performance-Details
+              </h3>
+              <div style="display: grid; gap: 8px;">
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">🎨</span>
+                  <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Disziplin:</strong>
+                  <span style="color: #451a03; background: white; padding: 2px 8px; border-radius: 4px; font-weight: 500;">{disciplines_str}</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">👥</span>
+                  <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Team:</strong>
+                  <span style="color: #451a03;">{req.team_size or '—'} {'Person' if req.team_size == 1 else 'Personen'}</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">⏱️</span>
+                  <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Dauer:</strong>
+                  <span style="color: #451a03;">{req.duration_minutes or '—'} Minuten</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Price Card -->
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: center;">
+              <h3 style="margin: 0 0 10px 0; color: white; font-size: 16px;">💰 Preisrahmen</h3>
+              <div style="color: white; font-size: 24px; font-weight: 700;">
+                {price_range or 'wird noch abgestimmt'}
+              </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="{app_url}/meine-anfragen"
+                 style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px;
+                        font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                        transition: transform 0.2s;">
+                🚀 Anfrage ansehen & antworten
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Footer -->
+          <div style="background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              Diese E-Mail wurde automatisch gesendet. Bitte nicht direkt antworten.
+            </p>
+          </div>
+
+        </div>
       </body>
     </html>
     """
