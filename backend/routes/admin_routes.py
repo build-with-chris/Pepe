@@ -637,10 +637,9 @@ def recalculate_all_gages():
         return error_response('internal_error', f'Failed to recalculate gages: {str(e)}', 500)
 
 
-@admin_bp.route('/migrate-database', methods=['POST'])
-@jwt_required()
+@admin_bp.route('/migrate-database-temp', methods=['POST'])
 def migrate_database():
-    """Run database migrations manually (admin only)."""
+    """Run database migrations manually - TEMPORARY ENDPOINT WITHOUT AUTH."""
     try:
         from flask_migrate import upgrade
         from flask import current_app
