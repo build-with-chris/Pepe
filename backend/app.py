@@ -284,22 +284,31 @@ def healthz():
         return error_response("internal_error", f"DB unavailable: {str(e)}", 503)
 
 
-@app.post("/run-migrations-temp")
-def run_migrations_temp():
+@app.route("/migrate-db-now", methods=["POST", "GET"])
+def migrate_db_now():
     """TEMPORARY: Run database migrations without auth. Remove after use."""
     try:
+        # Use the existing migrate instance
         from flask_migrate import upgrade
+        import os
 
-        # Run migrations
-        upgrade()
+        # Get migrations directory
+        migrations_dir = os.path.join(os.path.dirname(__file__), 'migrations')
+
+        # Run upgrade with explicit directory
+        upgrade(directory=migrations_dir)
 
         return jsonify({
-            "message": "Database migration completed successfully"
+            "message": "Database migration completed successfully",
+            "migrations_dir": migrations_dir
         }), 200
 
     except Exception as e:
         app.logger.exception("Migration failed: %s", e)
-        return error_response("internal_error", f"Migration failed: {str(e)}", 500)
+        return jsonify({
+            "error": f"Migration failed: {str(e)}",
+            "message": "Check logs for details"
+        }), 500
 
 
 if __name__=="__main__":
