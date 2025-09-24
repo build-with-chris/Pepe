@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDownIcon } from '@heroicons/react/24/solid';
-
-const API_BASE: string = (import.meta.env.VITE_API_URL as string) || '';
-const api = (path: string) => `${API_BASE}${path}`.replace(/([^:]\/)\/+/g, '$1');
+// import { ChevronDownIcon } from '@heroicons/react/24/solid';
+const ChevronDownIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
 
 function formatDate(value: any) {
   if (!value) return '—';
@@ -18,7 +20,6 @@ function formatDate(value: any) {
 }
 
 function getReceivedAt(offer: any): Date | null {
-  // Prefer the booking request's real creation timestamp
   const v =
     offer?.request_created_at ||
     offer?.booking_request_created_at ||
@@ -46,13 +47,13 @@ export default function Admin() {
 
   async function handleAcceptRequest(id: number) {
     if (!token) return;
+    const API = import.meta.env.VITE_API_URL;
     try {
-      const res = await fetch(api('/api/requests/requests/' + id + '/accept'), {
+      const res = await fetch(`${API}/api/requests/requests/${id}/accept`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      // Update status locally
       setDashboardData((prev: any) => {
         if (!prev?.offers) return prev;
         return { ...prev, offers: prev.offers.map((o: any) => o.id === id ? { ...o, status: 'akzeptiert' } : o) };
@@ -66,15 +67,15 @@ export default function Admin() {
     if (!token) return;
     const ok = window.confirm('Anfrage wirklich löschen?');
     if (!ok) return;
+    const API = import.meta.env.VITE_API_URL;
 
-    // Optimistic UI: entferne sofort aus der Liste
     setDashboardData((prev: any) => {
       if (!prev?.offers) return prev;
       return { ...prev, offers: prev.offers.filter((o: any) => o.id !== id) };
     });
 
     try {
-      const res = await fetch(api('/api/requests/requests/' + id), {
+      const res = await fetch(`${API}/api/requests/requests/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -82,11 +83,10 @@ export default function Admin() {
         throw new Error(`HTTP ${res.status}`);
       }
     } catch (e) {
-      // Rollback bei Fehler: neu laden
       await new Promise(r => setTimeout(r, 0));
       setLoading(true);
       try {
-        const res = await fetch(api('/api/admin/dashboard'), { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(`${API}/admin/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json();
         const { availabilities, artistAvailability, slots, ...filtered } = data;
         setDashboardData(filtered);
@@ -102,7 +102,7 @@ export default function Admin() {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    fetch(api('/api/admin/dashboard'), {
+    fetch(`${import.meta.env.VITE_API_URL}/admin/dashboard`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
@@ -111,7 +111,6 @@ export default function Admin() {
       })
       .then(data => {
         console.log('🚀 Raw dashboard data:', data);
-        // Entferne Artist-Verfügbarkeiten und Slots, bevor wir die Daten setzen
         const { availabilities, artistAvailability, slots, ...filtered } = data;
         setDashboardData(filtered);
         setLoading(false);

@@ -4,13 +4,16 @@
 // ---------------------------------------------------------------
 
 export interface Artist {
+  /** Unique identifier */
   id?: number;
   /** Full display name */
   name: string;
   /** Primary/cover image URL shown on the front */
-  image: string;
+  image?: string;
+  /** Alternative field for profile image from API */
+  profile_image_url?: string;
   /** Full biography text (may contain multiple sentences) */
-  bio: string;
+  bio?: string;
   /** List of disciplines/skills shown as badges */
   disciplines?: string[];
   /** Optional short quote; if missing, derive the first sentence from bio */
@@ -21,6 +24,20 @@ export interface Artist {
   gallery_urls?: string[];
   /** Instagram handle or full URL (e.g. "@myname" or "https://instagram.com/myname") */
   instagram?: string;
+  /** Price range for services */
+  price_range?: string;
+  /** Availability status */
+  availability?: string;
+  /** Social media links */
+  social_links?: {
+    instagram?: string;
+    website?: string;
+  };
+  /** Video links */
+  videos?: {
+    main?: string;
+    gallery?: string[];
+  };
 }
 
 /**
@@ -51,6 +68,16 @@ export function mergeGallery(artist: Artist): string[] {
     merged.push(s);
   }
   return merged;
+}
+
+/**
+ * Gets the primary image for an artist (their main profile image).
+ * Checks both 'image' and 'profile_image_url' fields for compatibility.
+ */
+export function getPrimaryImage(artist: Artist): string | undefined {
+  // Try both possible field names for the main image
+  const imageUrl = artist.image?.trim() || artist.profile_image_url?.trim();
+  return imageUrl || undefined;
 }
 
 /**

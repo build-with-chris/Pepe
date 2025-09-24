@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import posthog from "@/lib/posthog";
 
 export function Login({
@@ -38,8 +38,7 @@ export function Login({
     }
     try {
       // Authenticate with Supabase
-      const sb = await getSupabase();
-      const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -122,21 +121,10 @@ export function Login({
         posthog.capture(meOk ? 'artist_profile_loaded' : 'artist_profile_missing');
       } catch {}
 
-      // Update user in AuthContext with backend admin flag so the UI can react immediately
-      try {
-        setUser({
-          sub: supUser.id,
-          email: supUser.email || undefined,
-          role: (supUser.app_metadata as any)?.role || undefined,
-          is_admin: Boolean(me?.is_admin),
-        });
-      } catch {}
-
       // Decide where to route after login
       const role = (supUser.app_metadata as any)?.role;
-      const isAdmin = Boolean(me?.is_admin) || role === 'admin';
-      if (isAdmin) {
-        navigate('/admin/dashboard');
+      if (role === 'admin') {
+        navigate('/admin');
       } else {
         if (!meOk) {
           alert("Dein Profil konnte nicht geladen werden. Bitte versuche es erneut oder kontaktiere den Support.");
@@ -171,8 +159,7 @@ export function Login({
     setOauthLoading(true);
     try {
       try { posthog.capture('oauth_start', { provider: 'google', mode: 'login' }); } catch {}
-      const sb = await getSupabase();
-      const { error } = await sb.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/onboarding`,

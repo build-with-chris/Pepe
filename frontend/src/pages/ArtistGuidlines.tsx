@@ -95,7 +95,7 @@ export default function ArtistGuidlines() {
         <nav className="mb-10 rounded-lg border border-white/10 bg-white/[0.03] p-4">
           <h2 className="font-semibold mb-2">Inhalt</h2>
           <ul className="grid sm:grid-cols-2 gap-y-1 text-sm text-gray-300">
-            <li><a className="hover:underline" href="#flow">So funktioniert’s</a></li>
+            <li><a className="hover:underline" href="#flow">So funktioniert's</a></li>
             <li><a className="hover:underline" href="#rights">Deine Rechte</a></li>
             <li><a className="hover:underline" href="#standards">Unsere Standards</a></li>
             <li><a className="hover:underline" href="#fees">Honorar & Gebühren</a></li>
@@ -114,13 +114,13 @@ export default function ArtistGuidlines() {
             Fair, sicher, transparent. Du entscheidest über Anfragen &amp; Gagen,
             wir kümmern uns um Matching, Vertrag &amp; Support. Medien bleiben deine –
             wir nutzen sie nur zur Bewerbung. Bitte antworte auf Anfragen innerhalb von{" "}
-            <strong>24–48 h</strong> und halte Sicherheits‑/Venue‑Regeln ein.
+            <strong>24–48 h</strong> und halte Sicherheits‑/Venue‑Regeln ein.
           </p>
         </section>
 
         {/* Abschnitte */}
         <section id="flow" className="mb-10">
-          <h3 className="text-lg font-semibold mb-2">So funktioniert’s (4 Schritte)</h3>
+          <h3 className="text-lg font-semibold mb-2">So funktioniert's (4 Schritte)</h3>
           <ol className="list-decimal list-inside space-y-1 text-gray-300">
             <li><strong>Anfrage:</strong> Veranstalter geben Datum, Ort, Rahmen & Budget an.</li>
             <li><strong>Matching:</strong> Wir schlagen passende Artists vor (Disziplin, Stil, Verfügbarkeit).</li>
@@ -144,7 +144,7 @@ export default function ArtistGuidlines() {
           <h3 className="text-lg font-semibold mb-2">Unsere Standards (für alle Buchungen)</h3>
           <ul className="list-disc list-inside space-y-1 text-gray-300">
             <li><strong>Zuverlässigkeit:</strong> Bestätigte Termine sind verbindlich.</li>
-            <li><strong>Response-Zeit:</strong> Antwort auf Anfragen innerhalb von <strong>24–48 h</strong>.</li>
+            <li><strong>Response-Zeit:</strong> Antwort auf Anfragen innerhalb von <strong>24–48 h</strong>.</li>
             <li><strong>Professionalität:</strong> Pünktlichkeit, klare Kommunikation, Technik-/Sicherheits‑Rider beachten.</li>
             <li><strong>Sicherheit:</strong> Keine riskanten Acts ohne Freigabe/Absicherung; Venue-Regeln einhalten.</li>
             <li><strong>Fair Play:</strong> Keine Umgehung vereinbarter Prozesse/Verträge.</li>
@@ -164,7 +164,7 @@ export default function ArtistGuidlines() {
         <section id="cancellations" className="mb-10">
           <h3 className="text-lg font-semibold mb-2">Storno & Ausfälle (Kurzregel)</h3>
           <ul className="list-disc list-inside space-y-1 text-gray-300">
-            <li><strong>Kundenseitig:</strong> Staffelung je nach Abstand zum Termin (z. B. 30/50/100 %).</li>
+            <li><strong>Kundenseitig:</strong> Staffelung je nach Abstand zum Termin (z. B. 30/50/100 %).</li>
             <li><strong>Artistenseitig:</strong> Nur aus wichtigem Grund; wir helfen beim gleichwertigen Ersatz.</li>
             <li><strong>Höhere Gewalt:</strong> Fairer Ausgleich nach Vertrag & Aufwand.</li>
           </ul>
@@ -193,7 +193,7 @@ export default function ArtistGuidlines() {
           <h3 className="text-lg font-semibold mb-2">Kommunikation & Erreichbarkeit</h3>
           <ul className="list-disc list-inside space-y-1 text-gray-300">
             <li><strong>Ein Kanal:</strong> Bevorzugt über die Plattform (Chat/E‑Mail), damit nichts verloren geht.</li>
-            <li><strong>Response‑Ziel:</strong> 24–48 h. Wenn du verhindert bist → kurzer Auto‑Reply im Profil.</li>
+            <li><strong>Response‑Ziel:</strong> 24–48 h. Wenn du verhindert bist → kurzer Auto‑Reply im Profil.</li>
           </ul>
         </section>
 

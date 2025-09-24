@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-// Falls dein Auth-Context woanders liegt, ggf. den Import-Pfad anpassen
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 interface Gig {
   id: number;
-  event_date: string; // "YYYY-MM-DD"
-  event_time?: string | null; // "HH:MM:SS"
-  status: string; // sollte bereits per-Artist sein
+  event_date: string;
+  event_time?: string | null;
+  status: string;
   event_address?: string | null;
   event_type?: string | null;
   show_type?: string | null;
@@ -16,9 +16,7 @@ interface Gig {
 const normalize = (s?: string | null) => (s ?? '').toString().trim().toLowerCase();
 
 const parseEventDateTime = (dateStr?: string | null, timeStr?: string | null) => {
-  // Fallback auf 00:00, wenn keine Uhrzeit vorhanden ist
   const t = (timeStr && timeStr !== 'null' && timeStr !== 'undefined') ? timeStr : '00:00:00';
-  // Ohne Zeitzone: wird als lokale Zeit interpretiert (Europe/Berlin)
   return new Date(`${dateStr}T${t}`);
 };
 
@@ -30,6 +28,7 @@ const formatDateTimeDE = (d: Date) => {
 
 const MyGigs: React.FC = () => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gigs, setGigs] = useState<Gig[]>([]);
@@ -80,18 +79,17 @@ const MyGigs: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6">🎤 Meine Gigs</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('myGigs.title')}</h1>
 
-      {loading && <p>⏳ Lädt…</p>}
+      {loading && <p>{t('myGigs.loading')}</p>}
       {error && <p className="text-red-400">{error}</p>}
 
       {!loading && !error && (
         <>
-          {/* Bevorstehende Gigs */}
           <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">Bevorstehende Gigs</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('myGigs.upcoming')}</h2>
             {upcoming.length === 0 ? (
-              <p className="text-gray-400">Keine bevorstehenden Gigs.</p>) : (
+              <p className="text-gray-400">{t('myGigs.noUpcoming')}</p>) : (
               <ul className="space-y-3">
                 {upcoming.map(g => {
                   const dt = parseEventDateTime(g.event_date, g.event_time);
@@ -114,11 +112,10 @@ const MyGigs: React.FC = () => {
             )}
           </section>
 
-          {/* Vergangene Gigs */}
           <section>
-            <h2 className="text-xl font-semibold mb-4">Vergangene Gigs</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('myGigs.past')}</h2>
             {past.length === 0 ? (
-              <p className="text-gray-400">Keine vergangenen Gigs.</p>) : (
+              <p className="text-gray-400">{t('myGigs.noPast')}</p>) : (
               <ul className="space-y-3">
                 {past.map(g => {
                   const dt = parseEventDateTime(g.event_date, g.event_time);
