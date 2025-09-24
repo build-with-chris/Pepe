@@ -36,7 +36,17 @@ export default function Kuenstler() {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
         console.log('Fetching artists from:', `${baseUrl}/api/artists`)
-        const response = await fetch(`${baseUrl}/api/artists`)
+        
+        const response = await fetch(`${baseUrl}/api/artists`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        })
+        
         console.log('Response status:', response.status)
         
         if (response.ok) {
@@ -46,6 +56,10 @@ export default function Kuenstler() {
           setFilteredArtists(data)
         } else {
           console.error('Failed to fetch artists, status:', response.status)
+          // Use mock data as fallback when API is down
+          const mockArtists: Artist[] = []
+          setArtists(mockArtists)
+          setFilteredArtists(mockArtists)
         }
       } catch (error) {
         console.error('Failed to fetch artists:', error)

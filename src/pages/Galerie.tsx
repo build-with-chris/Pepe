@@ -214,7 +214,15 @@ export default function Galerie() {
     const fetchArtistsAndImages = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
-        const response = await fetch(`${baseUrl}/api/artists`)
+        const response = await fetch(`${baseUrl}/api/artists`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(10000)
+        })
+        
         if (response.ok) {
           const data = await response.json()
           

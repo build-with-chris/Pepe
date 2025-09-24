@@ -63,15 +63,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // initial session
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      const session: Session | null = data.session;
-      if (session) {
-        const u = session.user;
-        setToken(session.access_token);
-        setUser({ sub: u.id, email: u.email || undefined, role: (u.app_metadata as any)?.role || undefined });
-        (window as any).supabaseClient = supabase;
-        // sync Supabase profiles with backend artist link on initial session
-        syncSupabaseProfileWithBackend({ id: u.id, email: u.email ?? undefined }, session.access_token);
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.warn('[Auth] getSession error:', error.message);
+          // Clear any invalid session data
+          setToken(null);
+          setUser(null);
+          return;
+        }
+        
+        const session: Session | null = data.session;
+        if (session) {
+          const u = session.user;
+          setToken(session.access_token);
+          setUser({ sub: u.id, email: u.email || undefined, role: (u.app_metadata as any)?.role || undefined });
+          (window as any).supabaseClient = supabase;
+          // sync Supabase profiles with backend artist link on initial session
+          syncSupabaseProfileWithBackend({ id: u.id, email: u.email ?? undefined }, session.access_token);
+        }
+      } catch (error) {
+        console.error('[Auth] Session initialization error:', error);
+        setToken(null);
+        setUser(null);
       }
     })();
 
