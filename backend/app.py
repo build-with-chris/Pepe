@@ -284,29 +284,42 @@ def healthz():
         return error_response("internal_error", f"DB unavailable: {str(e)}", 503)
 
 
-@app.route("/migrate-db-now", methods=["POST", "GET"])
-def migrate_db_now():
-    """TEMPORARY: Run database migrations without auth. Remove after use."""
+@app.route("/migrate-db-sql", methods=["POST", "GET"])
+def migrate_db_sql():
+    """TEMPORARY: Run database migrations via direct SQL. Remove after use."""
     try:
-        # Use the existing migrate instance
-        from flask_migrate import upgrade
-        import os
+        # Direct SQL migration for gage calculation fields
+        sql_commands = [
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS calculated_gage INTEGER;",
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS admin_gage_override INTEGER;",
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS circus_education BOOLEAN DEFAULT FALSE;",
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS stage_experience VARCHAR(10);",
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS employment_type VARCHAR(20);",
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS awards_level VARCHAR(20);",
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS pepe_years INTEGER DEFAULT 0;",
+            "ALTER TABLE artists ADD COLUMN IF NOT EXISTS pepe_exclusivity BOOLEAN DEFAULT FALSE;"
+        ]
 
-        # Get migrations directory
-        migrations_dir = os.path.join(os.path.dirname(__file__), 'migrations')
+        results = []
+        for cmd in sql_commands:
+            try:
+                db.session.execute(text(cmd))
+                results.append(f"✓ {cmd}")
+            except Exception as e:
+                results.append(f"✗ {cmd} - Error: {str(e)}")
 
-        # Run upgrade with explicit directory
-        upgrade(directory=migrations_dir)
+        db.session.commit()
 
         return jsonify({
-            "message": "Database migration completed successfully",
-            "migrations_dir": migrations_dir
+            "message": "Database migration completed via SQL",
+            "results": results
         }), 200
 
     except Exception as e:
-        app.logger.exception("Migration failed: %s", e)
+        db.session.rollback()
+        app.logger.exception("SQL Migration failed: %s", e)
         return jsonify({
-            "error": f"Migration failed: {str(e)}",
+            "error": f"SQL Migration failed: {str(e)}",
             "message": "Check logs for details"
         }), 500
 
