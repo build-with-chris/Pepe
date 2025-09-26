@@ -14,7 +14,7 @@ import Presskit from './pages/Presskit'
 import Pressemappe from './pages/Pressemappe'
 import Team from './pages/Team'
 import Referenzen from './pages/Referenzen'
-import Login from './pages/Login'
+import {Login as LoginForm} from './components/login-form'
 import SignUp from './components/SignUp'
 import Dashboard from './pages/Dashboard'
 import Privacy from './pages/Privacy'
@@ -57,27 +57,30 @@ function App() {
         <Route path="/agentur" element={<Agentur />} />
         <Route path="/referenzen" element={<Referenzen />} />
         
-        {/* Authentication routes */}
-        <Route path="/anmelden" element={<Login />} />
+        {/* Authentication routes - use working components */}
+        <Route path="/anmelden" element={<LoginForm />} />
         <Route path="/registrieren" element={<SignUp />} />
         <Route path="/kuenstler-richtlinien" element={<ArtistGuidlines />} />
         <Route path="/onboarding" element={<ArtistGuidlines />} />
         
         {/* Legacy English routes for backwards compatibility */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/artist-guidelines" element={<ArtistGuidlines />} />
         
         {/* Admin routes (protected) */}
-        <Route path="/admin" element={<ProtectedRoute />}>
+        <Route path="/admin" element={<ProtectedRoute requiredRole="admin" />}>
           <Route index element={<Admin />} />
         </Route>
-        <Route path="/admin/kuenstler" element={<ProtectedRoute />}>
+        <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin" />}>
+          <Route index element={<Admin />} />
+        </Route>
+        <Route path="/admin/kuenstler" element={<ProtectedRoute requiredRole="admin" />}>
           <Route index element={<Artists />} />
         </Route>
         
         {/* Legacy admin route */}
-        <Route path="/admin/artists" element={<ProtectedRoute />}>
+        <Route path="/admin/artists" element={<ProtectedRoute requiredRole="admin" />}>
           <Route index element={<Artists />} />
         </Route>
         

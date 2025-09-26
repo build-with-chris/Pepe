@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/upload";
 import { useNavigate } from "react-router-dom";
 import { Pencil } from "lucide-react";
@@ -172,11 +172,12 @@ export default function Profile() {
       if (!user?.email) throw new Error(t('profileSetup.errors.userEmailMissing'));
 
       let effectiveId = backendArtistId || "new-id";
+      const sb = await getSupabase();
       let imageUrl = await uploadProfileImage(
         profileImageFile,
         effectiveId,
         PROFILE_BUCKET,
-        supabase,
+        sb,
         setProfileImageUrl,
         setBackendDebug,
         profileImageUrl
@@ -186,7 +187,7 @@ export default function Profile() {
         galleryFiles,
         effectiveId,
         PROFILE_BUCKET,
-        supabase,
+        sb,
         galleryUrls,
         setGalleryUrls
       );

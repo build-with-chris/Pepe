@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import posthog from "@/lib/posthog";
 
 export function Login({
@@ -38,7 +38,8 @@ export function Login({
     }
     try {
       // Authenticate with Supabase
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      const sb = await getSupabase();
+      const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({
         email,
         password,
       });
@@ -121,24 +122,40 @@ export function Login({
         posthog.capture(meOk ? 'artist_profile_loaded' : 'artist_profile_missing');
       } catch {}
 
-      // Decide where to route after login
+      // Update user in AuthContext with backend admin flag so the UI can react immediately
+      try {
+        setUser({
+          sub: supUser.id,
+          email: supUser.email || undefined,
+          role: (supUser.app_metadata as any)?.role || undefined,
+          is_admin: Boolean(me?.is_admin),
+        });
+      } catch {}
+
+      // Decide where to route after login based on database artists table
       const role = (supUser.app_metadata as any)?.role;
-      if (role === 'admin') {
-        navigate('/admin');
+      const isAdmin = Boolean(me?.is_admin || role === 'admin');
+      
+      console.log('User type check:', {
+        userEmail: supUser.email,
+        userRole: role,
+        backendUser: me,
+        isAdmin,
+        hasBackendProfile: Boolean(me)
+      });
+      
+      if (!meOk || !me) {
+        alert("Dein Profil konnte nicht geladen werden. Bitte versuche es erneut oder kontaktiere den Support.");
+        const sb = await getSupabase();
+        await sb.auth.signOut();
+        return;
+      }
+      
+      if (isAdmin) {
+        navigate('/admin/dashboard');
       } else {
-        if (!meOk) {
-          alert("Dein Profil konnte nicht geladen werden. Bitte versuche es erneut oder kontaktiere den Support.");
-        }
-        // Show Artist Guidelines once after admin approval, on next login
-        const approved = !!(me && (me.approved === true || me.isApproved === true || me.status === 'approved'));
-        const guidelinesAccepted = !!(me && (me.guidelinesAccepted === true || me.guidelinesAccepted === 1 || me.guidelines_accepted === true || me.guidelines_accepted === 1));
-        if (approved && !guidelinesAccepted) {
-          // Open the modal on the profile page via query param and custom event
-          navigate('/profile?guidelines=1');
-          try { window.dispatchEvent(new Event('artist:show-guidelines')); } catch {}
-        } else {
-          navigate('/profile');
-        }
+        // Artist user - redirect to profile
+        navigate('/profile');
       }
     } catch (err) {
       console.error("handleSignIn exception:", err);
@@ -159,10 +176,11 @@ export function Login({
     setOauthLoading(true);
     try {
       try { posthog.capture('oauth_start', { provider: 'google', mode: 'login' }); } catch {}
-      const { error } = await supabase.auth.signInWithOAuth({
+      const sb = await getSupabase();
+      const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`,
+          redirectTo: `${window.location.origin}/profile`,
           queryParams: { mode: 'login' },
         },
       });
@@ -185,9 +203,9 @@ export function Login({
     <div className={cn("flex flex-col gap-6 w-full md:max-w-screen-md mx-auto", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Login for Artists</CardTitle>
+          <CardTitle className="text-xl">Admin & Artist Login</CardTitle>
           <CardDescription>
-            Login with your Apple or Google account
+            Login with your Google account or email/password
           </CardDescription>
         </CardHeader>
         <CardContent>

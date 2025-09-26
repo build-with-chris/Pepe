@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 import type {Session} from '@supabase/supabase-js';
 import type {ReactNode} from 'react';
 
@@ -14,7 +14,7 @@ interface UserPayload {
 interface AuthContextValue {
   user: UserPayload | null;
   token: string | null;
-  supabase: SupabaseClient;
+  getSupabase: () => Promise<SupabaseClient>;
   setUser: (u: UserPayload | null) => void; // kept for backward compatibility
   setToken: (t: string | null) => void;
 }
@@ -31,32 +31,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const backendUrl = import.meta.env.VITE_API_URL as string;
       if (!backendUrl || !accessToken || !u?.id) return;
 
-      // 1) Ensure artist exists in backend and get the id
-      const res = await fetch(`${backendUrl}/api/artists/me/ensure`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const artist = await res.json();
-      if (!res.ok || !artist?.id) {
-        console.warn('[Auth] ensure_my_artist failed:', artist);
-        return;
+      // 1) Try to ensure artist exists in backend and get the id
+      try {
+        const res = await fetch(`${backendUrl}/api/artists/me/ensure`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        
+        if (res.ok) {
+          const artist = await res.json();
+          console.log('[Auth] Backend artist sync successful:', artist);
+          // Only try to sync with profiles table if we have a valid artist
+          if (artist?.id) {
+            try {
+              const sb = await getSupabase();
+              // Try to upsert to profiles table - handle if table doesn't exist or columns are missing
+              const { error: upsertErr } = await sb
+                .from('profiles')
+                .upsert(
+                  {
+                    user_id: u.id,
+                    email: u.email ?? null,
+                    display_name: artist.name ?? null,
+                  },
+                  { onConflict: 'user_id' }
+                );
+              if (upsertErr) console.warn('[Auth] profiles.upsert error (non-critical):', upsertErr);
+            } catch (profileErr) {
+              console.warn('[Auth] profiles table operation failed (non-critical):', profileErr);
+            }
+          }
+        } else {
+          const errorData = await res.json().catch(() => ({ message: 'Unknown error' }));
+          console.warn('[Auth] Backend artist ensure failed (non-critical):', res.status, errorData);
+        }
+      } catch (backendErr) {
+        console.warn('[Auth] Backend request failed (non-critical):', backendErr);
       }
-
-      // 2) Upsert profile link in Supabase (user_id -> backend_artist_id)
-      const { error: upsertErr } = await supabase
-        .from('profiles')
-        .upsert(
-          {
-            user_id: u.id,                    // adjust to your column name if needed (e.g., id)
-            backend_artist_id: artist.id,
-            email: u.email ?? null,           // optional convenience fields
-            display_name: artist.name ?? null,
-          },
-          { onConflict: 'user_id' }
-        );
-      if (upsertErr) console.warn('[Auth] profiles.upsert error:', upsertErr);
     } catch (e) {
-      console.error('[Auth] profile sync error:', e);
+      console.warn('[Auth] Profile sync error (non-critical):', e);
     }
   }
 
@@ -64,7 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // initial session
     (async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const sb = await getSupabase();
+        const { data, error } = await sb.auth.getSession();
         if (error) {
           console.warn('[Auth] getSession error:', error.message);
           // Clear any invalid session data
@@ -78,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const u = session.user;
           setToken(session.access_token);
           setUser({ sub: u.id, email: u.email || undefined, role: (u.app_metadata as any)?.role || undefined });
-          (window as any).supabaseClient = supabase;
+          (window as any).supabaseClient = sb;
           // sync Supabase profiles with backend artist link on initial session
           syncSupabaseProfileWithBackend({ id: u.id, email: u.email ?? undefined }, session.access_token);
         }
@@ -90,22 +104,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
 
     let subscription: { unsubscribe: () => void } | null = null;
-    const { data: listenerData } = supabase.auth.onAuthStateChange((_, newSession) => {
-      if (newSession) {
-        const u = newSession.user;
-        setToken(newSession.access_token);
-        setUser({ sub: u.id, email: u.email || undefined, role: (u.app_metadata as any)?.role || undefined });
-        // sync profiles link whenever session changes (login/refresh)
-        syncSupabaseProfileWithBackend({ id: u.id, email: u.email ?? undefined }, newSession.access_token);
-      } else {
-        setToken(null);
-        setUser(null);
+    (async () => {
+      const sb = await getSupabase();
+      const { data: listenerData } = sb.auth.onAuthStateChange((_: any, newSession: any) => {
+        if (newSession) {
+          const u = newSession.user;
+          setToken(newSession.access_token);
+          setUser({ sub: u.id, email: u.email || undefined, role: (u.app_metadata as any)?.role || undefined });
+          // sync profiles link whenever session changes (login/refresh)
+          syncSupabaseProfileWithBackend({ id: u.id, email: u.email ?? undefined }, newSession.access_token);
+        } else {
+          setToken(null);
+          setUser(null);
+        }
+        (window as any).supabaseClient = sb;
+      });
+      if (listenerData && typeof listenerData.subscription?.unsubscribe === 'function') {
+        subscription = listenerData.subscription;
       }
-      (window as any).supabaseClient = supabase;
-    });
-    if (listenerData && typeof listenerData.subscription?.unsubscribe === 'function') {
-      subscription = listenerData.subscription;
-    }
+    })();
 
     return () => {
       if (subscription) {
@@ -115,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, supabase, setUser, setToken }}>
+    <AuthContext.Provider value={{ user, token, getSupabase, setUser, setToken }}>
       {children}
     </AuthContext.Provider>
   );
