@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/hecking_killa/Desktop/booking-app-artistenagentur/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -282,6 +282,7 @@ export default function Home() {
 
   return (
     <>
+   
       <Helmet>
         <title>PepeShows – Künstler & Artisten buchen</title>
         <meta
