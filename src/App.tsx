@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import Navigation from './components/Navigation'
+import Navbar01Page from './components/navbar-01/navbar-01'
 import Footer from './components/Footer'
 import ParticleBackground from './components/ParticleBackground'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -39,7 +39,7 @@ function App() {
       {/* Global Particle Background */}
       <ParticleBackground />
       
-      <Navigation />
+      <Navbar01Page />
       
       <Routes>
         {/* Public routes */}
