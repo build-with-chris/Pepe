@@ -22,7 +22,9 @@ const DISCIPLINE_OPTIONS: { value: string; img: string; labelKey: string; descKe
   { value: 'Teeterboard', img: 'Teeterboard', labelKey: 'booking.disciplines.options.teeterboard.label', descKey: 'booking.disciplines.options.teeterboard.description' },
   { value: 'Jonglage', img: 'Jonglage', labelKey: 'booking.disciplines.options.jonglage.label', descKey: 'booking.disciplines.options.jonglage.description' },
   { value: 'Moderation', img: 'Moderation', labelKey: 'booking.disciplines.options.moderation.label', descKey: 'booking.disciplines.options.moderation.description' },
-  { value: 'Pantomime', img: 'Pantomime', labelKey: 'booking.disciplines.options.pantomimeEntertainment.label', descKey: 'booking.disciplines.options.pantomimeEntertainment.description' }
+  { value: 'Pantomime', img: 'Pantomime', labelKey: 'booking.disciplines.options.pantomimeEntertainment.label', descKey: 'booking.disciplines.options.pantomimeEntertainment.description' },
+  { value: 'Feuershow', img: 'Feuershow', labelKey: 'booking.disciplines.options.feuershow.label', descKey: 'booking.disciplines.options.feuershow.description' },
+  { value: 'Clown', img: 'Clown', labelKey: 'booking.disciplines.options.clown.label', descKey: 'booking.disciplines.options.clown.description' }
 ];
 
 const BACKEND_TO_OPTION_VALUE: Record<string, string> = {
@@ -41,7 +43,9 @@ const BACKEND_TO_OPTION_VALUE: Record<string, string> = {
   'teeterboard': 'Teeterboard',
   'jonglage': 'Jonglage',
   'moderation': 'Moderation',
-  'pantomime': 'Pantomime'
+  'pantomime': 'Pantomime',
+  'feuershow': 'Feuershow',
+  'clown': 'Clown'
 };
 
 export interface StepDisciplinesProps {

@@ -74,6 +74,8 @@
     "jonglage": "Jonglage",
     "moderation": "Moderation",
     "pantomime": "Pantomime",
+    "feuershow": "Feuershow",
+    "clown": "Clown",
     "_fallback_note": "Diese Keys sind Beispiele. Ergänze hier eure echten Disziplin-Bezeichnungen.",
     "Cyr-Wheel": "Cyr-Wheel",
     "Jonglage": "Jonglage"
@@ -196,6 +198,14 @@
       "pantomimeEntertainment": {
         "label": "Pantomime",
         "description": "Wortlose Unterhaltung, Comedy und Interaktion."
+      },
+      "feuershow": {
+        "label": "Feuershow",
+        "description": "Spektakuläre Performance mit Feuer und beeindruckenden Effekten."
+      },
+      "clown": {
+        "label": "Clown",
+        "description": "Humorvolle und interaktive Unterhaltung für alle Altersgruppen."
       }
     }
   },
