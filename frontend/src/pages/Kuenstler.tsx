@@ -49,7 +49,9 @@ type DisciplineKey =
   | "teeterboard"
   | "jonglage"
   | "moderation"
-  | "pantomime";
+  | "pantomime"
+  | "feuershow"
+  | "clown";
 
 const DISCIPLINE_ITEMS: { key: DisciplineKey; match: string }[] = [
   { key: "zauberer", match: "zauberer" },
@@ -66,6 +68,8 @@ const DISCIPLINE_ITEMS: { key: DisciplineKey; match: string }[] = [
   { key: "jonglage", match: "jonglage" },
   { key: "moderation", match: "moderation" },
   { key: "pantomime", match: "pantomime" },
+  { key: "feuershow", match: "feuershow" },
+  { key: "clown", match: "clown" },
 ];
 
 export default function Kuenstler(){

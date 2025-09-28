@@ -71,6 +71,8 @@
     "jonglage": "Juggling",
     "moderation": "Hosting",
     "pantomime": "Pantomime",
+    "feuershow": "Fire show",
+    "clown": "Clown",
     "_fallback_note": "These keys are examples. Add your real discipline labels here.",
     "Cyr-Wheel": "Cyr-wheel",
     "Jonglage": "Juggling"
@@ -193,6 +195,14 @@
       "pantomimeEntertainment": {
         "label": "Pantomime/Entertainment",
         "description": "Wordless entertainment, comedy and interaction."
+      },
+      "feuershow": {
+        "label": "Fire show",
+        "description": "Spectacular fire performances and pyrotechnic effects."
+      },
+      "clown": {
+        "label": "Clown",
+        "description": "Humorous performances and interactive entertainment."
       }
     }
   },

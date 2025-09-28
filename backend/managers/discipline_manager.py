@@ -16,7 +16,9 @@ ALLOWED_DISCIPLINES = [
     "Teeterboard",
     "Jonglage",
     "Moderation",
-    "Pantomime"
+    "Pantomime",
+    "Feuershow",
+    "Clown"
 ]
 
 
