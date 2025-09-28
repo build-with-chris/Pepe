@@ -21,6 +21,16 @@ def unique_email(prefix="user"):
 def app():
     flask_app.config['TESTING'] = True
     flask_app.config.from_object(TestConfig)
+
+    # PRODUCTION SAFETY CHECK
+    db_uri = flask_app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    dangerous_patterns = ['render.com', 'production', 'pepe-backend']
+    for pattern in dangerous_patterns:
+        if pattern in db_uri.lower():
+            raise RuntimeError(
+                f"KRITISCHER FEHLER: Tests versuchen Production-DB zu verwenden! "
+                f"DB-URI enthält '{pattern}': {db_uri[:100]}..."
+            )
     flask_app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'poolclass': NullPool,
         'connect_args': {'check_same_thread': False}

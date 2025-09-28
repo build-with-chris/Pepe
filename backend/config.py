@@ -55,4 +55,21 @@ class Config:
 class TestConfig(Config):
     """Konfiguration für Tests mit In-Memory-Datenbank."""
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
+
+    # SICHERHEITSCHECK: Niemals Production-DB in Tests verwenden!
+    test_db_url = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
+    production_indicators = [
+        "render.com", "production", "prod", "pepe-backend",
+        "postgresql+psycopg://", "postgresql://", "postgres://"
+    ]
+
+    # Überprüfe, ob TEST_DATABASE_URL auf Production zeigt
+    for indicator in production_indicators:
+        if indicator in test_db_url.lower():
+            raise RuntimeError(
+                f"GEFAHR: TEST_DATABASE_URL scheint auf Production-DB zu zeigen! "
+                f"URL enthält '{indicator}'. Verwende für Tests nur 'sqlite:///:memory:' "
+                f"oder eine lokale Test-DB. Aktuelle URL: {test_db_url[:50]}..."
+            )
+
+    SQLALCHEMY_DATABASE_URI = test_db_url
