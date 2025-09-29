@@ -1162,8 +1162,8 @@
       "basicData": "Basic data",
       "disciplines": "Disciplines",
       "pricing": "Price range",
-      "profileImage": "Profile picture square 1:1 (max. 2 MB)",
-      "gallery": "Gallery images in landscape 4:3 or 16:9",
+      "profileImage": "Profile picture",
+      "gallery": "Gallery images",
       "aboutMe": "About me – start with 1 catchy sentence. Maximum 3 sentences in total"
     },
     "labels": {

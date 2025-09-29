@@ -989,8 +989,8 @@
       "basicData": "Basisdaten",
       "disciplines": "Disziplinen",
       "pricing": "Preisrahmen",
-      "profileImage": "Profilbild Quadratisch 1:1 (max. 2mb)", 
-      "gallery": "Galeriebilder bitte Quer 4:3 oder 16:9",
+      "profileImage": "Profilbild",
+      "gallery": "Galeriebilder",
       "aboutMe": "Über mich - 1 Satz der catcht zu beginnt. Insgesamt max. 3 Sätze"
     },
     "labels": {
