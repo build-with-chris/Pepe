@@ -2,6 +2,43 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 const PROFILE_BUCKET = import.meta.env.VITE_SUPABASE_PROFILE_BUCKET || "profiles";
 
+// NEW: Backend-based upload with image processing
+export async function uploadImageViaBackend(
+  file: File,
+  type: 'profile' | 'gallery',
+  token: string,
+  setDebug: (message: string) => void
+): Promise<string | null> {
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('type', type);
+
+    const apiUrl = import.meta.env.VITE_API_URL;
+
+    const response = await fetch(`${apiUrl}/api/artists/me/upload-image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Upload failed with status ${response.status}`);
+    }
+
+    const result = await response.json();
+    setDebug(`${type} image uploaded and processed successfully`);
+    return result.url;
+
+  } catch (error: any) {
+    setDebug(`${type} image upload failed: ${error.message}`);
+    return null;
+  }
+}
+
 export async function uploadProfileImage(
   file: File | null,
   artistId: string,

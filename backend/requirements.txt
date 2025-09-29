@@ -11,3 +11,5 @@ gunicorn==23.0.0
 Flask-Migrate==4.0.1
 alembic==1.11.1
 psycopg[binary]==3.2.9
+Pillow==10.4.0
+supabase==2.7.4
