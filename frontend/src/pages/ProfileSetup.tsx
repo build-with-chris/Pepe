@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/upload";
+import { uploadProfileImage, uploadGalleryImages, uploadImageViaBackend } from "@/lib/storage/upload";
 import { useNavigate } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import { ProfileForm } from "../components/ProfileForm";
@@ -172,24 +172,33 @@ export default function Profile() {
       if (!user?.email) throw new Error(t('profileSetup.errors.userEmailMissing'));
 
       let effectiveId = backendArtistId || "new-id";
-      let imageUrl = await uploadProfileImage(
-        profileImageFile,
-        effectiveId,
-        PROFILE_BUCKET,
-        supabase,
-        setProfileImageUrl,
-        setBackendDebug,
-        profileImageUrl
-      );
 
-      let mergedGalleryUrls = await uploadGalleryImages(
-        galleryFiles,
-        effectiveId,
-        PROFILE_BUCKET,
-        supabase,
-        galleryUrls,
-        setGalleryUrls
-      );
+      // NEW: Use backend upload for profile image with automatic processing
+      let imageUrl = profileImageUrl;
+      if (profileImageFile) {
+        const uploadedUrl = await uploadImageViaBackend(
+          profileImageFile,
+          'profile',
+          token!,
+          setBackendDebug
+        );
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+          setProfileImageUrl(uploadedUrl);
+        }
+      }
+
+      // NEW: Use backend upload for gallery images with automatic processing
+      let mergedGalleryUrls = [...galleryUrls];
+      if (galleryFiles.length > 0) {
+        const uploadPromises = galleryFiles.map(file =>
+          uploadImageViaBackend(file, 'gallery', token!, setBackendDebug)
+        );
+        const uploadedUrls = await Promise.all(uploadPromises);
+        const successfulUploads = uploadedUrls.filter(url => url !== null) as string[];
+        mergedGalleryUrls = [...galleryUrls, ...successfulUploads];
+        setGalleryUrls(mergedGalleryUrls);
+      }
 
       const nextStatus = approvalStatus === 'approved' ? 'approved' : 'pending';
 

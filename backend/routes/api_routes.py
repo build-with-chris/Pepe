@@ -12,6 +12,10 @@ import logging
 from helpers.http_responses import error_response
 
 from datetime import datetime
+import os
+import tempfile
+from PIL import Image
+import io
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +30,55 @@ API-Modul: Beinhaltet Endpunkte für Artists, Verfügbarkeit und Buchungsanfrage
 
 # Blueprint für API-Routen
 api_bp = Blueprint('api', __name__)
+
+
+def process_image_for_upload(image_file, max_width=1200, max_height=1200, quality=85):
+    """
+    Verarbeitet ein Bild: Größe anpassen und in WebP konvertieren
+    """
+    try:
+        # Bild öffnen
+        image = Image.open(image_file)
+
+        # Bei Bedarf EXIF-Orientierung korrigieren
+        if hasattr(image, '_getexif'):
+            exif = image._getexif()
+            if exif is not None:
+                for tag, value in exif.items():
+                    if tag == 274:  # Orientation tag
+                        if value == 3:
+                            image = image.rotate(180, expand=True)
+                        elif value == 6:
+                            image = image.rotate(270, expand=True)
+                        elif value == 8:
+                            image = image.rotate(90, expand=True)
+
+        # RGB konvertieren falls notwendig
+        if image.mode in ('RGBA', 'LA'):
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+            image = background
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
+
+        # Größe anpassen
+        original_width, original_height = image.size
+        if original_width > max_width or original_height > max_height:
+            # Aspect ratio beibehalten
+            ratio = min(max_width / original_width, max_height / original_height)
+            new_width = int(original_width * ratio)
+            new_height = int(original_height * ratio)
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        # In WebP konvertieren
+        output = io.BytesIO()
+        image.save(output, format='WEBP', quality=quality, method=6)
+        output.seek(0)
+
+        return output
+    except Exception as e:
+        logger.exception('Fehler bei Bildverarbeitung')
+        raise ValueError(f'Bildverarbeitung fehlgeschlagen: {str(e)}')
 
 
 def get_current_user():
@@ -1031,3 +1084,97 @@ def get_my_gage_criteria():
     except Exception as e:
         logger.exception('Failed to get gage criteria')
         return error_response('internal_error', f'Failed to get gage criteria: {str(e)}', 500)
+
+
+# ===== IMAGE UPLOAD ENDPOINTS =====
+
+@api_bp.route('/artists/me/upload-image', methods=['POST'])
+@jwt_required()
+def upload_artist_image():
+    """Upload and process profile or gallery images for the current artist."""
+    user_id, artist = get_current_user()
+    if not artist:
+        return error_response('forbidden', 'Current user not linked to an artist', 403)
+
+    if 'image' not in request.files:
+        return error_response('validation_error', 'No image file provided', 400)
+
+    image_file = request.files['image']
+    if image_file.filename == '':
+        return error_response('validation_error', 'No image file selected', 400)
+
+    # Überprüfen ob es ein Bild ist
+    if not image_file.content_type or not image_file.content_type.startswith('image/'):
+        return error_response('validation_error', 'File must be an image', 400)
+
+    try:
+        # Image type (profile or gallery)
+        image_type = request.form.get('type', 'profile')  # default: profile
+
+        if image_type not in ['profile', 'gallery']:
+            return error_response('validation_error', 'Image type must be "profile" or "gallery"', 400)
+
+        # Bild verarbeiten
+        processed_image = process_image_for_upload(image_file)
+
+        # Supabase Storage Upload
+        import os
+        from supabase import create_client
+
+        supabase_url = os.getenv('SUPABASE_URL')
+        supabase_service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+
+        if not supabase_url or not supabase_service_key:
+            return error_response('internal_error', 'Supabase configuration missing', 500)
+
+        supabase = create_client(supabase_url, supabase_service_key)
+        bucket = os.getenv('SUPABASE_PROFILE_BUCKET', 'profiles')
+
+        if image_type == 'profile':
+            # Profilbild: überschreibt vorheriges
+            file_path = f"{artist.id}/profile.webp"
+        else:
+            # Gallery: eindeutiger Name mit Timestamp
+            from datetime import datetime
+            timestamp = int(datetime.utcnow().timestamp())
+            file_path = f"{artist.id}/gallery/{timestamp}.webp"
+
+        # Upload zu Supabase
+        result = supabase.storage.from_(bucket).upload(
+            file_path,
+            processed_image.read(),
+            file_options={
+                "content-type": "image/webp",
+                "upsert": image_type == 'profile'  # Profilbilder überschreiben, Gallery nicht
+            }
+        )
+
+        if result.error:
+            logger.error(f'Supabase upload error: {result.error}')
+            return error_response('internal_error', 'Image upload failed', 500)
+
+        # Public URL generieren
+        public_url_result = supabase.storage.from_(bucket).get_public_url(file_path)
+        public_url = public_url_result
+
+        # Bei Profilbild: URL in der Datenbank aktualisieren
+        if image_type == 'profile':
+            try:
+                artist.profile_image_url = public_url
+                db.session.commit()
+            except Exception as e:
+                logger.exception('Failed to update profile image URL in database')
+                # Nicht kritisch - Bild ist trotzdem hochgeladen
+
+        return jsonify({
+            'success': True,
+            'url': public_url,
+            'type': image_type,
+            'message': f'{image_type.title()} image uploaded and processed successfully'
+        }), 200
+
+    except ValueError as e:
+        return error_response('validation_error', str(e), 400)
+    except Exception as e:
+        logger.exception('Failed to upload image')
+        return error_response('internal_error', f'Image upload failed: {str(e)}', 500)
