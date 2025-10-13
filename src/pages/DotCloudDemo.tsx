@@ -236,8 +236,9 @@ export default function DotCloudDemo() {
         </div>
       </section>
 
-      {/* Final Spacer */}
-      <div className="h-screen" />
+        {/* Final Spacer */}
+        <div style={{ height: '150vh' }} />
+      </div>
     </div>
   );
 }
