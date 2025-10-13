@@ -74,36 +74,39 @@ export default function DotCloudDemo() {
 
         {/* Size: Small */}
         <section className="h-screen flex flex-col items-center justify-center px-6">
-          <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            Small Size (300px)
-            <span id={`scroll-indicator-${iconName}-small`} className="text-sm font-mono text-gray-500">0.00</span>
-          </h3>
-          <p className="text-gray-400 mb-12">Density: 1.0</p>
-          <DotCloudImage disciplineId={iconName} size={300} density={1.0} />
+          <h3 className="text-2xl font-bold text-white mb-2">Small Size (300px)</h3>
+          <p className="text-gray-400 mb-8 flex items-center gap-2">
+            Density: 1.0
+            <span className="text-gray-600">•</span>
+            <span id={`scroll-indicator-${iconName}-small`} className="text-xs font-mono text-gray-500">0.00</span>
+          </p>
+          <DotCloudImage disciplineId={`${iconName}-small`} size={300} density={1.0} />
         </section>
 
         <div style={{ height: '150vh' }} />
 
         {/* Size: Medium */}
         <section className="h-screen flex flex-col items-center justify-center px-6">
-          <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            Medium Size (400px)
-            <span id={`scroll-indicator-${iconName}-medium`} className="text-sm font-mono text-gray-500">0.00</span>
-          </h3>
-          <p className="text-gray-400 mb-12">Density: 0.9</p>
-          <DotCloudImage disciplineId={iconName} size={400} density={0.9} />
+          <h3 className="text-2xl font-bold text-white mb-2">Medium Size (400px)</h3>
+          <p className="text-gray-400 mb-8 flex items-center gap-2">
+            Density: 0.9
+            <span className="text-gray-600">•</span>
+            <span id={`scroll-indicator-${iconName}-medium`} className="text-xs font-mono text-gray-500">0.00</span>
+          </p>
+          <DotCloudImage disciplineId={`${iconName}-medium`} size={400} density={0.9} />
         </section>
 
         <div style={{ height: '150vh' }} />
 
         {/* Size: Large */}
         <section className="h-screen flex flex-col items-center justify-center px-6">
-          <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            Large Size (500px)
-            <span id={`scroll-indicator-${iconName}-large`} className="text-sm font-mono text-gray-500">0.00</span>
-          </h3>
-          <p className="text-gray-400 mb-12">Density: 0.8</p>
-          <DotCloudImage disciplineId={iconName} size={500} density={0.8} />
+          <h3 className="text-2xl font-bold text-white mb-2">Large Size (500px)</h3>
+          <p className="text-gray-400 mb-8 flex items-center gap-2">
+            Density: 0.8
+            <span className="text-gray-600">•</span>
+            <span id={`scroll-indicator-${iconName}-large`} className="text-xs font-mono text-gray-500">0.00</span>
+          </p>
+          <DotCloudImage disciplineId={`${iconName}-large`} size={500} density={0.8} />
         </section>
 
         <div style={{ height: '150vh' }} />

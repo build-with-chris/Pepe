@@ -94,10 +94,20 @@ export default function DotCloudImage({
       setScrollProgress(progress);
 
       // Update individual debug indicator for this component
-      const indicator = document.getElementById(`scroll-indicator-${disciplineId}`);
-      if (indicator) {
-        indicator.textContent = `${progress.toFixed(2)}`;
-        indicator.style.color = progress > 0.5 ? '#ffd700' : progress > 0.1 ? '#ffffff' : '#666666';
+      // Try multiple ID patterns since we have different naming schemes
+      const possibleIds = [
+        `scroll-indicator-${disciplineId}`,
+        `scroll-indicator-${disciplineId.split('-')[0]}-small`,
+        `scroll-indicator-${disciplineId.split('-')[0]}-medium`,
+        `scroll-indicator-${disciplineId.split('-')[0]}-large`
+      ];
+
+      for (const id of possibleIds) {
+        const indicator = document.getElementById(id);
+        if (indicator) {
+          indicator.textContent = `${progress.toFixed(2)}`;
+          indicator.style.color = progress > 0.5 ? '#ffd700' : progress > 0.1 ? '#ffffff' : '#666666';
+        }
       }
     };
 
