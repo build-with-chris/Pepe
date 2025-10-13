@@ -42,7 +42,9 @@ export default function DotCloudImage({
         setIsLoading(true);
         setError(null);
 
-        const imagePath = `/doticons/${disciplineId}.jpg`;
+        // Extract base icon name (e.g., "cyrwheel-small" -> "cyrwheel")
+        const baseIconName = disciplineId.split('-')[0];
+        const imagePath = `/doticons/${baseIconName}.jpg`;
         const particleData = await imageToParticles({
           imagePath,
           sampleGap: 2,
