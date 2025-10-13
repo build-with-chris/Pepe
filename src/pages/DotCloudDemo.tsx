@@ -2,6 +2,7 @@ import { useState } from 'react';
 import React from 'react';
 import DotCloudImage from '@/components/ui/DotCloudImage';
 import { disciplinesOptions } from '@/constraints/disciplines';
+import PepeLogo from '@/assets/Logos/Logo PepeShows weiß.png';
 
 // Map discipline names to available icon files
 const iconMap: Record<string, string> = {
@@ -35,62 +36,28 @@ export default function DotCloudDemo() {
   }, []);
 
   return (
-    <div className="bg-gradient-to-b from-black via-gray-900 to-black">
-      {/* Fixed Scroll Debug Indicator */}
-      <div
-        id="scroll-debug-indicator"
-        data-progress="0"
-        style={{
-          position: 'fixed',
-          top: '100px',
-          right: '20px',
-          fontSize: '14px',
-          color: 'yellow',
-          fontFamily: 'monospace',
-          pointerEvents: 'none',
-          zIndex: 1000,
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          padding: '8px 12px',
-          borderRadius: '4px',
-          opacity: 0.3,
-          transition: 'opacity 0.2s'
-        }}
-      >
-        scroll: 0.00
-      </div>
-      {/* Section 1: Hero + Selector - 100vh */}
-      <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 text-center">
-          DotCloud Icon System
-        </h1>
-        <p className="text-xl text-gray-400 max-w-3xl text-center mb-12">
-          Scroll-triggered particle animations • Nur Scrolling, kein Hover
-        </p>
+    <div className="bg-gradient-to-b from-black via-gray-900 to-black" style={{ paddingTop: '80px' }}>
+      {/* Fixed Icon Selector at Top */}
+      <section className="py-12 px-6 sticky top-20 z-40 bg-black/95 backdrop-blur border-b border-white/10">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-center gap-6 mb-6">
+            <h1 className="text-2xl font-bold text-white">Piktogramm Auswahl</h1>
+            <img
+              src={PepeLogo}
+              alt="Pepe Shows"
+              style={{ width: '192px', height: '64px', objectFit: 'contain' }}
+              className="hidden md:block"
+            />
+          </div>
 
-        {/* Discipline Selector */}
-        <div className="mb-16">
-          <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4 text-center">
-            Select Discipline
-          </h3>
-          <div className="flex flex-wrap gap-3 justify-center max-w-3xl">
-            {disciplinesOptions.map((discipline) => {
-              const hasIcon = iconMap[discipline];
+          <div className="flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
+            {availableDisciplines.map((discipline) => {
               const isSelected = discipline === selectedDiscipline;
-
               return (
                 <button
                   key={discipline}
-                  onClick={() => hasIcon && setSelectedDiscipline(discipline)}
-                  disabled={!hasIcon}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium transition-all text-sm
-                    ${hasIcon
-                      ? isSelected
-                        ? 'bg-[var(--pepe-gold)] text-black shadow-lg'
-                        : 'bg-white/10 text-white hover:bg-white/20'
-                      : 'bg-gray-900 text-gray-600 cursor-not-allowed opacity-30'
-                    }
-                  `}
+                  onClick={() => setSelectedDiscipline(discipline)}
+                  className={`filter-btn ${isSelected ? 'active' : ''}`}
                 >
                   {discipline}
                 </button>
@@ -98,98 +65,48 @@ export default function DotCloudDemo() {
             })}
           </div>
         </div>
-
-        <p className="text-sm text-gray-500 animate-pulse">
-          ↓ Scroll to see formation ↓
-        </p>
       </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+      {/* Show ALL variations of selected icon */}
+      <div className="py-20">
+        <h2 className="text-4xl font-bold text-center text-white mb-4">{selectedDiscipline}</h2>
+        <p className="text-center text-gray-400 mb-20">Scroll langsam um die Animationen zu sehen</p>
 
-      {/* Icon 1: Cyr-Wheel */}
-      <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Cyr-Wheel</h2>
-        <p className="text-gray-400 mb-16">Large • 500px</p>
-        <DotCloudImage
-          disciplineId="cyrwheel"
-          size={500}
-          density={0.8}
-        />
-      </section>
+        {/* Size: Small */}
+        <section className="h-screen flex flex-col items-center justify-center px-6">
+          <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+            Small Size (300px)
+            <span id={`scroll-indicator-${iconName}-small`} className="text-sm font-mono text-gray-500">0.00</span>
+          </h3>
+          <p className="text-gray-400 mb-12">Density: 1.0</p>
+          <DotCloudImage disciplineId={iconName} size={300} density={1.0} />
+        </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+        <div style={{ height: '150vh' }} />
 
-      {/* Icon 2: Jonglage */}
-      <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Jonglage</h2>
-        <p className="text-gray-400 mb-16">Large • 500px</p>
-        <DotCloudImage
-          disciplineId="juggling"
-          size={500}
-          density={0.8}
-        />
-      </section>
+        {/* Size: Medium */}
+        <section className="h-screen flex flex-col items-center justify-center px-6">
+          <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+            Medium Size (400px)
+            <span id={`scroll-indicator-${iconName}-medium`} className="text-sm font-mono text-gray-500">0.00</span>
+          </h3>
+          <p className="text-gray-400 mb-12">Density: 0.9</p>
+          <DotCloudImage disciplineId={iconName} size={400} density={0.9} />
+        </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+        <div style={{ height: '150vh' }} />
 
-      {/* Icon 3: Zauberer */}
-      <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Zauberer</h2>
-        <p className="text-gray-400 mb-16">Large • 500px</p>
-        <DotCloudImage
-          disciplineId="magician"
-          size={500}
-          density={0.8}
-        />
-      </section>
+        {/* Size: Large */}
+        <section className="h-screen flex flex-col items-center justify-center px-6">
+          <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+            Large Size (500px)
+            <span id={`scroll-indicator-${iconName}-large`} className="text-sm font-mono text-gray-500">0.00</span>
+          </h3>
+          <p className="text-gray-400 mb-12">Density: 0.8</p>
+          <DotCloudImage disciplineId={iconName} size={500} density={0.8} />
+        </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
-
-      {/* Size Variation: Small */}
-      <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Small Size</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline} • 300px</p>
-        <DotCloudImage
-          disciplineId={iconName}
-          size={300}
-          density={1.0}
-        />
-      </section>
-
-      {/* Spacer */}
-      <div className="h-screen" />
-
-      {/* Size Variation: Medium */}
-      <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Medium Size</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline} • 400px</p>
-        <DotCloudImage
-          disciplineId={iconName}
-          size={400}
-          density={0.9}
-        />
-      </section>
-
-      {/* Spacer */}
-      <div className="h-screen" />
-
-      {/* Size Variation: Large */}
-      <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Large Size</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline} • 600px</p>
-        <DotCloudImage
-          disciplineId={iconName}
-          size={600}
-          density={0.7}
-        />
-      </section>
-
-      {/* Spacer */}
-      <div className="h-screen" />
+        <div style={{ height: '150vh' }} />
 
       {/* Density: Sparse */}
       <section className="h-screen flex flex-col items-center justify-center px-6">

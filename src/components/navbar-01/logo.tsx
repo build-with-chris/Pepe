@@ -1,5 +1,5 @@
 import React from 'react';
-import LogoImage from '../../assets/LogoPepeSingle-50.webp';
+import LogoImage from '../../assets/LogoPepeSingle.webp';
 import SchriftImage from '../../assets/PepeSchrift.png';
 import { Link } from 'react-router'
 

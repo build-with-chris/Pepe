@@ -93,21 +93,21 @@ export default function DotCloudImage({
 
       setScrollProgress(progress);
 
-      // Update global debug indicator with the highest progress value
-      const indicator = document.getElementById('scroll-debug-indicator');
+      // Update individual debug indicator for this component
+      const indicator = document.getElementById(`scroll-indicator-${disciplineId}`);
       if (indicator) {
-        const currentValue = parseFloat(indicator.getAttribute('data-progress') || '0');
-        if (progress > currentValue) {
-          indicator.setAttribute('data-progress', progress.toString());
-          indicator.textContent = `scroll: ${progress.toFixed(2)}`;
-          indicator.style.opacity = progress > 0.01 ? '1' : '0.3';
-        }
+        indicator.textContent = `${progress.toFixed(2)}`;
+        indicator.style.color = progress > 0.5 ? '#ffd700' : progress > 0.1 ? '#ffffff' : '#666666';
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll, { passive: true });
-    handleScroll(); // Initial calculation
+
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      handleScroll(); // Initial calculation
+    }, 100);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
