@@ -25,6 +25,10 @@ export interface ImageToDotsOptions {
   densityMultiplier?: number;
   /** Canvas size to sample (default: 128) */
   canvasSize?: number;
+  /** Minimum dot size in pixels (default: 0.5) */
+  minDotSize?: number;
+  /** Maximum dot size in pixels (default: 5.0) */
+  maxDotSize?: number;
 }
 
 /**
@@ -40,6 +44,8 @@ export async function imageToParticles(
     sampleGap = 2,
     densityMultiplier = 1.0,
     canvasSize = 128,
+    minDotSize = 0.5,
+    maxDotSize = 5.0,
   } = options;
 
   // Load image
@@ -99,10 +105,11 @@ export async function imageToParticles(
         const offsetY = Math.sin(angle) * spreadRadius * Math.random();
 
         // ENHANCED: Size variation based on darkness
-        // Darker areas = larger dots (2-5px), lighter = smaller (1-3px)
+        // Darker areas = larger dots, lighter = smaller dots (uses user-defined range)
         const darknessFactor = 1 - brightness / 255;
-        const baseSize = 1.5 + darknessFactor * 3.5;
-        const sizeVariation = 0.5 + Math.random() * 0.5;
+        const sizeRange = maxDotSize - minDotSize;
+        const baseSize = minDotSize + darknessFactor * sizeRange;
+        const sizeVariation = 0.8 + Math.random() * 0.4; // 0.8-1.2x variation
         const size = baseSize * sizeVariation;
 
         // ENHANCED: Random animation timing

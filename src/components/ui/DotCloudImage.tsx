@@ -12,6 +12,16 @@ export interface DotCloudImageProps {
   density?: number;
   /** Additional CSS classes */
   className?: string;
+  /** Aspect ratio multiplier (default: 1, use 3 for wide logos) */
+  aspectRatio?: number;
+  /** Manual animation position override (0-100, disables scroll) */
+  manualAnimationPosition?: number;
+  /** Sample gap (1-250, default: 3) */
+  sampleGap?: number;
+  /** Minimum dot size (default: 0.5) */
+  minDotSize?: number;
+  /** Maximum dot size (default: 5.0) */
+  maxDotSize?: number;
 }
 
 /**
@@ -26,12 +36,21 @@ export default function DotCloudImage({
   color = 'var(--pepe-gold)',
   density = 1.0,
   className = '',
+  aspectRatio = 1,
+  manualAnimationPosition,
+  sampleGap = 3,
+  minDotSize = 0.5,
+  maxDotSize = 5.0,
 }: DotCloudImageProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0); // 0 = dispersed, 1 = formed
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use manual position if provided, otherwise use scroll progress
+  const isManualMode = manualAnimationPosition !== undefined;
+  const manualProgress = isManualMode ? manualAnimationPosition / 100 : 0;
 
   // Load particles
   useEffect(() => {
@@ -47,9 +66,11 @@ export default function DotCloudImage({
         const imagePath = `/doticons/${baseIconName}.jpg`;
         const particleData = await imageToParticles({
           imagePath,
-          sampleGap: 2,
-          densityMultiplier: density,
+          sampleGap, // User-configurable (1-250)
+          densityMultiplier: density * 1.2, // Increased density for better coverage
           canvasSize: 128,
+          minDotSize,
+          maxDotSize,
         });
 
         if (mounted) {
@@ -69,10 +90,13 @@ export default function DotCloudImage({
     return () => {
       mounted = false;
     };
-  }, [disciplineId, density]);
+  }, [disciplineId, density, sampleGap, minDotSize, maxDotSize]);
 
-  // Scroll-based animation trigger
+  // Scroll-based animation trigger (only when not in manual mode)
   useEffect(() => {
+    // Skip scroll handling if in manual mode
+    if (isManualMode) return;
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -90,8 +114,27 @@ export default function DotCloudImage({
       // MAXIMUM trigger range: Start forming from entire viewport (100vh away)
       const maxDistance = windowHeight * 1.0;
 
-      // Progress: 1 at center, 0 at far edges
-      const progress = Math.max(0, Math.min(1, 1 - distance / maxDistance));
+      // Raw progress: 1 at center, 0 at far edges
+      const rawProgress = Math.max(0, Math.min(1, 1 - distance / maxDistance));
+
+      // Apply easing curve with plateau at perfect alignment
+      // Reaches 1.0 exactly when centered, with plateau zone for stability
+      let progress = rawProgress;
+
+      if (rawProgress >= 0.9) {
+        // Plateau zone: reach 1.0 at exact center with wide plateau
+        // Maps 0.9-1.0 to 0.95-1.0 with ease-out curve
+        const plateauProgress = (rawProgress - 0.9) / 0.1;
+        progress = 0.95 + (plateauProgress * plateauProgress) * 0.05;
+      } else if (rawProgress >= 0.3) {
+        // Middle zone: ease-in-out for smooth transition
+        const t = (rawProgress - 0.3) / 0.6;
+        progress = 0.3 + (t * t * (3 - 2 * t)) * 0.65;
+      } else {
+        // Start zone: ease-in for gradual beginning
+        const t = rawProgress / 0.3;
+        progress = (t * t) * 0.3;
+      }
 
       setScrollProgress(progress);
 
@@ -117,7 +160,7 @@ export default function DotCloudImage({
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [disciplineId]);
+  }, [disciplineId, isManualMode]);
 
   if (error) {
     return (
@@ -142,48 +185,60 @@ export default function DotCloudImage({
   }
 
   // Scale factor from 128px canvas to display size
-  const scale = size / 128;
+  const scaleY = size / 128;
+  const scaleX = scaleY * aspectRatio; // X axis scales with aspect ratio
 
-  // Only use scroll progress (no hover)
-  const formProgress = scrollProgress;
+  // Use manual progress if in manual mode, otherwise use scroll progress
+  const formProgress = isManualMode ? manualProgress : scrollProgress;
+
+  // Calculate container dimensions based on aspect ratio
+  const containerWidth = size * aspectRatio;
+  const containerHeight = size;
 
   return (
     <div
       ref={containerRef}
       className={`dot-cloud-container ${className}`}
       style={{
-        width: size,
-        height: size,
+        width: containerWidth,
+        height: containerHeight,
         position: 'relative',
         overflow: 'visible',
       }}
       data-scroll-progress={scrollProgress.toFixed(2)}
     >
       {particles.map((particle, index) => {
-        const targetX = particle.targetX * scale;
-        const targetY = particle.targetY * scale;
+        const targetX = particle.targetX * scaleX;
+        const targetY = particle.targetY * scaleY;
 
-        // Add small random jitter to hover position (no raster)
-        const jitterX = (Math.random() - 0.5) * 2;
-        const jitterY = (Math.random() - 0.5) * 2;
+        // Minimal jitter for perfect alignment - only when not fully formed
+        const jitterX = (Math.random() - 0.5) * 0.5 * (1 - formProgress);
+        const jitterY = (Math.random() - 0.5) * 0.5 * (1 - formProgress);
         const formedX = targetX + jitterX;
         const formedY = targetY + jitterY;
 
         // Idle position (widely spread)
-        const idleX = targetX + particle.offsetX * scale;
-        const idleY = targetY + particle.offsetY * scale;
+        const idleX = targetX + particle.offsetX * scaleX;
+        const idleY = targetY + particle.offsetY * scaleY;
 
         // Interpolate between idle and formed based on scroll/hover
         const displayX = idleX + (formedX - idleX) * formProgress;
         const displayY = idleY + (formedY - idleY) * formProgress;
 
-        // Scale animation: much larger when idle (1.2-1.8x), normal when formed (0.9-1.1x)
-        const idleScale = 1.2 + Math.random() * 0.6;
-        const formedScale = 0.9 + Math.random() * 0.2;
+        // Enhanced contrast: darker spots get bigger dots at perfect alignment
+        const darknessFactor = 1 - particle.brightness / 255;
+        const contrastBoost = 1 + darknessFactor * 0.6 * formProgress; // Up to 60% bigger when dark & formed
+
+        // Scale animation: larger when idle, precise when formed
+        const idleScale = 1.3 + Math.random() * 0.5;
+        const formedScale = 1.0 * contrastBoost; // Consistent size when formed, boosted by darkness
         const currentScale = idleScale + (formedScale - idleScale) * formProgress;
 
-        // Opacity: much lower when dispersed, full when formed
-        const opacity = 0.2 + formProgress * 0.8;
+        // Enhanced opacity: much lower when dispersed, very clear at perfect alignment
+        // At perfect alignment (formProgress = 1), opacity reaches 1.0 for maximum clarity
+        const baseOpacity = 0.1 + formProgress * 0.7; // 0.1 -> 0.8
+        const alignmentBoost = formProgress > 0.85 ? (formProgress - 0.85) * 1.33 : 0; // 0 -> 0.2
+        const opacity = Math.min(1.0, baseOpacity + alignmentBoost);
 
         return (
           <span
