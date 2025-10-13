@@ -1,54 +1,3 @@
-# Dependencies
-node_modules/
-*/node_modules/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Build outputs
-dist/
-build/
-*/dist/
-*/build/
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-.venv-backend/
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
 # Logs
 logs
 *.log
@@ -58,35 +7,22 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+node_modules
+dist
+dist-ssr
+*.local
 
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
+# Environment variables
+.env
 
-# Flask
-instance/
-.webassets-cache
-
-# Testing
-.coverage
-.pytest_cache/
-.tox/
-.nox/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# Cloudflare
-.wrangler/
-
-# Temporary files
-*.tmp
-*.temp
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vercel
