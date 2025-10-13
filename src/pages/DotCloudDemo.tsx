@@ -75,9 +75,9 @@ export default function DotCloudDemo() {
         {/* Size: Small */}
         <section className="h-screen flex flex-col items-center justify-center px-6">
           <h3 className="text-2xl font-bold text-white mb-2">Small Size (300px)</h3>
-          <p className="text-gray-400 mb-8 flex items-center gap-2">
+          <p className="text-gray-400 mb-8 flex items-center gap-3">
             Density: 1.0
-            <span className="text-gray-600">•</span>
+            <span className="text-gray-600 px-1">•</span>
             <span id={`scroll-indicator-${iconName}-small`} className="text-xs font-mono text-gray-500">0.00</span>
           </p>
           <DotCloudImage disciplineId={`${iconName}-small`} size={300} density={1.0} />
@@ -88,9 +88,9 @@ export default function DotCloudDemo() {
         {/* Size: Medium */}
         <section className="h-screen flex flex-col items-center justify-center px-6">
           <h3 className="text-2xl font-bold text-white mb-2">Medium Size (400px)</h3>
-          <p className="text-gray-400 mb-8 flex items-center gap-2">
+          <p className="text-gray-400 mb-8 flex items-center gap-3">
             Density: 0.9
-            <span className="text-gray-600">•</span>
+            <span className="text-gray-600 px-1">•</span>
             <span id={`scroll-indicator-${iconName}-medium`} className="text-xs font-mono text-gray-500">0.00</span>
           </p>
           <DotCloudImage disciplineId={`${iconName}-medium`} size={400} density={0.9} />
@@ -101,9 +101,9 @@ export default function DotCloudDemo() {
         {/* Size: Large */}
         <section className="h-screen flex flex-col items-center justify-center px-6">
           <h3 className="text-2xl font-bold text-white mb-2">Large Size (500px)</h3>
-          <p className="text-gray-400 mb-8 flex items-center gap-2">
+          <p className="text-gray-400 mb-8 flex items-center gap-3">
             Density: 0.8
-            <span className="text-gray-600">•</span>
+            <span className="text-gray-600 px-1">•</span>
             <span id={`scroll-indicator-${iconName}-large`} className="text-xs font-mono text-gray-500">0.00</span>
           </p>
           <DotCloudImage disciplineId={`${iconName}-large`} size={500} density={0.8} />
@@ -114,9 +114,9 @@ export default function DotCloudDemo() {
       {/* Density: Sparse */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
         <h3 className="text-2xl font-bold text-white mb-2">Sparse Density</h3>
-        <p className="text-gray-400 mb-8 flex items-center gap-2">
+        <p className="text-gray-400 mb-8 flex items-center gap-3">
           Density: 0.5
-          <span className="text-gray-600">•</span>
+          <span className="text-gray-600 px-1">•</span>
           <span id={`scroll-indicator-${iconName}-sparse`} className="text-xs font-mono text-gray-500">0.00</span>
         </p>
         <DotCloudImage
@@ -131,9 +131,9 @@ export default function DotCloudDemo() {
       {/* Density: Normal */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
         <h3 className="text-2xl font-bold text-white mb-2">Normal Density</h3>
-        <p className="text-gray-400 mb-8 flex items-center gap-2">
+        <p className="text-gray-400 mb-8 flex items-center gap-3">
           Density: 1.0
-          <span className="text-gray-600">•</span>
+          <span className="text-gray-600 px-1">•</span>
           <span id={`scroll-indicator-${iconName}-normal`} className="text-xs font-mono text-gray-500">0.00</span>
         </p>
         <DotCloudImage
@@ -148,9 +148,9 @@ export default function DotCloudDemo() {
       {/* Density: Dense */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
         <h3 className="text-2xl font-bold text-white mb-2">Dense</h3>
-        <p className="text-gray-400 mb-8 flex items-center gap-2">
+        <p className="text-gray-400 mb-8 flex items-center gap-3">
           Density: 1.5
-          <span className="text-gray-600">•</span>
+          <span className="text-gray-600 px-1">•</span>
           <span id={`scroll-indicator-${iconName}-dense`} className="text-xs font-mono text-gray-500">0.00</span>
         </p>
         <DotCloudImage
@@ -165,9 +165,9 @@ export default function DotCloudDemo() {
       {/* Color: Gold */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
         <h3 className="text-2xl font-bold text-white mb-2">Gold Color</h3>
-        <p className="text-gray-400 mb-8 flex items-center gap-2">
+        <p className="text-gray-400 mb-8 flex items-center gap-3">
           Color: Gold
-          <span className="text-gray-600">•</span>
+          <span className="text-gray-600 px-1">•</span>
           <span id={`scroll-indicator-${iconName}-gold`} className="text-xs font-mono text-gray-500">0.00</span>
         </p>
         <DotCloudImage
@@ -183,9 +183,9 @@ export default function DotCloudDemo() {
       {/* Color: Bronze */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
         <h3 className="text-2xl font-bold text-white mb-2">Bronze Color</h3>
-        <p className="text-gray-400 mb-8 flex items-center gap-2">
+        <p className="text-gray-400 mb-8 flex items-center gap-3">
           Color: Bronze
-          <span className="text-gray-600">•</span>
+          <span className="text-gray-600 px-1">•</span>
           <span id={`scroll-indicator-${iconName}-bronze`} className="text-xs font-mono text-gray-500">0.00</span>
         </p>
         <DotCloudImage
@@ -201,9 +201,9 @@ export default function DotCloudDemo() {
       {/* Color: Amber */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
         <h3 className="text-2xl font-bold text-white mb-2">Amber Color</h3>
-        <p className="text-gray-400 mb-8 flex items-center gap-2">
+        <p className="text-gray-400 mb-8 flex items-center gap-3">
           Color: Amber
-          <span className="text-gray-600">•</span>
+          <span className="text-gray-600 px-1">•</span>
           <span id={`scroll-indicator-${iconName}-amber`} className="text-xs font-mono text-gray-500">0.00</span>
         </p>
         <DotCloudImage
@@ -219,9 +219,9 @@ export default function DotCloudDemo() {
       {/* Color: White */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
         <h3 className="text-2xl font-bold text-white mb-2">White Color</h3>
-        <p className="text-gray-400 mb-8 flex items-center gap-2">
+        <p className="text-gray-400 mb-8 flex items-center gap-3">
           Color: White
-          <span className="text-gray-600">•</span>
+          <span className="text-gray-600 px-1">•</span>
           <span id={`scroll-indicator-${iconName}-white`} className="text-xs font-mono text-gray-500">0.00</span>
         </p>
         <DotCloudImage

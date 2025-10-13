@@ -187,18 +187,20 @@ export default function DotCloudImage({
 
         return (
           <span
-            key={index}
+            key={`${disciplineId}-${index}`}
             className="dot-particle"
             style={{
-              '--dot-x': `${displayX}px`,
-              '--dot-y': `${displayY}px`,
-              '--dot-color': color,
-              '--dot-size': `${particle.size}px`,
-              '--dot-scale': currentScale,
-              '--dot-opacity': opacity,
-              '--float-delay': `${particle.floatDelay}ms`,
-              '--float-speed': `${6 + particle.floatSpeed * 4}s`,
-              '--drift-amplitude': `${20 * (1 - formProgress)}px`,
+              left: `${displayX}px`,
+              top: `${displayY}px`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              background: color,
+              transform: `scale(${currentScale})`,
+              opacity: opacity,
+              animationDelay: `${particle.floatDelay}ms`,
+              animationDuration: `${6 + particle.floatSpeed * 4}s`,
+              '--drift-x': `${20 * (1 - formProgress)}px`,
+              '--drift-y': `${20 * (1 - formProgress)}px`,
             } as React.CSSProperties}
           />
         );
@@ -212,42 +214,28 @@ export default function DotCloudImage({
 
         .dot-particle {
           position: absolute;
-          width: var(--dot-size, 3px);
-          height: var(--dot-size, 3px);
           border-radius: 50%;
-          background: var(--dot-color, var(--pepe-gold));
-          box-shadow: 0 0 6px var(--pepe-gold-glow);
-          transform: translate(var(--dot-x), var(--dot-y)) scale(var(--dot-scale, 1));
-          opacity: var(--dot-opacity, 0.7);
-          transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1),
-                      opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-          will-change: transform, opacity;
-          animation: particleFloat var(--float-speed, 8s) ease-in-out infinite;
-          animation-delay: var(--float-delay, 0ms);
+          box-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
+          transition: left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+                      top 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+                      transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+                      opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+          will-change: left, top, transform, opacity;
+          animation: particleFloat 8s ease-in-out infinite;
         }
 
         @keyframes particleFloat {
           0%, 100% {
-            transform: translate(var(--dot-x), var(--dot-y))
-                       scale(var(--dot-scale, 1));
+            transform: translate(0, 0) scale(1);
           }
           25% {
-            transform: translate(
-              calc(var(--dot-x) + var(--drift-amplitude, 8px)),
-              calc(var(--dot-y) - var(--drift-amplitude, 8px) * 0.7)
-            ) scale(calc(var(--dot-scale, 1) * 1.1));
+            transform: translate(var(--drift-x, 8px), calc(var(--drift-y, 8px) * -0.7)) scale(1.05);
           }
           50% {
-            transform: translate(
-              calc(var(--dot-x) - var(--drift-amplitude, 8px) * 0.5),
-              calc(var(--dot-y) + var(--drift-amplitude, 8px))
-            ) scale(calc(var(--dot-scale, 1) * 0.95));
+            transform: translate(calc(var(--drift-x, 8px) * -0.5), var(--drift-y, 8px)) scale(0.98);
           }
           75% {
-            transform: translate(
-              calc(var(--dot-x) - var(--drift-amplitude, 8px)),
-              calc(var(--dot-y) - var(--drift-amplitude, 8px) * 0.5)
-            ) scale(calc(var(--dot-scale, 1) * 1.05));
+            transform: translate(calc(var(--drift-x, 8px) * -1), calc(var(--drift-y, 8px) * -0.5)) scale(1.02);
           }
         }
 
