@@ -94,20 +94,12 @@ export default function DotCloudImage({
       setScrollProgress(progress);
 
       // Update individual debug indicator for this component
-      // Try multiple ID patterns since we have different naming schemes
-      const possibleIds = [
-        `scroll-indicator-${disciplineId}`,
-        `scroll-indicator-${disciplineId.split('-')[0]}-small`,
-        `scroll-indicator-${disciplineId.split('-')[0]}-medium`,
-        `scroll-indicator-${disciplineId.split('-')[0]}-large`
-      ];
-
-      for (const id of possibleIds) {
-        const indicator = document.getElementById(id);
-        if (indicator) {
-          indicator.textContent = `${progress.toFixed(2)}`;
-          indicator.style.color = progress > 0.5 ? '#ffd700' : progress > 0.1 ? '#ffffff' : '#666666';
-        }
+      // Match the exact disciplineId used (e.g., "cyrwheel-small", "cyrwheel-sparse", etc.)
+      const indicatorId = `scroll-indicator-${disciplineId}`;
+      const indicator = document.getElementById(indicatorId);
+      if (indicator) {
+        indicator.textContent = `${progress.toFixed(2)}`;
+        indicator.style.color = progress > 0.5 ? '#ffd700' : progress > 0.1 ? '#ffffff' : '#666666';
       }
     };
 
@@ -123,7 +115,7 @@ export default function DotCloudImage({
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, []);
+  }, [disciplineId]);
 
   if (error) {
     return (

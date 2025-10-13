@@ -113,97 +113,119 @@ export default function DotCloudDemo() {
 
       {/* Density: Sparse */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Sparse Density</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline} • 0.5x • ~25-50 particles</p>
+        <h3 className="text-2xl font-bold text-white mb-2">Sparse Density</h3>
+        <p className="text-gray-400 mb-8 flex items-center gap-2">
+          Density: 0.5
+          <span className="text-gray-600">•</span>
+          <span id={`scroll-indicator-${iconName}-sparse`} className="text-xs font-mono text-gray-500">0.00</span>
+        </p>
         <DotCloudImage
-          disciplineId={iconName}
+          disciplineId={`${iconName}-sparse`}
           size={450}
           density={0.5}
         />
       </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+      <div style={{ height: '150vh' }} />
 
       {/* Density: Normal */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Normal Density</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline} • 1.0x • ~50-100 particles</p>
+        <h3 className="text-2xl font-bold text-white mb-2">Normal Density</h3>
+        <p className="text-gray-400 mb-8 flex items-center gap-2">
+          Density: 1.0
+          <span className="text-gray-600">•</span>
+          <span id={`scroll-indicator-${iconName}-normal`} className="text-xs font-mono text-gray-500">0.00</span>
+        </p>
         <DotCloudImage
-          disciplineId={iconName}
+          disciplineId={`${iconName}-normal`}
           size={450}
           density={1.0}
         />
       </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+      <div style={{ height: '150vh' }} />
 
       {/* Density: Dense */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Dense</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline} • 1.5x • ~75-150 particles</p>
+        <h3 className="text-2xl font-bold text-white mb-2">Dense</h3>
+        <p className="text-gray-400 mb-8 flex items-center gap-2">
+          Density: 1.5
+          <span className="text-gray-600">•</span>
+          <span id={`scroll-indicator-${iconName}-dense`} className="text-xs font-mono text-gray-500">0.00</span>
+        </p>
         <DotCloudImage
-          disciplineId={iconName}
+          disciplineId={`${iconName}-dense`}
           size={450}
           density={1.5}
         />
       </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+      <div style={{ height: '150vh' }} />
 
       {/* Color: Gold */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Gold Color</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline}</p>
+        <h3 className="text-2xl font-bold text-white mb-2">Gold Color</h3>
+        <p className="text-gray-400 mb-8 flex items-center gap-2">
+          Color: Gold
+          <span className="text-gray-600">•</span>
+          <span id={`scroll-indicator-${iconName}-gold`} className="text-xs font-mono text-gray-500">0.00</span>
+        </p>
         <DotCloudImage
-          disciplineId={iconName}
+          disciplineId={`${iconName}-gold`}
           size={450}
           density={1.0}
           color="var(--pepe-gold)"
         />
       </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+      <div style={{ height: '150vh' }} />
 
       {/* Color: Bronze */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Bronze Color</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline}</p>
+        <h3 className="text-2xl font-bold text-white mb-2">Bronze Color</h3>
+        <p className="text-gray-400 mb-8 flex items-center gap-2">
+          Color: Bronze
+          <span className="text-gray-600">•</span>
+          <span id={`scroll-indicator-${iconName}-bronze`} className="text-xs font-mono text-gray-500">0.00</span>
+        </p>
         <DotCloudImage
-          disciplineId={iconName}
+          disciplineId={`${iconName}-bronze`}
           size={450}
           density={1.0}
           color="var(--pepe-bronze)"
         />
       </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+      <div style={{ height: '150vh' }} />
 
       {/* Color: Amber */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">Amber Color</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline}</p>
+        <h3 className="text-2xl font-bold text-white mb-2">Amber Color</h3>
+        <p className="text-gray-400 mb-8 flex items-center gap-2">
+          Color: Amber
+          <span className="text-gray-600">•</span>
+          <span id={`scroll-indicator-${iconName}-amber`} className="text-xs font-mono text-gray-500">0.00</span>
+        </p>
         <DotCloudImage
-          disciplineId={iconName}
+          disciplineId={`${iconName}-amber`}
           size={450}
           density={1.0}
           color="var(--pepe-amber)"
         />
       </section>
 
-      {/* Spacer */}
-      <div className="h-screen" />
+      <div style={{ height: '150vh' }} />
 
       {/* Color: White */}
       <section className="h-screen flex flex-col items-center justify-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-6">White Color</h2>
-        <p className="text-gray-400 mb-16">{selectedDiscipline}</p>
+        <h3 className="text-2xl font-bold text-white mb-2">White Color</h3>
+        <p className="text-gray-400 mb-8 flex items-center gap-2">
+          Color: White
+          <span className="text-gray-600">•</span>
+          <span id={`scroll-indicator-${iconName}-white`} className="text-xs font-mono text-gray-500">0.00</span>
+        </p>
         <DotCloudImage
-          disciplineId={iconName}
+          disciplineId={`${iconName}-white`}
           size={450}
           density={1.0}
           color="#FFFFFF"
