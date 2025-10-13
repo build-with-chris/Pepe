@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import Navbar01Page from './components/navbar-01/navbar-01'
+import Navigation from './components/Navigation'
 import Footer from './components/Footer'
 import ParticleBackground from './components/ParticleBackground'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -31,6 +31,7 @@ import Datenschutz from './pages/Datenschutz'
 import AGB from './pages/AGB'
 import Agentur from './pages/Agentur'
 import NotFound from './pages/NotFound'
+import DotCloudDemo from './pages/DotCloudDemo'
 import './index.css'
 
 function App() {
@@ -39,7 +40,7 @@ function App() {
       {/* Global Particle Background */}
       <ParticleBackground />
       
-      <Navbar01Page />
+      <Navigation />
       
       <Routes>
         {/* Public routes */}
@@ -56,7 +57,10 @@ function App() {
         <Route path="/team" element={<Team />} />
         <Route path="/agentur" element={<Agentur />} />
         <Route path="/referenzen" element={<Referenzen />} />
-        
+
+        {/* Demo route for DotCloud particle system */}
+        <Route path="/demo/dotcloud" element={<DotCloudDemo />} />
+
         {/* Authentication routes - use working components */}
         <Route path="/anmelden" element={<LoginForm />} />
         <Route path="/registrieren" element={<SignUp />} />
