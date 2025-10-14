@@ -317,7 +317,7 @@ export default function Home() {
                 <DotCloudImage
                   disciplineId="logo"
                   size={600}
-                  density={2.0}
+                  density={1.0}
                   color="#FFFFFF"
                   aspectRatio={3}
                   sampleGap={2}
@@ -489,7 +489,7 @@ export default function Home() {
                 key={randomIcon1}
                 disciplineId={randomIcon1}
                 size={300}
-                density={2.0}
+                density={1.0}
                 color="var(--pepe-gold)"
                 sampleGap={2}
                 minDotSize={1.2}
@@ -622,7 +622,7 @@ export default function Home() {
                         <DotCloudImage
                           disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
                           size={300}
-                          density={2.0}
+                          density={1.0}
                           color="var(--pepe-gold)"
                           sampleGap={2}
                           minDotSize={1.2}

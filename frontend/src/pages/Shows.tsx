@@ -113,7 +113,7 @@ export default function Shows() {
                 key={randomIcon}
                 disciplineId={randomIcon}
                 size={600}
-                density={2.0}
+                density={1.0}
                 color="#FFFFFF"
                 sampleGap={2}
                 minDotSize={1.2}
