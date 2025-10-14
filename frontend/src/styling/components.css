@@ -2559,14 +2559,14 @@
   border-color: var(--pepe-gold);
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  opacity: 1 !important; /* Override inline opacity on hover */
 }
 
 .choice-card.selected {
   border-color: var(--pepe-gold);
   background: var(--pepe-ink);
-  box-shadow: 
-    0 0 0 3px var(--pepe-gold-glow),
-    0 12px 40px rgba(212, 165, 116, 0.15);
+  /* Glow removed for performance */
+  box-shadow: 0 12px 40px rgba(212, 165, 116, 0.15);
 }
 
 .choice-card-image {

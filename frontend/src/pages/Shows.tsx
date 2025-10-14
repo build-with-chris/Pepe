@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import DotCloudImage from '../components/ui/DotCloudImage'
 
 interface Show {
   id: number
@@ -17,7 +18,41 @@ export default function Shows() {
   const [shows, setShows] = useState<Show[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [randomIcon, setRandomIcon] = useState('cyrwheel')
+  const [autoAnimPosition, setAutoAnimPosition] = useState(0)
   const { t } = useTranslation()
+
+  // Available icons for random shuffling
+  const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole']
+
+  // Shuffle random icon every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newIcon = availableIcons[Math.floor(Math.random() * availableIcons.length)]
+      setRandomIcon(newIcon)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Auto-animation loop (8 seconds)
+  useEffect(() => {
+    let animationFrame: number
+    const startTime = performance.now()
+    const duration = 8000
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = (elapsed % duration) / duration
+      const position = Math.sin(progress * Math.PI * 2) * 50 + 50
+      setAutoAnimPosition(position)
+      animationFrame = requestAnimationFrame(animate)
+    }
+
+    animationFrame = requestAnimationFrame(animate)
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame)
+    }
+  }, [])
 
   useEffect(() => {
     const fetchShows = async () => {
@@ -72,6 +107,20 @@ export default function Shows() {
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">
           <div className="hero-content text-center max-w-3xl mx-auto py-12">
+            {/* Random animated DotIcon */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
+              <DotCloudImage
+                key={randomIcon}
+                disciplineId={randomIcon}
+                size={600}
+                density={2.0}
+                color="#FFFFFF"
+                sampleGap={2}
+                minDotSize={1.2}
+                maxDotSize={5.8}
+                manualAnimationPosition={autoAnimPosition}
+              />
+            </div>
             <div className="overline text-pepe-gold mb-4">{t('hero37.kicker')}</div>
             <h1 className="h1 display-gradient mb-6">
               {t('hero37.title')}

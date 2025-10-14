@@ -37,6 +37,7 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
     <div
       className={`choice-card ${selected ? 'selected' : ''}`}
       onClick={() => onSelect(value)}
+      style={useDotIcon ? { opacity: selected ? 1 : 0.95 } : undefined}
     >
       <div className="choice-card-image">
         {useDotIcon ? (
@@ -49,7 +50,7 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
               sampleGap={2}
               minDotSize={1.2}
               maxDotSize={3.4}
-              manualAnimationPosition={isActive ? 100 : undefined}
+              manualAnimationPosition={100}
               aspectRatio={iconName === 'logo' ? 3 : 1}
             />
           </div>

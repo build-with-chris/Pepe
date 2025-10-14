@@ -21,7 +21,6 @@ export default function Home() {
   const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
   const [isStackPaused, setIsStackPaused] = useState(false)
   const [randomIcon1, setRandomIcon1] = useState('cyrwheel')
-  const [randomIcon2, setRandomIcon2] = useState('juggling')
   const [autoAnimPosition, setAutoAnimPosition] = useState(0)
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -59,7 +58,7 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
-  // Slow auto-animation for disciplines accordion
+  // Animation synced to accordion opening - starts from 0 when card becomes active
   useEffect(() => {
     let animationFrame: number
     const startTime = performance.now()
@@ -77,7 +76,7 @@ export default function Home() {
     return () => {
       if (animationFrame) cancelAnimationFrame(animationFrame)
     }
-  }, [])
+  }, [expandedDiscipline]) // Reset animation when accordion changes
 
   const handleArtistClick = (artistId: number) => {
     navigate(`/kuenstler?flip=${artistId}`)
@@ -317,13 +316,13 @@ export default function Home() {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
                 <DotCloudImage
                   disciplineId="logo"
-                  size={800}
+                  size={600}
                   density={2.0}
-                  color="var(--pepe-gold)"
+                  color="#FFFFFF"
                   aspectRatio={3}
                   sampleGap={2}
                   minDotSize={1.2}
-                  maxDotSize={3.4}
+                  maxDotSize={5.8}
                 />
               </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
@@ -565,19 +564,6 @@ export default function Home() {
       <section className="section bg-pepe-ink">
         <div className="stage-container">
           <div className="text-center mb-16">
-            {/* Random shuffling DotIcon */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
-              <DotCloudImage
-                key={randomIcon2}
-                disciplineId={randomIcon2}
-                size={300}
-                density={2.0}
-                color="var(--pepe-gold)"
-                sampleGap={2}
-                minDotSize={1.2}
-                maxDotSize={3.4}
-              />
-            </div>
             <h2 className="display-2 mb-8">
               {t('home.cta.heading')}
             </h2>
@@ -619,15 +605,8 @@ export default function Home() {
                     {discipline.name}
                   </div>
                   
-                  {/* Image container for active card */}
+                  {/* DotIcon only - no background image */}
                   <div className="discipline-image-container">
-                    {/* Always show background image */}
-                    <img
-                      src={discipline.image}
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
-                    {/* DotIcon overlay on active card */}
                     {index === expandedDiscipline && (
                       <div style={{
                         position: 'absolute',

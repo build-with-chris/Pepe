@@ -430,39 +430,13 @@ export default function Galerie() {
                     {discipline.name}
                   </div>
                   
-                  {/* Image container for active card */}
+                  {/* Image only - no DotIcon overlay */}
                   <div className="discipline-image-container">
-                    {/* Always show background image */}
                     <img
                       src={discipline.image}
                       alt={discipline.name}
                       className="discipline-image"
                     />
-                    {/* DotIcon overlay on active card */}
-                    {index === expandedDiscipline && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        pointerEvents: 'none'
-                      }}>
-                        <DotCloudImage
-                          disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
-                          size={300}
-                          density={2.0}
-                          color="#FFFFFF"
-                          sampleGap={2}
-                          minDotSize={1.2}
-                          maxDotSize={3.4}
-                          manualAnimationPosition={autoAnimPosition}
-                        />
-                      </div>
-                    )}
                   </div>
                   
                   {/* Enhanced Overlay content for active card */}
