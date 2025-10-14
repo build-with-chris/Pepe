@@ -316,8 +316,8 @@ export default function Home() {
               {/* DotIcon Logo with scroll animation */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
                 <DotCloudImage
-                  disciplineId="logo-hero"
-                  size={300}
+                  disciplineId="logo"
+                  size={800}
                   density={2.0}
                   color="var(--pepe-gold)"
                   aspectRatio={3}
