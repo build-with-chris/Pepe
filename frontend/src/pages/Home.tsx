@@ -316,13 +316,13 @@ export default function Home() {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
                 <DotCloudImage
                   disciplineId="logo"
-                  size={600}
-                  density={1.0}
+                  size={300}
+                  density={0.7}
                   color="#FFFFFF"
                   aspectRatio={3}
-                  sampleGap={2}
-                  minDotSize={1.2}
-                  maxDotSize={5.8}
+                  sampleGap={1}
+                  minDotSize={1.9}
+                  maxDotSize={3.6}
                 />
               </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
@@ -489,11 +489,11 @@ export default function Home() {
                 key={randomIcon1}
                 disciplineId={randomIcon1}
                 size={300}
-                density={1.0}
+                density={0.7}
                 color="var(--pepe-gold)"
-                sampleGap={2}
-                minDotSize={1.2}
-                maxDotSize={3.4}
+                sampleGap={1}
+                minDotSize={1.9}
+                maxDotSize={3.6}
               />
             </div>
             <h2 className="h1 mb-6">{t('home.findArtistTitle')}</h2>
@@ -622,11 +622,11 @@ export default function Home() {
                         <DotCloudImage
                           disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
                           size={300}
-                          density={1.0}
+                          density={0.7}
                           color="var(--pepe-gold)"
-                          sampleGap={2}
-                          minDotSize={1.2}
-                          maxDotSize={3.4}
+                          sampleGap={1}
+                          minDotSize={1.9}
+                          maxDotSize={3.6}
                           manualAnimationPosition={autoAnimPosition}
                         />
                       </div>

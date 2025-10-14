@@ -2545,6 +2545,7 @@
   min-height: 320px;
   display: flex;
   flex-direction: column;
+  opacity: 0.9;
 }
 
 .choice-card:not(.selected) .choice-card-image {
@@ -2567,6 +2568,7 @@
   background: var(--pepe-ink);
   /* Glow removed for performance */
   box-shadow: 0 12px 40px rgba(212, 165, 116, 0.15);
+  opacity: 1;
 }
 
 .choice-card-image {

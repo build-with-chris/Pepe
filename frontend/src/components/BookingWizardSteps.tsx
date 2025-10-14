@@ -37,20 +37,19 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
     <div
       className={`choice-card ${selected ? 'selected' : ''}`}
       onClick={() => onSelect(value)}
-      style={useDotIcon ? { opacity: selected ? 1 : 0.9 } : undefined}
     >
       <div className="choice-card-image">
         {useDotIcon ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
             <DotCloudImage
               disciplineId={iconName}
-              size={200}
-              density={1.0}
+              size={300}
+              density={0.7}
               color="var(--pepe-gold)"
-              sampleGap={2}
-              minDotSize={1.2}
-              maxDotSize={3.4}
-              manualAnimationPosition={90}
+              sampleGap={1}
+              minDotSize={1.9}
+              maxDotSize={3.6}
+              manualAnimationPosition={undefined}
               aspectRatio={iconName === 'logo' ? 3 : 1}
             />
           </div>
