@@ -621,8 +621,25 @@ export default function Home() {
                   
                   {/* Image container for active card */}
                   <div className="discipline-image-container">
-                    {index === expandedDiscipline ? (
-                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }}>
+                    {/* Always show background image */}
+                    <img
+                      src={discipline.image}
+                      alt={discipline.name}
+                      className="discipline-image"
+                    />
+                    {/* DotIcon overlay on active card */}
+                    {index === expandedDiscipline && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        pointerEvents: 'none'
+                      }}>
                         <DotCloudImage
                           disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
                           size={300}
@@ -634,12 +651,6 @@ export default function Home() {
                           manualAnimationPosition={autoAnimPosition}
                         />
                       </div>
-                    ) : (
-                      <img
-                        src={discipline.image}
-                        alt={discipline.name}
-                        className="discipline-image"
-                      />
                     )}
                   </div>
                   
