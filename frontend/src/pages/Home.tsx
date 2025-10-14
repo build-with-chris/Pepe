@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
+import DotCloudImage from '../components/ui/DotCloudImage'
 import heroImage from '../assets/PepeHero.webp'
 
 interface Artist {
@@ -19,8 +20,64 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
   const [isStackPaused, setIsStackPaused] = useState(false)
+  const [randomIcon1, setRandomIcon1] = useState('cyrwheel')
+  const [randomIcon2, setRandomIcon2] = useState('juggling')
+  const [autoAnimPosition, setAutoAnimPosition] = useState(0)
   const { t } = useTranslation()
   const navigate = useNavigate()
+
+  // Available icons for random shuffling
+  const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole']
+
+  // Map discipline names to icon names for DotCloudImage
+  const disciplineToIcon: Record<string, string> = {
+    'contemporary dance': 'contemporary',
+    'chinese pole': 'pole',
+    'cyr-wheel': 'cyrwheel',
+    'cyr wheel': 'cyrwheel',
+    'hula hoop': 'logo',
+    'bodenakrobatik': 'logo',
+    'breakdance': 'breakdance',
+    'handstand': 'handstand',
+    'jonglage': 'juggling',
+    'luftakrobatik': 'luftakrobatik',
+    'moderation': 'logo',
+    'pantomime': 'pantomime',
+    'partnerakrobatik': 'partnerakrobatik',
+    'zauberer': 'magician',
+    'zauberei': 'magician'
+  }
+
+  // Shuffle random icons every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newIcon1 = availableIcons[Math.floor(Math.random() * availableIcons.length)]
+      const newIcon2 = availableIcons[Math.floor(Math.random() * availableIcons.length)]
+      setRandomIcon1(newIcon1)
+      setRandomIcon2(newIcon2)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Slow auto-animation for disciplines accordion
+  useEffect(() => {
+    let animationFrame: number
+    const startTime = performance.now()
+    const duration = 8000 // 8 seconds for slow animation
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = (elapsed % duration) / duration
+      const position = Math.sin(progress * Math.PI * 2) * 50 + 50 // 0-100 oscillation
+      setAutoAnimPosition(position)
+      animationFrame = requestAnimationFrame(animate)
+    }
+
+    animationFrame = requestAnimationFrame(animate)
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame)
+    }
+  }, [])
 
   const handleArtistClick = (artistId: number) => {
     navigate(`/kuenstler?flip=${artistId}`)
@@ -256,6 +313,19 @@ export default function Home() {
         <div className="hero-content-wrapper">
           <div className="stage-container">
             <div className="hero-content">
+              {/* DotIcon Logo with scroll animation */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
+                <DotCloudImage
+                  disciplineId="logo-hero"
+                  size={300}
+                  density={2.0}
+                  color="var(--pepe-gold)"
+                  aspectRatio={3}
+                  sampleGap={2}
+                  minDotSize={1.2}
+                  maxDotSize={3.4}
+                />
+              </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
               <h1 className="hero-title-elegant display-gradient mb-6">
                 {t('home.hero.title')}
@@ -414,6 +484,19 @@ export default function Home() {
       <section className="section">
         <div className="stage-container">
           <div className="section-header text-center mb-16">
+            {/* Random shuffling DotIcon */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
+              <DotCloudImage
+                key={randomIcon1}
+                disciplineId={randomIcon1}
+                size={300}
+                density={2.0}
+                color="var(--pepe-gold)"
+                sampleGap={2}
+                minDotSize={1.2}
+                maxDotSize={3.4}
+              />
+            </div>
             <h2 className="h1 mb-6">{t('home.findArtistTitle')}</h2>
             <p className="body-lg max-w-3xl mx-auto mb-8">
               {t('home.findArtistSubtitle')}
@@ -482,6 +565,19 @@ export default function Home() {
       <section className="section bg-pepe-ink">
         <div className="stage-container">
           <div className="text-center mb-16">
+            {/* Random shuffling DotIcon */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
+              <DotCloudImage
+                key={randomIcon2}
+                disciplineId={randomIcon2}
+                size={300}
+                density={2.0}
+                color="var(--pepe-gold)"
+                sampleGap={2}
+                minDotSize={1.2}
+                maxDotSize={3.4}
+              />
+            </div>
             <h2 className="display-2 mb-8">
               {t('home.cta.heading')}
             </h2>
@@ -525,11 +621,26 @@ export default function Home() {
                   
                   {/* Image container for active card */}
                   <div className="discipline-image-container">
-                    <img 
-                      src={discipline.image} 
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
+                    {index === expandedDiscipline ? (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }}>
+                        <DotCloudImage
+                          disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
+                          size={300}
+                          density={2.0}
+                          color="var(--pepe-gold)"
+                          sampleGap={2}
+                          minDotSize={1.2}
+                          maxDotSize={3.4}
+                          manualAnimationPosition={autoAnimPosition}
+                        />
+                      </div>
+                    ) : (
+                      <img
+                        src={discipline.image}
+                        alt={discipline.name}
+                        className="discipline-image"
+                      />
+                    )}
                   </div>
                   
                   {/* Enhanced Overlay content for active card */}

@@ -1,4 +1,5 @@
 // import React from 'react' - not needed in modern React
+import DotCloudImage from './ui/DotCloudImage'
 
 interface ChoiceCardProps {
   image: string
@@ -7,16 +8,54 @@ interface ChoiceCardProps {
   value: string
   selected: boolean
   onSelect: (value: string) => void
+  useDotIcon?: boolean
+  isActive?: boolean
 }
 
-export function ChoiceCard({ image, label, description, value, selected, onSelect }: ChoiceCardProps) {
+// Map performance style values to doticon names
+const dotIconMap: Record<string, string> = {
+  'zauberer': 'magician',
+  'luftakrobatik': 'luftakrobatik',
+  'bodenakrobatik': 'logo', // fallback
+  'partnerakrobatik': 'partnerakrobatik',
+  'contemporary-dance': 'contemporary',
+  'breakdance': 'breakdance',
+  'jonglage': 'juggling',
+  'pantomime': 'pantomime',
+  'cyrwheel': 'cyrwheel',
+  'cyr-wheel': 'cyrwheel',
+  'handstand': 'handstand',
+  'hula-hoop': 'logo', // fallback
+  'chinese-pole': 'pole',
+  'moderation': 'logo' // fallback
+}
+
+export function ChoiceCard({ image, label, description, value, selected, onSelect, useDotIcon, isActive }: ChoiceCardProps) {
+  const iconName = dotIconMap[value] || 'logo'
+
   return (
-    <div 
+    <div
       className={`choice-card ${selected ? 'selected' : ''}`}
       onClick={() => onSelect(value)}
     >
       <div className="choice-card-image">
-        <img src={image} alt={label} />
+        {useDotIcon ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <DotCloudImage
+              disciplineId={iconName}
+              size={200}
+              density={2.0}
+              color="var(--pepe-gold)"
+              sampleGap={2}
+              minDotSize={1.2}
+              maxDotSize={3.4}
+              manualAnimationPosition={isActive ? 100 : undefined}
+              aspectRatio={iconName === 'logo' ? 3 : 1}
+            />
+          </div>
+        ) : (
+          <img src={image} alt={label} />
+        )}
       </div>
       <div className="choice-card-content">
         <h3 className="choice-card-title">{label}</h3>
@@ -110,6 +149,8 @@ export function StepContent({
                 description={style.description}
                 value={style.value}
                 selected={Array.isArray(formData.performanceStyle) ? formData.performanceStyle.includes(style.value) : formData.performanceStyle === style.value}
+                useDotIcon={true}
+                isActive={step === 3}
                 onSelect={(value) => {
                   const currentStyles = Array.isArray(formData.performanceStyle) ? formData.performanceStyle : []
                   if (currentStyles.includes(value)) {

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import DotCloudImage from '../components/ui/DotCloudImage'
 
 
 // Artist interface for discipline creation
@@ -19,11 +20,51 @@ export default function Galerie() {
   const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
-  
+  const [autoAnimPosition, setAutoAnimPosition] = useState(0)
+
   // Discipline stack state from Home page
   const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
   const [isStackPaused, setIsStackPaused] = useState(false)
+
+  // Map discipline names to icon names for DotCloudImage
+  const disciplineToIcon: Record<string, string> = {
+    'contemporary dance': 'contemporary',
+    'chinese pole': 'pole',
+    'cyr-wheel': 'cyrwheel',
+    'cyr wheel': 'cyrwheel',
+    'hula hoop': 'logo',
+    'bodenakrobatik': 'logo',
+    'breakdance': 'breakdance',
+    'handstand': 'handstand',
+    'jonglage': 'juggling',
+    'luftakrobatik': 'luftakrobatik',
+    'moderation': 'logo',
+    'pantomime': 'pantomime',
+    'partnerakrobatik': 'partnerakrobatik',
+    'zauberer': 'magician',
+    'zauberei': 'magician'
+  }
+
+  // Slow auto-animation for disciplines accordion
+  useEffect(() => {
+    let animationFrame: number
+    const startTime = performance.now()
+    const duration = 8000 // 8 seconds for slow animation
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = (elapsed % duration) / duration
+      const position = Math.sin(progress * Math.PI * 2) * 50 + 50 // 0-100 oscillation
+      setAutoAnimPosition(position)
+      animationFrame = requestAnimationFrame(animate)
+    }
+
+    animationFrame = requestAnimationFrame(animate)
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame)
+    }
+  }, [])
   
   // State for combined static and dynamic images
   const [allImages, setAllImages] = useState<Array<{
@@ -391,11 +432,26 @@ export default function Galerie() {
                   
                   {/* Image container for active card */}
                   <div className="discipline-image-container">
-                    <img 
-                      src={discipline.image} 
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
+                    {index === expandedDiscipline ? (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }}>
+                        <DotCloudImage
+                          disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
+                          size={300}
+                          density={2.0}
+                          color="#FFFFFF"
+                          sampleGap={2}
+                          minDotSize={1.2}
+                          maxDotSize={3.4}
+                          manualAnimationPosition={autoAnimPosition}
+                        />
+                      </div>
+                    ) : (
+                      <img
+                        src={discipline.image}
+                        alt={discipline.name}
+                        className="discipline-image"
+                      />
+                    )}
                   </div>
                   
                   {/* Enhanced Overlay content for active card */}
