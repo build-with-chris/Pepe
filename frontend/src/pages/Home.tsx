@@ -51,9 +51,7 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       const newIcon1 = availableIcons[Math.floor(Math.random() * availableIcons.length)]
-      const newIcon2 = availableIcons[Math.floor(Math.random() * availableIcons.length)]
       setRandomIcon1(newIcon1)
-      setRandomIcon2(newIcon2)
     }, 5000)
     return () => clearInterval(interval)
   }, [])
