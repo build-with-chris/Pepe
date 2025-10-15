@@ -172,7 +172,7 @@ export default function FloatingDisciplines({
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          background: var(--pepe-t40);
+          background: rgba(255, 215, 0, 0.3);
           border: none;
           padding: 0;
           cursor: pointer;
@@ -180,7 +180,7 @@ export default function FloatingDisciplines({
         }
 
         .discipline-dot:hover {
-          background: var(--pepe-t60);
+          background: rgba(255, 215, 0, 0.5);
           transform: scale(1.2);
         }
 
