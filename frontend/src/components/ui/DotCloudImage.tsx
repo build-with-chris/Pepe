@@ -48,7 +48,7 @@ export default function DotCloudImage({
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [scrollProgress, setScrollProgress] = useState(0); // 0 = dispersed, 1 = formed
+  const [scrollProgress, setScrollProgress] = useState(1); // Start at 1.0 (fully formed) until scroll calculates actual position
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Use manual position if provided, otherwise use scroll progress
@@ -152,9 +152,12 @@ export default function DotCloudImage({
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll, { passive: true });
 
-    // Small delay to ensure DOM is ready
+    // Calculate immediately
+    handleScroll();
+
+    // Also recalculate after delay to ensure DOM is fully ready
     setTimeout(() => {
-      handleScroll(); // Initial calculation
+      handleScroll();
     }, 100);
 
     return () => {
