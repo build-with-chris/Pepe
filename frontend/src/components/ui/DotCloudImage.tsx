@@ -107,34 +107,36 @@ export default function DotCloudImage({
       const rect = container.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
-      // NEW BEHAVIOR: 100% when in viewport, 0% when out of viewport
-      // Element is "in viewport" when any part is visible
+      // NEW BEHAVIOR: 100% when fully in viewport at top, dissolves as scrolled
       const isInViewport = rect.top < windowHeight && rect.bottom > 0;
 
       let progress = 0;
 
       if (isInViewport) {
-        // Element is visible - start at 100% and dissolve as it scrolls out
-        // Calculate how much of the element is in the viewport
+        // Calculate visibility ratio
         const visibleTop = Math.max(0, rect.top);
         const visibleBottom = Math.min(windowHeight, rect.bottom);
         const visibleHeight = visibleBottom - visibleTop;
         const elementHeight = rect.height;
-
-        // Progress is 1.0 when fully in viewport, 0 when completely out
-        // If more than 80% of element is visible, consider it fully formed (100%)
         const visibilityRatio = visibleHeight / elementHeight;
 
-        if (visibilityRatio >= 0.8) {
-          progress = 1.0; // Fully formed when mostly visible
+        // Also consider scroll position: dissolve as element moves up (scrolled down)
+        // When element is at top of viewport (rect.top = 0), start dissolving
+        // When element is centered or below (rect.top > windowHeight * 0.3), stay formed
+        const topPosition = rect.top / windowHeight;
+        const positionFactor = topPosition < 0.3 ? 1.0 : Math.max(0, 1 - Math.abs(topPosition - 0.3) / 0.5);
+
+        // Combine visibility and position
+        const rawProgress = Math.min(visibilityRatio, positionFactor);
+
+        if (rawProgress >= 0.8) {
+          progress = 1.0; // Fully formed when well positioned
         } else {
-          // Dissolve as it scrolls out
-          progress = visibilityRatio / 0.8; // 0 to 1 as it goes from 0% to 80% visible
+          progress = rawProgress / 0.8; // Dissolve
           progress = progress * progress * (3 - 2 * progress); // smoothstep
         }
       } else {
-        // Completely out of viewport
-        progress = 0;
+        progress = 0; // Out of viewport
       }
 
       setScrollProgress(progress);
@@ -307,7 +309,16 @@ export default function DotCloudImage({
         }
 
         .dot-particle.no-float {
-          animation: none !important;
+          animation: glowPulse 3s ease-in-out infinite !important;
+        }
+
+        @keyframes glowPulse {
+          0%, 100% {
+            filter: brightness(1) drop-shadow(0 0 2px currentColor);
+          }
+          50% {
+            filter: brightness(1.15) drop-shadow(0 0 4px currentColor);
+          }
         }
 
         @keyframes particleFloat {
