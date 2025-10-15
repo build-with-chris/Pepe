@@ -26,6 +26,7 @@ export default function FloatingDisciplines({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showName, setShowName] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [animationPosition, setAnimationPosition] = useState(100) // Start at 100 (fully formed)
 
   // Auto-loop through disciplines
   useEffect(() => {
@@ -51,6 +52,39 @@ export default function FloatingDisciplines({
     return () => clearTimeout(timer)
   }, [currentIndex])
 
+  // Animate active icon from 90% to 100% only
+  useEffect(() => {
+    let animationFrame: number
+    const startTime = performance.now()
+    const duration = 5000 // 5 seconds total
+    const animationStart = 0.9 // Start animation at 90% of timeline
+    const animationEnd = 1.0 // End at 100%
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1) // 0 to 1 over 5 seconds
+
+      if (progress < animationStart) {
+        // Before 90%: stay at 100 (fully formed, no movement)
+        setAnimationPosition(100)
+      } else {
+        // Between 90-100%: animate from 90 to 100
+        const animProgress = (progress - animationStart) / (animationEnd - animationStart)
+        const position = 90 + (animProgress * 10) // 90 to 100
+        setAnimationPosition(position)
+      }
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate)
+      }
+    }
+
+    animationFrame = requestAnimationFrame(animate)
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame)
+    }
+  }, [currentIndex, isPaused])
+
   if (filteredDisciplines.length === 0) return null
 
   const currentDiscipline = filteredDisciplines[currentIndex]
@@ -70,7 +104,7 @@ export default function FloatingDisciplines({
             disciplineId={iconKey}
             size={300}
             color="var(--pepe-gold)"
-            manualAnimationPosition={50}
+            manualAnimationPosition={animationPosition}
           />
         </div>
 
@@ -107,8 +141,9 @@ export default function FloatingDisciplines({
           display: flex;
           justify-content: center;
           align-items: center;
-          min-height: 350px;
-          margin-bottom: var(--space-6);
+          width: 300px;
+          height: 300px;
+          margin: 0 auto var(--space-6);
         }
 
         .floating-discipline-label {
