@@ -325,10 +325,10 @@ export default function Home() {
                   size={133}
                   color="var(--pepe-gold)"
                   aspectRatio={3}
-                  density={0.9}
+                  density={0.25}
                   sampleGap={2}
-                  minDotSize={0.5}
-                  maxDotSize={5.0}
+                  minDotSize={0.2}
+                  maxDotSize={3.0}
                 />
               </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>

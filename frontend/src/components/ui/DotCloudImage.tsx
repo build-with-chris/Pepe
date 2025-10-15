@@ -252,10 +252,13 @@ export default function DotCloudImage({
           ? `0 0 ${glowSize}px rgba(255, 215, 0, ${glowOpacity})`
           : 'none';
 
+        // Only 5% of particles get the glow animation
+        const shouldGlow = Math.random() < 0.05;
+
         return (
           <span
             key={`${disciplineId}-${index}`}
-            className={`dot-particle ${formProgress > 0.95 ? 'no-float' : ''}`}
+            className={`dot-particle ${formProgress > 0.95 ? (shouldGlow ? 'no-float glow-particle' : 'no-float') : ''}`}
             style={{
               left: `${displayX}px`,
               top: `${displayY}px`,
@@ -309,6 +312,10 @@ export default function DotCloudImage({
         }
 
         .dot-particle.no-float {
+          animation: none !important;
+        }
+
+        .dot-particle.glow-particle {
           animation: glowPulse 3s ease-in-out infinite !important;
         }
 
@@ -317,7 +324,7 @@ export default function DotCloudImage({
             filter: brightness(1) drop-shadow(0 0 2px currentColor);
           }
           50% {
-            filter: brightness(1.15) drop-shadow(0 0 4px currentColor);
+            filter: brightness(1.2) drop-shadow(0 0 5px currentColor);
           }
         }
 
