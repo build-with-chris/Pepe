@@ -23,6 +23,8 @@ export default function Home() {
   const [isStackPaused, setIsStackPaused] = useState(false)
   const [randomIcon1, setRandomIcon1] = useState('cyrwheel')
   const [autoAnimPosition, setAutoAnimPosition] = useState(0)
+  const [worldIconPosition, setWorldIconPosition] = useState(100) // 100 = fully formed, 0 = dispersed
+  const [worldIconClicked, setWorldIconClicked] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -303,13 +305,44 @@ export default function Home() {
       <section className="hero-full">
         {/* Background Hero Image */}
         <div className="hero-background">
-          <img 
-            src={heroImage} 
-            alt="Pepe Shows Hero" 
+          <img
+            src={heroImage}
+            alt="Pepe Shows Hero"
             className="hero-image"
           />
           <div className="hero-overlay"></div>
           <Buhnenzauber />
+
+          {/* World Icon - Centered Background - 100px, no glow */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 1,
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+            }}
+            onMouseEnter={() => !worldIconClicked && setWorldIconPosition(0)}
+            onMouseLeave={() => !worldIconClicked && setWorldIconPosition(100)}
+            onClick={() => {
+              setWorldIconClicked(!worldIconClicked)
+              setWorldIconPosition(worldIconClicked ? 100 : 0)
+            }}
+          >
+            <DotCloudImage
+              disciplineId="world"
+              size={100}
+              color="#FFFFFF"
+              manualAnimationPosition={worldIconPosition}
+              density={0.3}
+              sampleGap={1}
+              minDotSize={0.5}
+              maxDotSize={2.0}
+              noGlow={true}
+            />
+          </div>
         </div>
         
         {/* Hero Content - Positioned Lower */}
