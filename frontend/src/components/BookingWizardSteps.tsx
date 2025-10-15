@@ -46,7 +46,7 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
               size={150}
               density={0.15}
               color="var(--pepe-gold)"
-              sampleGap={4}
+              sampleGap={2}
               minDotSize={1.5}
               maxDotSize={4.0}
               manualAnimationPosition={100}
