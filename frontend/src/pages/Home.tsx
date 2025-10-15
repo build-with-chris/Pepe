@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Buhnenzauber from '../components/Buhnenzauber'
 import DotCloudImage from '../components/ui/DotCloudImage'
+import FloatingDisciplines from '../components/FloatingDisciplines'
 import heroImage from '../assets/PepeHero.webp'
 
 interface Artist {
@@ -568,67 +569,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Excellence Section with Animated Disciplines */}
+      {/* Excellence Section with Floating Disciplines */}
       <section className="section">
         <div className="stage-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
-            <div>
-              <h2 className="display-2 mb-6">{t('home.excellence.heading')}</h2>
-              <p className="body-lg mb-6">{t('home.excellence.copy')}</p>
-              <p className="body text-pepe-t64 mb-0">{t('home.excellence.note')}</p>
-            </div>
-            <div 
-              className="discipline-card-stack"
-              onMouseEnter={handleStackMouseEnter}
-              onMouseLeave={handleStackMouseLeave}
-            >
-              {disciplines.map((discipline, index) => (
-                <div 
-                  key={discipline.id} 
-                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
-                  style={{ '--index': index } as React.CSSProperties}
-                  onMouseEnter={() => handleDisciplineClick(index)}
-                >
-                  {/* Text-only display for closed cards */}
-                  <div className="discipline-text-only">
-                    {discipline.name}
-                  </div>
-                  
-                  {/* DotIcon only - no background image */}
-                  <div className="discipline-image-container">
-                    {index === expandedDiscipline && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        pointerEvents: 'none'
-                      }}>
-                        <DotCloudImage
-                          disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
-                          size={300}
-                          color="var(--pepe-gold)"
-                          manualAnimationPosition={autoAnimPosition}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Enhanced Overlay content for active card */}
-                  <div className="discipline-overlay">
-                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
-                    <p className="discipline-description text-white/90 mb-6">
-                      {discipline.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="text-center mb-16">
+            <h2 className="display-2 mb-6">{t('home.excellence.heading')}</h2>
+            <p className="body-lg max-w-3xl mx-auto mb-6">{t('home.excellence.copy')}</p>
+            <p className="body text-pepe-t64">{t('home.excellence.note')}</p>
           </div>
+
+          <FloatingDisciplines
+            disciplines={disciplines}
+            disciplineToIcon={disciplineToIcon}
+            expandedDiscipline={expandedDiscipline}
+            autoAnimPosition={autoAnimPosition}
+            onDisciplineClick={handleDisciplineClick}
+            onMouseEnter={handleStackMouseEnter}
+            onMouseLeave={handleStackMouseLeave}
+          />
 
           {/* Client Logos */}
           <div className="text-center mb-10">
