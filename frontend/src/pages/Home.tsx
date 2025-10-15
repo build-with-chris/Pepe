@@ -319,8 +319,8 @@ export default function Home() {
           <div className="stage-container">
             <div className="hero-content">
               {/* DotIcon Logo with scroll animation - 60vw width (600px on 1000px screen) */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
-                <div style={{ width: '60vw', maxWidth: '800px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 'var(--space-8)' }}>
+                <div style={{ width: '60vw', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
                   <DotCloudImage
                     disciplineId="logo"
                     size={200}

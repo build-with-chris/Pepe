@@ -107,33 +107,27 @@ export default function DotCloudImage({
       const rect = container.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
-      // NEW BEHAVIOR: 100% when fully in viewport at top, dissolves as scrolled
+      // Dissolve very soon after scrolling starts
       const isInViewport = rect.top < windowHeight && rect.bottom > 0;
 
       let progress = 0;
 
       if (isInViewport) {
-        // Calculate visibility ratio
-        const visibleTop = Math.max(0, rect.top);
-        const visibleBottom = Math.min(windowHeight, rect.bottom);
-        const visibleHeight = visibleBottom - visibleTop;
-        const elementHeight = rect.height;
-        const visibilityRatio = visibleHeight / elementHeight;
-
-        // Also consider scroll position: dissolve as element moves up (scrolled down)
-        // When element is at top of viewport (rect.top = 0), start dissolving
-        // When element is centered or below (rect.top > windowHeight * 0.3), stay formed
+        // Calculate how far from initial position (bottom of viewport)
+        // When at bottom/center of viewport (rect.top > windowHeight * 0.5) = 100%
+        // As soon as scrolling up starts (rect.top decreases) = start dissolving
         const topPosition = rect.top / windowHeight;
-        const positionFactor = topPosition < 0.3 ? 1.0 : Math.max(0, 1 - Math.abs(topPosition - 0.3) / 0.5);
 
-        // Combine visibility and position
-        const rawProgress = Math.min(visibilityRatio, positionFactor);
-
-        if (rawProgress >= 0.8) {
-          progress = 1.0; // Fully formed when well positioned
-        } else {
-          progress = rawProgress / 0.8; // Dissolve
+        if (topPosition >= 0.5) {
+          // Still in lower half of viewport - fully formed
+          progress = 1.0;
+        } else if (topPosition >= 0.2) {
+          // Between 20-50% from top - dissolve quickly
+          progress = (topPosition - 0.2) / 0.3; // Maps 0.2-0.5 to 0-1
           progress = progress * progress * (3 - 2 * progress); // smoothstep
+        } else {
+          // Top 20% of viewport or above - fully dissolved
+          progress = 0;
         }
       } else {
         progress = 0; // Out of viewport
