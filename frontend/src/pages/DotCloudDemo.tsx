@@ -16,6 +16,7 @@ const iconMap: Record<string, string> = {
   'Partnerakrobatik': 'partnerakrobatik',
   'Luftakrobatik': 'luftakrobatik',
   'Chinese Pole': 'pole',
+  'Verantwortung': 'world',
 };
 
 // Get available disciplines (ones with icons)
