@@ -460,21 +460,26 @@ export default function Home() {
                 setResponsibilityWorldPosition(responsibilityWorldClicked ? 100 : 0)
               }}
             >
-              {/* World Icon Background - 100px, centered, 50% opacity */}
+              {/* World Icon Background - 100% container width, centered, 50% opacity */}
               <div
                 style={{
                   position: 'absolute',
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
+                  width: '100%',
+                  height: '100%',
                   zIndex: 0,
                   opacity: 0.5,
                   pointerEvents: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 <DotCloudImage
                   disciplineId="world"
-                  size={100}
+                  size={300}
                   color="#FFFFFF"
                   manualAnimationPosition={responsibilityWorldPosition}
                   density={0.3}
