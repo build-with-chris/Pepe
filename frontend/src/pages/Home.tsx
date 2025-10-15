@@ -211,6 +211,23 @@ export default function Home() {
   }
 
   useEffect(() => {
+    // Use hardcoded disciplines with all icons
+    const hardcodedDisciplines = [
+      { id: '1', name: 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Spektakuläre Akrobatik im Riesenrad', artistCount: 5 },
+      { id: '2', name: 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Meisterhafte Objekt-Manipulation', artistCount: 8 },
+      { id: '3', name: 'Zauberer', image: '/images/disciplines/Zauberer.webp', description: 'Magische Illusionen', artistCount: 6 },
+      { id: '4', name: 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Urbane Tanzkunst', artistCount: 4 },
+      { id: '5', name: 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft und Balance', artistCount: 7 },
+      { id: '6', name: 'Pantomime', image: '/images/disciplines/Pantomime.webp', description: 'Stumme Komödie', artistCount: 3 },
+      { id: '7', name: 'Contemporary Dance', image: '/images/disciplines/Contemporary_Dance.webp', description: 'Moderne Choreografie', artistCount: 5 },
+      { id: '8', name: 'Partnerakrobatik', image: '/images/disciplines/Partnerakrobatik.webp', description: 'Synchrone Bewegungen', artistCount: 6 },
+      { id: '9', name: 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Artistik in der Luft', artistCount: 9 },
+      { id: '10', name: 'Chinese Pole', image: '/images/disciplines/Chinese_Pole.webp', description: 'Vertikale Akrobatik', artistCount: 4 },
+      { id: '11', name: 'Verantwortung', image: '/images/disciplines/World.webp', description: 'Nachhaltigkeit und soziale Verantwortung', artistCount: 0 },
+    ]
+
+    setDisciplines(hardcodedDisciplines)
+
     const fetchArtists = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
@@ -222,25 +239,12 @@ export default function Home() {
           },
           signal: AbortSignal.timeout(10000)
         })
-        
+
         if (response.ok) {
           const data = await response.json()
           // Shuffle artists randomly and take only 4
           const shuffled = data.sort(() => 0.5 - Math.random())
           setArtists(shuffled.slice(0, 4))
-          
-          // Create disciplines from all artists data
-          const dynamicDisciplines = createDisciplinesFromArtists(data)
-          setDisciplines(dynamicDisciplines.length > 0 ? dynamicDisciplines : [
-            // Fallback disciplines if database is empty
-            {
-              id: 'zauberer',
-              name: t('artists.disciplines.zauberer') || 'Zauberei',
-              image: '/images/disciplines/Zauberer.webp',
-              description: 'Magische Momente und Illusionen für jedes Publikum.',
-              artistCount: 0
-            }
-          ])
         } else {
           console.error('Failed to fetch artists, status:', response.status)
         }
