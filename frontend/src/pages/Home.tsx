@@ -318,18 +318,20 @@ export default function Home() {
         <div className="hero-content-wrapper">
           <div className="stage-container">
             <div className="hero-content">
-              {/* DotIcon Logo with scroll animation - 400px wide (133px height × 3 aspect ratio) */}
+              {/* DotIcon Logo with scroll animation - 60vw width (600px on 1000px screen) */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
-                <DotCloudImage
-                  disciplineId="logo"
-                  size={133}
-                  color="var(--pepe-gold)"
-                  aspectRatio={3}
-                  density={0.25}
-                  sampleGap={2}
-                  minDotSize={0.2}
-                  maxDotSize={3.0}
-                />
+                <div style={{ width: '60vw', maxWidth: '800px' }}>
+                  <DotCloudImage
+                    disciplineId="logo"
+                    size={200}
+                    color="var(--pepe-gold)"
+                    aspectRatio={3}
+                    density={1.0}
+                    sampleGap={2}
+                    minDotSize={0.2}
+                    maxDotSize={3.0}
+                  />
+                </div>
               </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
               <h1 className="hero-title-elegant display-gradient mb-6">
