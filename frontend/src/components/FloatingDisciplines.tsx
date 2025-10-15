@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import DotCloudImage from './ui/DotCloudImage'
 
 interface Discipline {
@@ -11,137 +12,156 @@ interface Discipline {
 interface FloatingDisciplinesProps {
   disciplines: Discipline[]
   disciplineToIcon: Record<string, string>
-  expandedDiscipline: number
-  autoAnimPosition: number
-  onDisciplineClick: (index: number) => void
-  onMouseEnter: () => void
-  onMouseLeave: () => void
 }
 
 export default function FloatingDisciplines({
   disciplines,
   disciplineToIcon,
-  expandedDiscipline,
-  autoAnimPosition,
-  onDisciplineClick,
-  onMouseEnter,
-  onMouseLeave,
 }: FloatingDisciplinesProps) {
   // Filter to only disciplines with icons (excluding 'logo')
   const filteredDisciplines = disciplines.filter(
     d => disciplineToIcon[d.name.toLowerCase()] && disciplineToIcon[d.name.toLowerCase()] !== 'logo'
   )
 
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [showName, setShowName] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+
+  // Auto-loop through disciplines
+  useEffect(() => {
+    if (isPaused || filteredDisciplines.length === 0) return
+
+    const interval = setInterval(() => {
+      setShowName(false) // Hide name before transition
+
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % filteredDisciplines.length)
+      }, 400) // Wait for fade out
+    }, 5000) // Change discipline every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [isPaused, filteredDisciplines.length])
+
+  // Show name with delay after icon starts loading
+  useEffect(() => {
+    setShowName(false)
+    const timer = setTimeout(() => {
+      setShowName(true)
+    }, 600) // Delay for icon to start appearing
+    return () => clearTimeout(timer)
+  }, [currentIndex])
+
+  if (filteredDisciplines.length === 0) return null
+
+  const currentDiscipline = filteredDisciplines[currentIndex]
+  const iconKey = disciplineToIcon[currentDiscipline.name.toLowerCase()]
+
   return (
     <>
       <div
-        className="floating-disciplines"
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
+        className="floating-disciplines-single"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
-        {filteredDisciplines.map((discipline, index) => (
-          <div
-            key={discipline.id}
-            className={`floating-discipline-item ${index === expandedDiscipline ? 'expanded' : ''}`}
-            onMouseEnter={() => onDisciplineClick(index)}
-            onClick={() => onDisciplineClick(index)}
-          >
-            <div className="floating-discipline-content">
-              {/* Discipline Name - Always Visible */}
-              <h3 className="floating-discipline-name">{discipline.name}</h3>
+        {/* Single DotIcon - Only ONE loads at a time */}
+        <div className="floating-icon-container">
+          <DotCloudImage
+            key={`${iconKey}-${currentIndex}`}
+            disciplineId={iconKey}
+            size={300}
+            color="var(--pepe-gold)"
+            manualAnimationPosition={50}
+          />
+        </div>
 
-              {/* DotIcon - 300px wide */}
-              <div className="floating-discipline-icon">
-                <DotCloudImage
-                  disciplineId={disciplineToIcon[discipline.name.toLowerCase()]}
-                  size={300}
-                  color="var(--pepe-gold)"
-                  manualAnimationPosition={index === expandedDiscipline ? autoAnimPosition : 0}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+        {/* Discipline Name - Fades up from bottom */}
+        <h3 className={`floating-discipline-label ${showName ? 'visible' : ''}`}>
+          {currentDiscipline.name}
+        </h3>
+
+        {/* Progress dots */}
+        <div className="discipline-dots">
+          {filteredDisciplines.map((_, index) => (
+            <button
+              key={index}
+              className={`discipline-dot ${index === currentIndex ? 'active' : ''}`}
+              onClick={() => {
+                setShowName(false)
+                setTimeout(() => setCurrentIndex(index), 300)
+              }}
+              aria-label={`Go to ${filteredDisciplines[index].name}`}
+            />
+          ))}
+        </div>
       </div>
 
       <style>{`
-        .floating-disciplines {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-4);
-          max-width: 900px;
+        .floating-disciplines-single {
+          max-width: 600px;
           margin: 0 auto;
+          padding: var(--space-12) 0;
+          position: relative;
         }
 
-        .floating-discipline-item {
-          cursor: pointer;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .floating-discipline-content {
-          display: flex;
-          align-items: center;
-          gap: var(--space-8);
-          padding: var(--space-6) 0;
-        }
-
-        .floating-discipline-name {
-          font-size: var(--text-2xl);
-          font-weight: 500;
-          color: var(--pepe-t80);
-          min-width: 220px;
-          transition: all 0.4s ease;
-        }
-
-        .floating-discipline-item.expanded .floating-discipline-name {
-          color: var(--pepe-gold);
-          font-size: var(--text-3xl);
-          font-weight: 600;
-        }
-
-        .floating-discipline-icon {
-          flex: 1;
+        .floating-icon-container {
           display: flex;
           justify-content: center;
-          min-height: 200px;
-          transition: all 0.4s ease;
+          align-items: center;
+          min-height: 350px;
+          margin-bottom: var(--space-6);
         }
 
-        .floating-discipline-item:not(.expanded) .floating-discipline-icon {
-          opacity: 0.3;
-          transform: scale(0.8);
-        }
-
-        .floating-discipline-item.expanded .floating-discipline-icon {
-          opacity: 1;
-          transform: scale(1);
-        }
-
-        /* Hover states */
-        .floating-discipline-item:hover:not(.expanded) .floating-discipline-name {
+        .floating-discipline-label {
+          text-align: center;
+          font-size: var(--text-4xl);
+          font-weight: 600;
           color: var(--pepe-gold);
-          transform: translateX(8px);
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        .floating-discipline-item:hover:not(.expanded) .floating-discipline-icon {
-          opacity: 0.5;
-          transform: scale(0.85);
+        .floating-discipline-label.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .discipline-dots {
+          display: flex;
+          justify-content: center;
+          gap: var(--space-2);
+          margin-top: var(--space-8);
+        }
+
+        .discipline-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: var(--pepe-t40);
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .discipline-dot:hover {
+          background: var(--pepe-t60);
+          transform: scale(1.2);
+        }
+
+        .discipline-dot.active {
+          background: var(--pepe-gold);
+          width: 30px;
+          border-radius: 5px;
         }
 
         @media (max-width: 768px) {
-          .floating-discipline-content {
-            flex-direction: column;
-            text-align: center;
-            gap: var(--space-4);
-          }
-
-          .floating-discipline-name {
-            min-width: unset;
-            font-size: var(--text-xl);
-          }
-
-          .floating-discipline-item.expanded .floating-discipline-name {
+          .floating-discipline-label {
             font-size: var(--text-2xl);
+          }
+
+          .floating-icon-container {
+            min-height: 250px;
           }
         }
       `}</style>

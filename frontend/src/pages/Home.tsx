@@ -478,14 +478,6 @@ export default function Home() {
       <section className="section">
         <div className="stage-container">
           <div className="section-header text-center mb-16">
-            {/* Random shuffling DotIcon */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
-              <DotCloudImage
-                disciplineId={randomIcon1}
-                size={300}
-                color="var(--pepe-gold)"
-              />
-            </div>
             <h2 className="h1 mb-6">{t('home.findArtistTitle')}</h2>
             <p className="body-lg max-w-3xl mx-auto mb-8">
               {t('home.findArtistSubtitle')}
@@ -581,11 +573,6 @@ export default function Home() {
           <FloatingDisciplines
             disciplines={disciplines}
             disciplineToIcon={disciplineToIcon}
-            expandedDiscipline={expandedDiscipline}
-            autoAnimPosition={autoAnimPosition}
-            onDisciplineClick={handleDisciplineClick}
-            onMouseEnter={handleStackMouseEnter}
-            onMouseLeave={handleStackMouseLeave}
           />
 
           {/* Client Logos */}

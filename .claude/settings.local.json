@@ -5,7 +5,8 @@
       "Bash(git add:*)",
       "Bash(git branch:*)",
       "Bash(python -m flask db revision:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMerge shuffle appearances - single auto-looping accordion\n\nChanges:\n- Removed upper random shuffle appearance\n- Single centered accordion shows ONE icon at a time\n- Auto-loops through disciplines every 5 seconds\n- Discipline name fades up from bottom with 600ms delay\n- Pause on hover\n- Interactive progress dots for navigation\n- Key prop ensures only one DotIcon loads at a time\n- Clean, focused design\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
