@@ -104,36 +104,28 @@ export default function DotCloudImage({
       const rect = container.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
-      // Calculate progress: 0 when out of view, 1 when centered in viewport
-      const containerCenter = rect.top + rect.height / 2;
-      const viewportCenter = windowHeight / 2;
+      // NEW BEHAVIOR: 100% when in viewport, 0% when out of viewport
+      // Element is "in viewport" when any part is visible
+      const isInViewport = rect.top < windowHeight && rect.bottom > 0;
 
-      // Distance from center
-      const distance = Math.abs(containerCenter - viewportCenter);
+      let progress = 0;
 
-      // MAXIMUM trigger range: Start forming from entire viewport (100vh away)
-      const maxDistance = windowHeight * 1.0;
+      if (isInViewport) {
+        // Element is visible - start at 100% and dissolve as it scrolls out
+        // Calculate how much of the element is in the viewport
+        const visibleTop = Math.max(0, rect.top);
+        const visibleBottom = Math.min(windowHeight, rect.bottom);
+        const visibleHeight = visibleBottom - visibleTop;
+        const elementHeight = rect.height;
 
-      // Raw progress: 1 at center, 0 at far edges
-      const rawProgress = Math.max(0, Math.min(1, 1 - distance / maxDistance));
+        // Progress is 1.0 when fully in viewport, 0 when completely out
+        progress = Math.max(0, Math.min(1, visibleHeight / elementHeight));
 
-      // Apply easing curve with plateau at perfect alignment
-      // Reaches 1.0 exactly when centered, with plateau zone for stability
-      let progress = rawProgress;
-
-      if (rawProgress >= 0.9) {
-        // Plateau zone: reach 1.0 at exact center with wide plateau
-        // Maps 0.9-1.0 to 0.95-1.0 with ease-out curve
-        const plateauProgress = (rawProgress - 0.9) / 0.1;
-        progress = 0.95 + (plateauProgress * plateauProgress) * 0.05;
-      } else if (rawProgress >= 0.3) {
-        // Middle zone: ease-in-out for smooth transition
-        const t = (rawProgress - 0.3) / 0.6;
-        progress = 0.3 + (t * t * (3 - 2 * t)) * 0.65;
+        // Ease the transition for smoother dissolve
+        progress = progress * progress * (3 - 2 * progress); // smoothstep
       } else {
-        // Start zone: ease-in for gradual beginning
-        const t = rawProgress / 0.3;
-        progress = (t * t) * 0.3;
+        // Completely out of viewport
+        progress = 0;
       }
 
       setScrollProgress(progress);
@@ -248,7 +240,7 @@ export default function DotCloudImage({
         return (
           <span
             key={`${disciplineId}-${index}`}
-            className="dot-particle"
+            className={`dot-particle ${formProgress > 0.95 ? 'no-float' : ''}`}
             style={{
               left: `${displayX}px`,
               top: `${displayY}px`,
@@ -297,6 +289,10 @@ export default function DotCloudImage({
                       transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
           will-change: transform;
           animation: particleFloat 8s ease-in-out infinite;
+        }
+
+        .dot-particle.no-float {
+          animation: none !important;
         }
 
         @keyframes particleFloat {
