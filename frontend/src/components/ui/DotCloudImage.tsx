@@ -8,7 +8,7 @@ export interface DotCloudImageProps {
   size?: number;
   /** Particle color (default: uses --pepe-gold) */
   color?: string;
-  /** Density multiplier (default: 1.0, range: 0.1-2.0) */
+  /** Density multiplier (default: 0.3, range: 0.1-2.0) */
   density?: number;
   /** Additional CSS classes */
   className?: string;
@@ -16,11 +16,11 @@ export interface DotCloudImageProps {
   aspectRatio?: number;
   /** Manual animation position override (0-100, disables scroll) */
   manualAnimationPosition?: number;
-  /** Sample gap (1-250, default: 3) */
+  /** Sample gap (1-250, default: 1) */
   sampleGap?: number;
   /** Minimum dot size (default: 0.5) */
   minDotSize?: number;
-  /** Maximum dot size (default: 5.0) */
+  /** Maximum dot size (default: 6.0) */
   maxDotSize?: number;
 }
 
@@ -34,13 +34,13 @@ export default function DotCloudImage({
   disciplineId,
   size = 400,
   color = 'var(--pepe-gold)',
-  density = 1.0,
+  density = 0.3,
   className = '',
   aspectRatio = 1,
   manualAnimationPosition,
-  sampleGap = 3,
+  sampleGap = 1,
   minDotSize = 0.5,
-  maxDotSize = 5.0,
+  maxDotSize = 6.0,
 }: DotCloudImageProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -234,11 +234,8 @@ export default function DotCloudImage({
         const formedScale = 1.0 * contrastBoost; // Consistent size when formed, boosted by darkness
         const currentScale = idleScale + (formedScale - idleScale) * formProgress;
 
-        // Enhanced opacity: much lower when dispersed, very clear at perfect alignment
-        // At perfect alignment (formProgress = 1), opacity reaches 1.0 for maximum clarity
-        const baseOpacity = 0.1 + formProgress * 0.7; // 0.1 -> 0.8
-        const alignmentBoost = formProgress > 0.85 ? (formProgress - 0.85) * 1.33 : 0; // 0 -> 0.2
-        const opacity = Math.min(1.0, baseOpacity + alignmentBoost);
+        // NO TRANSPARENCY - solid opacity for performance
+        const opacity = 1.0;
 
         return (
           <span
@@ -251,7 +248,6 @@ export default function DotCloudImage({
               height: `${particle.size}px`,
               background: color,
               transform: `scale(${currentScale})`,
-              opacity: opacity,
               animationDelay: `${particle.floatDelay}ms`,
               animationDuration: `${6 + particle.floatSpeed * 4}s`,
               '--drift-x': `${20 * (1 - formProgress)}px`,
@@ -260,6 +256,23 @@ export default function DotCloudImage({
           />
         );
       })}
+
+      {/* Single global glow behind center - very blurry */}
+      <div
+        className="dot-glow"
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: '80%',
+          height: '80%',
+          transform: 'translate(-50%, -50%)',
+          background: `radial-gradient(circle, ${color}40 0%, transparent 70%)`,
+          filter: 'blur(60px)',
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
+      />
 
 
       <style>{`
@@ -270,12 +283,10 @@ export default function DotCloudImage({
         .dot-particle {
           position: absolute;
           border-radius: 50%;
-          box-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
           transition: left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
                       top 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-                      transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-                      opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-          will-change: left, top, transform, opacity;
+                      transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+          will-change: transform;
           animation: particleFloat 8s ease-in-out infinite;
         }
 

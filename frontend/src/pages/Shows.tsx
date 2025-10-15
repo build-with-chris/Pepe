@@ -112,11 +112,7 @@ export default function Shows() {
               <DotCloudImage
                 disciplineId={randomIcon}
                 size={300}
-                density={0.7}
                 color="#FFFFFF"
-                sampleGap={1}
-                minDotSize={1.9}
-                maxDotSize={3.6}
                 manualAnimationPosition={autoAnimPosition}
               />
             </div>

@@ -315,12 +315,8 @@ export default function Home() {
                 <DotCloudImage
                   disciplineId="logo"
                   size={300}
-                  density={0.7}
                   color="#FFFFFF"
                   aspectRatio={3}
-                  sampleGap={1}
-                  minDotSize={1.9}
-                  maxDotSize={3.6}
                 />
               </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
@@ -486,11 +482,7 @@ export default function Home() {
               <DotCloudImage
                 disciplineId={randomIcon1}
                 size={300}
-                density={0.7}
                 color="var(--pepe-gold)"
-                sampleGap={1}
-                minDotSize={1.9}
-                maxDotSize={3.6}
               />
             </div>
             <h2 className="h1 mb-6">{t('home.findArtistTitle')}</h2>
@@ -619,11 +611,7 @@ export default function Home() {
                         <DotCloudImage
                           disciplineId={disciplineToIcon[discipline.name.toLowerCase()] || 'logo'}
                           size={300}
-                          density={0.7}
                           color="var(--pepe-gold)"
-                          sampleGap={1}
-                          minDotSize={1.9}
-                          maxDotSize={3.6}
                           manualAnimationPosition={autoAnimPosition}
                         />
                       </div>
