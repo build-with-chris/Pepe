@@ -482,10 +482,10 @@ export default function Home() {
                   size={300}
                   color="#FFFFFF"
                   manualAnimationPosition={responsibilityWorldPosition}
-                  density={0.3}
-                  sampleGap={1}
-                  minDotSize={0.5}
-                  maxDotSize={2.0}
+                  density={0.15}
+                  sampleGap={2}
+                  minDotSize={1.0}
+                  maxDotSize={4.0}
                   noGlow={true}
                 />
               </div>
