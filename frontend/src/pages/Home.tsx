@@ -484,7 +484,6 @@ export default function Home() {
             {/* Random shuffling DotIcon */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
               <DotCloudImage
-                key={randomIcon1}
                 disciplineId={randomIcon1}
                 size={300}
                 density={0.7}
