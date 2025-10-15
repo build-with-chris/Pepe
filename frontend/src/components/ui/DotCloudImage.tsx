@@ -237,6 +237,14 @@ export default function DotCloudImage({
         // NO TRANSPARENCY - solid opacity for performance
         const opacity = 1.0;
 
+        // Particle glow: strong at 100%, off at 50% (0-0.5 = no glow, 0.5-1.0 = increasing glow)
+        const glowIntensity = formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0; // 0 to 1
+        const glowSize = 8 * glowIntensity; // 0 to 8px
+        const glowOpacity = 0.6 * glowIntensity; // 0 to 0.6
+        const boxShadow = glowSize > 0
+          ? `0 0 ${glowSize}px rgba(255, 215, 0, ${glowOpacity})`
+          : 'none';
+
         return (
           <span
             key={`${disciplineId}-${index}`}
@@ -248,6 +256,7 @@ export default function DotCloudImage({
               height: `${particle.size}px`,
               background: color,
               transform: `scale(${currentScale})`,
+              boxShadow: boxShadow,
               animationDelay: `${particle.floatDelay}ms`,
               animationDuration: `${6 + particle.floatSpeed * 4}s`,
               '--drift-x': `${20 * (1 - formProgress)}px`,

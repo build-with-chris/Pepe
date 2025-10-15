@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import DotCloudImage from './ui/DotCloudImage'
 
 interface Discipline {
@@ -27,8 +27,10 @@ export default function FloatingDisciplines({
   const [showName, setShowName] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [animationPosition, setAnimationPosition] = useState(100) // Start at 100 (fully formed)
+  const touchStartX = useRef<number>(0)
+  const touchEndX = useRef<number>(0)
 
-  // Auto-loop through disciplines
+  // Auto-loop through disciplines (2.5 seconds)
   useEffect(() => {
     if (isPaused || filteredDisciplines.length === 0) return
 
@@ -38,10 +40,37 @@ export default function FloatingDisciplines({
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % filteredDisciplines.length)
       }, 400) // Wait for fade out
-    }, 5000) // Change discipline every 5 seconds
+    }, 2500) // Change discipline every 2.5 seconds
 
     return () => clearInterval(interval)
   }, [isPaused, filteredDisciplines.length])
+
+  // Swipe gesture handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current - touchEndX.current > 50) {
+      // Swipe left - next
+      setShowName(false)
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % filteredDisciplines.length)
+      }, 300)
+    }
+
+    if (touchEndX.current - touchStartX.current > 50) {
+      // Swipe right - previous
+      setShowName(false)
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev - 1 + filteredDisciplines.length) % filteredDisciplines.length)
+      }, 300)
+    }
+  }
 
   // Show name with delay after icon starts loading
   useEffect(() => {
@@ -52,17 +81,17 @@ export default function FloatingDisciplines({
     return () => clearTimeout(timer)
   }, [currentIndex])
 
-  // Animate active icon from 90% to 100% only
+  // Animate active icon from 90% to 100% only (adjusted for 2.5s)
   useEffect(() => {
     let animationFrame: number
     const startTime = performance.now()
-    const duration = 5000 // 5 seconds total
+    const duration = 2500 // 2.5 seconds total
     const animationStart = 0.9 // Start animation at 90% of timeline
     const animationEnd = 1.0 // End at 100%
 
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime
-      const progress = Math.min(elapsed / duration, 1) // 0 to 1 over 5 seconds
+      const progress = Math.min(elapsed / duration, 1) // 0 to 1 over 2.5 seconds
 
       if (progress < animationStart) {
         // Before 90%: stay at 100 (fully formed, no movement)
@@ -96,6 +125,9 @@ export default function FloatingDisciplines({
         className="floating-disciplines-single"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Single DotIcon - Only ONE loads at a time */}
         <div className="floating-icon-container">
@@ -103,7 +135,7 @@ export default function FloatingDisciplines({
             key={`${iconKey}-${currentIndex}`}
             disciplineId={iconKey}
             size={300}
-            color="var(--pepe-gold)"
+            color={iconKey === 'world' ? '#FFFFFF' : 'var(--pepe-gold)'}
             manualAnimationPosition={animationPosition}
           />
         </div>

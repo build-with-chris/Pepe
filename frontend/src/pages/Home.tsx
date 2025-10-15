@@ -45,7 +45,8 @@ export default function Home() {
     'pantomime': 'pantomime',
     'partnerakrobatik': 'partnerakrobatik',
     'zauberer': 'magician',
-    'zauberei': 'magician'
+    'zauberei': 'magician',
+    'verantwortung': 'world'
   }
 
   // Shuffle random icons every 5 seconds
@@ -318,6 +319,10 @@ export default function Home() {
                   size={300}
                   color="#FFFFFF"
                   aspectRatio={3}
+                  density={0.7}
+                  sampleGap={2}
+                  minDotSize={2.2}
+                  maxDotSize={7.3}
                 />
               </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
