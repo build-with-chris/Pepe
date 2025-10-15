@@ -447,7 +447,17 @@ export default function Home() {
             <Link to="/team" className="bento-card-square bento-card-responsibility-square bento-clickable">
               <div className="bento-card-content">
                 <div className="responsibility-icon">
-                  <div className="circular-progress"></div>
+                  <DotCloudImage
+                    disciplineId="world"
+                    size={300}
+                    color="#FFFFFF"
+                    manualAnimationPosition={100}
+                    density={0.3}
+                    sampleGap={1}
+                    minDotSize={0.5}
+                    maxDotSize={6.0}
+                    noGlow={true}
+                  />
                 </div>
                 <h3 className="bento-title">{t('bento1.responsibility.title')}</h3>
                 <p className="bento-text">

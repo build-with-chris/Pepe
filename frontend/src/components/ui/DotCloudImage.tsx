@@ -22,6 +22,8 @@ export interface DotCloudImageProps {
   minDotSize?: number;
   /** Maximum dot size (default: 6.0) */
   maxDotSize?: number;
+  /** Disable all glow effects (default: false) */
+  noGlow?: boolean;
 }
 
 /**
@@ -41,6 +43,7 @@ export default function DotCloudImage({
   sampleGap = 1,
   minDotSize = 0.5,
   maxDotSize = 6.0,
+  noGlow = false,
 }: DotCloudImageProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -230,7 +233,8 @@ export default function DotCloudImage({
         const opacity = 1.0;
 
         // Particle glow: strong at 100%, off at 50% (0-0.5 = no glow, 0.5-1.0 = increasing glow)
-        const glowIntensity = formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0; // 0 to 1
+        // Disabled if noGlow prop is true
+        const glowIntensity = noGlow ? 0 : (formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0); // 0 to 1
         const glowSize = 8 * glowIntensity; // 0 to 8px
         const glowOpacity = 0.6 * glowIntensity; // 0 to 0.6
         const boxShadow = glowSize > 0
@@ -258,22 +262,24 @@ export default function DotCloudImage({
         );
       })}
 
-      {/* Single global glow behind center - very blurry */}
-      <div
-        className="dot-glow"
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          width: '80%',
-          height: '80%',
-          transform: 'translate(-50%, -50%)',
-          background: `radial-gradient(circle, ${color}40 0%, transparent 70%)`,
-          filter: 'blur(60px)',
-          pointerEvents: 'none',
-          zIndex: -1,
-        }}
-      />
+      {/* Single global glow behind center - very blurry (disabled if noGlow) */}
+      {!noGlow && (
+        <div
+          className="dot-glow"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: '80%',
+            height: '80%',
+            transform: 'translate(-50%, -50%)',
+            background: `radial-gradient(circle, ${color}40 0%, transparent 70%)`,
+            filter: 'blur(60px)',
+            pointerEvents: 'none',
+            zIndex: -1,
+          }}
+        />
+      )}
 
 
       <style>{`
