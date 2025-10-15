@@ -37,16 +37,22 @@ export default function DisciplinesCarousel() {
     const fetchDisciplines = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        console.log('Fetching disciplines from:', `${baseUrl}/api/disciplines`)
         const response = await fetch(`${baseUrl}/api/disciplines`)
 
         if (response.ok) {
           const data = await response.json()
+          console.log('Disciplines loaded:', data.length)
           setDisciplines(data)
         } else {
-          console.error('Failed to fetch disciplines')
+          console.error('Failed to fetch disciplines, status:', response.status)
+          // Load with fallback empty array to show component anyway
+          setDisciplines([])
         }
       } catch (error) {
         console.error('Error fetching disciplines:', error)
+        // Load with fallback empty array
+        setDisciplines([])
       } finally {
         setLoading(false)
       }
@@ -63,9 +69,31 @@ export default function DisciplinesCarousel() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0A0A0A'
+        background: '#0A0A0A',
+        color: '#FFD700'
       }}>
-        <div className="dot-cloud-loader" />
+        <div>Loading disciplines...</div>
+      </div>
+    )
+  }
+
+  if (disciplines.length === 0) {
+    return (
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        background: '#0A0A0A',
+        color: '#FFD700',
+        gap: '1rem'
+      }}>
+        <div>No disciplines found</div>
+        <div style={{ fontSize: '0.875rem', color: '#999' }}>
+          Check console for errors
+        </div>
       </div>
     )
   }
