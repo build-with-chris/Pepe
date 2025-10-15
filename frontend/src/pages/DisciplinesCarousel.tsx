@@ -9,19 +9,19 @@ interface Discipline {
 }
 
 export default function DisciplinesCarousel() {
-  // Hardcoded disciplines - API endpoint doesn't exist yet
+  // All disciplines including Verantwortung
   const disciplines: Discipline[] = [
-    { id: '1', name: 'Cyr Wheel', image: '', description: '', artistCount: 0 },
-    { id: '2', name: 'Jonglage', image: '', description: '', artistCount: 0 },
-    { id: '3', name: 'Zauberer', image: '', description: '', artistCount: 0 },
-    { id: '4', name: 'Breakdance', image: '', description: '', artistCount: 0 },
-    { id: '5', name: 'Handstand', image: '', description: '', artistCount: 0 },
-    { id: '6', name: 'Pantomime', image: '', description: '', artistCount: 0 },
-    { id: '7', name: 'Contemporary Dance', image: '', description: '', artistCount: 0 },
-    { id: '8', name: 'Partnerakrobatik', image: '', description: '', artistCount: 0 },
-    { id: '9', name: 'Luftakrobatik', image: '', description: '', artistCount: 0 },
-    { id: '10', name: 'Chinese Pole', image: '', description: '', artistCount: 0 },
-    { id: '11', name: 'Verantwortung', image: '', description: '', artistCount: 0 },
+    { id: '1', name: 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Spektakuläre Akrobatik im Riesenrad', artistCount: 5 },
+    { id: '2', name: 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Meisterhafte Objekt-Manipulation', artistCount: 8 },
+    { id: '3', name: 'Zauberer', image: '/images/disciplines/Zauberer.webp', description: 'Magische Illusionen', artistCount: 6 },
+    { id: '4', name: 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Urbane Tanzkunst', artistCount: 4 },
+    { id: '5', name: 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft und Balance', artistCount: 7 },
+    { id: '6', name: 'Pantomime', image: '/images/disciplines/Pantomime.webp', description: 'Stumme Komödie', artistCount: 3 },
+    { id: '7', name: 'Contemporary Dance', image: '/images/disciplines/Contemporary_Dance.webp', description: 'Moderne Choreografie', artistCount: 5 },
+    { id: '8', name: 'Partnerakrobatik', image: '/images/disciplines/Partnerakrobatik.webp', description: 'Synchrone Bewegungen', artistCount: 6 },
+    { id: '9', name: 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Artistik in der Luft', artistCount: 9 },
+    { id: '10', name: 'Chinese Pole', image: '/images/disciplines/Chinese_Pole.webp', description: 'Vertikale Akrobatik', artistCount: 4 },
+    { id: '11', name: 'Verantwortung', image: '/images/disciplines/World.webp', description: 'Nachhaltigkeit und soziale Verantwortung', artistCount: 0 },
   ]
 
   // Map discipline names to icon names for DotCloudImage
