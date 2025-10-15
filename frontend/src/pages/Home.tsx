@@ -25,6 +25,8 @@ export default function Home() {
   const [autoAnimPosition, setAutoAnimPosition] = useState(0)
   const [worldIconPosition, setWorldIconPosition] = useState(100) // 100 = fully formed, 0 = dispersed
   const [worldIconClicked, setWorldIconClicked] = useState(false)
+  const [responsibilityWorldPosition, setResponsibilityWorldPosition] = useState(100)
+  const [responsibilityWorldClicked, setResponsibilityWorldClicked] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -353,13 +355,13 @@ export default function Home() {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
                 <DotCloudImage
                   disciplineId="logo"
-                  size={300}
-                  color="#FFFFFF"
+                  size={400}
+                  color="var(--pepe-gold)"
                   aspectRatio={3}
-                  density={0.7}
+                  density={0.9}
                   sampleGap={2}
-                  minDotSize={2.2}
-                  maxDotSize={7.3}
+                  minDotSize={0.5}
+                  maxDotSize={5.0}
                 />
               </div>
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
@@ -477,21 +479,44 @@ export default function Home() {
             </Link>
 
             {/* Taking Responsibility Card - Square Format */}
-            <Link to="/team" className="bento-card-square bento-card-responsibility-square bento-clickable">
-              <div className="bento-card-content">
-                <div className="responsibility-icon">
-                  <DotCloudImage
-                    disciplineId="world"
-                    size={300}
-                    color="#FFFFFF"
-                    manualAnimationPosition={100}
-                    density={0.3}
-                    sampleGap={1}
-                    minDotSize={0.5}
-                    maxDotSize={6.0}
-                    noGlow={true}
-                  />
-                </div>
+            <Link
+              to="/team"
+              className="bento-card-square bento-card-responsibility-square bento-clickable"
+              style={{ position: 'relative', overflow: 'hidden' }}
+              onMouseEnter={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(0)}
+              onMouseLeave={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(100)}
+              onClick={(e) => {
+                e.preventDefault()
+                setResponsibilityWorldClicked(!responsibilityWorldClicked)
+                setResponsibilityWorldPosition(responsibilityWorldClicked ? 100 : 0)
+              }}
+            >
+              {/* World Icon Background - 100px, centered, 50% opacity */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 0,
+                  opacity: 0.5,
+                  pointerEvents: 'none',
+                }}
+              >
+                <DotCloudImage
+                  disciplineId="world"
+                  size={100}
+                  color="#FFFFFF"
+                  manualAnimationPosition={responsibilityWorldPosition}
+                  density={0.3}
+                  sampleGap={1}
+                  minDotSize={0.5}
+                  maxDotSize={2.0}
+                  noGlow={true}
+                />
+              </div>
+
+              <div className="bento-card-content" style={{ position: 'relative', zIndex: 1 }}>
                 <h3 className="bento-title">{t('bento1.responsibility.title')}</h3>
                 <p className="bento-text">
                   {t('bento1.responsibility.body1')}<br/>
