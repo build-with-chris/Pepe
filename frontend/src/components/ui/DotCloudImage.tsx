@@ -122,10 +122,16 @@ export default function DotCloudImage({
         const elementHeight = rect.height;
 
         // Progress is 1.0 when fully in viewport, 0 when completely out
-        progress = Math.max(0, Math.min(1, visibleHeight / elementHeight));
+        // If more than 80% of element is visible, consider it fully formed (100%)
+        const visibilityRatio = visibleHeight / elementHeight;
 
-        // Ease the transition for smoother dissolve
-        progress = progress * progress * (3 - 2 * progress); // smoothstep
+        if (visibilityRatio >= 0.8) {
+          progress = 1.0; // Fully formed when mostly visible
+        } else {
+          // Dissolve as it scrolls out
+          progress = visibilityRatio / 0.8; // 0 to 1 as it goes from 0% to 80% visible
+          progress = progress * progress * (3 - 2 * progress); // smoothstep
+        }
       } else {
         // Completely out of viewport
         progress = 0;
