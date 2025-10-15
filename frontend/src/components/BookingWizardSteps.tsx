@@ -43,12 +43,12 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
             <DotCloudImage
               disciplineId={iconName}
-              size={200}
-              density={0.7}
+              size={150}
+              density={0.15}
               color="var(--pepe-gold)"
-              sampleGap={1}
-              minDotSize={1.9}
-              maxDotSize={3.6}
+              sampleGap={4}
+              minDotSize={1.5}
+              maxDotSize={4.0}
               manualAnimationPosition={100}
               aspectRatio={iconName === 'logo' ? 3 : 1}
               noGlow={!selected}
