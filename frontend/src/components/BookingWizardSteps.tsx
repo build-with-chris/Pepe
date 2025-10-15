@@ -44,7 +44,7 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
             <DotCloudImage
               disciplineId={iconName}
               size={150}
-              density={0.15}
+              density={0.25}
               color="var(--pepe-gold)"
               sampleGap={2}
               minDotSize={1.5}
