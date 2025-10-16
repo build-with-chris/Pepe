@@ -113,20 +113,18 @@ export default function DotCloudImage({
       let progress = 0;
 
       if (isInViewport) {
-        // Calculate how far from initial position (bottom of viewport)
-        // When at bottom/center of viewport (rect.top > windowHeight * 0.5) = 100%
-        // As soon as scrolling up starts (rect.top decreases) = start dissolving
+        // Dissolve based on scroll: starts dissolving immediately when scrolling
         const topPosition = rect.top / windowHeight;
 
-        if (topPosition >= 0.5) {
-          // Still in lower half of viewport - fully formed
+        if (topPosition >= 0.6) {
+          // In lower 40% of viewport - fully formed
           progress = 1.0;
-        } else if (topPosition >= 0.2) {
-          // Between 20-50% from top - dissolve quickly
-          progress = (topPosition - 0.2) / 0.3; // Maps 0.2-0.5 to 0-1
+        } else if (topPosition >= 0.1) {
+          // Between 10-60% from top - dissolve progressively
+          progress = (topPosition - 0.1) / 0.5; // Maps 0.1-0.6 to 0-1
           progress = progress * progress * (3 - 2 * progress); // smoothstep
         } else {
-          // Top 20% of viewport or above - fully dissolved
+          // Top 10% or scrolled out - fully dissolved
           progress = 0;
         }
       } else {
