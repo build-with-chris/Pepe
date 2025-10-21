@@ -16,6 +16,7 @@ interface Artist {
 }
 
 export default function Home() {
+  console.log("[Home] Component rendering");
   const [artists, setArtists] = useState<Artist[]>([])
   const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [loading, setLoading] = useState(true)
