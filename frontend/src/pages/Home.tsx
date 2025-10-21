@@ -322,6 +322,7 @@ export default function Home() {
               {/* DotIcon Logo with scroll animation - 60vw width (600px on 1000px screen) */}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 'var(--space-8)' }}>
                 <div style={{ width: '60vw', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
+                  {console.log('[Home] Rendering logo DotCloudImage')}
                   <DotCloudImage
                     disciplineId="logo"
                     size={200}
