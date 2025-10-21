@@ -103,26 +103,13 @@ export default function DotCloudImage({
   // Scroll-based animation trigger (only when not in manual mode)
   useEffect(() => {
     // Skip scroll handling if in manual mode
-    if (isManualMode) {
-      if (disciplineId === 'logo') console.log('[Logo] Skipping scroll - manual mode');
-      return;
-    }
+    if (isManualMode) return;
 
     // Wait for particles to load before setting up scroll handler
-    if (isLoading || particles.length === 0) {
-      if (disciplineId === 'logo') console.log('[Logo] Waiting for particles to load');
-      return;
-    }
+    if (isLoading || particles.length === 0) return;
 
     const container = containerRef.current;
-    if (!container) {
-      if (disciplineId === 'logo') console.log('[Logo] No container ref');
-      return;
-    }
-
-    if (disciplineId === 'logo') {
-      console.log('[Logo] Setting up scroll handler. reverseScroll:', reverseScroll, 'particles:', particles.length);
-    }
+    if (!container) return;
 
     const handleScroll = () => {
       const rect = container.getBoundingClientRect();
@@ -151,10 +138,6 @@ export default function DotCloudImage({
           progress = progress * progress * (3 - 2 * progress); // smoothstep for smooth transition
         }
 
-        // Debug only for logo to verify scroll handler is working
-        if (disciplineId === 'logo') {
-          console.log('[Logo Scroll]', { scrollY, dissolveStart, dissolveEnd, progress: progress.toFixed(2) });
-        }
       } else {
         // NORMAL SCROLL MODE: For elements lower on page
         // Dissolve very soon after scrolling starts
@@ -255,6 +238,13 @@ export default function DotCloudImage({
       data-scroll-progress={scrollProgress.toFixed(2)}
     >
       {particles.map((particle, index) => {
+        // Dynamic particle culling during animation for performance
+        // When animating (progress 0.05-0.95), hide 30% of particles
+        // When static (progress < 0.05 or > 0.95), show all particles
+        const isAnimating = formProgress < 0.95 && formProgress > 0.05;
+        const shouldHide = isAnimating && (index % 10 < 3); // Hide 30% during animation
+        if (shouldHide) return null;
+
         const targetX = particle.targetX * scaleX;
         const targetY = particle.targetY * scaleY;
 
@@ -287,7 +277,6 @@ export default function DotCloudImage({
         // Particle glow: only when fully formed (progress >= 0.95) and not animating
         // During animation (progress < 0.95), disable all glow for performance
         // Disabled if noGlow prop is true
-        const isAnimating = formProgress < 0.95 && formProgress > 0.05;
         const glowIntensity = noGlow || isAnimating ? 0 : (formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0); // 0 to 1
         const glowSize = 8 * glowIntensity; // 0 to 8px
         const glowOpacity = 0.6 * glowIntensity; // 0 to 0.6
