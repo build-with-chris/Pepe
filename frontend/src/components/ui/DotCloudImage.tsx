@@ -103,13 +103,26 @@ export default function DotCloudImage({
   // Scroll-based animation trigger (only when not in manual mode)
   useEffect(() => {
     // Skip scroll handling if in manual mode
-    if (isManualMode) return;
+    if (isManualMode) {
+      if (disciplineId === 'logo') console.log('[Logo] Manual mode, skipping scroll');
+      return;
+    }
 
     // Wait for particles to load before setting up scroll handler
-    if (isLoading || particles.length === 0) return;
+    if (isLoading || particles.length === 0) {
+      if (disciplineId === 'logo') console.log('[Logo] Waiting for particles:', { isLoading, particleCount: particles.length });
+      return;
+    }
 
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      if (disciplineId === 'logo') console.log('[Logo] No container ref');
+      return;
+    }
+
+    if (disciplineId === 'logo') {
+      console.log('[Logo] Scroll handler attached! reverseScroll:', reverseScroll);
+    }
 
     const handleScroll = () => {
       const rect = container.getBoundingClientRect();
@@ -122,11 +135,14 @@ export default function DotCloudImage({
         // Start fully formed (100%), dissolve as user scrolls down
         // Uses easeInQuart curve: slow start, explosive end
         const scrollY = window.scrollY;
+        const elementTop = rect.top + scrollY; // Element's absolute position on page
 
         // Start dissolving immediately when scrolling begins
         const dissolveStart = 0;
-        // Fully dissolved after scrolling down by viewport height
-        const dissolveEnd = windowHeight;
+        // Fully dissolved when logo CENTER hits top of viewport
+        // elementTop is logo's top edge, so add half the logo height
+        const logoCenterOffset = containerHeight / 2;
+        const dissolveEnd = elementTop - logoCenterOffset;
 
         if (scrollY <= dissolveStart) {
           progress = 1.0; // Fully formed when page is at top
@@ -136,12 +152,16 @@ export default function DotCloudImage({
           // Linear scroll progress 0-1
           const scrollProgress = (scrollY - dissolveStart) / (dissolveEnd - dissolveStart);
 
-          // Reverse to get 1.0 → 0
-          const reversed = 1.0 - scrollProgress;
+          // Apply easeInQuart to scrollProgress: slow start, explosive end
+          // x^4 makes it stay near 0 at start, then accelerate rapidly
+          const eased = Math.pow(scrollProgress, 4);
 
-          // Apply easeInQuart: very subtle at start, explosive at end
-          // Formula: 1 - (1-x)^4 creates slow start, fast end
-          progress = 1.0 - Math.pow(1.0 - reversed, 4);
+          // Invert to get progress from 1.0 → 0 (formed → dissolved)
+          progress = 1.0 - eased;
+
+          if (disciplineId === 'logo') {
+            console.log('[Logo Scroll]', { scrollY, elementTop, dissolveEnd, scrollProgress: scrollProgress.toFixed(2), progress: progress.toFixed(2) });
+          }
         }
 
       } else {
