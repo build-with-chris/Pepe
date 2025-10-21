@@ -48,6 +48,8 @@ export default function DotCloudImage({
   noGlow = false,
   reverseScroll = false,
 }: DotCloudImageProps) {
+  console.log('[DotIcon]', disciplineId, 'Component function called with props:', { size, density, reverseScroll, aspectRatio });
+
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
