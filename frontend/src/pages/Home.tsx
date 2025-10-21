@@ -16,7 +16,6 @@ interface Artist {
 }
 
 export default function Home() {
-  console.log("[Home] Component rendering");
   const [artists, setArtists] = useState<Artist[]>([])
   const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [loading, setLoading] = useState(true)
@@ -259,7 +258,7 @@ export default function Home() {
     }
 
     fetchArtists()
-  }, [t])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return ''
@@ -322,7 +321,6 @@ export default function Home() {
               {/* DotIcon Logo with scroll animation - 60vw width (600px on 1000px screen) */}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 'var(--space-8)' }}>
                 <div style={{ width: '60vw', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
-                  {console.log('[Home] Rendering logo DotCloudImage')}
                   <DotCloudImage
                     disciplineId="logo"
                     size={200}

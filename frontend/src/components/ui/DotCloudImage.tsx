@@ -48,7 +48,6 @@ export default function DotCloudImage({
   noGlow = false,
   reverseScroll = false,
 }: DotCloudImageProps) {
-  console.log('[DotIcon]', disciplineId, 'Component function called with props:', { size, density, reverseScroll, aspectRatio });
 
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +65,6 @@ export default function DotCloudImage({
 
     const loadParticles = async () => {
       try {
-        console.log("[DotIcon]", disciplineId, "Starting to load particles...");
         setIsLoading(true);
         setError(null);
 
@@ -83,7 +81,6 @@ export default function DotCloudImage({
         });
 
         if (mounted) {
-          console.log("[DotIcon]", disciplineId, "Loaded", particleData.length, "particles");
           setParticles(particleData);
           setIsLoading(false);
         }
@@ -105,7 +102,6 @@ export default function DotCloudImage({
 
   // Scroll-based animation trigger (only when not in manual mode)
   useEffect(() => {
-    console.log("[DotIcon]", disciplineId, "useEffect triggered. reverseScroll:", reverseScroll, "isManualMode:", isManualMode);
     // Skip scroll handling if in manual mode
     if (isManualMode) return;
 
@@ -113,7 +109,6 @@ export default function DotCloudImage({
     if (!container) return;
 
     const handleScroll = () => {
-      if (disciplineId === "logo") console.log("[DotIcon Logo] handleScroll called, scrollY:", window.scrollY);
       const rect = container.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
@@ -139,7 +134,6 @@ export default function DotCloudImage({
 
         // Debug logging for hero logo
         if (disciplineId === 'logo') {
-          console.log('[DotIcon Logo] scrollY:', scrollY, 'dissolveEnd:', dissolveEnd, 'progress:', progress.toFixed(2));
         }
       } else {
         // NORMAL SCROLL MODE: For elements lower on page
