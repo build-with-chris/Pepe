@@ -301,23 +301,22 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero Section - Centered Stack */}
+      {/* Hero Section */}
       <section style={{
         position: 'relative',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden'
+        justifyContent: 'center'
       }}>
-        {/* Background - Fixed, Extended */}
+        {/* Background - Absolute with proper aspect ratio */}
         <div style={{
-          position: 'fixed',
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
           zIndex: 0
         }}>
           <img
@@ -380,29 +379,41 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Logo - Positioned at bottom center */}
+        {/* Sticky Logo Wrapper */}
         <div style={{
           position: 'absolute',
           bottom: '15vh',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 10,
-          width: '100%',
-          maxWidth: 'min(600px, 85vw)',
-          display: 'flex',
-          justifyContent: 'center'
+          left: 0,
+          right: 0,
+          zIndex: 10
         }}>
-          <DotCloudImage
-            disciplineId="logo"
-            size={250}
-            color="var(--pepe-gold)"
-            aspectRatio={3}
-            density={0.5}
-            sampleGap={2}
-            minDotSize={1.4}
-            maxDotSize={2.5}
-            reverseScroll={true}
-          />
+          <div style={{
+            position: 'sticky',
+            top: '50vh',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            justifyContent: 'center',
+            pointerEvents: 'none'
+          }}>
+            <div style={{
+              width: '100%',
+              maxWidth: 'min(600px, 85vw)',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <DotCloudImage
+                disciplineId="logo"
+                size={250}
+                color="var(--pepe-gold)"
+                aspectRatio={3}
+                density={0.5}
+                sampleGap={2}
+                minDotSize={1.4}
+                maxDotSize={2.5}
+                reverseScroll={true}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Scroll Indicator */}
