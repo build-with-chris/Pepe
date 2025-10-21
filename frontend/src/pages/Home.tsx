@@ -313,39 +313,11 @@ export default function Home() {
           <div className="hero-overlay"></div>
           <Buhnenzauber />
         </div>
-        
+
         {/* Hero Content - Positioned Lower */}
         <div className="hero-content-wrapper">
           <div className="stage-container">
             <div className="hero-content">
-              {/* Sticky DotIcon Logo - stays in middle during scroll animation (300vh) */}
-              <div style={{
-                position: 'sticky',
-                top: '50vh',
-                transform: 'translateY(-50%)',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 'var(--space-8)',
-                zIndex: 10
-              }}>
-                <div style={{ width: '60vw', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
-                  <DotCloudImage
-                    disciplineId="logo"
-                    size={200}
-                    color="var(--pepe-gold)"
-                    aspectRatio={3}
-                    density={0.6}
-                    sampleGap={2}
-                    minDotSize={2.0}
-                    maxDotSize={5.0}
-                    reverseScroll={true}
-                  />
-                </div>
-              </div>
-
-              {/* Spacer for 300vh scroll animation */}
-              <div style={{ height: '300vh' }} aria-hidden="true" />
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
               <h1 className="hero-title-elegant display-gradient mb-6">
                 {t('home.hero.title')}
@@ -365,6 +337,35 @@ export default function Home() {
         {/* Scroll Indicator */}
         <div className="scroll-indicator">
           <div className="scroll-dot"></div>
+        </div>
+      </section>
+
+      {/* Sticky Logo Animation Section - 300vh scroll area */}
+      <section style={{ position: 'relative', height: '300vh' }}>
+        {/* Sticky DotIcon Logo - stays in middle during scroll */}
+        <div style={{
+          position: 'sticky',
+          top: '50vh',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 10,
+          pointerEvents: 'none'
+        }}>
+          <div style={{ width: '60vw', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
+            <DotCloudImage
+              disciplineId="logo"
+              size={200}
+              color="var(--pepe-gold)"
+              aspectRatio={3}
+              density={0.6}
+              sampleGap={2}
+              minDotSize={2.0}
+              maxDotSize={5.0}
+              reverseScroll={true}
+            />
+          </div>
         </div>
       </section>
 
