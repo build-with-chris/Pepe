@@ -64,6 +64,7 @@ export default function DotCloudImage({
 
     const loadParticles = async () => {
       try {
+        console.log("[DotIcon]", disciplineId, "Starting to load particles...");
         setIsLoading(true);
         setError(null);
 
@@ -80,11 +81,13 @@ export default function DotCloudImage({
         });
 
         if (mounted) {
+          console.log("[DotIcon]", disciplineId, "Loaded", particleData.length, "particles");
           setParticles(particleData);
           setIsLoading(false);
         }
       } catch (err) {
         if (mounted) {
+          console.error("[DotIcon]", disciplineId, "Load error:", err);
           setError(err instanceof Error ? err.message : 'Failed to load image');
           setIsLoading(false);
         }
