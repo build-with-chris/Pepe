@@ -187,8 +187,8 @@ export default function Pressemappe() {
           <Card>
             <div className="space-y-2 text-gray-200">
               <p className="text-white text-2xl font-semibold mb-2">{t("presskit.contact.person")}</p>
-              <p className="flex items-center gap-2"><Mail className="h-5 w-5" /> chris@pepearts.de</p>
-              <p className="flex items-center gap-2"><Phone className="h-5 w-5" /> +49 159 04891419</p>
+              <p className="flex items-center gap-2"><Mail className="h-5 w-5" /> info@pepe-shows.de</p>
+              <p className="flex items-center gap-2"><Phone className="h-5 w-5" /> +49 123 456 789</p>
               <p className="flex items-center gap-2"><Globe className="h-5 w-5" /> pepeshows.de</p>
             </div>
           </Card>

@@ -461,7 +461,7 @@ export default function Profile() {
         onOpenGuidelines={() => {
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }}
-        supportEmail="info@pepeshows.de"
+        supportEmail="info@pepe-shows.de"
       />
       <div className="relative">
         <ProfileForm

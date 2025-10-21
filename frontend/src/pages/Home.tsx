@@ -587,7 +587,7 @@ export default function Home() {
 
           <div className="text-center mt-12">
             <Link to="/kuenstler" className="btn btn-secondary btn-lg">
-              Alle Künstler ansehen
+              {t('home.viewAllArtists') || 'Alle Künstler ansehen'}
             </Link>
           </div>
         </div>

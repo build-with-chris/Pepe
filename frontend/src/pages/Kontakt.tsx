@@ -46,7 +46,7 @@ export default function Kontakt() {
               <p className="body-sm text-pepe-t60 mb-4">
                 {t('kontakt.methods.email.description')}
               </p>
-              <a href="mailto:info@pepeshows.de" className="btn btn-primary">
+              <a href="mailto:info@pepe-shows.de" className="btn btn-primary">
                 {t('kontakt.methods.email.button')}
               </a>
             </div>
@@ -131,7 +131,7 @@ export default function Kontakt() {
             <Link to="/anfragen" className="btn btn-primary btn-xl">
               {t('kontakt.cta.booking_button')}
             </Link>
-            <a href="mailto:info@pepeshows.de" className="btn btn-ghost btn-lg">
+            <a href="mailto:info@pepe-shows.de" className="btn btn-ghost btn-lg">
               {t('kontakt.cta.email_button')}
             </a>
           </div>

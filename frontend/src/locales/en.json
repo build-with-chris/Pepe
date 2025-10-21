@@ -56,6 +56,17 @@
   "results_other": "{{count}} results",
   "loading": "Loading artists…",
   "empty": "No artists available yet.",
+  "sectionTitle": "Our Artists",
+  "sectionSubtitle": "Meet the talented personalities who bring our vision to life.",
+  "filterByDiscipline": "Filter by discipline",
+  "noResultsFor": "No artists found for \"{{discipline}}\"",
+  "showAll": "Show all artists",
+  "disciplinesTitle": "Our Disciplines",
+  "disciplinesSubtitle": "From classical acrobatics to modern performances – our artists master a wide range of disciplines.",
+  "ctaKicker": "READY FOR YOUR EVENT?",
+  "ctaTitle": "Find the right artist",
+  "ctaSubtitle": "Use our booking assistant for a custom artist recommendation or contact us directly.",
+  "ctaContact": "Direct contact",
   "disciplines": {
     "zauberer": "Magician",
     "cyrWheel": "Cyr-Wheel",
@@ -752,6 +763,26 @@
         "description": "We create commercial shows, promote culture, and run our own base.\nThis way we combine experience, network, and passion – making PepeShows true experts for unforgettable experiences.",
         "button": "To the agency"
       },
+      "viewAllArtists": "View all artists"
+    },
+
+    "shows": {
+      "formats": {
+        "title": "Our Show Formats",
+        "subtitle": "From short solo acts to full-evening variety shows – discover our professional show formats."
+      },
+      "available": {
+        "title": "Available Shows",
+        "subtitle": "Explore our current show portfolio from the database."
+      },
+      "filter": {
+        "title": "Shows by category",
+        "all": "All shows"
+      }
+    },
+
+    "logos3": { "heading": "These clients trust Pepe" },
+    "home": {
       "categories": {
         "title": "Show Categories",
         "subtitle": "Our Repertoire",
@@ -1089,7 +1120,12 @@
       },
       "phone": {
         "label": "Phone",
-        "description": "Mon–Fri, 9am–5pm"
+        "description": "Mon–Fri, 9am–5pm",
+        "value": "+49 123 456 789"
+      },
+      "email": {
+        "label": "Email",
+        "value": "info@pepe-shows.de"
       },
       "chat": {
         "label": "Live Chat",
@@ -1482,7 +1518,11 @@
       "phone": {
         "title": "Phone",
         "hours": "Mon–Fri, 9–17",
-        "button": "Call now"
+        "button": "Call now",
+        "value": "+49 123 456 789"
+      },
+      "email": {
+        "value": "info@pepe-shows.de"
       },
       "chat": {
         "title": "Live Chat",

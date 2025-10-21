@@ -208,7 +208,7 @@ export default function Mediamaterial() {
               <Download className="w-5 h-5 mr-2" />
               {t('mediamaterial.cta.download_button')}
             </button>
-            <a href="mailto:presse@pepeshows.de" className="btn btn-ghost btn-lg">
+            <a href="mailto:info@pepe-shows.de" className="btn btn-ghost btn-lg">
               {t('mediamaterial.cta.questions_button')}
             </a>
           </div>

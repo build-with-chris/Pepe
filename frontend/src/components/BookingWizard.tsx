@@ -201,81 +201,81 @@ export default function BookingWizard() {
   const performanceStyles = [
     {
       value: 'zauberer',
-      label: t('disciplines.zauberer') || 'Zauberei',
+      label: t('booking.disciplines.options.zauberer.label') || 'Zauberei',
       image: '/images/disciplines/Zauberer.webp',
-      description: 'Magische Shows & Illusions'
+      description: t('booking.disciplines.options.zauberer.description') || 'Magische Shows & Illusions'
     },
     {
       value: 'luftakrobatik',
-      label: t('disciplines.luftakrobatik') || 'Luftakrobatik', 
+      label: t('booking.disciplines.options.luftakrobatik.label') || 'Luftakrobatik',
       image: '/images/disciplines/Luftakrobatik.webp',
-      description: 'Aerial & Luftartistik'
+      description: t('booking.disciplines.options.luftakrobatik.description') || 'Aerial & Luftartistik'
     },
     {
       value: 'bodenakrobatik',
-      label: t('disciplines.bodenakrobatik') || 'Bodenakrobatik',
+      label: t('booking.disciplines.options.bodenakrobatik.label') || 'Bodenakrobatik',
       image: '/images/disciplines/Bodenakrobatik.webp',
-      description: 'Floor Acrobatics & Turnen'
+      description: t('booking.disciplines.options.bodenakrobatik.description') || 'Floor Acrobatics & Turnen'
     },
     {
       value: 'partnerakrobatik',
-      label: t('disciplines.partnerakrobatik') || 'Partnerakrobatik',
+      label: t('booking.disciplines.options.partnerakrobatik.label') || 'Partnerakrobatik',
       image: '/images/disciplines/Partnerakrobatik.webp',
-      description: 'Partner Acrobatics & Hand-to-Hand'
+      description: t('booking.disciplines.options.partnerakrobatik.description') || 'Partner Acrobatics & Hand-to-Hand'
     },
     {
       value: 'contemporary-dance',
-      label: t('disciplines.contemporaryDance') || 'Contemporary Dance',
+      label: t('booking.disciplines.options.contemporaryDance.label') || 'Contemporary Dance',
       image: '/images/disciplines/Contemporary_Dance.webp',
-      description: 'Moderner Tanz & Choreographie'
+      description: t('booking.disciplines.options.contemporaryDance.description') || 'Moderner Tanz & Choreographie'
     },
     {
       value: 'breakdance',
-      label: t('disciplines.breakdance') || 'Breakdance',
+      label: t('booking.disciplines.options.breakdance.label') || 'Breakdance',
       image: '/images/disciplines/Breakdance.webp',
-      description: 'Urban Dance & Hip-Hop'
+      description: t('booking.disciplines.options.breakdance.description') || 'Urban Dance & Hip-Hop'
     },
     {
       value: 'jonglage',
-      label: t('disciplines.jonglage') || 'Jonglage',
+      label: t('booking.disciplines.options.jonglage.label') || 'Jonglage',
       image: '/images/disciplines/Jonglage.webp',
-      description: 'Artistisches Jonglieren'
+      description: t('booking.disciplines.options.jonglage.description') || 'Artistisches Jonglieren'
     },
     {
       value: 'chinese-pole',
-      label: t('disciplines.chinesePole') || 'Chinese Pole',
+      label: t('booking.disciplines.options.chinesePole.label') || 'Chinese Pole',
       image: '/images/disciplines/Chinese_Pole.webp',
-      description: 'Vertikale Artistik am Mast'
+      description: t('booking.disciplines.options.chinesePole.description') || 'Vertikale Artistik am Mast'
     },
     {
       value: 'cyr-wheel',
-      label: t('disciplines.cyrWheel') || 'Cyr Wheel',
+      label: t('booking.disciplines.options.cyrWheel.label') || 'Cyr Wheel',
       image: '/images/disciplines/Cyr-Wheel.webp',
-      description: 'Artistik im großen Rad'
+      description: t('booking.disciplines.options.cyrWheel.description') || 'Artistik im großen Rad'
     },
     {
       value: 'hula-hoop',
-      label: t('disciplines.hulaHoop') || 'Hula Hoop',
+      label: t('booking.disciplines.options.hulaHoop.label') || 'Hula Hoop',
       image: '/images/disciplines/Hula_Hoop.webp',
-      description: 'Artistisches Hula-Hoop'
+      description: t('booking.disciplines.options.hulaHoop.description') || 'Artistisches Hula-Hoop'
     },
     {
       value: 'handstand',
-      label: t('disciplines.handstand') || 'Handstand',
+      label: t('booking.disciplines.options.handstand.label') || 'Handstand',
       image: '/images/disciplines/Handstand.webp',
-      description: 'Kraft & Balance Acts'
+      description: t('booking.disciplines.options.handstand.description') || 'Kraft & Balance Acts'
     },
     {
       value: 'moderation',
-      label: t('disciplines.moderation') || 'Moderation',
-      image: '/images/disciplines/Moderation.webp', 
-      description: 'Event-Moderation & Entertainment'
+      label: t('booking.disciplines.options.moderation.label') || 'Moderation',
+      image: '/images/disciplines/Moderation.webp',
+      description: t('booking.disciplines.options.moderation.description') || 'Event-Moderation & Entertainment'
     },
     {
       value: 'pantomime',
-      label: t('disciplines.pantomime') || 'Pantomime',
+      label: t('booking.disciplines.options.pantomimeEntertainment.label') || 'Pantomime',
       image: '/images/disciplines/Pantomime/Entertainment.webp',
-      description: 'Stumme Kunst & Entertainment'
+      description: t('booking.disciplines.options.pantomimeEntertainment.description') || 'Stumme Kunst & Entertainment'
     }
   ]
 
@@ -418,7 +418,7 @@ export default function BookingWizard() {
         }))
         
         setRequestId(generatedRequestId)
-        setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepe-shows.com oder telefonisch.')
+        setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepe-shows.de oder telefonisch.')
         console.error('All endpoints failed. Last error:', lastError)
       }
     } catch (error) {
@@ -431,7 +431,7 @@ export default function BookingWizard() {
         status: 'error'
       }))
       setRequestId(fallbackRequestId)
-      setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepe-shows.com oder telefonisch.')
+      setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepe-shows.de oder telefonisch.')
     } finally {
       setIsSubmitting(false)
     }
@@ -519,7 +519,7 @@ export default function BookingWizard() {
                 <strong>Ihre Anfrage-ID: {requestId}</strong>
               </div>
               <div className="error-actions mt-4">
-                <a href="mailto:info@pepe-shows.com" className="btn btn-secondary btn-sm mr-3">
+                <a href="mailto:info@pepe-shows.de" className="btn btn-secondary btn-sm mr-3">
                   E-Mail senden
                 </a>
                 <a href="tel:+49123456789" className="btn btn-secondary btn-sm">

@@ -59,6 +59,17 @@
   "results_other": "{{count}} Ergebnisse",
   "loading": "Lade Künstler…",
   "empty": "Noch keine Künstler verfügbar.",
+  "sectionTitle": "Unsere Künstler",
+  "sectionSubtitle": "Lernen Sie die talentierten Persönlichkeiten kennen, die unsere Vision zum Leben erwecken.",
+  "filterByDiscipline": "Nach Disziplin filtern",
+  "noResultsFor": "Keine Künstler für \"{{discipline}}\" gefunden",
+  "showAll": "Alle Künstler anzeigen",
+  "disciplinesTitle": "Unsere Disziplinen",
+  "disciplinesSubtitle": "Von klassischer Akrobatik bis zu modernen Performances – unsere Künstler beherrschen ein breites Spektrum an Disziplinen.",
+  "ctaKicker": "BEREIT FÜR IHR EVENT?",
+  "ctaTitle": "Den passenden Künstler finden",
+  "ctaSubtitle": "Nutzen Sie unseren Booking-Assistenten für eine maßgeschneiderte Künstlerempfehlung oder kontaktieren Sie uns direkt.",
+  "ctaContact": "Direkter Kontakt",
   "disciplines": {
     "zauberer": "Zauberer",
     "cyrWheel": "Cyr-Wheel",
@@ -699,6 +710,21 @@
       "heading": "PepeShows – mehr als eine Künstlervermittlung",
       "description": "Wir kreieren kommerzielle Shows, fördern Kultur und betreiben unsere eigene Base.\nSo vereinen wir Erfahrung, Netzwerk und Leidenschaft – und machen PepeShows zu echten Experten für unvergessliche Erlebnisse.",
       "button": "Zur Agentur"
+    },
+    "viewAllArtists": "Alle Künstler ansehen"
+  },
+  "shows": {
+    "formats": {
+      "title": "Unsere Show-Formate",
+      "subtitle": "Von kurzem Solo-Act bis abendfüllendem Varieté - entdecken Sie unsere professionellen Show-Formate."
+    },
+    "available": {
+      "title": "Verfügbare Shows",
+      "subtitle": "Entdecken Sie unser aktuelles Show-Portfolio aus der Datenbank."
+    },
+    "filter": {
+      "title": "Shows nach Kategorie",
+      "all": "Alle Shows"
     }
   },
   "logos3": { "heading": "Diese Kunden vertrauen auf Pepe" },
@@ -933,7 +959,12 @@
     },
     "phone": {
       "label": "Telefon",
-      "description": "Mo–Fr, 9–17 Uhr"
+      "description": "Mo–Fr, 9–17 Uhr",
+      "value": "+49 123 456 789"
+    },
+    "email": {
+      "label": "E-Mail",
+      "value": "info@pepe-shows.de"
     },
     "chat": {
       "label": "Live Chat",
@@ -1307,7 +1338,11 @@
       "phone": {
         "title": "Telefon",
         "hours": "Mo–Fr, 9–17 Uhr",
-        "button": "Jetzt anrufen"
+        "button": "Jetzt anrufen",
+        "value": "+49 123 456 789"
+      },
+      "email": {
+        "value": "info@pepe-shows.de"
       },
       "chat": {
         "title": "Live Chat",

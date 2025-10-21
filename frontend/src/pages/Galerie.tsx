@@ -273,14 +273,14 @@ export default function Galerie() {
             // Fallback disciplines if database is empty
             {
               id: 'zauberer',
-              name: t('artists.disciplines.zauberer') || 'Zauberei',
+              name: t('booking.disciplines.options.zauberer.label') || 'Zauberei',
               image: '/images/disciplines/Zauberer.webp',
               description: 'Magische Momente und Illusionen für jedes Publikum.',
               artistCount: 0
             },
             {
               id: 'luftakrobatik',
-              name: t('artists.disciplines.luftakrobatik') || 'Luftakrobatik',
+              name: t('booking.disciplines.options.luftakrobatik.label') || 'Luftakrobatik',
               image: '/images/disciplines/Luftakrobatik.webp',
               description: 'Schwebende Eleganz und atemberaubende Höhenakrobatik.',
               artistCount: 0

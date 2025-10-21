@@ -114,6 +114,8 @@ export default function Shows() {
                 size={300}
                 color="#FFFFFF"
                 manualAnimationPosition={autoAnimPosition}
+                density={0.15}
+                sampleGap={2}
               />
             </div>
             <div className="overline text-pepe-gold mb-4">{t('hero37.kicker')}</div>
@@ -136,9 +138,9 @@ export default function Shows() {
       <section className="section">
         <div className="stage-container">
           <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">Unsere Show-Formate</h2>
+            <h2 className="h1 mb-6">{t('shows.formats.title') || 'Unsere Show-Formate'}</h2>
             <p className="body-lg max-w-3xl mx-auto">
-              Von kurzem Solo-Act bis abendfüllendem Varieté - entdecken Sie unsere professionellen Show-Formate.
+              {t('shows.formats.subtitle') || 'Von kurzem Solo-Act bis abendfüllendem Varieté - entdecken Sie unsere professionellen Show-Formate.'}
             </p>
             <div className="text-center mt-6">
               <span className="overline text-pepe-gold">{t('gallery34.hint')}</span>
@@ -195,22 +197,22 @@ export default function Shows() {
         <section className="section">
           <div className="stage-container">
             <div className="section-header text-center mb-16">
-              <h2 className="h1 mb-6">Verfügbare Shows</h2>
+              <h2 className="h1 mb-6">{t('shows.available.title') || 'Verfügbare Shows'}</h2>
               <p className="body-lg max-w-3xl mx-auto">
-                Entdecken Sie unser aktuelles Show-Portfolio aus der Datenbank.
+                {t('shows.available.subtitle') || 'Entdecken Sie unser aktuelles Show-Portfolio aus der Datenbank.'}
               </p>
             </div>
 
             {/* Filter Section */}
             {categories.length > 0 && (
               <div className="filter-section mb-12">
-                <h3 className="h3 text-center mb-8">Shows nach Kategorie</h3>
+                <h3 className="h3 text-center mb-8">{t('shows.filter.title') || 'Shows nach Kategorie'}</h3>
                 <div className="filter-buttons">
                   <button
                     onClick={() => setSelectedCategory('')}
                     className={`filter-btn ${!selectedCategory ? 'active' : ''}`}
                   >
-                    Alle Shows
+                    {t('shows.filter.all') || 'Alle Shows'}
                   </button>
                   {categories.map((category) => (
                     <button

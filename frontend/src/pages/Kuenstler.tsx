@@ -162,7 +162,7 @@ export default function Kuenstler() {
         <div className="hero-content-layer">
           <div className="stage-container">
             <div className="hero-content text-center max-w-4xl mx-auto">
-              <div className="overline text-pepe-gold mb-6 animate-fade-in">{t('artists.quote')}</div>
+              <div className="overline text-pepe-gold mb-6 animate-fade-in">{t('artists.quote') || 'Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.'}</div>
               <h1 className="display-1 display-gradient mb-8 animate-slide-up">
                 {t('hero87.heading') || 'Künstler & Performer'}
               </h1>
@@ -187,9 +187,9 @@ export default function Kuenstler() {
         <div className="stage-container">
           
           <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">Unsere Künstler</h2>
+            <h2 className="h1 mb-6">{t('artists.sectionTitle') || 'Unsere Künstler'}</h2>
             <p className="body-lg max-w-3xl mx-auto">
-              Lernen Sie die talentierten Persönlichkeiten kennen, die unsere Vision zum Leben erwecken.
+              {t('artists.sectionSubtitle') || 'Lernen Sie die talentierten Persönlichkeiten kennen, die unsere Vision zum Leben erwecken.'}
             </p>
           </div>
 
@@ -197,7 +197,7 @@ export default function Kuenstler() {
           {!loading && allDisciplines.length > 0 && (
             <div className="mb-16">
               <div className="filter-section">
-                <h3 className="h3 text-center mb-8">Nach Disziplin filtern</h3>
+                <h3 className="h3 text-center mb-8">{t('artists.filterByDiscipline') || 'Nach Disziplin filtern'}</h3>
                 <div className="filter-buttons">
                   {allDisciplines.map((discipline) => (
                     <button
@@ -233,7 +233,7 @@ export default function Kuenstler() {
             <div className="text-center mb-12">
               <div className="results-count">
                 <span className="label">
-                  {filteredArtists.length} {filteredArtists.length === 1 ? 'Künstler' : 'Künstler'} 
+                  {t('artists.results', { count: filteredArtists.length })} 
                   {selectedDiscipline && ` für "${selectedDiscipline}"`}
                 </span>
               </div>
@@ -250,8 +250,8 @@ export default function Kuenstler() {
             <div className="empty-state">
               <div className="empty-icon">🎭</div>
               <h3 className="h3 mb-4">
-                {selectedDiscipline ? 
-                  `Keine Künstler für "${selectedDiscipline}" gefunden` : 
+                {selectedDiscipline ?
+                  t('artists.noResultsFor', { discipline: selectedDiscipline }) || `Keine Künstler für "${selectedDiscipline}" gefunden` :
                   t('artists.empty')
                 }
               </h3>
@@ -260,7 +260,7 @@ export default function Kuenstler() {
                   onClick={clearFilters}
                   className="btn btn-secondary"
                 >
-                  Alle Künstler anzeigen
+                  {t('artists.showAll') || 'Alle Künstler anzeigen'}
                 </button>
               )}
             </div>
@@ -283,10 +283,9 @@ export default function Kuenstler() {
       <section className="section bg-pepe-ink">
         <div className="stage-container">
           <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">Unsere Disziplinen</h2>
+            <h2 className="h1 mb-6">{t('artists.disciplinesTitle') || 'Unsere Disziplinen'}</h2>
             <p className="body-lg max-w-3xl mx-auto">
-              Von klassischer Akrobatik bis zu modernen Performances – 
-              unsere Künstler beherrschen ein breites Spektrum an Disziplinen.
+              {t('artists.disciplinesSubtitle') || 'Von klassischer Akrobatik bis zu modernen Performances – unsere Künstler beherrschen ein breites Spektrum an Disziplinen.'}
             </p>
           </div>
 
@@ -318,8 +317,8 @@ export default function Kuenstler() {
             </div>
             <div className="discipline-showcase-card">
               <div className="discipline-icon">🎭</div>
-              <h3 className="h3 mb-3">{t('artists.disciplines.zauberer') || 'Zauberei'}</h3>
-              <p className="body-sm">Magische Shows und Illusionen, die Ihr Publikum in Staunen versetzen</p>
+              <h3 className="h3 mb-3">{t('booking.disciplines.options.zauberer.label') || 'Zauberei'}</h3>
+              <p className="body-sm">{t('booking.disciplines.options.zauberer.description') || 'Magische Shows und Illusionen, die Ihr Publikum in Staunen versetzen'}</p>
             </div>
           </div>
         </div>
@@ -328,18 +327,17 @@ export default function Kuenstler() {
       {/* Call to Action */}
       <section className="section-large text-center bg-gradient-dark">
         <div className="stage-container">
-          <div className="overline text-pepe-gold mb-4">BEREIT FÜR IHR EVENT?</div>
-          <h2 className="display-2 mb-8">Den passenden Künstler finden</h2>
+          <div className="overline text-pepe-gold mb-4">{t('artists.ctaKicker') || 'BEREIT FÜR IHR EVENT?'}</div>
+          <h2 className="display-2 mb-8">{t('artists.ctaTitle') || 'Den passenden Künstler finden'}</h2>
           <p className="lead mb-12 max-w-3xl mx-auto">
-            Nutzen Sie unseren Booking-Assistenten für eine maßgeschneiderte 
-            Künstlerempfehlung oder kontaktieren Sie uns direkt.
+            {t('artists.ctaSubtitle') || 'Nutzen Sie unseren Booking-Assistenten für eine maßgeschneiderte Künstlerempfehlung oder kontaktieren Sie uns direkt.'}
           </p>
           <div className="cta-actions">
             <Link to="/anfragen" className="btn btn-primary btn-xl">
               {t('about1.next.cta.assistant')}
             </Link>
             <Link to="/kontakt" className="btn btn-ghost btn-lg">
-              Direkter Kontakt
+              {t('artists.ctaContact') || 'Direkter Kontakt'}
             </Link>
           </div>
         </div>

@@ -15,22 +15,21 @@ export default function Imprint() {
               
               <h3 className="h3 mb-4">Angaben gemäß § 5 TMG</h3>
               <div className="space-y-2 mb-6">
-                <p className="body"><strong>PepeShows Entertainment GmbH</strong></p>
-                <p className="body">Musterstraße 123</p>
-                <p className="body">12345 Berlin</p>
+                <p className="body"><strong>Heiduk & Hermann GbR PepeShows</strong></p>
+                <p className="body">Maria-Montessori-Str. 4</p>
+                <p className="body">81829 München</p>
                 <p className="body">Deutschland</p>
               </div>
 
               <h3 className="h3 mb-4">Kontakt</h3>
               <div className="space-y-2 mb-6">
-                <p className="body">Telefon: +49 (0) 30 12345678</p>
-                <p className="body">E-Mail: info@pepe-shows.com</p>
-                <p className="body">Website: www.pepe-shows.com</p>
+                <p className="body">Telefon: +49 123 456 789</p>
+                <p className="body">E-Mail: info@pepe-shows.de</p>
               </div>
 
               <h3 className="h3 mb-4">Vertreten durch</h3>
               <p className="body mb-6">
-                Geschäftsführer: Max Mustermann
+                Christoph Hermann und Michael Heiduk
               </p>
 
               <h3 className="h3 mb-4">Registereintrag</h3>
@@ -80,22 +79,21 @@ export default function Imprint() {
               
               <h3 className="h3 mb-4">Information according to § 5 TMG</h3>
               <div className="space-y-2 mb-6">
-                <p className="body"><strong>PepeShows Entertainment GmbH</strong></p>
-                <p className="body">Sample Street 123</p>
-                <p className="body">12345 Berlin</p>
+                <p className="body"><strong>Heiduk & Hermann GbR PepeShows</strong></p>
+                <p className="body">Maria-Montessori-Str. 4</p>
+                <p className="body">81829 Munich</p>
                 <p className="body">Germany</p>
               </div>
 
               <h3 className="h3 mb-4">Contact</h3>
               <div className="space-y-2 mb-6">
-                <p className="body">Phone: +49 (0) 30 12345678</p>
-                <p className="body">Email: info@pepe-shows.com</p>
-                <p className="body">Website: www.pepe-shows.com</p>
+                <p className="body">Phone: +49 123 456 789</p>
+                <p className="body">Email: info@pepe-shows.de</p>
               </div>
 
               <h3 className="h3 mb-4">Represented by</h3>
               <p className="body mb-6">
-                Managing Director: Max Mustermann
+                Christoph Hermann and Michael Heiduk
               </p>
 
               <h3 className="h3 mb-4">Registry entry</h3>
