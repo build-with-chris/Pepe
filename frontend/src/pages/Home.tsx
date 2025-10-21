@@ -304,13 +304,9 @@ export default function Home() {
       {/* Hero Section */}
       <section style={{
         position: 'relative',
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center'
+        minHeight: '100vh'
       }}>
-        {/* Background - Absolute with proper aspect ratio */}
+        {/* Background - Absolute */}
         <div style={{
           position: 'absolute',
           top: 0,
@@ -340,19 +336,20 @@ export default function Home() {
           <Buhnenzauber />
         </div>
 
-        {/* Content Stack: Headline → Buttons */}
+        {/* Content - Absolute Positioned */}
         <div style={{
-          position: 'relative',
+          position: 'absolute',
+          top: '30%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
           zIndex: 10,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: 'clamp(1.5rem, 4vh, 3rem)',
-          padding: 'clamp(1rem, 3vw, 2rem)',
           textAlign: 'center',
           maxWidth: '1200px',
-          width: '100%',
-          paddingBottom: '25vh'
+          width: '90%'
         }}>
           {/* Headline */}
           <h1 className="hero-title-elegant display-gradient" style={{
@@ -379,43 +376,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Sticky Logo Wrapper */}
-        <div style={{
-          position: 'absolute',
-          bottom: '15vh',
-          left: 0,
-          right: 0,
-          zIndex: 10
-        }}>
-          <div style={{
-            position: 'sticky',
-            top: '50vh',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            justifyContent: 'center',
-            pointerEvents: 'none'
-          }}>
-            <div style={{
-              width: '100%',
-              maxWidth: 'min(600px, 85vw)',
-              display: 'flex',
-              justifyContent: 'center'
-            }}>
-              <DotCloudImage
-                disciplineId="logo"
-                size={250}
-                color="var(--pepe-gold)"
-                aspectRatio={3}
-                density={0.5}
-                sampleGap={2}
-                minDotSize={1.4}
-                maxDotSize={2.5}
-                reverseScroll={true}
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Scroll Indicator */}
         <div style={{
           position: 'absolute',
@@ -429,6 +389,36 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Sticky Logo Section - Must be in normal flow */}
+      <div style={{
+        position: 'relative',
+        marginTop: '-85vh' // Pull up to overlap hero
+      }}>
+        <div style={{
+          position: 'sticky',
+          top: '50vh',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 15,
+          pointerEvents: 'none',
+          padding: '0 5vw'
+        }}>
+          <DotCloudImage
+            disciplineId="logo"
+            size={250}
+            color="var(--pepe-gold)"
+            aspectRatio={3}
+            density={0.5}
+            sampleGap={2}
+            minDotSize={1.4}
+            maxDotSize={2.5}
+            reverseScroll={true}
+          />
+        </div>
+      </div>
 
       {/* Animation Extension - 100vh with particles */}
       <section style={{
