@@ -24,6 +24,8 @@ export interface DotCloudImageProps {
   maxDotSize?: number;
   /** Disable all glow effects (default: false) */
   noGlow?: boolean;
+  /** Reverse scroll direction: start formed (100%), dissolve on scroll down (default: false) */
+  reverseScroll?: boolean;
 }
 
 /**
@@ -44,6 +46,7 @@ export default function DotCloudImage({
   minDotSize = 0.5,
   maxDotSize = 6.0,
   noGlow = false,
+  reverseScroll = false,
 }: DotCloudImageProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,28 +110,48 @@ export default function DotCloudImage({
       const rect = container.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
-      // Dissolve very soon after scrolling starts
-      const isInViewport = rect.top < windowHeight && rect.bottom > 0;
-
       let progress = 0;
 
-      if (isInViewport) {
-        // Dissolve based on scroll: starts dissolving immediately when scrolling
-        const topPosition = rect.top / windowHeight;
+      if (reverseScroll) {
+        // REVERSE SCROLL MODE: For hero elements at page top
+        // Start fully formed (100%) at page top, dissolve as user scrolls down
+        const scrollY = window.scrollY;
+        const dissolveStart = 0; // Start dissolving immediately
+        const dissolveEnd = windowHeight * 0.8; // Fully dissolved after scrolling 80% of viewport height
 
-        if (topPosition >= 0.6) {
-          // In lower 40% of viewport - fully formed
-          progress = 1.0;
-        } else if (topPosition >= 0.1) {
-          // Between 10-60% from top - dissolve progressively
-          progress = (topPosition - 0.1) / 0.5; // Maps 0.1-0.6 to 0-1
-          progress = progress * progress * (3 - 2 * progress); // smoothstep
+        if (scrollY <= dissolveStart) {
+          progress = 1.0; // Fully formed at top
+        } else if (scrollY >= dissolveEnd) {
+          progress = 0; // Fully dissolved
         } else {
-          // Top 10% or scrolled out - fully dissolved
-          progress = 0;
+          // Progressive dissolve based on scroll amount
+          const scrollProgress = (scrollY - dissolveStart) / (dissolveEnd - dissolveStart);
+          progress = 1.0 - scrollProgress; // Reverse: 1.0 → 0
+          progress = progress * progress * (3 - 2 * progress); // smoothstep for smooth transition
         }
       } else {
-        progress = 0; // Out of viewport
+        // NORMAL SCROLL MODE: For elements lower on page
+        // Dissolve very soon after scrolling starts
+        const isInViewport = rect.top < windowHeight && rect.bottom > 0;
+
+        if (isInViewport) {
+          // Dissolve based on scroll: starts dissolving immediately when scrolling
+          const topPosition = rect.top / windowHeight;
+
+          if (topPosition >= 0.6) {
+            // In lower 40% of viewport - fully formed
+            progress = 1.0;
+          } else if (topPosition >= 0.1) {
+            // Between 10-60% from top - dissolve progressively
+            progress = (topPosition - 0.1) / 0.5; // Maps 0.1-0.6 to 0-1
+            progress = progress * progress * (3 - 2 * progress); // smoothstep
+          } else {
+            // Top 10% or scrolled out - fully dissolved
+            progress = 0;
+          }
+        } else {
+          progress = 0; // Out of viewport
+        }
       }
 
       setScrollProgress(progress);
@@ -158,7 +181,7 @@ export default function DotCloudImage({
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [disciplineId, isManualMode]);
+  }, [disciplineId, isManualMode, reverseScroll]);
 
   if (error) {
     return (

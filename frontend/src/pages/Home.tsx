@@ -330,6 +330,7 @@ export default function Home() {
                     sampleGap={2}
                     minDotSize={0.2}
                     maxDotSize={3.0}
+                    reverseScroll={true}
                   />
                 </div>
               </div>
