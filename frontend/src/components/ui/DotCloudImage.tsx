@@ -129,6 +129,11 @@ export default function DotCloudImage({
           progress = 1.0 - scrollProgress; // Reverse: 1.0 → 0
           progress = progress * progress * (3 - 2 * progress); // smoothstep for smooth transition
         }
+
+        // Debug logging for hero logo
+        if (disciplineId === 'logo') {
+          console.log('[DotIcon Logo] scrollY:', scrollY, 'dissolveEnd:', dissolveEnd, 'progress:', progress.toFixed(2));
+        }
       } else {
         // NORMAL SCROLL MODE: For elements lower on page
         // Dissolve very soon after scrolling starts
