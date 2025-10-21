@@ -390,9 +390,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sticky Logo Section - Must be in normal flow */}
+      {/* Sticky Logo Container - Spans animation area */}
       <div style={{
         position: 'relative',
+        height: '185vh', // 85vh overlap + 100vh extension
         marginTop: '-85vh' // Pull up to overlap hero
       }}>
         <div style={{
@@ -418,17 +419,20 @@ export default function Home() {
             reverseScroll={true}
           />
         </div>
-      </div>
 
-      {/* Animation Extension - 100vh with particles */}
-      <section style={{
-        position: 'relative',
-        height: '100vh',
-        overflow: 'hidden',
-        backgroundColor: '#000'
-      }}>
-        <Buhnenzauber />
-      </section>
+        {/* Background particles for extension */}
+        <div style={{
+          position: 'absolute',
+          top: '85vh',
+          left: 0,
+          width: '100%',
+          height: '100vh',
+          backgroundColor: '#000',
+          zIndex: -1
+        }}>
+          <Buhnenzauber />
+        </div>
+      </div>
 
       {/* Bento Grid Section - logo overlays on this */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
