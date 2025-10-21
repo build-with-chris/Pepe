@@ -301,8 +301,8 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero Section with Logo starting position */}
-      <section className="hero-full" style={{ position: 'relative' }}>
+      {/* Hero Section */}
+      <section className="hero-full" style={{ position: 'relative', overflow: 'visible' }}>
         {/* Background Hero Image */}
         <div className="hero-background">
           <img
@@ -314,45 +314,17 @@ export default function Home() {
           <Buhnenzauber />
         </div>
 
-        {/* Sticky Logo - starts in middle of hero */}
-        <div style={{
+        {/* Hero Content - Positioned Higher (20% up from default) */}
+        <div className="hero-content-wrapper" style={{
           position: 'absolute',
-          top: '50%',
-          left: '0',
-          right: '0',
-          transform: 'translateY(-50%)',
-          zIndex: 15,
-          pointerEvents: 'none'
+          bottom: '60%',
+          left: 0,
+          right: 0,
+          transform: 'translateY(50%)'
         }}>
-          <div style={{
-            position: 'sticky',
-            top: '50vh',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}>
-            <div style={{ width: '60vw', maxWidth: '800px' }}>
-              <DotCloudImage
-                disciplineId="logo"
-                size={200}
-                color="var(--pepe-gold)"
-                aspectRatio={3}
-                density={0.6}
-                sampleGap={2}
-                minDotSize={2.0}
-                maxDotSize={5.0}
-                reverseScroll={true}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Hero Content - Positioned Lower */}
-        <div className="hero-content-wrapper">
           <div className="stage-container">
-            <div className="hero-content">
-              <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
+            <div className="hero-content" style={{ textAlign: 'center' }}>
+              {/* Removed PEPE SHOWS kicker */}
               <h1 className="hero-title-elegant display-gradient mb-6">
                 {t('home.hero.title')}
               </h1>
@@ -368,19 +340,57 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="scroll-indicator">
-          <div className="scroll-dot"></div>
+        {/* Scroll Indicator - Fixed at bottom of viewport */}
+        <div style={{
+          position: 'fixed',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20
+        }}>
+          <div className="scroll-indicator">
+            <div className="scroll-dot"></div>
+          </div>
         </div>
       </section>
 
-      {/* Black Focus Section - 100vh for logo animation */}
-      <section style={{
-        position: 'relative',
-        height: '100vh',
-        backgroundColor: '#000',
-        zIndex: 5
-      }} />
+      {/* Sticky Logo Container - wraps black section and extends to bento */}
+      <div style={{ position: 'relative' }}>
+        {/* Sticky Logo - stays in center */}
+        <div style={{
+          position: 'sticky',
+          top: '50vh',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 15,
+          pointerEvents: 'none',
+          marginTop: '-50vh' // Pull up to overlap hero
+        }}>
+          <div style={{ width: '60vw', maxWidth: '800px' }}>
+            <DotCloudImage
+              disciplineId="logo"
+              size={200}
+              color="var(--pepe-gold)"
+              aspectRatio={3}
+              density={0.6}
+              sampleGap={2}
+              minDotSize={2.0}
+              maxDotSize={5.0}
+              reverseScroll={true}
+            />
+          </div>
+        </div>
+
+        {/* Black Focus Section - 100vh for logo animation */}
+        <section style={{
+          position: 'relative',
+          height: '100vh',
+          backgroundColor: '#000',
+          zIndex: 5
+        }} />
+      </div>
 
       {/* Bento Grid Section - logo overlays on this */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
