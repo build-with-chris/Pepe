@@ -311,8 +311,8 @@ export default function DotCloudImage({
           : 'none';
 
         // During animation: only 0.3% of particles glow (3-5 particles for ~1300 total)
-        // When static: 25% of particles can glow
-        const glowChance = isAnimating ? 0.003 : 0.25;
+        // When static: only 2.5% of particles can glow (much more subtle)
+        const glowChance = isAnimating ? 0.003 : 0.025;
         const shouldGlow = Math.random() < glowChance;
 
         return (
