@@ -311,7 +311,7 @@ export default function Home() {
         justifyContent: 'center',
         overflow: 'hidden'
       }}>
-        {/* Background - Fixed, Extended for Animation */}
+        {/* Background - Fixed, Extended */}
         <div style={{
           position: 'fixed',
           top: 0,
@@ -325,7 +325,7 @@ export default function Home() {
             alt="Pepe Shows Hero"
             style={{
               width: '100%',
-              height: '100vh',
+              height: '100%',
               objectFit: 'cover',
               objectPosition: 'center'
             }}
@@ -338,22 +338,21 @@ export default function Home() {
             bottom: 0,
             background: 'rgba(0, 0, 0, 0.4)'
           }} />
-          <Buhnenzauber />
         </div>
 
-        {/* Centered Stack: Headline → Buttons → Logo */}
+        {/* Content Stack: Headline → Buttons */}
         <div style={{
           position: 'relative',
           zIndex: 10,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: 'clamp(2rem, 5vh, 4rem)',
+          gap: 'clamp(1.5rem, 4vh, 3rem)',
           padding: 'clamp(1rem, 3vw, 2rem)',
           textAlign: 'center',
           maxWidth: '1200px',
-          width: '100%'
+          width: '100%',
+          paddingBottom: '25vh'
         }}>
           {/* Headline */}
           <h1 className="hero-title-elegant display-gradient" style={{
@@ -378,30 +377,31 @@ export default function Home() {
               {t('home.hero.secondaryCta')}
             </Link>
           </div>
+        </div>
 
-          {/* Logo - Sticky for Animation */}
-          <div style={{
-            position: 'sticky',
-            top: '50vh',
-            transform: 'translateY(-50%)',
-            width: '100%',
-            maxWidth: 'min(800px, 90vw)',
-            display: 'flex',
-            justifyContent: 'center',
-            zIndex: 15
-          }}>
-            <DotCloudImage
-              disciplineId="logo"
-              size={350}
-              color="var(--pepe-gold)"
-              aspectRatio={3}
-              density={0.5}
-              sampleGap={2}
-              minDotSize={1.4}
-              maxDotSize={2.5}
-              reverseScroll={true}
-            />
-          </div>
+        {/* Logo - Positioned at bottom center */}
+        <div style={{
+          position: 'absolute',
+          bottom: '15vh',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+          width: '100%',
+          maxWidth: 'min(600px, 85vw)',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          <DotCloudImage
+            disciplineId="logo"
+            size={250}
+            color="var(--pepe-gold)"
+            aspectRatio={3}
+            density={0.5}
+            sampleGap={2}
+            minDotSize={1.4}
+            maxDotSize={2.5}
+            reverseScroll={true}
+          />
         </div>
 
         {/* Scroll Indicator */}
@@ -418,15 +418,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Animation Extension - 100vh with Buhnenzauber */}
+      {/* Animation Extension - 100vh */}
       <section style={{
         position: 'relative',
         height: '100vh',
         overflow: 'hidden',
         backgroundColor: '#000'
-      }}>
-        <Buhnenzauber />
-      </section>
+      }} />
 
       {/* Bento Grid Section - logo overlays on this */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
