@@ -52,7 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   {
                     user_id: u.id,
                     email: u.email ?? null,
-                    display_name: artist.name ?? null,
                   },
                   { onConflict: 'user_id' }
                 );
