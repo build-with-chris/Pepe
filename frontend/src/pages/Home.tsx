@@ -333,7 +333,6 @@ export default function Home() {
             bottom: 0,
             background: 'rgba(0, 0, 0, 0.4)'
           }} />
-          <Buhnenzauber />
         </div>
 
         {/* Centered Stack: Headline → Buttons → Logo */}
@@ -419,15 +418,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Animation Extension - 100vh with particles */}
+      {/* Animation Extension - 100vh */}
       <section style={{
         position: 'relative',
         height: '100vh',
         overflow: 'hidden',
         backgroundColor: '#000'
-      }}>
-        <Buhnenzauber />
-      </section>
+      }} />
 
       {/* Bento Grid Section - logo overlays on this */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>

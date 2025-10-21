@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
-import ParticleBackground from './components/ParticleBackground'
+import Buhnenzauber from './components/Buhnenzauber'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Kuenstler from './pages/Kuenstler'
@@ -45,7 +45,17 @@ function App() {
         {/* Regular pages with nav/footer */}
         <Route path="*" element={
           <>
-            <ParticleBackground />
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              zIndex: -1,
+              pointerEvents: 'none'
+            }}>
+              <Buhnenzauber />
+            </div>
             <Navigation />
             <Routes>
               {/* Public routes */}
