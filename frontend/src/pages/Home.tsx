@@ -301,48 +301,112 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero Section */}
-      <section className="hero-full" style={{ position: 'relative', overflow: 'visible' }}>
-        {/* Background Hero Image */}
-        <div className="hero-background">
+      {/* Hero Section - Centered Stack */}
+      <section style={{
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden'
+      }}>
+        {/* Background - Fixed, Extended for Animation */}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '200vh',
+          zIndex: 0
+        }}>
           <img
             src={heroImage}
             alt="Pepe Shows Hero"
-            className="hero-image"
+            style={{
+              width: '100%',
+              height: '100vh',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
           />
-          <div className="hero-overlay"></div>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.4)'
+          }} />
           <Buhnenzauber />
         </div>
 
-        {/* Hero Content - Positioned Higher (20% up from default) */}
-        <div className="hero-content-wrapper" style={{
-          position: 'absolute',
-          bottom: '60%',
-          left: 0,
-          right: 0,
-          transform: 'translateY(50%)'
+        {/* Centered Stack: Headline → Buttons → Logo */}
+        <div style={{
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 'clamp(2rem, 5vh, 4rem)',
+          padding: 'clamp(1rem, 3vw, 2rem)',
+          textAlign: 'center',
+          maxWidth: '1200px',
+          width: '100%'
         }}>
-          <div className="stage-container">
-            <div className="hero-content" style={{ textAlign: 'center' }}>
-              {/* Removed PEPE SHOWS kicker */}
-              <h1 className="hero-title-elegant display-gradient mb-6">
-                {t('home.hero.title')}
-              </h1>
-              <div className="hero-actions">
-                <Link to="/anfragen" className="btn btn-primary btn-lg">
-                  {t('home.hero.primaryCta')}
-                </Link>
-                <Link to="/shows" className="btn btn-secondary btn-lg">
-                  {t('home.hero.secondaryCta')}
-                </Link>
-              </div>
-            </div>
+          {/* Headline */}
+          <h1 className="hero-title-elegant display-gradient" style={{
+            fontSize: 'clamp(2rem, 5vw, 4rem)',
+            margin: 0,
+            lineHeight: 1.2
+          }}>
+            {t('home.hero.title')}
+          </h1>
+
+          {/* Buttons */}
+          <div style={{
+            display: 'flex',
+            gap: 'clamp(0.5rem, 2vw, 1rem)',
+            flexWrap: 'wrap',
+            justifyContent: 'center'
+          }}>
+            <Link to="/anfragen" className="btn btn-primary btn-lg">
+              {t('home.hero.primaryCta')}
+            </Link>
+            <Link to="/shows" className="btn btn-secondary btn-lg">
+              {t('home.hero.secondaryCta')}
+            </Link>
+          </div>
+
+          {/* Logo - Sticky for Animation */}
+          <div style={{
+            position: 'sticky',
+            top: '50vh',
+            transform: 'translateY(-50%)',
+            width: '100%',
+            maxWidth: 'min(800px, 90vw)',
+            display: 'flex',
+            justifyContent: 'center',
+            zIndex: 15
+          }}>
+            <DotCloudImage
+              disciplineId="logo"
+              size={350}
+              color="var(--pepe-gold)"
+              aspectRatio={3}
+              density={0.5}
+              sampleGap={2}
+              minDotSize={1.4}
+              maxDotSize={2.5}
+              reverseScroll={true}
+            />
           </div>
         </div>
 
-        {/* Scroll Indicator - Fixed at bottom of viewport */}
+        {/* Scroll Indicator */}
         <div style={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: '2rem',
           left: '50%',
           transform: 'translateX(-50%)',
@@ -354,43 +418,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sticky Logo Container - wraps black section and extends to bento */}
-      <div style={{ position: 'relative' }}>
-        {/* Sticky Logo - stays in center */}
-        <div style={{
-          position: 'sticky',
-          top: '50vh',
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 15,
-          pointerEvents: 'none',
-          marginTop: '-50vh' // Pull up to overlap hero
-        }}>
-          <div style={{ width: '60vw', maxWidth: '800px' }}>
-            <DotCloudImage
-              disciplineId="logo"
-              size={200}
-              color="var(--pepe-gold)"
-              aspectRatio={3}
-              density={0.6}
-              sampleGap={2}
-              minDotSize={2.0}
-              maxDotSize={5.0}
-              reverseScroll={true}
-            />
-          </div>
-        </div>
-
-        {/* Black Focus Section - 100vh for logo animation */}
-        <section style={{
-          position: 'relative',
-          height: '100vh',
-          backgroundColor: '#000',
-          zIndex: 5
-        }} />
-      </div>
+      {/* Animation Extension - 100vh with Buhnenzauber */}
+      <section style={{
+        position: 'relative',
+        height: '100vh',
+        overflow: 'hidden',
+        backgroundColor: '#000'
+      }}>
+        <Buhnenzauber />
+      </section>
 
       {/* Bento Grid Section - logo overlays on this */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
