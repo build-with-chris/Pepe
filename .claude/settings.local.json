@@ -6,7 +6,14 @@
       "Bash(git branch:*)",
       "Bash(python -m flask db revision:*)",
       "Bash(npx vercel:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nMerge shuffle appearances - single auto-looping accordion\n\nChanges:\n- Removed upper random shuffle appearance\n- Single centered accordion shows ONE icon at a time\n- Auto-loops through disciplines every 5 seconds\n- Discipline name fades up from bottom with 600ms delay\n- Pause on hover\n- Interactive progress dots for navigation\n- Key prop ensures only one DotIcon loads at a time\n- Clean, focused design\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nMerge shuffle appearances - single auto-looping accordion\n\nChanges:\n- Removed upper random shuffle appearance\n- Single centered accordion shows ONE icon at a time\n- Auto-loops through disciplines every 5 seconds\n- Discipline name fades up from bottom with 600ms delay\n- Pause on hover\n- Interactive progress dots for navigation\n- Key prop ensures only one DotIcon loads at a time\n- Clean, focused design\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix translations, contact info, and performance optimizations\n\nChanges:\n- Fixed all discipline translation keys to use correct paths (booking.disciplines.options.*.label)\n- Updated all contact information:\n  - Email: info@pepe-shows.de (consolidated from multiple addresses)\n  - Phone: +49 123 456 789\n  - Address: PepeDome, Ostpark München, 81735\n- Added missing translation keys for Home, Shows, and Artists pages\n- Fixed PostHog initialization (only runs if key exists)\n- Fixed Supabase initialization (validates required env vars)\n- Reduced particle density in Shows page hero (density=0.15, sampleGap=2)\n- Updated Impressum/Imprint pages with correct company info\n- Cleaned up parent directory structure (removed duplicate files)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

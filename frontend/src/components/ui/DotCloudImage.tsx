@@ -132,14 +132,13 @@ export default function DotCloudImage({
 
       if (reverseScroll) {
         // REVERSE SCROLL MODE: For hero elements
-        // Start fully formed (100%), dissolve as element scrolls up and out of view
+        // Start fully formed (100%), dissolve as user scrolls down
         const scrollY = window.scrollY;
-        const elementTop = rect.top + scrollY; // Element's absolute position on page
 
-        // Start dissolving when user scrolls past 60% of viewport height
-        const dissolveStart = windowHeight * 0.6;
-        // Fully dissolved when element is near top of viewport
-        const dissolveEnd = elementTop + windowHeight * 0.3;
+        // Start dissolving immediately when scrolling begins
+        const dissolveStart = 0;
+        // Fully dissolved after scrolling down by viewport height
+        const dissolveEnd = windowHeight;
 
         if (scrollY <= dissolveStart) {
           progress = 1.0; // Fully formed when page is at top
@@ -154,7 +153,7 @@ export default function DotCloudImage({
 
         // Debug only for logo to verify scroll handler is working
         if (disciplineId === 'logo') {
-          console.log('[Logo Scroll]', { scrollY, elementTop, dissolveStart, dissolveEnd, progress: progress.toFixed(2) });
+          console.log('[Logo Scroll]', { scrollY, dissolveStart, dissolveEnd, progress: progress.toFixed(2) });
         }
       } else {
         // NORMAL SCROLL MODE: For elements lower on page
@@ -285,17 +284,21 @@ export default function DotCloudImage({
         // NO TRANSPARENCY - solid opacity for performance
         const opacity = 1.0;
 
-        // Particle glow: strong at 100%, off at 50% (0-0.5 = no glow, 0.5-1.0 = increasing glow)
+        // Particle glow: only when fully formed (progress >= 0.95) and not animating
+        // During animation (progress < 0.95), disable all glow for performance
         // Disabled if noGlow prop is true
-        const glowIntensity = noGlow ? 0 : (formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0); // 0 to 1
+        const isAnimating = formProgress < 0.95 && formProgress > 0.05;
+        const glowIntensity = noGlow || isAnimating ? 0 : (formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0); // 0 to 1
         const glowSize = 8 * glowIntensity; // 0 to 8px
         const glowOpacity = 0.6 * glowIntensity; // 0 to 0.6
         const boxShadow = glowSize > 0
           ? `0 0 ${glowSize}px rgba(255, 215, 0, ${glowOpacity})`
           : 'none';
 
-        // Only 5% of particles get the glow animation
-        const shouldGlow = Math.random() < 0.05;
+        // During animation: only 0.3% of particles glow (3-5 particles for ~1300 total)
+        // When static: 5% can glow
+        const glowChance = isAnimating ? 0.003 : 0.05;
+        const shouldGlow = Math.random() < glowChance;
 
         return (
           <span

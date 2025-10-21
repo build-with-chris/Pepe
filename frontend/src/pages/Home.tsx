@@ -326,8 +326,8 @@ export default function Home() {
                     size={200}
                     color="var(--pepe-gold)"
                     aspectRatio={3}
-                    density={1.0}
-                    sampleGap={2}
+                    density={0.7}
+                    sampleGap={3}
                     minDotSize={0.2}
                     maxDotSize={3.0}
                     reverseScroll={true}
