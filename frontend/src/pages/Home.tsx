@@ -345,7 +345,7 @@ export default function Home() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 'clamp(2rem, 5vh, 4rem)',
+          gap: 'clamp(1.5rem, 4vh, 4rem)',
           textAlign: 'center',
           maxWidth: '1200px',
           width: '90%'
@@ -374,7 +374,7 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Logo - Responsive */}
+          {/* Logo - Responsive (60% size on mobile) */}
           <div style={{
             width: '100%',
             maxWidth: '90vw',
@@ -382,25 +382,19 @@ export default function Home() {
             justifyContent: 'center',
             overflow: 'hidden'
           }}>
-            <div style={{
-              width: 'min(750px, 90vw)',
-              height: 'min(250px, 30vw)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}>
-              <DotCloudImage
-                disciplineId="logo"
-                size={Math.min(250, typeof window !== 'undefined' ? window.innerWidth * 0.3 : 250)}
-                color="var(--pepe-gold)"
-                aspectRatio={3}
-                density={0.5}
-                sampleGap={2}
-                minDotSize={1.4}
-                maxDotSize={2.5}
-                reverseScroll={true}
-              />
-            </div>
+            <DotCloudImage
+              disciplineId="logo"
+              size={typeof window !== 'undefined' && window.innerWidth < 768
+                ? Math.min(150, window.innerWidth * 0.6)
+                : 250}
+              color="var(--pepe-gold)"
+              aspectRatio={3}
+              density={0.5}
+              sampleGap={2}
+              minDotSize={1.4}
+              maxDotSize={2.5}
+              reverseScroll={true}
+            />
           </div>
         </div>
 
