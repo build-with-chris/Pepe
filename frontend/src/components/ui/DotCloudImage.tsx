@@ -103,10 +103,26 @@ export default function DotCloudImage({
   // Scroll-based animation trigger (only when not in manual mode)
   useEffect(() => {
     // Skip scroll handling if in manual mode
-    if (isManualMode) return;
+    if (isManualMode) {
+      if (disciplineId === 'logo') console.log('[Logo] Skipping scroll - manual mode');
+      return;
+    }
+
+    // Wait for particles to load before setting up scroll handler
+    if (isLoading || particles.length === 0) {
+      if (disciplineId === 'logo') console.log('[Logo] Waiting for particles to load');
+      return;
+    }
 
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      if (disciplineId === 'logo') console.log('[Logo] No container ref');
+      return;
+    }
+
+    if (disciplineId === 'logo') {
+      console.log('[Logo] Setting up scroll handler. reverseScroll:', reverseScroll, 'particles:', particles.length);
+    }
 
     const handleScroll = () => {
       const rect = container.getBoundingClientRect();
@@ -192,7 +208,7 @@ export default function DotCloudImage({
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [disciplineId, isManualMode, reverseScroll]);
+  }, [disciplineId, isManualMode, reverseScroll, isLoading, particles.length]);
 
   if (error) {
     return (
