@@ -304,15 +304,15 @@ export default function DotCloudImage({
         // During animation (progress < 0.95), disable all glow for performance
         // Disabled if noGlow prop is true
         const glowIntensity = noGlow || isAnimating ? 0 : (formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0); // 0 to 1
-        const glowSize = 8 * glowIntensity; // 0 to 8px
-        const glowOpacity = 0.6 * glowIntensity; // 0 to 0.6
+        const glowSize = 4 * glowIntensity; // Reduced: 0 to 4px (was 8px)
+        const glowOpacity = 0.3 * glowIntensity; // Reduced: 0 to 0.3 (was 0.6)
         const boxShadow = glowSize > 0
           ? `0 0 ${glowSize}px rgba(255, 215, 0, ${glowOpacity})`
           : 'none';
 
         // During animation: only 0.3% of particles glow (3-5 particles for ~1300 total)
-        // When static: 5% can glow
-        const glowChance = isAnimating ? 0.003 : 0.05;
+        // When static: 25% of particles can glow
+        const glowChance = isAnimating ? 0.003 : 0.25;
         const shouldGlow = Math.random() < glowChance;
 
         return (
