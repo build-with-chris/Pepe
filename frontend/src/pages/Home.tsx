@@ -318,8 +318,17 @@ export default function Home() {
         <div className="hero-content-wrapper">
           <div className="stage-container">
             <div className="hero-content">
-              {/* DotIcon Logo with scroll animation - 60vw width (600px on 1000px screen) */}
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 'var(--space-8)' }}>
+              {/* Sticky DotIcon Logo - stays in middle during scroll animation (300vh) */}
+              <div style={{
+                position: 'sticky',
+                top: '50vh',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 'var(--space-8)',
+                zIndex: 10
+              }}>
                 <div style={{ width: '60vw', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
                   <DotCloudImage
                     disciplineId="logo"
@@ -334,6 +343,9 @@ export default function Home() {
                   />
                 </div>
               </div>
+
+              {/* Spacer for 300vh scroll animation */}
+              <div style={{ height: '300vh' }} aria-hidden="true" />
               <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
               <h1 className="hero-title-elegant display-gradient mb-6">
                 {t('home.hero.title')}

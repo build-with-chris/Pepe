@@ -131,25 +131,21 @@ export default function DotCloudImage({
       let progress = 0;
 
       if (reverseScroll) {
-        // REVERSE SCROLL MODE: For hero elements
-        // Start fully formed (100%), dissolve as user scrolls down
+        // STICKY SCROLL MODE: Logo stays in middle of screen for 300vh
+        // Animation spans 300vh scroll range
         // Uses easeInQuart curve: slow start, explosive end
         const scrollY = window.scrollY;
-        const elementTop = rect.top + scrollY; // Element's absolute position on page
 
-        // Start dissolving immediately when scrolling begins
+        // Animation runs over 300vh (3x viewport height)
         const dissolveStart = 0;
-        // Fully dissolved when logo CENTER hits top of viewport
-        // elementTop is logo's top edge, so add half the logo height
-        const logoCenterOffset = containerHeight / 2;
-        const dissolveEnd = elementTop - logoCenterOffset;
+        const dissolveEnd = windowHeight * 3; // 300vh
 
         if (scrollY <= dissolveStart) {
-          progress = 1.0; // Fully formed when page is at top
+          progress = 1.0; // Fully formed at page top
         } else if (scrollY >= dissolveEnd) {
-          progress = 0; // Fully dissolved when scrolled far
+          progress = 0; // Fully dissolved after 300vh
         } else {
-          // Linear scroll progress 0-1
+          // Linear scroll progress 0-1 over 300vh range
           const scrollProgress = (scrollY - dissolveStart) / (dissolveEnd - dissolveStart);
 
           // Apply easeInQuart to scrollProgress: slow start, explosive end
@@ -158,10 +154,6 @@ export default function DotCloudImage({
 
           // Invert to get progress from 1.0 → 0 (formed → dissolved)
           progress = 1.0 - eased;
-
-          if (disciplineId === 'logo') {
-            console.log('[Logo Scroll]', { scrollY, elementTop, dissolveEnd, scrollProgress: scrollProgress.toFixed(2), progress: progress.toFixed(2) });
-          }
         }
 
       } else {
@@ -265,10 +257,10 @@ export default function DotCloudImage({
     >
       {particles.map((particle, index) => {
         // Dynamic particle culling during animation for performance
-        // When animating (progress 0.05-0.95), hide 30% of particles
+        // When animating (progress 0.05-0.95), hide 50% of particles for smooth 300vh animation
         // When static (progress < 0.05 or > 0.95), show all particles
         const isAnimating = formProgress < 0.95 && formProgress > 0.05;
-        const shouldHide = isAnimating && (index % 10 < 3); // Hide 30% during animation
+        const shouldHide = isAnimating && (index % 2 === 0); // Hide 50% during animation
         if (shouldHide) return null;
 
         const targetX = particle.targetX * scaleX;
