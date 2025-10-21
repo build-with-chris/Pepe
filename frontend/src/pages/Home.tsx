@@ -375,24 +375,33 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Logo */}
+          {/* Logo - Responsive */}
           <div style={{
             width: '100%',
-            maxWidth: 'min(600px, 85vw)',
+            maxWidth: '90vw',
             display: 'flex',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            overflow: 'hidden'
           }}>
-            <DotCloudImage
-              disciplineId="logo"
-              size={250}
-              color="var(--pepe-gold)"
-              aspectRatio={3}
-              density={0.5}
-              sampleGap={2}
-              minDotSize={1.4}
-              maxDotSize={2.5}
-              reverseScroll={true}
-            />
+            <div style={{
+              width: 'min(750px, 90vw)',
+              height: 'min(250px, 30vw)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <DotCloudImage
+                disciplineId="logo"
+                size={Math.min(250, typeof window !== 'undefined' ? window.innerWidth * 0.3 : 250)}
+                color="var(--pepe-gold)"
+                aspectRatio={3}
+                density={0.5}
+                sampleGap={2}
+                minDotSize={1.4}
+                maxDotSize={2.5}
+                reverseScroll={true}
+              />
+            </div>
           </div>
         </div>
 
