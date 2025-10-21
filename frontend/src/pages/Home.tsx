@@ -336,17 +336,17 @@ export default function Home() {
           <Buhnenzauber />
         </div>
 
-        {/* Content - Absolute Positioned */}
+        {/* Centered Stack: Headline → Buttons → Logo */}
         <div style={{
           position: 'absolute',
-          top: '30%',
+          top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
           zIndex: 10,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 'clamp(1.5rem, 4vh, 3rem)',
+          gap: 'clamp(2rem, 5vh, 4rem)',
           textAlign: 'center',
           maxWidth: '1200px',
           width: '90%'
@@ -374,6 +374,26 @@ export default function Home() {
               {t('home.hero.secondaryCta')}
             </Link>
           </div>
+
+          {/* Logo */}
+          <div style={{
+            width: '100%',
+            maxWidth: 'min(600px, 85vw)',
+            display: 'flex',
+            justifyContent: 'center'
+          }}>
+            <DotCloudImage
+              disciplineId="logo"
+              size={250}
+              color="var(--pepe-gold)"
+              aspectRatio={3}
+              density={0.5}
+              sampleGap={2}
+              minDotSize={1.4}
+              maxDotSize={2.5}
+              reverseScroll={true}
+            />
+          </div>
         </div>
 
         {/* Scroll Indicator */}
@@ -390,49 +410,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sticky Logo Container - Spans animation area */}
-      <div style={{
+      {/* Animation Extension - 100vh with particles */}
+      <section style={{
         position: 'relative',
-        height: '185vh', // 85vh overlap + 100vh extension
-        marginTop: '-85vh' // Pull up to overlap hero
+        height: '100vh',
+        overflow: 'hidden',
+        backgroundColor: '#000'
       }}>
-        <div style={{
-          position: 'sticky',
-          top: '50vh',
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 15,
-          pointerEvents: 'none',
-          padding: '0 5vw'
-        }}>
-          <DotCloudImage
-            disciplineId="logo"
-            size={250}
-            color="var(--pepe-gold)"
-            aspectRatio={3}
-            density={0.5}
-            sampleGap={2}
-            minDotSize={1.4}
-            maxDotSize={2.5}
-            reverseScroll={true}
-          />
-        </div>
-
-        {/* Background particles for extension */}
-        <div style={{
-          position: 'absolute',
-          top: '85vh',
-          left: 0,
-          width: '100%',
-          height: '100vh',
-          backgroundColor: '#000',
-          zIndex: -1
-        }}>
-          <Buhnenzauber />
-        </div>
-      </div>
+        <Buhnenzauber />
+      </section>
 
       {/* Bento Grid Section - logo overlays on this */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
