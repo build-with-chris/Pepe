@@ -301,8 +301,8 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero Section - Full Viewport Height */}
-      <section className="hero-full">
+      {/* Hero Section with Logo starting position */}
+      <section className="hero-full" style={{ position: 'relative' }}>
         {/* Background Hero Image */}
         <div className="hero-background">
           <img
@@ -312,6 +312,40 @@ export default function Home() {
           />
           <div className="hero-overlay"></div>
           <Buhnenzauber />
+        </div>
+
+        {/* Sticky Logo - starts in middle of hero */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '0',
+          right: '0',
+          transform: 'translateY(-50%)',
+          zIndex: 15,
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            position: 'sticky',
+            top: '50vh',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <div style={{ width: '60vw', maxWidth: '800px' }}>
+              <DotCloudImage
+                disciplineId="logo"
+                size={200}
+                color="var(--pepe-gold)"
+                aspectRatio={3}
+                density={0.6}
+                sampleGap={2}
+                minDotSize={2.0}
+                maxDotSize={5.0}
+                reverseScroll={true}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Hero Content - Positioned Lower */}
@@ -340,37 +374,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sticky Logo Animation Section - 300vh scroll area */}
-      <section style={{ position: 'relative', height: '300vh' }}>
-        {/* Sticky DotIcon Logo - stays in middle during scroll */}
-        <div style={{
-          position: 'sticky',
-          top: '50vh',
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 10,
-          pointerEvents: 'none'
-        }}>
-          <div style={{ width: '60vw', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
-            <DotCloudImage
-              disciplineId="logo"
-              size={200}
-              color="var(--pepe-gold)"
-              aspectRatio={3}
-              density={0.6}
-              sampleGap={2}
-              minDotSize={2.0}
-              maxDotSize={5.0}
-              reverseScroll={true}
-            />
-          </div>
-        </div>
-      </section>
+      {/* Black Focus Section - 100vh for logo animation */}
+      <section style={{
+        position: 'relative',
+        height: '100vh',
+        backgroundColor: '#000',
+        zIndex: 5
+      }} />
 
-      {/* Bento Grid Section */}
-      <section className="section bg-pepe-ink">
+      {/* Bento Grid Section - logo overlays on this */}
+      <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
         <div className="stage-container">
           <div className="bento-grid-square">
             {/* Main Circus Tent Card - Square Format */}
