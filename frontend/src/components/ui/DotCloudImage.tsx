@@ -104,24 +104,17 @@ export default function DotCloudImage({
   useEffect(() => {
     // Skip scroll handling if in manual mode
     if (isManualMode) {
-      if (disciplineId === 'logo') console.log('[Logo] Manual mode, skipping scroll');
       return;
     }
 
     // Wait for particles to load before setting up scroll handler
     if (isLoading || particles.length === 0) {
-      if (disciplineId === 'logo') console.log('[Logo] Waiting for particles:', { isLoading, particleCount: particles.length });
       return;
     }
 
     const container = containerRef.current;
     if (!container) {
-      if (disciplineId === 'logo') console.log('[Logo] No container ref');
       return;
-    }
-
-    if (disciplineId === 'logo') {
-      console.log('[Logo] Scroll handler attached! reverseScroll:', reverseScroll);
     }
 
     const handleScroll = () => {
@@ -131,29 +124,37 @@ export default function DotCloudImage({
       let progress = 0;
 
       if (reverseScroll) {
-        // STICKY SCROLL MODE: Logo stays in middle of screen for 300vh
-        // Animation spans 300vh scroll range
-        // Uses easeInQuart curve: slow start, explosive end
+        // FIXED SCROLL MODE: Logo stays centered, dissolves over scroll range
+        // Uses easeInCubic curve: faster start than easeInQuart
         const scrollY = window.scrollY;
 
-        // Animation runs over 300vh (3x viewport height)
+        // Animation starts immediately and runs through hero (100vh) + scroll section (100vh) = 200vh total
         const dissolveStart = 0;
-        const dissolveEnd = windowHeight * 3; // 300vh
+        const dissolveEnd = windowHeight * 2; // 200vh total
 
         if (scrollY <= dissolveStart) {
           progress = 1.0; // Fully formed at page top
         } else if (scrollY >= dissolveEnd) {
-          progress = 0; // Fully dissolved after 300vh
+          progress = 0; // Fully dissolved after 200vh
         } else {
-          // Linear scroll progress 0-1 over 300vh range
+          // Linear scroll progress 0-1 over 200vh range
           const scrollProgress = (scrollY - dissolveStart) / (dissolveEnd - dissolveStart);
 
-          // Apply easeInQuart to scrollProgress: slow start, explosive end
-          // x^4 makes it stay near 0 at start, then accelerate rapidly
-          const eased = Math.pow(scrollProgress, 4);
+          // Apply easeInCubic to scrollProgress: faster start than easeInQuart
+          // x^3 makes it start sooner, still accelerate at end
+          const eased = Math.pow(scrollProgress, 3);
 
           // Invert to get progress from 1.0 → 0 (formed → dissolved)
           progress = 1.0 - eased;
+        }
+
+        // Hide component completely when fully dissolved
+        if (progress === 0 && container) {
+          container.style.opacity = '0';
+          container.style.visibility = 'hidden';
+        } else if (container) {
+          container.style.opacity = '1';
+          container.style.visibility = 'visible';
         }
 
       } else {
@@ -239,6 +240,14 @@ export default function DotCloudImage({
   // Use manual progress if in manual mode, otherwise use scroll progress
   const formProgress = isManualMode ? manualProgress : scrollProgress;
 
+  // Animation phases based on progress (ONLY for reverseScroll mode, not manual mode)
+  // Phase 1 (1.0 -> 0.8): Fully formed, growing dots
+  // Phase 2 (0.8 -> 0.6): Glitter/glow effect peaks
+  // Phase 3 (0.6 -> 0.4): Lights start turning off
+  // Phase 4 (0.4 -> 0.2): Dots shrink to 0.5x, start exploding
+  // Phase 5 (0.2 -> 0.0): Density reduction, final explosion
+  const enableAdvancedEffects = reverseScroll && !isManualMode;
+
   // Calculate container dimensions based on aspect ratio
   const containerWidth = size * aspectRatio;
   const containerHeight = size;
@@ -256,12 +265,11 @@ export default function DotCloudImage({
       data-scroll-progress={scrollProgress.toFixed(2)}
     >
       {particles.map((particle, index) => {
-        // Dynamic particle culling during animation for performance
-        // When animating (progress 0.05-0.95), hide 50% of particles for smooth 300vh animation
-        // When static (progress < 0.05 or > 0.95), show all particles
-        const isAnimating = formProgress < 0.95 && formProgress > 0.05;
-        const shouldHide = isAnimating && (index % 2 === 0); // Hide 50% during animation
-        if (shouldHide) return null;
+        // Phase 5: Progressive density reduction (ONLY for advanced effects)
+        if (enableAdvancedEffects && formProgress < 0.2) {
+          const densityReduction = formProgress / 0.2; // 0 to 1
+          if (Math.random() > densityReduction) return null;
+        }
 
         const targetX = particle.targetX * scaleX;
         const targetY = particle.targetY * scaleY;
@@ -272,57 +280,116 @@ export default function DotCloudImage({
         const formedX = targetX + jitterX;
         const formedY = targetY + jitterY;
 
+        // Phase 4 & 5: Explosion offset (ONLY for advanced effects)
+        let explosionX = 0;
+        let explosionY = 0;
+        if (enableAdvancedEffects && formProgress < 0.4) {
+          const explosionProgress = 1 - (formProgress / 0.4); // 0 to 1
+          const angle = Math.random() * Math.PI * 2;
+          const distance = explosionProgress * 200 * (1 + Math.random());
+          explosionX = Math.cos(angle) * distance;
+          explosionY = Math.sin(angle) * distance;
+        }
+
         // Idle position (widely spread)
         const idleX = targetX + particle.offsetX * scaleX;
         const idleY = targetY + particle.offsetY * scaleY;
 
         // Interpolate between idle and formed based on scroll/hover
-        const displayX = idleX + (formedX - idleX) * formProgress;
-        const displayY = idleY + (formedY - idleY) * formProgress;
+        const displayX = idleX + (formedX - idleX) * formProgress + explosionX;
+        const displayY = idleY + (formedY - idleY) * formProgress + explosionY;
 
         // Enhanced contrast: darker spots get bigger dots at perfect alignment
         const darknessFactor = 1 - particle.brightness / 255;
         const contrastBoost = 1 + darknessFactor * 0.6 * formProgress; // Up to 60% bigger when dark & formed
 
+        // Phase 1: Dot growth (ONLY for advanced effects)
+        let growthScale = 1.0;
+        if (enableAdvancedEffects && formProgress > 0.8) {
+          growthScale = 1.0 + ((formProgress - 0.8) / 0.2) * 0.5; // 1.0 to 1.5
+        }
+
+        // Phase 4: Dot shrinkage (ONLY for advanced effects)
+        let shrinkScale = 1.0;
+        if (enableAdvancedEffects && formProgress < 0.4 && formProgress > 0.2) {
+          shrinkScale = 0.5 + ((formProgress - 0.2) / 0.2) * 0.5; // 0.5 to 1.0
+        } else if (enableAdvancedEffects && formProgress <= 0.2) {
+          shrinkScale = 0.5;
+        }
+
         // Scale animation: larger when idle, precise when formed
         const idleScale = 1.3 + Math.random() * 0.5;
-        const formedScale = 1.0 * contrastBoost; // Consistent size when formed, boosted by darkness
+        const formedScale = 1.0 * contrastBoost * growthScale * shrinkScale;
         const currentScale = idleScale + (formedScale - idleScale) * formProgress;
 
-        // NO TRANSPARENCY - solid opacity for performance
-        const opacity = 1.0;
+        // Phase 2 & 3: Glitter/glow effect (ONLY for advanced effects)
+        let glowIntensity = 0;
+        if (enableAdvancedEffects && formProgress > 0.4 && formProgress < 0.9) {
+          // Peak at 0.7, fade in from 0.4, fade out to 0.9
+          const distanceFromPeak = Math.abs(formProgress - 0.7);
+          glowIntensity = Math.max(0, 1 - (distanceFromPeak / 0.3));
+        }
 
-        // Particle glow: only when fully formed (progress >= 0.95) and not animating
-        // During animation (progress < 0.95), disable all glow for performance
-        // Disabled if noGlow prop is true
-        const glowIntensity = noGlow || isAnimating ? 0 : (formProgress >= 0.5 ? (formProgress - 0.5) * 2 : 0); // 0 to 1
-        const glowSize = 4 * glowIntensity; // Reduced: 0 to 4px (was 8px)
-        const glowOpacity = 0.3 * glowIntensity; // Reduced: 0 to 0.3 (was 0.6)
-        const boxShadow = glowSize > 0
-          ? `0 0 ${glowSize}px rgba(255, 215, 0, ${glowOpacity})`
+        // Phase 3: Random lights turn off (ONLY for advanced effects)
+        let lightOn = true;
+        if (enableAdvancedEffects && formProgress < 0.6 && formProgress > 0.4) {
+          const lightsOffProgress = 1 - ((formProgress - 0.4) / 0.2); // 0 to 1
+          lightOn = Math.random() > lightsOffProgress * 0.7; // Up to 70% lights off
+        } else if (enableAdvancedEffects && formProgress <= 0.4) {
+          lightOn = Math.random() > 0.7; // 70% lights off
+        }
+
+        const glowSize = 8 * glowIntensity;
+        const glowOpacity = 0.8 * glowIntensity;
+        const boxShadow = glowSize > 0 && lightOn
+          ? `0 0 ${glowSize}px rgba(255, 215, 0, ${glowOpacity}), 0 0 ${glowSize * 2}px rgba(255, 215, 0, ${glowOpacity * 0.5})`
           : 'none';
 
-        // During animation: only 0.3% of particles glow (3-5 particles for ~1300 total)
-        // When static: only 2.5% of particles can glow (much more subtle)
-        const glowChance = isAnimating ? 0.003 : 0.025;
-        const shouldGlow = Math.random() < glowChance;
+        // Color tween (ONLY for advanced effects)
+        // Phase 1-2 (1.0 -> 0.6): White
+        // Phase 3 (0.6 -> 0.4): Transition from white to bronze
+        // Phase 4-5 (0.4 -> 0.0): Bronze
+        let particleColor = color;
+        if (enableAdvancedEffects) {
+          if (formProgress > 0.6) {
+            // Phase 1-2: White
+            particleColor = '#FFFFFF';
+          } else if (formProgress > 0.4) {
+            // Phase 3: Tween from white to bronze
+            const tweenProgress = 1 - ((formProgress - 0.4) / 0.2); // 0 to 1
+            const white = { r: 255, g: 255, b: 255 };
+            const bronze = { r: 205, g: 127, b: 50 }; // CD7F32
+            const r = Math.round(white.r + (bronze.r - white.r) * tweenProgress);
+            const g = Math.round(white.g + (bronze.g - white.g) * tweenProgress);
+            const b = Math.round(white.b + (bronze.b - white.b) * tweenProgress);
+            particleColor = `rgb(${r}, ${g}, ${b})`;
+          } else {
+            // Phase 4-5: Bronze
+            particleColor = '#CD7F32';
+          }
+        }
+
+        // Opacity: fade out when lights are off or during final explosion
+        const opacity = lightOn ? 1.0 : 0.3;
+
+        // Mobile: reduce dot size by 50%
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const dotSize = isMobile ? particle.size * 0.5 : particle.size;
 
         return (
           <span
             key={`${disciplineId}-${index}`}
-            className={`dot-particle ${formProgress > 0.95 ? (shouldGlow ? 'no-float glow-particle' : 'no-float') : ''}`}
+            className="dot-particle no-float"
             style={{
               left: `${displayX}px`,
               top: `${displayY}px`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              background: color,
+              width: `${dotSize}px`,
+              height: `${dotSize}px`,
+              background: particleColor,
               transform: `scale(${currentScale})`,
+              opacity: opacity,
               boxShadow: boxShadow,
-              animationDelay: `${particle.floatDelay}ms`,
-              animationDuration: `${6 + particle.floatSpeed * 4}s`,
-              '--drift-x': `${20 * (1 - formProgress)}px`,
-              '--drift-y': `${20 * (1 - formProgress)}px`,
+              transition: 'opacity 0.3s ease-out',
             } as React.CSSProperties}
           />
         );

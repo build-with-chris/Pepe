@@ -58,31 +58,20 @@ export default function Shows() {
     const fetchShows = async () => {
       const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
       
-      // Try multiple endpoint variations
-      const endpoints = [
-        `${baseUrl}/api/shows`,
-        `${baseUrl}/shows`,
-        `${baseUrl}/api/shows/shows`,
-        `${baseUrl}/api/public/shows`
-      ]
-      
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(endpoint)
-          if (response.ok) {
-            const data = await response.json()
-            setShows(data)
-            setLoading(false)
-            return
-          }
-        } catch (error) {
-          console.warn(`Endpoint ${endpoint} failed:`, error)
-          continue
+      try {
+        const response = await fetch(`${baseUrl}/api/shows`, {
+          signal: AbortSignal.timeout(5000)
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setShows(data)
         }
+      } catch (error) {
+        // Shows endpoint not available, use empty array
+        setShows([])
+      } finally {
+        setLoading(false)
       }
-      
-      console.error('All show endpoints failed')
-      setLoading(false)
     }
 
     fetchShows()

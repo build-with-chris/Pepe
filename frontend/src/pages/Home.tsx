@@ -23,7 +23,7 @@ export default function Home() {
   const [isStackPaused, setIsStackPaused] = useState(false)
   const [randomIcon1, setRandomIcon1] = useState('cyrwheel')
   const [autoAnimPosition, setAutoAnimPosition] = useState(0)
-  const [responsibilityWorldPosition, setResponsibilityWorldPosition] = useState(100)
+  const [responsibilityWorldPosition, setResponsibilityWorldPosition] = useState(0)
   const [responsibilityWorldClicked, setResponsibilityWorldClicked] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -301,12 +301,12 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero Section */}
+      {/* Hero - 100vh */}
       <section style={{
         position: 'relative',
-        minHeight: '100vh'
+        height: '100vh',
+        overflow: 'visible'
       }}>
-        {/* Background - Absolute */}
         <div style={{
           position: 'absolute',
           top: 0,
@@ -335,73 +335,56 @@ export default function Home() {
           }} />
         </div>
 
-        {/* Centered Stack: Headline → Buttons → Logo */}
         <div style={{
           position: 'absolute',
-          top: '50%',
+          top: '66.67%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
           zIndex: 10,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 'clamp(1.5rem, 4vh, 4rem)',
+          gap: 'clamp(1rem, 2.5vh, 2rem)',
           textAlign: 'center',
           maxWidth: '1200px',
-          width: '90%'
+          width: '90%',
+          padding: '0 1rem'
         }}>
-          {/* Headline */}
           <h1 className="hero-title-elegant display-gradient" style={{
-            fontSize: 'clamp(2rem, 5vw, 4rem)',
+            fontSize: 'clamp(1.5rem, 6vw, 4rem)',
             margin: 0,
-            lineHeight: 1.2
+            lineHeight: 1.1,
+            maxWidth: '100%',
+            wordWrap: 'break-word'
           }}>
             {t('home.hero.title')}
           </h1>
 
-          {/* Buttons */}
           <div style={{
             display: 'flex',
             gap: 'clamp(0.5rem, 2vw, 1rem)',
             flexWrap: 'wrap',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
           }}>
-            <Link to="/anfragen" className="btn btn-primary btn-lg">
+            <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
+              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+            }}>
               {t('home.hero.primaryCta')}
             </Link>
-            <Link to="/shows" className="btn btn-secondary btn-lg">
+            <Link to="/shows" className="btn btn-secondary btn-lg" style={{
+              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+            }}>
               {t('home.hero.secondaryCta')}
             </Link>
           </div>
-
-          {/* Logo - Responsive (60% size on mobile) */}
-          <div style={{
-            width: '100%',
-            maxWidth: '90vw',
-            display: 'flex',
-            justifyContent: 'center',
-            overflow: 'hidden'
-          }}>
-            <DotCloudImage
-              disciplineId="logo"
-              size={typeof window !== 'undefined' && window.innerWidth < 768
-                ? Math.min(150, window.innerWidth * 0.6)
-                : 250}
-              color="var(--pepe-gold)"
-              aspectRatio={3}
-              density={0.5}
-              sampleGap={2}
-              minDotSize={1.4}
-              maxDotSize={2.5}
-              reverseScroll={true}
-            />
-          </div>
         </div>
 
-        {/* Scroll Indicator */}
         <div style={{
           position: 'absolute',
-          bottom: '2rem',
+          bottom: '5vh',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 20
@@ -412,15 +395,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Animation Extension - 100vh */}
-      <section style={{
+      {/* Fixed Logo - visible from hero through scroll section */}
+      <div style={{
+        position: 'fixed',
+        top: typeof window !== 'undefined' && window.innerWidth < 768 ? '35%' : '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 50,
+        pointerEvents: 'none'
+      }}>
+        <DotCloudImage
+          disciplineId="logo"
+          size={typeof window !== 'undefined' && window.innerWidth < 768
+            ? Math.min(82, window.innerWidth * 0.32)
+            : 250}
+          color="var(--pepe-gold)"
+          aspectRatio={3}
+          density={0.5}
+          sampleGap={2}
+          minDotSize={1.4}
+          maxDotSize={2.5}
+          reverseScroll={true}
+        />
+      </div>
+
+      {/* Scroll spacer + black focus section - 100vh (reduced from 200vh) */}
+      <div style={{
         position: 'relative',
         height: '100vh',
-        overflow: 'hidden',
-        backgroundColor: '#000'
-      }} />
+        background: 'linear-gradient(to bottom, transparent 0%, #000000 40%, #000000 60%, transparent 100%)',
+        zIndex: 1
+      }}>
+      </div>
 
-      {/* Bento Grid Section - logo overlays on this */}
+      {/* Bento Grid Section */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
         <div className="stage-container">
           <div className="bento-grid-square">
@@ -517,12 +525,12 @@ export default function Home() {
               to="/team"
               className="bento-card-square bento-card-responsibility-square bento-clickable"
               style={{ position: 'relative', overflow: 'hidden' }}
-              onMouseEnter={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(0)}
-              onMouseLeave={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(100)}
+              onMouseEnter={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(100)}
+              onMouseLeave={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(0)}
               onClick={(e) => {
                 e.preventDefault()
                 setResponsibilityWorldClicked(!responsibilityWorldClicked)
-                setResponsibilityWorldPosition(responsibilityWorldClicked ? 100 : 0)
+                setResponsibilityWorldPosition(responsibilityWorldClicked ? 0 : 100)
               }}
             >
               {/* World Icon Background - 100% container width, centered, 50% opacity */}
