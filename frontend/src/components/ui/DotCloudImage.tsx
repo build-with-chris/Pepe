@@ -120,6 +120,7 @@ export default function DotCloudImage({
       if (reverseScroll) {
         // REVERSE SCROLL MODE: For hero elements
         // Start fully formed (100%), dissolve as user scrolls down
+        // Uses easeInQuart curve: slow start, explosive end
         const scrollY = window.scrollY;
 
         // Start dissolving immediately when scrolling begins
@@ -132,10 +133,15 @@ export default function DotCloudImage({
         } else if (scrollY >= dissolveEnd) {
           progress = 0; // Fully dissolved when scrolled far
         } else {
-          // Progressive dissolve based on scroll amount
+          // Linear scroll progress 0-1
           const scrollProgress = (scrollY - dissolveStart) / (dissolveEnd - dissolveStart);
-          progress = 1.0 - scrollProgress; // Reverse: 1.0 → 0
-          progress = progress * progress * (3 - 2 * progress); // smoothstep for smooth transition
+
+          // Reverse to get 1.0 → 0
+          const reversed = 1.0 - scrollProgress;
+
+          // Apply easeInQuart: very subtle at start, explosive at end
+          // Formula: 1 - (1-x)^4 creates slow start, fast end
+          progress = 1.0 - Math.pow(1.0 - reversed, 4);
         }
 
       } else {
