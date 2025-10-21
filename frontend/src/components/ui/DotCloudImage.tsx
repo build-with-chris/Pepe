@@ -100,6 +100,7 @@ export default function DotCloudImage({
 
   // Scroll-based animation trigger (only when not in manual mode)
   useEffect(() => {
+    console.log("[DotIcon]", disciplineId, "useEffect triggered. reverseScroll:", reverseScroll, "isManualMode:", isManualMode);
     // Skip scroll handling if in manual mode
     if (isManualMode) return;
 
@@ -107,6 +108,7 @@ export default function DotCloudImage({
     if (!container) return;
 
     const handleScroll = () => {
+      if (disciplineId === "logo") console.log("[DotIcon Logo] handleScroll called, scrollY:", window.scrollY);
       const rect = container.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
