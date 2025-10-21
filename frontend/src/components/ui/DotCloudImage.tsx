@@ -115,16 +115,20 @@ export default function DotCloudImage({
       let progress = 0;
 
       if (reverseScroll) {
-        // REVERSE SCROLL MODE: For hero elements at page top
-        // Start fully formed (100%) at page top, dissolve as user scrolls down
+        // REVERSE SCROLL MODE: For hero elements
+        // Start fully formed (100%), dissolve as element scrolls up and out of view
         const scrollY = window.scrollY;
-        const dissolveStart = 0; // Start dissolving immediately
-        const dissolveEnd = windowHeight * 0.8; // Fully dissolved after scrolling 80% of viewport height
+        const elementTop = rect.top + scrollY; // Element's absolute position on page
+
+        // Start dissolving when user scrolls past 60% of viewport height
+        const dissolveStart = windowHeight * 0.6;
+        // Fully dissolved when element is near top of viewport
+        const dissolveEnd = elementTop + windowHeight * 0.3;
 
         if (scrollY <= dissolveStart) {
-          progress = 1.0; // Fully formed at top
+          progress = 1.0; // Fully formed when page is at top
         } else if (scrollY >= dissolveEnd) {
-          progress = 0; // Fully dissolved
+          progress = 0; // Fully dissolved when scrolled far
         } else {
           // Progressive dissolve based on scroll amount
           const scrollProgress = (scrollY - dissolveStart) / (dissolveEnd - dissolveStart);
@@ -132,8 +136,9 @@ export default function DotCloudImage({
           progress = progress * progress * (3 - 2 * progress); // smoothstep for smooth transition
         }
 
-        // Debug logging for hero logo
+        // Debug only for logo to verify scroll handler is working
         if (disciplineId === 'logo') {
+          console.log('[Logo Scroll]', { scrollY, elementTop, dissolveStart, dissolveEnd, progress: progress.toFixed(2) });
         }
       } else {
         // NORMAL SCROLL MODE: For elements lower on page

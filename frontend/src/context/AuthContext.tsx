@@ -40,26 +40,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (res.ok) {
           const artist = await res.json();
-          console.log('[Auth] Backend artist sync successful:', artist);
-          // Only try to sync with profiles table if we have a valid artist
-          if (artist?.id) {
-            try {
-              const sb = await getSupabase();
-              // Try to upsert to profiles table - handle if table doesn't exist or columns are missing
-              const { error: upsertErr } = await sb
-                .from('profiles')
-                .upsert(
-                  {
-                    user_id: u.id,
-                    email: u.email ?? null,
-                  },
-                  { onConflict: 'user_id' }
-                );
-              if (upsertErr) console.warn('[Auth] profiles.upsert error (non-critical):', upsertErr);
-            } catch (profileErr) {
-              console.warn('[Auth] profiles table operation failed (non-critical):', profileErr);
-            }
-          }
+          // Skip profiles sync - table schema mismatch
+          // if (artist?.id) {
+          //   try {
+          //     const sb = await getSupabase();
+          //     const { error: upsertErr } = await sb
+          //       .from('profiles')
+          //       .upsert(
+          //         {
+          //           user_id: u.id,
+          //           email: u.email ?? null,
+          //         },
+          //         { onConflict: 'user_id' }
+          //       );
+          //     if (upsertErr) console.warn('[Auth] profiles.upsert error (non-critical):', upsertErr);
+          //   } catch (profileErr) {
+          //     console.warn('[Auth] profiles table operation failed (non-critical):', profileErr);
+          //   }
+          // }
         } else {
           const errorData = await res.json().catch(() => ({ message: 'Unknown error' }));
           console.warn('[Auth] Backend artist ensure failed (non-critical):', res.status, errorData);
