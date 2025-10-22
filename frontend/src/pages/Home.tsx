@@ -445,13 +445,14 @@ export default function Home() {
       </div>
 
       {/* Fixed Logo - visible from hero through scroll section */}
-      <div style={{
+      <div className="hero-logo-doticon" style={{
         position: 'fixed',
         top: typeof window !== 'undefined' && window.innerWidth < 768 ? '35%' : '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: 50,
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        transition: 'opacity 0.3s ease, visibility 0.3s ease'
       }}>
         <DotCloudImage
           disciplineId="logo"

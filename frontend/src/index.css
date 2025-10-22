@@ -34,6 +34,13 @@ body {
   min-height: 100vh;
 }
 
+/* Hide hero logo DotIcon when mobile menu is open */
+body.mobile-menu-open .hero-logo-doticon {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 #root {
   min-height: 100vh;
   display: flex;
