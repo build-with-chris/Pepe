@@ -307,6 +307,7 @@ export default function Home() {
         height: '100vh',
         overflow: 'visible'
       }}>
+        {/* Background image - will be made sticky below */}
         <div style={{
           position: 'absolute',
           top: 0,
@@ -360,6 +361,16 @@ export default function Home() {
             {t('home.hero.title')}
           </h1>
 
+          <p className="body-lg" style={{
+            color: 'var(--pepe-gold)',
+            margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
+            fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+            fontWeight: 500,
+            letterSpacing: '0.02em'
+          }}>
+            {t('home.hero.claim')}
+          </p>
+
           <div style={{
             display: 'flex',
             gap: 'clamp(0.5rem, 2vw, 1rem)',
@@ -395,6 +406,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Fixed background image - sticky until bento section */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '100vh',
+        zIndex: 0,
+        pointerEvents: 'none'
+      }}>
+        <img
+          src={heroImage}
+          alt="Pepe Shows Background"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center'
+          }}
+        />
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)'
+        }} />
+      </div>
+
       {/* Fixed Logo - visible from hero through scroll section */}
       <div style={{
         position: 'fixed',
@@ -420,7 +461,7 @@ export default function Home() {
         />
       </div>
 
-      {/* Scroll spacer + black focus section - 100vh (reduced from 200vh) */}
+      {/* Scroll spacer + black focus section - 100vh - ends sticky background */}
       <div style={{
         position: 'relative',
         height: '100vh',
