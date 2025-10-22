@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 export default function Kontakt() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
+
   return (
     <main>
       {/* Hero Section */}
@@ -41,18 +42,16 @@ export default function Kontakt() {
         <div className="stage-container">
           <div className="contact-methods-grid">
             <div className="contact-method-card">
-              <div className="contact-icon">📧</div>
               <h3 className="h3 mb-3">{t('kontakt.methods.email.title')}</h3>
               <p className="body-sm text-pepe-t60 mb-4">
                 {t('kontakt.methods.email.description')}
               </p>
-              <a href="mailto:info@pepe-shows.de" className="btn btn-primary">
+              <a href="mailto:info@pepe-shows.de" className="btn btn-primary btn-lg">
                 {t('kontakt.methods.email.button')}
               </a>
             </div>
-            
+
             <div className="contact-method-card">
-              <div className="contact-icon">🏢</div>
               <h3 className="h3 mb-3">{t('kontakt.methods.space.title')}</h3>
               <p className="body-sm text-pepe-t60 mb-4">
                 {t('kontakt.methods.space.description')}
@@ -60,36 +59,24 @@ export default function Kontakt() {
               <div className="contact-address mb-4">
                 <div className="body-sm">{t('kontakt.methods.space.address')}</div>
               </div>
-              <a 
-                href="https://maps.google.com" 
-                target="_blank" 
+              <a
+                href="https://maps.google.com/?q=Ostpark+München+81735"
+                target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-lg"
               >
                 {t('kontakt.methods.space.button')}
               </a>
             </div>
-            
+
             <div className="contact-method-card">
-              <div className="contact-icon">📞</div>
               <h3 className="h3 mb-3">{t('kontakt.methods.phone.title')}</h3>
               <p className="body-sm text-pepe-t60 mb-4">
                 {t('kontakt.methods.phone.hours')}
               </p>
-              <a href="tel:+498912345678" className="btn btn-primary">
+              <a href="tel:+4915904891419" className="btn btn-primary btn-lg">
                 {t('kontakt.methods.phone.button')}
               </a>
-            </div>
-            
-            <div className="contact-method-card">
-              <div className="contact-icon">💬</div>
-              <h3 className="h3 mb-3">{t('kontakt.methods.chat.title')}</h3>
-              <p className="body-sm text-pepe-t60 mb-4">
-                {t('kontakt.methods.chat.status')}
-              </p>
-              <button className="btn btn-secondary" disabled>
-                {t('kontakt.methods.chat.button')}
-              </button>
             </div>
           </div>
         </div>
@@ -98,26 +85,27 @@ export default function Kontakt() {
       {/* Clients Section */}
       <section className="section">
         <div className="stage-container">
-          <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">{t('kontakt.clients.title')}</h2>
+          <div className="text-center mb-10">
+            <h3 className="h2 mb-8">{t('kontakt.clients.title')}</h3>
           </div>
-
-          <div className="clients-marquee">
-            <div className="clients-track">
-              <div className="client-logo">Porsche</div>
-              <div className="client-logo">Google</div>
-              <div className="client-logo">McDonald's</div>
-              <div className="client-logo">AstraZeneca</div>
-              <div className="client-logo">Munich Mash</div>
-              <div className="client-logo">European Championships</div>
-              <div className="client-logo">Tollwood</div>
-              <div className="client-logo">Porsche</div>
-              <div className="client-logo">Google</div>
-              <div className="client-logo">McDonald's</div>
-              <div className="client-logo">AstraZeneca</div>
-              <div className="client-logo">Munich Mash</div>
-              <div className="client-logo">European Championships</div>
-              <div className="client-logo">Tollwood</div>
+          <div className="logo-strip">
+            <div className="logo-item">
+              <img src="/images/Logos/Porsche.png" alt="Porsche" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/google.svg" alt="Google" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/mcdonalds.svg" alt="McDonald's" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/astrazeneca.svg" alt="AstraZeneca" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/tollwood.svg" alt="Tollwood Festival" className="client-logo" />
+            </div>
+            <div className="logo-item">
+              <img src="/images/Logos/european-championships.svg" alt="European Championships" className="client-logo" />
             </div>
           </div>
         </div>

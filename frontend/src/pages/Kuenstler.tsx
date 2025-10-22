@@ -174,7 +174,7 @@ export default function Kuenstler() {
                   {t('about1.next.cta.assistant')}
                 </Link>
                 <Link to="/shows" className="btn btn-ghost btn-lg">
-                  Shows entdecken
+                  {t('hero87.cta')}
                 </Link>
               </div>
             </div>
@@ -233,8 +233,8 @@ export default function Kuenstler() {
             <div className="text-center mb-12">
               <div className="results-count">
                 <span className="label">
-                  {t('artists.results', { count: filteredArtists.length })} 
-                  {selectedDiscipline && ` für "${selectedDiscipline}"`}
+                  {t('artists.results', { count: filteredArtists.length })}
+                  {selectedDiscipline && ` ${t('artists.noResultsFor', { discipline: selectedDiscipline })}`}
                 </span>
               </div>
             </div>

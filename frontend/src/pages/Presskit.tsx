@@ -231,7 +231,7 @@ export default function Presskit() {
               <a href="mailto:info@pepe-shows.de" className="btn btn-primary">
                 E-Mail senden
               </a>
-              <a href="tel:+49123456789" className="btn btn-secondary">
+              <a href="tel:+4915904891419" className="btn btn-secondary">
                 Anrufen
               </a>
             </div>

@@ -173,35 +173,32 @@ export function StepContent({
         <div className="wizard-step">
           <h3 className="wizard-step-title">Wo findet Ihre Veranstaltung statt?</h3>
           <p className="wizard-step-subtitle">Veranstaltungsort und technische Anforderungen</p>
-          
-          <div className="location-step-layout-centered">
-            {/* Column 1: Venue type selection cards */}
-            <div className="venue-selection-section">
-              <h4 className="section-title mb-4">Art der Veranstaltung</h4>
-              <div className="venue-cards-row-centered">
-                {venueTypes.map((venue) => (
-                  <div 
-                    key={venue.value}
-                    className={`venue-card-mini ${formData.venueType === venue.value ? 'selected' : ''}`}
-                    onClick={() => onUpdate('venueType', venue.value)}
-                  >
-                    <div className="venue-card-mini-image">
-                      <img src={venue.image} alt={venue.label} />
-                    </div>
-                    <div className="venue-card-mini-label">{venue.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Column 2: Address details */}
-            <div className="location-address-section">
-              {/* Enhanced Address Section */}
-              <div className="location-input-section">
-                <h4 className="form-section-title mb-4">
-                  <span className="section-icon">📍</span>
-                  Veranstaltungsadresse
-                </h4>
+          {/* Row 1: Art der Veranstaltung - Indoor left, Outdoor right */}
+          <div className="venue-selection-section mb-8">
+            <h4 className="section-title mb-4 text-center">Art der Veranstaltung</h4>
+            <div style={{display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap'}}>
+              {venueTypes.map((venue) => (
+                <div
+                  key={venue.value}
+                  className={`venue-card-mini ${formData.venueType === venue.value ? 'selected' : ''}`}
+                  onClick={() => onUpdate('venueType', venue.value)}
+                  style={{flex: '0 1 250px'}}
+                >
+                  <div className="venue-card-mini-image">
+                    <img src={venue.image} alt={venue.label} />
+                  </div>
+                  <div className="venue-card-mini-label">{venue.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: Veranstaltungsadresse and Technische Anforderungen side by side */}
+          <div className="form-row" style={{gap: '2rem', alignItems: 'flex-start'}}>
+            {/* Left Column: Veranstaltungsadresse */}
+            <div className="location-input-section" style={{flex: 1}}>
+              <h4 className="form-section-title mb-4">Veranstaltungsadresse</h4>
               <div className="form-row mb-4">
                 <div className="form-field">
                   <label className="form-label">Straße und Hausnummer *</label>
@@ -215,7 +212,7 @@ export function StepContent({
                   />
                 </div>
               </div>
-              
+
               <div className="form-row mb-6">
                 <div className="form-field" style={{flex: '0 0 30%'}}>
                   <label className="form-label">PLZ *</label>
@@ -242,9 +239,8 @@ export function StepContent({
                   />
                 </div>
               </div>
-              
-              {/* Optional: Additional location details */}
-              <div className="form-field mb-6">
+
+              <div className="form-field">
                 <label className="form-label">Zusätzliche Ortsangaben (optional)</label>
                 <textarea
                   value={formData.locationDetails || ''}
@@ -256,22 +252,18 @@ export function StepContent({
               </div>
             </div>
 
-            {/* Enhanced Technical Requirements Section */}
-            <div className="technical-requirements-section">
-              <h4 className="form-section-title mb-4">
-                <span className="section-icon">⚡</span>
-                Technische Anforderungen
-              </h4>
+            {/* Right Column: Technische Anforderungen */}
+            <div className="technical-requirements-section" style={{flex: 1}}>
+              <h4 className="form-section-title mb-4">Technische Anforderungen</h4>
               <p className="form-helper-text mb-4">
                 Wählen Sie aus, welche technische Ausstattung Sie für Ihre Veranstaltung benötigen
               </p>
-              
+
               <div className="toggle-switches-container">
                 {/* Professional Lighting Toggle */}
                 <div className="toggle-switch-item">
                   <div className="toggle-switch-content">
-                    <div className="toggle-switch-icon">💡</div>
-                    <div className="toggle-switch-text">
+                    <div className="toggle-switch-text" style={{textAlign: 'left'}}>
                       <h5 className="toggle-switch-title">Professionelle Beleuchtung</h5>
                       <p className="toggle-switch-description">
                         Scheinwerfer, Moving Heads, LED-Bars für optimale Bühnenbeleuchtung
@@ -291,8 +283,7 @@ export function StepContent({
                 {/* Professional Sound Toggle */}
                 <div className="toggle-switch-item">
                   <div className="toggle-switch-content">
-                    <div className="toggle-switch-icon">🔊</div>
-                    <div className="toggle-switch-text">
+                    <div className="toggle-switch-text" style={{textAlign: 'left'}}>
                       <h5 className="toggle-switch-title">Professionelle Beschallung</h5>
                       <p className="toggle-switch-description">
                         PA-Anlage, Mikrofone und Mischpult für kristallklaren Sound
@@ -308,8 +299,6 @@ export function StepContent({
                     <span className="toggle-slider"></span>
                   </label>
                 </div>
-
-              </div>
               </div>
             </div>
           </div>
@@ -752,12 +741,23 @@ export function StepContent({
               </div>
             )}
           </div>
-          
+
           <div className="wizard-terms-summary">
-            <p className="text-sm text-pepe-t64">
-              Mit dem Absenden Ihrer Anfrage akzeptieren Sie unsere Allgemeinen Geschäftsbedingungen 
-              und Datenschutzerklärung. Ihre Anfrage wird vertraulich behandelt.
-            </p>
+            <div className="form-field" style={{marginTop: '2rem'}}>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.termsAccepted || false}
+                  onChange={(e) => onUpdate('termsAccepted', e.target.checked)}
+                  className="mt-1"
+                  required
+                />
+                <span className="text-sm text-pepe-t64">
+                  Ich akzeptiere die Allgemeinen Geschäftsbedingungen und die Datenschutzerklärung.
+                  Meine Anfrage wird vertraulich behandelt. *
+                </span>
+              </label>
+            </div>
           </div>
         </div>
       )

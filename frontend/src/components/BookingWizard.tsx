@@ -522,7 +522,7 @@ export default function BookingWizard() {
                 <a href="mailto:info@pepe-shows.de" className="btn btn-secondary btn-sm mr-3">
                   E-Mail senden
                 </a>
-                <a href="tel:+49123456789" className="btn btn-secondary btn-sm">
+                <a href="tel:+4915904891419" className="btn btn-secondary btn-sm">
                   Anrufen
                 </a>
               </div>
@@ -574,7 +574,7 @@ export default function BookingWizard() {
                 disabled={!isStepValid(currentStep) || isSubmitting}
                 className="btn btn-primary btn-xl"
               >
-                {isSubmitting ? 'Wird gesendet...' : (t('booking.submit') || 'Anfrage absenden')}
+                {isSubmitting ? 'Wird gesendet...' : 'Anfrage absenden'}
               </button>
             )}
           </div>

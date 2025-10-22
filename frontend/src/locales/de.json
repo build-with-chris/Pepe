@@ -1327,7 +1327,8 @@
       "email": {
         "title": "E-Mail",
         "description": "Auf E-Mails antworten wir in der Regel innerhalb von 24 Stunden.",
-        "button": "E-Mail schreiben"
+        "button": "E-Mail schreiben",
+        "value": "info@pepe-shows.de"
       },
       "space": {
         "title": "Space",
@@ -1339,10 +1340,7 @@
         "title": "Telefon",
         "hours": "Mo–Fr, 9–17 Uhr",
         "button": "Jetzt anrufen",
-        "value": "+49 123 456 789"
-      },
-      "email": {
-        "value": "info@pepe-shows.de"
+        "value": "+49 159 04891419"
       },
       "chat": {
         "title": "Live Chat",

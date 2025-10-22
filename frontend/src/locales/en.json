@@ -1507,7 +1507,8 @@
       "email": {
         "title": "Email",
         "description": "We usually respond to emails within 24 hours.",
-        "button": "Write email"
+        "button": "Write email",
+        "value": "info@pepe-shows.de"
       },
       "space": {
         "title": "Space",
@@ -1519,10 +1520,7 @@
         "title": "Phone",
         "hours": "Mon–Fri, 9–17",
         "button": "Call now",
-        "value": "+49 123 456 789"
-      },
-      "email": {
-        "value": "info@pepe-shows.de"
+        "value": "+49 159 04891419"
       },
       "chat": {
         "title": "Live Chat",

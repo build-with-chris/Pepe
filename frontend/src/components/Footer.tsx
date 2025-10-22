@@ -23,14 +23,15 @@ export default function Footer() {
             
             {/* Instagram */}
             <div className="mb-8">
-              <a 
-                href="https://www.instagram.com/pepe_arts/" 
-                target="_blank" 
+              <a
+                href="https://www.instagram.com/pepe_arts/"
+                target="_blank"
                 rel="noopener noreferrer"
-                className="footer-social-link inline-flex items-center gap-2"
+                className="footer-social-link inline-flex items-center"
+                style={{gap: '0.5rem'}}
               >
-                <Instagram className="w-3 h-3" />
-                <span>@pepe_arts</span>
+                <Instagram style={{width: '1rem', height: '1rem', color: 'white'}} />
+                <span>@pepe_arts · 12.5k Follower</span>
               </a>
             </div>
             
@@ -86,11 +87,17 @@ export default function Footer() {
               <a href="mailto:info@pepe-shows.de" className="footer-link">
                 info@pepe-shows.de
               </a>
-              <a href="tel:+49123456789" className="footer-link">
-                +49 123 456 789
+              <a href="tel:+4915904891419" className="footer-link">
+                +49 159 04891419
               </a>
               <div className="footer-link">
-                PepeDome, Ostpark München
+                Heiduk & Hermann GbR PepeShows
+              </div>
+              <div className="footer-link">
+                Maria-Montessori-Str. 4
+              </div>
+              <div className="footer-link">
+                81829 München
               </div>
             </div>
           </div>
@@ -99,7 +106,7 @@ export default function Footer() {
         {/* Footer Bottom */}
         <div className="footer-bottom">
           <p className="footer-copyright">
-            © 2024 {t('footer.copyright')}
+            © {new Date().getFullYear()} {t('footer.copyright')}
           </p>
           <div className="footer-legal">
             <Link to="/imprint" className="footer-legal-link">{t('footer.legalLinks.impressum')}</Link>
