@@ -327,17 +327,17 @@ export default function Kuenstler() {
       {/* Call to Action */}
       <section className="section-large text-center bg-gradient-dark">
         <div className="stage-container">
-          <div className="overline text-pepe-gold mb-4">{t('artists.ctaKicker') || 'BEREIT FÜR IHR EVENT?'}</div>
-          <h2 className="display-2 mb-8">{t('artists.ctaTitle') || 'Den passenden Künstler finden'}</h2>
+          <div className="overline text-pepe-gold mb-4">{t('artists.ctaKicker')}</div>
+          <h2 className="display-2 mb-8">{t('artists.ctaTitle')}</h2>
           <p className="lead mb-12 max-w-3xl mx-auto">
-            {t('artists.ctaSubtitle') || 'Nutzen Sie unseren Booking-Assistenten für eine maßgeschneiderte Künstlerempfehlung oder kontaktieren Sie uns direkt.'}
+            {t('artists.ctaSubtitle')}
           </p>
           <div className="cta-actions">
             <Link to="/anfragen" className="btn btn-primary btn-xl">
               {t('about1.next.cta.assistant')}
             </Link>
             <Link to="/kontakt" className="btn btn-ghost btn-lg">
-              {t('artists.ctaContact') || 'Direkter Kontakt'}
+              {t('artists.ctaContact')}
             </Link>
           </div>
         </div>

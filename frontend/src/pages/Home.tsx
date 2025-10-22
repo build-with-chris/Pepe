@@ -412,10 +412,11 @@ export default function Home() {
           color="var(--pepe-gold)"
           aspectRatio={3}
           density={0.5}
-          sampleGap={2}
+          sampleGap={1}
           minDotSize={1.4}
           maxDotSize={2.5}
           reverseScroll={true}
+          dynamicDensity={true}
         />
       </div>
 

@@ -26,6 +26,8 @@ export interface DotCloudImageProps {
   noGlow?: boolean;
   /** Reverse scroll direction: start formed (100%), dissolve on scroll down (default: false) */
   reverseScroll?: boolean;
+  /** Enable dynamic density reduction during scroll (only works with reverseScroll, default: false) */
+  dynamicDensity?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export default function DotCloudImage({
   maxDotSize = 6.0,
   noGlow = false,
   reverseScroll = false,
+  dynamicDensity = false,
 }: DotCloudImageProps) {
 
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -264,7 +267,62 @@ export default function DotCloudImage({
       }}
       data-scroll-progress={scrollProgress.toFixed(2)}
     >
+      {/* DEBUG: Visual indicator with actual rendered count */}
+      {(() => {
+        let visibleCount = 0;
+        const progressNormalized = formProgress / 0.98;
+        const exponentialProgress = Math.pow(progressNormalized, 8);
+        const keepRatio = 0.1 + (exponentialProgress * 0.9);
+        const threshold = Math.floor(keepRatio * 10);
+
+        if (dynamicDensity && reverseScroll && !isManualMode) {
+          visibleCount = particles.filter((_, idx) => (idx % 10) < threshold).length;
+        } else {
+          visibleCount = particles.length;
+        }
+
+        return dynamicDensity && (
+          <div style={{
+            position: 'absolute',
+            top: -40,
+            left: 0,
+            background: 'rgba(255,0,0,0.9)',
+            color: 'white',
+            padding: '8px 12px',
+            fontSize: '14px',
+            fontFamily: 'monospace',
+            borderRadius: '4px',
+            zIndex: 9999,
+            pointerEvents: 'none'
+          }}>
+            Progress: {formProgress.toFixed(3)} | Threshold: {threshold} | Visible: {visibleCount}/{particles.length} ({Math.round(visibleCount/particles.length*100)}%)
+          </div>
+        );
+      })()}
       {particles.map((particle, index) => {
+        // Dynamic density: EXTREME aggressive reduction - starts IMMEDIATELY!
+        // At threshold 10: 100% particles
+        // At threshold 9: 70% particles (30% GONE immediately!)
+        // At threshold 7: 50% particles
+        // At threshold 5: 30% particles
+        // At threshold 1: 10% particles
+        if (dynamicDensity && reverseScroll && !isManualMode) {
+          // Use power of 8 for SUPER EXTREME aggressive reduction at start
+          const progressNormalized = formProgress / 0.98; // Normalize to 0→1
+          const exponentialProgress = Math.pow(progressNormalized, 8); // Power of 8!
+
+          // Map to 10% → 100% range
+          const keepRatio = 0.1 + (exponentialProgress * 0.9); // 10% to 100%
+
+          // Use modulo 10 for filtering
+          const threshold = Math.floor(keepRatio * 10); // 1 to 10
+          const moduloCheck = index % 10;
+
+          if (moduloCheck >= threshold) {
+            return null; // Remove this particle
+          }
+        }
+
         // Phase 5: Progressive density reduction (ONLY for advanced effects)
         if (enableAdvancedEffects && formProgress < 0.2) {
           const densityReduction = formProgress / 0.2; // 0 to 1

@@ -14,7 +14,10 @@
       "Bash(git push:*)",
       "Bash(cat:*)",
       "Bash(git checkout:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(vercel list:*)",
+      "Bash(vercel:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
