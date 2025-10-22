@@ -92,70 +92,74 @@ export default function Navigation({ className = '' }: NavigationProps) {
 
           {/* Mobile Menu Button */}
           <button
-            className="mobile-menu-btn p-2 text-white"
+            className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Menu öffnen"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Full Screen */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-60 md:hidden">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className="fixed right-0 top-0 h-full w-4/5 max-w-sm bg-pepe-dark border-l border-pepe-line">
-            <div className="flex items-center justify-between p-6 border-b border-pepe-line">
-              <h3 className="h3">Menu</h3>
+        <div className="mobile-menu-overlay">
+          <div className="mobile-menu-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="mobile-menu-content">
+            <div className="mobile-menu-header">
+              <Link to="/" className="nav-brand-link" onClick={() => setIsMobileMenuOpen(false)}>
+                <img src={logoIcon} alt="Pepe Logo" className="nav-logo-svg" />
+                <span className="nav-brand-text">PEPE</span>
+                <span className="nav-shows-text">SHOWS</span>
+              </Link>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 text-white"
+                className="mobile-menu-close"
                 aria-label="Menu schließen"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M6 18l12-12" />
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`block nav-link text-lg py-2 ${location.pathname === link.href ? 'active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              
+            <div className="mobile-menu-body">
+              <nav className="mobile-menu-nav">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className={`mobile-menu-link ${location.pathname === link.href ? 'active' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+
               {/* Mobile Language Switch */}
-              <div className="pt-4 border-t border-pepe-line">
-                <div className="mb-3">
-                  <span className="text-sm text-pepe-t64">{t('nav.language')}</span>
-                </div>
-                <div className="nav-language">
+              <div className="mobile-menu-language">
+                <span className="mobile-menu-language-label">{t('nav.language')}</span>
+                <div className="mobile-menu-language-buttons">
                   <button
                     onClick={() => changeLanguage('de')}
-                    className={`lang-btn ${i18n.language === 'de' ? 'active' : ''}`}
+                    className={`mobile-menu-lang-btn ${i18n.language === 'de' ? 'active' : ''}`}
                   >
                     Deutsch
                   </button>
-                  <span className="lang-separator">|</span>
+                  <span className="mobile-menu-lang-separator">|</span>
                   <button
                     onClick={() => changeLanguage('en')}
-                    className={`lang-btn ${i18n.language === 'en' ? 'active' : ''}`}
+                    className={`mobile-menu-lang-btn ${i18n.language === 'en' ? 'active' : ''}`}
                   >
                     English
                   </button>
                 </div>
               </div>
-              
-              <div className="pt-6 space-y-3">
-                <Link to="/anfragen" className="btn btn-primary btn-xs w-full" onClick={() => setIsMobileMenuOpen(false)}>
+
+              <div className="mobile-menu-cta">
+                <Link to="/anfragen" className="btn btn-primary btn-lg w-full" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.booking')}
                 </Link>
               </div>

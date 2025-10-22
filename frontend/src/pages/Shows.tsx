@@ -104,7 +104,7 @@ export default function Shows() {
                 color="#FFFFFF"
                 manualAnimationPosition={autoAnimPosition}
                 density={0.15}
-                sampleGap={2}
+                sampleGap={1}
               />
             </div>
             <div className="overline text-pepe-gold mb-4">{t('hero37.kicker')}</div>
@@ -299,21 +299,6 @@ export default function Shows() {
         </section>
       )}
 
-      {/* Empty State */}
-      {!loading && shows.length === 0 && (
-        <section className="section">
-          <div className="stage-container">
-            <div className="empty-state">
-              <div className="empty-icon">🎬</div>
-              <h3 className="h3 mb-4">Keine Shows verfügbar</h3>
-              <p className="body-sm mb-6">Derzeit sind keine Shows in der Datenbank verfügbar.</p>
-              <Link to="/anfragen" className="btn btn-primary btn-lg">
-                Individuelle Anfrage stellen
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Call-to-Action */}
       <section className="section-large text-center bg-gradient-dark">

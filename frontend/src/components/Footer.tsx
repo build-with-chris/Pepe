@@ -28,10 +28,10 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="footer-social-link inline-flex items-center"
-                style={{gap: '0.5rem'}}
+                style={{gap: '0.75rem', alignItems: 'baseline'}}
               >
-                <Instagram style={{width: '1rem', height: '1rem', color: 'white'}} />
-                <span>@pepe_arts · 12.5k Follower</span>
+                <Instagram style={{width: '1rem', height: '1rem', color: 'white', verticalAlign: 'baseline'}} />
+                <span>@pepe_arts · 13k Follower</span>
               </a>
             </div>
             

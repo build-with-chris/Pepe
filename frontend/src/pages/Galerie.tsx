@@ -560,7 +560,7 @@ export default function Galerie() {
                   !selectedCategory ? 'active' : ''
                 }`}
               >
-                {t('artists.filters.all') || 'All'}
+                {t('artists.filters.all')}
               </button>
               {Array.from(new Set(allImages.map(img => img.category))).map((category) => (
                 <button

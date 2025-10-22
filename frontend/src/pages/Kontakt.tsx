@@ -46,7 +46,7 @@ export default function Kontakt() {
               <p className="body-sm text-pepe-t60 mb-4">
                 {t('kontakt.methods.email.description')}
               </p>
-              <a href="mailto:info@pepe-shows.de" className="btn btn-primary btn-lg">
+              <a href="mailto:info@pepe-shows.de" className="btn btn-secondary btn-lg">
                 {t('kontakt.methods.email.button')}
               </a>
             </div>
@@ -74,7 +74,7 @@ export default function Kontakt() {
               <p className="body-sm text-pepe-t60 mb-4">
                 {t('kontakt.methods.phone.hours')}
               </p>
-              <a href="tel:+4915904891419" className="btn btn-primary btn-lg">
+              <a href="tel:+4915904891419" className="btn btn-secondary btn-lg">
                 {t('kontakt.methods.phone.button')}
               </a>
             </div>

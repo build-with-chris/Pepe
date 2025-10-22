@@ -406,34 +406,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Fixed background image - sticky until bento section */}
+      {/* Fixed background image - sticky until end of scroll section (200vh total) */}
       <div style={{
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        height: '100vh',
+        height: '200vh', // Covers hero (100vh) + scroll section (100vh)
         zIndex: 0,
         pointerEvents: 'none'
       }}>
-        <img
-          src={heroImage}
-          alt="Pepe Shows Background"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center'
-          }}
-        />
         <div style={{
-          position: 'absolute',
+          position: 'sticky',
           top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)'
-        }} />
+          width: '100%',
+          height: '100vh',
+          overflow: 'hidden'
+        }}>
+          <img
+            src={heroImage}
+            alt="Pepe Shows Background"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)'
+          }} />
+        </div>
       </div>
 
       {/* Fixed Logo - visible from hero through scroll section */}
