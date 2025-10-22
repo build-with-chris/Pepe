@@ -142,15 +142,10 @@ def list_artists():
     return jsonify([{
         'id': a.id,
         'name': a.name,
-        'email': a.email,
-        'address': getattr(a, 'address', None),
-        'phone_number': a.phone_number,
         'disciplines': [d.name for d in a.disciplines],
-        'price_min': getattr(a, 'price_min', None),
-        'price_max': getattr(a, 'price_max', None),
         'profile_image_url': getattr(a, 'profile_image_url', None),
         'bio': getattr(a, 'bio', None),
-        'instagram': getattr(a, 'instagram', None),              
+        'instagram': getattr(a, 'instagram', None),
         'gallery_urls': getattr(a, 'gallery_urls', []) or []
     } for a in artists])
 
@@ -521,12 +516,7 @@ def get_artist_public(artist_id):
         return jsonify({
             'id': artist.id,
             'name': artist.name,
-            'email': artist.email,
-            'address': getattr(artist, 'address', None),
-            'phone_number': artist.phone_number,
             'disciplines': [d.name for d in artist.disciplines],
-            'price_min': getattr(artist, 'price_min', None),
-            'price_max': getattr(artist, 'price_max', None),
             'profile_image_url': getattr(artist, 'profile_image_url', None),
             'bio': getattr(artist, 'bio', None),
             'instagram': getattr(artist, 'instagram', None),
