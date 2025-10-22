@@ -133,7 +133,7 @@ export default function DotCloudImage({
         const dissolveEnd = windowHeight * 2; // 200vh total
 
         if (scrollY <= dissolveStart) {
-          progress = 1.0; // Fully formed at page top
+          progress = 0.98; // Initial state at 98% (not 100%)
         } else if (scrollY >= dissolveEnd) {
           progress = 0; // Fully dissolved after 200vh
         } else {
@@ -144,8 +144,8 @@ export default function DotCloudImage({
           // x^3 makes it start sooner, still accelerate at end
           const eased = Math.pow(scrollProgress, 3);
 
-          // Invert to get progress from 1.0 → 0 (formed → dissolved)
-          progress = 1.0 - eased;
+          // Invert to get progress from 0.98 → 0 (formed → dissolved)
+          progress = 0.98 - (eased * 0.98);
         }
 
         // Hide component completely when fully dissolved
