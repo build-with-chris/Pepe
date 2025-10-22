@@ -159,7 +159,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
               </div>
 
               <div className="mobile-menu-cta">
-                <Link to="/anfragen" className="btn btn-primary btn-lg w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link to="/anfragen" className="btn btn-primary btn-lg mobile-menu-cta-btn" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.booking')}
                 </Link>
               </div>
