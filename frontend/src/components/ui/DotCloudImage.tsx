@@ -281,23 +281,8 @@ export default function DotCloudImage({
           visibleCount = particles.length;
         }
 
-        return dynamicDensity && (
-          <div style={{
-            position: 'absolute',
-            top: -40,
-            left: 0,
-            background: 'rgba(255,0,0,0.9)',
-            color: 'white',
-            padding: '8px 12px',
-            fontSize: '14px',
-            fontFamily: 'monospace',
-            borderRadius: '4px',
-            zIndex: 9999,
-            pointerEvents: 'none'
-          }}>
-            Progress: {formProgress.toFixed(3)} | Threshold: {threshold} | Visible: {visibleCount}/{particles.length} ({Math.round(visibleCount/particles.length*100)}%)
-          </div>
-        );
+        // Debug indicator disabled
+        return null;
       })()}
       {particles.map((particle, index) => {
         // Dynamic density: EXTREME aggressive reduction - starts IMMEDIATELY!
