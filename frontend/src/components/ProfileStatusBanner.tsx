@@ -17,7 +17,7 @@ export function ProfileStatusBanner({
   className = "",
   onEdit,
   onOpenGuidelines,
-  supportEmail = "info@pepe-shows.de"
+  supportEmail = "info@pepeshows.de"
 }: ProfileStatusBannerProps) {
   const { t } = useTranslation();
 

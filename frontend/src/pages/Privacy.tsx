@@ -96,7 +96,7 @@ export default function Privacy() {
 
               <h3 className="h3 mb-4">3. Contact Information</h3>
               <p className="body mb-4">
-                If you have questions about data protection, please contact us at: info@pepe-shows.de
+                If you have questions about data protection, please contact us at: info@pepeshows.de
               </p>
             </div>
           </div>

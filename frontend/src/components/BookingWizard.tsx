@@ -420,7 +420,7 @@ export default function BookingWizard() {
         }))
         
         setRequestId(generatedRequestId)
-        setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepe-shows.de oder telefonisch.')
+        setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepeshows.de oder telefonisch.')
         console.error('All endpoints failed. Last error:', lastError)
       }
     } catch (error) {
@@ -433,7 +433,7 @@ export default function BookingWizard() {
         status: 'error'
       }))
       setRequestId(fallbackRequestId)
-      setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepe-shows.de oder telefonisch.')
+      setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepeshows.de oder telefonisch.')
     } finally {
       setIsSubmitting(false)
     }
@@ -521,7 +521,7 @@ export default function BookingWizard() {
                 <strong>Ihre Anfrage-ID: {requestId}</strong>
               </div>
               <div className="error-actions mt-4">
-                <a href="mailto:info@pepe-shows.de" className="btn btn-secondary btn-sm mr-3">
+                <a href="mailto:info@pepeshows.de" className="btn btn-secondary btn-sm mr-3">
                   E-Mail senden
                 </a>
                 <a href="tel:+4915904891419" className="btn btn-secondary btn-sm">

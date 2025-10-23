@@ -15,7 +15,7 @@ export default function Datenschutz() {
           <p>Heiduk & Hermann GbR PepeShows</p>
           <p>Maria-Montessori-Str. 4</p>
           <p>81829 München</p>
-          <p>E-Mail: info@pepe-shows.de</p>
+          <p>E-Mail: info@pepeshows.de</p>
         </div>
 
         <div className="space-y-2">
@@ -60,7 +60,7 @@ export default function Datenschutz() {
           <h2 className="text-xl font-semibold">6. Kontakt für Datenschutzanfragen</h2>
           <p>
             Wenn Sie Fragen zum Datenschutz haben oder Ihre Rechte ausüben möchten,
-            kontaktieren Sie uns bitte unter: info@pepe-shows.de
+            kontaktieren Sie uns bitte unter: info@pepeshows.de
           </p>
         </div>
 

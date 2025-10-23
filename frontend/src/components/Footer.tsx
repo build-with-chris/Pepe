@@ -83,8 +83,8 @@ export default function Footer() {
           <div className="footer-group">
             <h4 className="footer-title">Kontakt</h4>
             <div className="footer-link-group">
-              <a href="mailto:info@pepe-shows.de" className="footer-link">
-                info@pepe-shows.de
+              <a href="mailto:info@pepeshows.de" className="footer-link">
+                info@pepeshows.de
               </a>
               <a href="tel:+4915904891419" className="footer-link">
                 +49 159 04891419

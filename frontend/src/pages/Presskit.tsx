@@ -228,7 +228,7 @@ export default function Presskit() {
             <h3 className="h3 mb-6">{t('presskit.contact.title')}</h3>
             <p className="body-lg mb-8">{t('presskit.contact.person')}</p>
             <div className="contact-actions">
-              <a href="mailto:info@pepe-shows.de" className="btn btn-primary">
+              <a href="mailto:info@pepeshows.de" className="btn btn-primary">
                 E-Mail senden
               </a>
               <a href="tel:+4915904891419" className="btn btn-secondary">

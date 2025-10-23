@@ -965,7 +965,7 @@
     },
     "email": {
       "label": "E-Mail",
-      "value": "info@pepe-shows.de"
+      "value": "info@pepeshows.de"
     },
     "chat": {
       "label": "Live Chat",
@@ -1329,7 +1329,7 @@
         "title": "E-Mail",
         "description": "Auf E-Mails antworten wir in der Regel innerhalb von 24 Stunden.",
         "button": "E-Mail schreiben",
-        "value": "info@pepe-shows.de"
+        "value": "info@pepeshows.de"
       },
       "space": {
         "title": "Space",

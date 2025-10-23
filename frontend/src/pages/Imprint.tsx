@@ -24,7 +24,7 @@ export default function Imprint() {
               <h3 className="h3 mb-4">Kontakt</h3>
               <div className="space-y-2 mb-6">
                 <p className="body">Telefon: +49 123 456 789</p>
-                <p className="body">E-Mail: info@pepe-shows.de</p>
+                <p className="body">E-Mail: info@pepeshows.de</p>
               </div>
 
               <h3 className="h3 mb-4">Vertreten durch</h3>
@@ -88,7 +88,7 @@ export default function Imprint() {
               <h3 className="h3 mb-4">Contact</h3>
               <div className="space-y-2 mb-6">
                 <p className="body">Phone: +49 123 456 789</p>
-                <p className="body">Email: info@pepe-shows.de</p>
+                <p className="body">Email: info@pepeshows.de</p>
               </div>
 
               <h3 className="h3 mb-4">Represented by</h3>

@@ -19,7 +19,7 @@ export default function Impressum() {
         <div className="space-y-2">
           <p><strong>Kontakt:</strong></p>
           <p>Telefon: <a href="tel:+4915904891419" className="underline">+49 159 04891419</a></p>
-          <p>E-Mail: <a href="mailto:info@pepe-shows.de" className="underline">info@pepe-shows.de</a></p>
+          <p>E-Mail: <a href="mailto:info@pepeshows.de" className="underline">info@pepeshows.de</a></p>
         </div>
 
         <div className="space-y-2">

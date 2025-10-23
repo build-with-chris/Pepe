@@ -200,8 +200,8 @@ export default function ArtistGuidlines() {
         <section id="help" className="mb-12">
           <h3 className="text-lg font-semibold mb-2">Hilfe & Kontakt</h3>
           <ul className="list-disc list-inside space-y-1 text-gray-300">
-            <li><strong>Technik/Profil:</strong> info@pepe-shows.de</li>
-            <li><strong>Buchungen/Verträge:</strong> info@pepe-shows.de</li>
+            <li><strong>Technik/Profil:</strong> info@pepeshows.de</li>
+            <li><strong>Buchungen/Verträge:</strong> info@pepeshows.de</li>
             <li><strong>Notfälle am Eventtag:</strong> Hotline (erscheint bei bestätigten Buchungen)</li>
           </ul>
         </section>

@@ -57,7 +57,7 @@ export default function Shows() {
   useEffect(() => {
     const fetchShows = async () => {
       const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
-      
+
       try {
         const response = await fetch(`${baseUrl}/api/shows`, {
           signal: AbortSignal.timeout(5000)
@@ -65,9 +65,12 @@ export default function Shows() {
         if (response.ok) {
           const data = await response.json()
           setShows(data)
+        } else {
+          // Endpoint returns non-OK status (404, etc.), silently use empty array
+          setShows([])
         }
       } catch (error) {
-        // Shows endpoint not available, use empty array
+        // Network error or timeout, silently use empty array
         setShows([])
       } finally {
         setLoading(false)
