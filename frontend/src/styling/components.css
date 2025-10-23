@@ -4695,15 +4695,19 @@ textarea.input {
 /* ===== Square Bento Grid Layout ===== */
 .bento-grid-square {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-6);
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
   margin-bottom: var(--space-16);
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Square Bento Cards */
 .bento-card-square {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 16/9;
+  min-height: 400px;
   border-radius: var(--radius-2xl);
   overflow: hidden;
   background: var(--pepe-surface);
@@ -4712,6 +4716,13 @@ textarea.input {
   display: block;
   text-decoration: none;
   color: inherit;
+}
+
+@media (max-width: 768px) {
+  .bento-card-square {
+    min-height: 300px;
+    aspect-ratio: 4/3;
+  }
 }
 
 .bento-card-square:hover {
@@ -5743,12 +5754,12 @@ textarea.input {
 /* ===== Mobile Responsive Grid & Layout ===== */
 
 /* Bento Grid Responsive */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .bento-grid-square {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-4);
+    gap: var(--space-6);
+    margin-bottom: var(--space-12);
   }
-  
+
   .bento-card-square .bento-card-header {
     bottom: var(--space-4);
     left: var(--space-4);
@@ -5756,41 +5767,18 @@ textarea.input {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .bento-grid-square {
-    grid-template-columns: 1fr;
     gap: var(--space-4);
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-8);
   }
-  
-  .bento-card-square {
-    aspect-ratio: 4/3;
-    max-height: 280px;
-  }
-  
+
   .bento-card-square .bento-card-header {
     bottom: var(--space-3);
     left: var(--space-3);
     right: var(--space-3);
   }
-}
 
-@media (max-width: 480px) {
-  .bento-grid-square {
-    gap: var(--space-3);
-    margin-bottom: var(--space-8);
-  }
-  
-  .bento-card-square {
-    max-height: 240px;
-  }
-  
-  .bento-card-square .bento-card-header {
-    bottom: var(--space-2);
-    left: var(--space-3);
-    right: var(--space-3);
-  }
-  
   .bento-destination-tag {
     padding: var(--space-1) var(--space-2);
     font-size: var(--text-xs);
@@ -6370,9 +6358,8 @@ textarea.input {
     gap: var(--space-3);
     max-width: 400px;
   }
-  
+
   .bento-grid-square {
-    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-4);
   }
   

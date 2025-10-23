@@ -312,7 +312,6 @@ export default function BookingWizard() {
       setCurrentStep(prev => prev + 1)
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, behavior: 'smooth' })
-        window.scrollTo({ top: 0, behavior: 'smooth' })
       }
     }
   }
@@ -320,6 +319,9 @@ export default function BookingWizard() {
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1)
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
     }
   }
 
