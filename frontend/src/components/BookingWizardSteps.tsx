@@ -25,7 +25,7 @@ const dotIconMap: Record<string, string> = {
   'cyrwheel': 'cyrwheel',
   'cyr-wheel': 'cyrwheel',
   'handstand': 'handstand',
-  'hula-hoop': 'logo', // fallback
+  'hula-hoop': 'hulahoop',
   'chinese-pole': 'pole',
   'moderation': 'logo' // fallback
 }

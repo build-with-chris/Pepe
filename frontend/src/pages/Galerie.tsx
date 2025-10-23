@@ -33,7 +33,7 @@ export default function Galerie() {
     'chinese pole': 'pole',
     'cyr-wheel': 'cyrwheel',
     'cyr wheel': 'cyrwheel',
-    'hula hoop': 'logo',
+    'hula hoop': 'hulahoop',
     'bodenakrobatik': 'logo',
     'breakdance': 'breakdance',
     'handstand': 'handstand',
