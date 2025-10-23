@@ -13,7 +13,6 @@ import Mediamaterial from './pages/Mediamaterial'
 import Presskit from './pages/Presskit'
 import Pressemappe from './pages/Pressemappe'
 import Team from './pages/Team'
-import Referenzen from './pages/Referenzen'
 import {Login as LoginForm} from './components/login-form'
 import SignUp from './components/SignUp'
 import Dashboard from './pages/Dashboard'
@@ -71,7 +70,6 @@ function App() {
               <Route path="/pressemappe" element={<Pressemappe />} />
               <Route path="/team" element={<Team />} />
               <Route path="/agentur" element={<Agentur />} />
-              <Route path="/referenzen" element={<Referenzen />} />
 
               {/* Demo route for DotCloud particle system */}
               <Route path="/demo/dotcloud" element={<DotCloudDemo />} />

@@ -627,7 +627,7 @@ export default function Home() {
             </Link>
 
             {/* 100% Fairness Card - Square Format */}
-            <Link to="/referenzen" className="bento-card-square bento-card-fairness-square bento-clickable">
+            <Link to="/kuenstler" className="bento-card-square bento-card-fairness-square bento-clickable">
               <div className="bento-card-content">
                 <h3 className="bento-title">{t('bento1.values.fairnessTitle')}</h3>
                 <p className="bento-text">
@@ -642,7 +642,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="bento-destination-tag">
-                <span>Referenzen</span>
+                <span>Künstler ansehen</span>
               </div>
             </Link>
           </div>

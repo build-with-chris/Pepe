@@ -73,7 +73,6 @@ export default function Footer() {
               <div className="footer-link-group">
                 <Link to="/anfragen" className="footer-link">Booking Assistent</Link>
                 <Link to="/mediamaterial" className="footer-link">{t('footer.mainLinks.mediamaterial')}</Link>
-                <Link to="/referenzen" className="footer-link">{t('footer.mainLinks.referenzen')}</Link>
                 <Link to="/team" className="footer-link">{t('footer.mainLinks.agenturUndTeam')}</Link>
                 <Link to="/login" className="footer-link">{t('footer.mainLinks.artistLogin')}</Link>
               </div>
