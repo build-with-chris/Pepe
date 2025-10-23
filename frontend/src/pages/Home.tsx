@@ -29,7 +29,7 @@ export default function Home() {
   const navigate = useNavigate()
 
   // Available icons for random shuffling
-  const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole', 'hulahoop']
+  const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole', 'hulahoop', 'flooracrobatics']
 
   // Map discipline names to icon names for DotCloudImage
   const disciplineToIcon: Record<string, string> = {
@@ -38,7 +38,7 @@ export default function Home() {
     'cyr-wheel': 'cyrwheel',
     'cyr wheel': 'cyrwheel',
     'hula hoop': 'hulahoop',
-    'bodenakrobatik': 'logo',
+    'bodenakrobatik': 'flooracrobatics',
     'breakdance': 'breakdance',
     'handstand': 'handstand',
     'jonglage': 'juggling',

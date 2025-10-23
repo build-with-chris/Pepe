@@ -16,7 +16,7 @@ interface ChoiceCardProps {
 const dotIconMap: Record<string, string> = {
   'zauberer': 'magician',
   'luftakrobatik': 'luftakrobatik',
-  'bodenakrobatik': 'logo', // fallback
+  'bodenakrobatik': 'flooracrobatics',
   'partnerakrobatik': 'partnerakrobatik',
   'contemporary-dance': 'contemporary',
   'breakdance': 'breakdance',

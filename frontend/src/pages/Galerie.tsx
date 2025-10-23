@@ -34,7 +34,7 @@ export default function Galerie() {
     'cyr-wheel': 'cyrwheel',
     'cyr wheel': 'cyrwheel',
     'hula hoop': 'hulahoop',
-    'bodenakrobatik': 'logo',
+    'bodenakrobatik': 'flooracrobatics',
     'breakdance': 'breakdance',
     'handstand': 'handstand',
     'jonglage': 'juggling',
