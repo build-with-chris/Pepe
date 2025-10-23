@@ -4695,19 +4695,15 @@ textarea.input {
 /* ===== Square Bento Grid Layout ===== */
 .bento-grid-square {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
   margin-bottom: var(--space-16);
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* Square Bento Cards */
 .bento-card-square {
   position: relative;
-  aspect-ratio: 16/9;
-  min-height: 400px;
+  aspect-ratio: 1;
   border-radius: var(--radius-2xl);
   overflow: hidden;
   background: var(--pepe-surface);
@@ -4719,6 +4715,10 @@ textarea.input {
 }
 
 @media (max-width: 768px) {
+  .bento-grid-square {
+    grid-template-columns: 1fr;
+  }
+
   .bento-card-square {
     min-height: 300px;
     aspect-ratio: 4/3;
@@ -5756,6 +5756,7 @@ textarea.input {
 /* Bento Grid Responsive */
 @media (max-width: 768px) {
   .bento-grid-square {
+    grid-template-columns: 1fr;
     gap: var(--space-6);
     margin-bottom: var(--space-12);
   }
