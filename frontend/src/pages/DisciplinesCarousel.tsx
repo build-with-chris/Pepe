@@ -36,7 +36,7 @@ export default function DisciplinesCarousel() {
     'handstand': 'handstand',
     'jonglage': 'juggling',
     'luftakrobatik': 'luftakrobatik',
-    'moderation': 'logo',
+    'moderation': 'moderation',
     'pantomime': 'pantomime',
     'partnerakrobatik': 'partnerakrobatik',
     'zauberer': 'magician',

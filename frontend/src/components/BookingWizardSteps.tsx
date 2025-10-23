@@ -27,7 +27,7 @@ const dotIconMap: Record<string, string> = {
   'handstand': 'handstand',
   'hula-hoop': 'hulahoop',
   'chinese-pole': 'pole',
-  'moderation': 'logo' // fallback
+  'moderation': 'moderation'
 }
 
 export function ChoiceCard({ image, label, description, value, selected, onSelect, useDotIcon, isActive }: ChoiceCardProps) {
