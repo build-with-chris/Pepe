@@ -118,9 +118,9 @@ export function StepContent({
         <div className="wizard-step">
           <h3 className="wizard-step-title">Wie viele Künstler möchten Sie buchen?</h3>
           <p className="wizard-step-subtitle">Die Anzahl der Künstler bestimmt das Format Ihrer Show</p>
-          
-          <div className="choice-grid">
-            {teamSizes.map((size) => (
+
+          <div className="choice-grid choice-grid-two">
+            {teamSizes.slice(0, 2).map((size) => (
               <ChoiceCard
                 key={size.value}
                 image={size.image}
@@ -520,160 +520,106 @@ export function StepContent({
         <div className="wizard-step">
           <h3 className="wizard-step-title">Zusammenfassung Ihrer Buchungsanfrage</h3>
           <p className="wizard-step-subtitle">Überprüfen Sie Ihre Angaben vor dem Absenden</p>
-          
-          <div className="booking-summary-enhanced">
-            {/* Event Details Section */}
-            <div className="summary-section">
-              <h4 className="summary-section-title">🎭 Veranstaltungsdetails</h4>
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="summary-label">Veranstaltungsart:</span>
-                  <span className="summary-value">
-                    {eventTypes.find(t => t.value === formData.eventType)?.label || '-'}
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Team-Größe:</span>
-                  <span className="summary-value">
-                    {formData.teamSize === 'solo' && 'Solo-Künstler'}
-                    {formData.teamSize === 'duo' && 'Duo'}
-                    {formData.teamSize === 'group' && 'Gruppe (3+)'}
-                    {!formData.teamSize && '-'}
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Veranstaltungsort:</span>
-                  <span className="summary-value">
-                    {formData.venueType === 'indoor' && 'Innenveranstaltung'}
-                    {formData.venueType === 'outdoor' && 'Außenveranstaltung'}
-                    {!formData.venueType && '-'}
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Datum & Zeit:</span>
-                  <span className="summary-value">
-                    {formData.eventDate ? 
-                      new Date(formData.eventDate).toLocaleDateString('de-DE', {
-                        day: 'numeric',
-                        month: 'numeric', 
-                        year: 'numeric'
-                      }) : '-'
-                    } {formData.eventTime && `um ${formData.eventTime} Uhr`}
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Anzahl Gäste:</span>
-                  <span className="summary-value">{formData.guestCount || '-'} Personen</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Show-Dauer:</span>
-                  <span className="summary-value">{formData.duration || '-'}</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Location Section */}
-            <div className="summary-section">
-              <h4 className="summary-section-title">📍 Veranstaltungsort</h4>
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="summary-label">Venue-Typ:</span>
-                  <span className="summary-value">
-                    {venueTypes.find(v => v.value === formData.venueType)?.label || '-'}
-                  </span>
-                </div>
-                <div className="summary-item full-width">
-                  <span className="summary-label">Adresse:</span>
-                  <span className="summary-value">
-                    {formData.street && formData.postalCode && formData.city ? 
-                      `${formData.street}, ${formData.postalCode} ${formData.city}` : 
-                      formData.eventAddress || '-'
+          <div className="booking-summary">
+            {/* Performance Selection - FULL WIDTH with DotCloud Icons */}
+            {Array.isArray(formData.performanceStyle) && formData.performanceStyle.length > 0 && (
+              <div className="summary-section-performance">
+                <h4>Performance-Auswahl</h4>
+                <div className="summary-performance-grid">
+                  {formData.performanceStyle.map((styleValue: string) => {
+                    const style = performanceStyles.find(p => p.value === styleValue)
+                    // Map discipline values to doticon filenames
+                    const iconMap: Record<string, string> = {
+                      'zauberer': 'magician',
+                      'luftakrobatik': 'luftakrobatik',
+                      'bodenakrobatik': 'flooracrobatics',
+                      'partnerakrobatik': 'partnerakrobatik',
+                      'contemporary-dance': 'contemporary',
+                      'breakdance': 'breakdance',
+                      'jonglage': 'juggling',
+                      'hula-hoop': 'hulahoop',
+                      'cyr-wheel': 'cyrwheel',
+                      'chinese-pole': 'pole',
+                      'handstand': 'handstand',
+                      'pantomime': 'pantomime',
+                      'moderation': 'moderation'
                     }
-                  </span>
-                </div>
-                {formData.locationDetails && (
-                  <div className="summary-item full-width">
-                    <span className="summary-label">Zusätzliche Angaben:</span>
-                    <span className="summary-value">{formData.locationDetails}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+                    const iconId = iconMap[styleValue] || styleValue
 
-            {/* Performance Section */}
-            <div className="summary-section">
-              <h4 className="summary-section-title">🎪 Performance-Auswahl</h4>
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="summary-label">Künstler-Anzahl:</span>
-                  <span className="summary-value">
-                    {teamSizes.find(t => t.value === formData.teamSize)?.label || '-'}
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Performance-Stil:</span>
-                  <span className="summary-value">
-                    {Array.isArray(formData.performanceStyle) && formData.performanceStyle.length > 0 ? 
-                      formData.performanceStyle.map((styleValue: string) => {
-                        const style = performanceStyles.find(p => p.value === styleValue)
-                        return style?.label || styleValue
-                      }).join(', ') : '-'}
-                  </span>
-                </div>
-                {formData.selectedActs && formData.selectedActs.length > 0 && (
-                  <div className="summary-item full-width">
-                    <span className="summary-label">Ausgewählte Acts:</span>
-                    <span className="summary-value">
-                      {formData.selectedActs.join(', ')}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
+                    // Dynamic icon size based on quantity (1-3: 300px, 4-6: 200px, 7+: 150px)
+                    const iconCount = formData.performanceStyle.length
+                    const iconSize = iconCount <= 3 ? 300 : iconCount <= 6 ? 200 : 150
 
-            {/* Location Section */}
-            {(formData.street || formData.city || formData.postalCode || formData.locationDetails) && (
-              <div className="summary-section">
-                <h4 className="summary-section-title">📍 Veranstaltungsadresse</h4>
-                <div className="summary-grid">
-                  {(formData.street || formData.city || formData.postalCode) && (
-                    <div className="summary-item full-width">
-                      <span className="summary-label">Adresse:</span>
-                      <span className="summary-value">
-                        {formData.street && formData.street}
-                        {formData.street && (formData.postalCode || formData.city) && ', '}
-                        {formData.postalCode && formData.postalCode}
-                        {formData.postalCode && formData.city && ' '}
-                        {formData.city && formData.city}
-                      </span>
-                    </div>
-                  )}
-                  {formData.locationDetails && (
-                    <div className="summary-item full-width">
-                      <span className="summary-label">Zusätzliche Angaben:</span>
-                      <span className="summary-value">{formData.locationDetails}</span>
-                    </div>
-                  )}
+                    return style ? (
+                      <div key={styleValue} className="performance-icon-item">
+                        <DotCloudImage
+                          disciplineId={iconId}
+                          size={iconSize}
+                          color="var(--pepe-gold)"
+                          density={0.3}
+                          sampleGap={2}
+                          minDotSize={1.2}
+                          maxDotSize={2.5}
+                          manualAnimationPosition={100}
+                        />
+                        <span>{style.label}</span>
+                      </div>
+                    ) : null
+                  })}
                 </div>
               </div>
             )}
 
+            {/* Event Details Section with Venue - Full Width */}
+            <div className="summary-section summary-section-full">
+              <h4>Veranstaltungsdetails</h4>
+              <div className="event-details-with-venue">
+                <div className="summary-grid">
+                  <div><strong>Veranstaltungsart</strong><span className="summary-value">{eventTypes.find(t => t.value === formData.eventType)?.label || '-'}</span></div>
+                  <div><strong>Team-Größe</strong><span className="summary-value">
+                    {formData.teamSize === 'solo' && 'Solo-Künstler'}
+                    {formData.teamSize === 'duo' && 'Duo'}
+                    {formData.teamSize === 'group' && 'Gruppe (3+)'}
+                    {!formData.teamSize && '-'}
+                  </span></div>
+                  <div><strong>Datum & Zeit</strong><span className="summary-value">
+                    {formData.eventDate ?
+                      new Date(formData.eventDate).toLocaleDateString('de-DE', {
+                        day: 'numeric',
+                        month: 'numeric',
+                        year: 'numeric'
+                      }) : '-'
+                    } {formData.eventTime && `um ${formData.eventTime} Uhr`}
+                  </span></div>
+                  <div><strong>Anzahl Gäste</strong><span className="summary-value">{formData.guestCount || '-'} Personen</span></div>
+                  <div><strong>Show-Dauer</strong><span className="summary-value">{formData.duration || '-'}</span></div>
+                </div>
+
+                {/* Venue thumbnail on right side */}
+                {formData.venueType && (
+                  <div className="venue-thumbnail-inline">
+                    <img
+                      src={venueTypes.find(v => v.value === formData.venueType)?.image || '/images/showTypes/Indoor.webp'}
+                      alt={venueTypes.find(v => v.value === formData.venueType)?.label || 'Venue'}
+                      className="venue-thumbnail-small"
+                    />
+                    <span className="venue-label">{venueTypes.find(v => v.value === formData.venueType)?.label || '-'}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Technical Requirements Section */}
             <div className="summary-section">
-              <h4 className="summary-section-title">⚡ Technische Anforderungen</h4>
-              <div className="summary-tech-list">
-                {formData.needsLight && (
-                  <div className="tech-requirement-badge">
-                    💡 Professionelle Beleuchtung
-                  </div>
-                )}
-                {formData.needsSound && (
-                  <div className="tech-requirement-badge">
-                    🔊 Professionelle Beschallung
-                  </div>
-                )}
-                {!formData.needsLight && !formData.needsSound && (
-                  <span className="text-pepe-t64">Keine besonderen technischen Anforderungen</span>
+              <h4>Technische Anforderungen</h4>
+              <div className="summary-grid">
+                {formData.needsLight && <div><strong>Beleuchtung</strong><span className="summary-value">Professionelle Beleuchtung erforderlich</span></div>}
+                {formData.needsSound && <div><strong>Beschallung</strong><span className="summary-value">Professionelle Beschallung erforderlich</span></div>}
+                {formData.needsStageFloor && <div><strong>Bühnenboden</strong><span className="summary-value">Spezial-Bühnenboden erforderlich</span></div>}
+                {formData.needsRigging && <div><strong>Rigging</strong><span className="summary-value">Rigging & Aufhängungen erforderlich</span></div>}
+                {!formData.needsLight && !formData.needsSound && !formData.needsStageFloor && !formData.needsRigging && (
+                  <div><span className="text-pepe-t64">Keine besonderen technischen Anforderungen</span></div>
                 )}
               </div>
             </div>
@@ -681,83 +627,81 @@ export function StepContent({
             {/* Budget & Planning Section */}
             {(formData.budget || formData.planningStatus) && (
               <div className="summary-section">
-                <h4 className="summary-section-title">💰 Budget & Planung</h4>
+                <h4>Budget & Planung</h4>
                 <div className="summary-grid">
                   {formData.budget && (
-                    <div className="summary-item">
-                      <span className="summary-label">Budgetrahmen:</span>
-                      <span className="summary-value">
-                        {budgetRanges.find(b => b.value === formData.budget)?.label}
-                      </span>
-                    </div>
+                    <div><strong>Budgetrahmen</strong><span className="summary-value">{budgetRanges.find(b => b.value === formData.budget)?.label}</span></div>
                   )}
                   {formData.planningStatus && (
-                    <div className="summary-item">
-                      <span className="summary-label">Planungsstand:</span>
-                      <span className="summary-value">
-                        {formData.planningStatus === 'just_browsing' && 'Schaue mich nur um'}
-                        {formData.planningStatus === 'early_planning' && 'Frühe Planungsphase'}
-                        {formData.planningStatus === 'in_planning' && 'Konkret in Planung'}
-                        {formData.planningStatus === 'urgent' && 'Dringend - Event bald'}
-                      </span>
-                    </div>
+                    <div><strong>Planungsstand</strong><span className="summary-value">
+                      {formData.planningStatus === 'just_browsing' && 'Schaue mich nur um'}
+                      {formData.planningStatus === 'early_planning' && 'Frühe Planungsphase'}
+                      {formData.planningStatus === 'in_planning' && 'Konkret in Planung'}
+                      {formData.planningStatus === 'urgent' && 'Dringend - Event bald'}
+                    </span></div>
                   )}
                 </div>
               </div>
             )}
-            
-            {/* Contact Information Section */}
-            <div className="summary-section">
-              <h4 className="summary-section-title">📧 Kontaktdaten</h4>
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="summary-label">Name:</span>
-                  <span className="summary-value">
-                    {formData.firstName} {formData.lastName}
-                  </span>
-                </div>
-                {formData.company && (
-                  <div className="summary-item">
-                    <span className="summary-label">Unternehmen:</span>
-                    <span className="summary-value">{formData.company}</span>
-                  </div>
-                )}
-                <div className="summary-item">
-                  <span className="summary-label">E-Mail:</span>
-                  <span className="summary-value">{formData.email}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Telefon:</span>
-                  <span className="summary-value">{formData.phone}</span>
-                </div>
-              </div>
-            </div>
-            
+
             {/* Additional Message Section */}
             {formData.message && (
-              <div className="summary-section">
-                <h4 className="summary-section-title">💬 Zusätzliche Wünsche</h4>
+              <div className="summary-section summary-section-full">
+                <h4>Zusätzliche Wünsche</h4>
                 <p className="summary-message-text">{formData.message}</p>
+              </div>
+            )}
+
+            {/* Contact Information Section */}
+            <div className="summary-section">
+              <h4>Kontaktdaten</h4>
+              <div className="summary-grid">
+                <div><strong>Name</strong><span className="summary-value">{formData.firstName} {formData.lastName}</span></div>
+                {formData.company && <div><strong>Unternehmen</strong><span className="summary-value">{formData.company}</span></div>}
+                <div><strong>E-Mail</strong><span className="summary-value">{formData.email}</span></div>
+                <div><strong>Telefon</strong><span className="summary-value">{formData.phone}</span></div>
+              </div>
+            </div>
+
+            {/* Address Details - after Kontaktdaten */}
+            {(formData.street || formData.city || formData.postalCode || formData.eventAddress) && (
+              <div className="summary-section">
+                <h4>Adresse</h4>
+                <div className="summary-grid">
+                  <div><strong>Adresse</strong><span className="summary-value">
+                    {formData.street && formData.postalCode && formData.city ?
+                      `${formData.street}, ${formData.postalCode} ${formData.city}` :
+                      formData.eventAddress || '-'
+                    }
+                  </span></div>
+                  {formData.locationDetails && (
+                    <div><strong>Zusätzliche Angaben</strong><span className="summary-value">{formData.locationDetails}</span></div>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          <div className="wizard-terms-summary">
-            <div className="form-field" style={{marginTop: '2rem'}}>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.termsAccepted || false}
-                  onChange={(e) => onUpdate('termsAccepted', e.target.checked)}
-                  className="mt-1"
-                  required
-                />
-                <span className="text-sm text-pepe-t64">
-                  Ich akzeptiere die Allgemeinen Geschäftsbedingungen und die Datenschutzerklärung.
-                  Meine Anfrage wird vertraulich behandelt. *
-                </span>
-              </label>
-            </div>
+          <div className="wizard-terms-container">
+            <label className="terms-checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.termsAccepted || false}
+                onChange={(e) => onUpdate('termsAccepted', e.target.checked)}
+                required
+              />
+              <span className="terms-text">
+                Ich akzeptiere die{' '}
+                <a href="/agb" target="_blank" rel="noopener noreferrer" className="terms-link">
+                  Allgemeinen Geschäftsbedingungen
+                </a>
+                {' '}und die{' '}
+                <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="terms-link">
+                  Datenschutzerklärung
+                </a>
+                . Meine Anfrage wird vertraulich behandelt. *
+              </span>
+            </label>
           </div>
         </div>
       )

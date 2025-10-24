@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StepContent } from './BookingWizardSteps'
 
@@ -117,6 +117,7 @@ export default function BookingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
+  const wizardRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState<BookingData>({
     eventType: '',
     teamSize: '',
@@ -149,6 +150,13 @@ export default function BookingWizard() {
   })
 
   const totalSteps = 7
+
+  // Scroll to top of wizard on step change
+  useEffect(() => {
+    if (wizardRef.current) {
+      wizardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [currentStep])
 
   const eventTypes = [
     { 
@@ -484,7 +492,7 @@ export default function BookingWizard() {
 
 
   return (
-    <div className="booking-wizard">
+    <div ref={wizardRef} className="booking-wizard">
       {/* Stepper */}
       <div className="stepper mb-6" style={{ maxWidth: 'none', width: '100%' }}>
         {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (

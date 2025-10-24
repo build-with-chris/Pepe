@@ -1,45 +1,82 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
 import Buhnenzauber from './components/Buhnenzauber'
 import { ProtectedRoute } from './components/ProtectedRoute'
-import Home from './pages/Home'
-import Kuenstler from './pages/Kuenstler'
-import Shows from './pages/Shows'
-import Galerie from './pages/Galerie'
-import Kontakt from './pages/Kontakt'
-import Anfragen from './pages/Anfragen'
-import Mediamaterial from './pages/Mediamaterial'
-import Presskit from './pages/Presskit'
-import Pressemappe from './pages/Pressemappe'
-import Team from './pages/Team'
-import {Login as LoginForm} from './components/login-form'
-import SignUp from './components/SignUp'
-import Dashboard from './pages/Dashboard'
-import Privacy from './pages/Privacy'
-import Imprint from './pages/Imprint'
-import Terms from './pages/Terms'
-import ArtistGuidlines from './pages/ArtistGuidlines'
-import Admin from './pages/Admin'
-import Artists from './pages/Artists'
-import ProfileSetup from './pages/ProfileSetup'
-import Kalender from './pages/Kalender'
-import MyGigs from './pages/MyGigs'
-import Impressum from './pages/Impressum'
-import Datenschutz from './pages/Datenschutz'
-import AGB from './pages/AGB'
-import Agentur from './pages/Agentur'
-import NotFound from './pages/NotFound'
-import DotCloudDemo from './pages/DotCloudDemo'
-import DisciplinesCarousel from './pages/DisciplinesCarousel'
 import './index.css'
+
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname])
+
+  return null
+}
+
+// Lazy load all page components
+const Home = lazy(() => import('./pages/Home'))
+const Kuenstler = lazy(() => import('./pages/Kuenstler'))
+const Shows = lazy(() => import('./pages/Shows'))
+const Galerie = lazy(() => import('./pages/Galerie'))
+const Kontakt = lazy(() => import('./pages/Kontakt'))
+const Anfragen = lazy(() => import('./pages/Anfragen'))
+const Mediamaterial = lazy(() => import('./pages/Mediamaterial'))
+const Presskit = lazy(() => import('./pages/Presskit'))
+const Pressemappe = lazy(() => import('./pages/Pressemappe'))
+const Team = lazy(() => import('./pages/Team'))
+const LoginForm = lazy(() => import('./components/login-form').then(m => ({ default: m.Login })))
+const SignUp = lazy(() => import('./components/SignUp'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Privacy = lazy(() => import('./pages/Privacy'))
+const Imprint = lazy(() => import('./pages/Imprint'))
+const Terms = lazy(() => import('./pages/Terms'))
+const ArtistGuidlines = lazy(() => import('./pages/ArtistGuidlines'))
+const Admin = lazy(() => import('./pages/Admin'))
+const Artists = lazy(() => import('./pages/Artists'))
+const ProfileSetup = lazy(() => import('./pages/ProfileSetup'))
+const Kalender = lazy(() => import('./pages/Kalender'))
+const MyGigs = lazy(() => import('./pages/MyGigs'))
+const Impressum = lazy(() => import('./pages/Impressum'))
+const Datenschutz = lazy(() => import('./pages/Datenschutz'))
+const AGB = lazy(() => import('./pages/AGB'))
+const Agentur = lazy(() => import('./pages/Agentur'))
+const NotFound = lazy(() => import('./pages/NotFound'))
+const DotCloudDemo = lazy(() => import('./pages/DotCloudDemo'))
+const DisciplinesCarousel = lazy(() => import('./pages/DisciplinesCarousel'))
+
+// Loading fallback component
+const PageLoader = () => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '60vh',
+    color: 'var(--pepe-gold)'
+  }}>
+    <div style={{
+      fontSize: '1.125rem',
+      fontWeight: 500
+    }}>
+      Wird geladen...
+    </div>
+  </div>
+)
 
 function App() {
   return (
     <div className="min-h-screen">
+      <ScrollToTop />
       <Routes>
         {/* Fullscreen carousel - no nav/footer */}
-        <Route path="/carousel" element={<DisciplinesCarousel />} />
+        <Route path="/carousel" element={
+          <Suspense fallback={<PageLoader />}>
+            <DisciplinesCarousel />
+          </Suspense>
+        } />
 
         {/* Regular pages with nav/footer */}
         <Route path="*" element={
@@ -56,20 +93,21 @@ function App() {
               <Buhnenzauber />
             </div>
             <Navigation />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/kuenstler" element={<Kuenstler />} />
-              <Route path="/shows" element={<Shows />} />
-              <Route path="/galerie" element={<Galerie />} />
-              <Route path="/kontakt" element={<Kontakt />} />
-              <Route path="/anfragen" element={<Anfragen />} />
-              <Route path="/mediamaterial" element={<Mediamaterial />} />
-              <Route path="/presskit" element={<Presskit />} />
-              <Route path="/pressemappe" element={<Pressemappe />} />
-              <Route path="/team" element={<Team />} />
-              <Route path="/agentur" element={<Agentur />} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/kuenstler" element={<Kuenstler />} />
+                <Route path="/shows" element={<Shows />} />
+                <Route path="/galerie" element={<Galerie />} />
+                <Route path="/kontakt" element={<Kontakt />} />
+                <Route path="/anfragen" element={<Anfragen />} />
+                <Route path="/mediamaterial" element={<Mediamaterial />} />
+                <Route path="/presskit" element={<Presskit />} />
+                <Route path="/pressemappe" element={<Pressemappe />} />
+                <Route path="/team" element={<Team />} />
+                <Route path="/agentur" element={<Agentur />} />
 
               {/* Demo route for DotCloud particle system */}
               <Route path="/demo/dotcloud" element={<DotCloudDemo />} />
@@ -139,9 +177,10 @@ function App() {
               <Route path="/imprint" element={<Imprint />} />
               <Route path="/terms" element={<Terms />} />
 
-              {/* 404 fallback */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* 404 fallback */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
             <Footer />
           </>
         } />

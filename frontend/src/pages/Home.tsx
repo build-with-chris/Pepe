@@ -230,6 +230,9 @@ export default function Home() {
 
     setDisciplines(hardcodedDisciplines)
 
+    // Set loading to false immediately
+    setLoading(false)
+
     const fetchArtists = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
@@ -239,7 +242,7 @@ export default function Home() {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(5000) // Shorter timeout
         })
 
         if (response.ok) {
@@ -247,13 +250,10 @@ export default function Home() {
           // Shuffle artists randomly and take only 4
           const shuffled = data.sort(() => 0.5 - Math.random())
           setArtists(shuffled.slice(0, 4))
-        } else {
-          console.error('Failed to fetch artists, status:', response.status)
         }
       } catch (error) {
-        console.error('Failed to fetch artists:', error)
-      } finally {
-        setLoading(false)
+        // Silently fail - page works without artist preview
+        console.warn('Artists API unavailable:', error)
       }
     }
 
@@ -626,23 +626,38 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* 100% Fairness Card - Square Format */}
-            <Link to="/kuenstler" className="bento-card-square bento-card-fairness-square bento-clickable">
+            {/* Team Box - Full Width */}
+            <Link to="/team" className="bento-card-square bento-card-fairness-square bento-clickable">
               <div className="bento-card-content">
                 <h3 className="bento-title">{t('bento1.values.fairnessTitle')}</h3>
                 <p className="bento-text">
                   {t('bento1.values.fairnessBodyPrefix')} <span className="text-pepe-gold">{t('bento1.values.linkText')}</span>.
                 </p>
                 <div className="artist-avatars">
-                  <img src="/images/Slider/Artist1.webp" alt="Artist 1" className="avatar" />
-                  <img src="/images/Slider/Artist2.webp" alt="Artist 2" className="avatar" />
-                  <img src="/images/Slider/Artist3.webp" alt="Artist 3" className="avatar" />
-                  <img src="/images/Slider/Artist4.webp" alt="Artist 4" className="avatar" />
-                  <img src="/images/Slider/Artist5.webp" alt="Artist 5" className="avatar" />
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist1.webp" alt="Carmen" className="avatar" />
+                    <span className="team-member-name">Carmen</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist2.webp" alt="Jonas" className="avatar" />
+                    <span className="team-member-name">Jonas</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist3.webp" alt="Sophie" className="avatar" />
+                    <span className="team-member-name">Sophie</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist4.webp" alt="Dani" className="avatar" />
+                    <span className="team-member-name">Dani</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist5.webp" alt="Jakob" className="avatar" />
+                    <span className="team-member-name">Jakob</span>
+                  </div>
                 </div>
               </div>
               <div className="bento-destination-tag">
-                <span>Künstler ansehen</span>
+                <span>Unser Team</span>
               </div>
             </Link>
           </div>
