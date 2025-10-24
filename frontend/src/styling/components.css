@@ -2906,6 +2906,13 @@
   margin-right: auto;
 }
 
+.choice-grid-three {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .choice-grid-large {
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4);
@@ -3212,6 +3219,11 @@
   }
 
   .choice-grid-two {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .choice-grid-three {
     grid-template-columns: 1fr;
     gap: var(--space-3);
   }

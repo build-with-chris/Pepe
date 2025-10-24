@@ -78,13 +78,14 @@ export default function Galerie() {
 
   // Static gallery images
   const staticGalleryImages = [
-    // Show Formats
-    { id: 1, src: '/images/Galerie34/Solo.webp', alt: 'Solo Performance', category: 'Solo', aspectRatio: 4/3, source: 'static' as const },
-    { id: 2, src: '/images/Galerie34/Duo.webp', alt: 'Duo Performance', category: 'Duo', aspectRatio: 16/9, source: 'static' as const },
-    { id: 3, src: '/images/Galerie34/Variete.webp', alt: 'Varieté Show', category: 'Varieté', aspectRatio: 3/4, source: 'static' as const },
-    { id: 4, src: '/images/Galerie34/Konzeptshow.webp', alt: 'Konzept Show', category: 'Konzept', aspectRatio: 4/3, source: 'static' as const },
-    { id: 5, src: '/images/Galerie34/Zauberer.webp', alt: 'Zauber Performance', category: 'Magie', aspectRatio: 16/9, source: 'static' as const },
-    { id: 6, src: '/images/Galerie34/Feuershow.webp', alt: 'Feuer Show', category: 'Feuer', aspectRatio: 4/3, source: 'static' as const },
+    // Start - Featured Gallery Images
+    { id: 1, src: '/images/Galerie34/Solo.webp', alt: 'Solo Performance', category: 'Start', aspectRatio: 4/3, source: 'static' as const },
+    { id: 2, src: '/images/Galerie34/Duo.webp', alt: 'Duo Performance', category: 'Start', aspectRatio: 16/9, source: 'static' as const },
+    { id: 3, src: '/images/Galerie34/Variete.webp', alt: 'Varieté Show', category: 'Start', aspectRatio: 3/4, source: 'static' as const },
+    { id: 4, src: '/images/Galerie34/Konzeptshow.webp', alt: 'Konzept Show', category: 'Start', aspectRatio: 4/3, source: 'static' as const },
+    { id: 5, src: '/images/Galerie34/Zauberer.webp', alt: 'Zauber Performance', category: 'Start', aspectRatio: 16/9, source: 'static' as const },
+    { id: 6, src: '/images/Galerie34/Feuershow.webp', alt: 'Feuer Show', category: 'Start', aspectRatio: 4/3, source: 'static' as const },
+
     // Akrobatik & Artistik
     { id: 7, src: '/images/posters/Handstand-768.webp', alt: 'Handstand Akrobatik', category: 'Akrobatik', aspectRatio: 3/4, source: 'static' as const },
     { id: 8, src: '/images/posters/Cyr 5-768.webp', alt: 'Cyr Wheel Performance', category: 'Akrobatik', aspectRatio: 3/4, source: 'static' as const },
@@ -92,9 +93,11 @@ export default function Galerie() {
     { id: 10, src: '/images/posters/Hula-768.webp', alt: 'Hula Hoop Performance', category: 'Artistik', aspectRatio: 3/4, source: 'static' as const },
     { id: 11, src: '/images/posters/Contortion-768.webp', alt: 'Contortion', category: 'Akrobatik', aspectRatio: 3/4, source: 'static' as const },
     { id: 12, src: '/images/posters/LED CYR Blackbox-768.webp', alt: 'LED Cyr Wheel', category: 'Akrobatik', aspectRatio: 16/9, source: 'static' as const },
+
     // Theater & Pantomime
     { id: 13, src: '/images/posters/Pantomime-768.webp', alt: 'Pantomime Performance', category: 'Theater', aspectRatio: 3/4, source: 'static' as const },
     { id: 14, src: '/images/posters/Pantomime 2-768.webp', alt: 'Pantomime Act 2', category: 'Theater', aspectRatio: 3/4, source: 'static' as const },
+
     // PepeShows Impressions - New category from gallery folder
     { id: 15, src: '/images/gallery/performance1.jpg', alt: 'PepeShows Live Performance', category: 'PepeShows Impressions', aspectRatio: 4/3, source: 'static' as const },
     { id: 16, src: '/images/gallery/performance2.jpg', alt: 'Artist Showcase', category: 'PepeShows Impressions', aspectRatio: 16/9, source: 'static' as const },
@@ -252,6 +255,9 @@ export default function Galerie() {
 
   // Fetch artists and create disciplines + combine gallery images
   React.useEffect(() => {
+    // Set static images immediately
+    setAllImages(staticGalleryImages)
+
     const fetchArtistsAndImages = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
@@ -261,7 +267,7 @@ export default function Galerie() {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(5000) // Shorter timeout
         })
         
         if (response.ok) {
@@ -332,32 +338,8 @@ export default function Galerie() {
           setAllImages(staticGalleryImages)
         }
       } catch (error) {
-        console.error('Failed to fetch artists:', error)
-        // Set fallback disciplines and static images only
-        setDisciplines([
-          {
-            id: 'zauberer',
-            name: t('artists.disciplines.zauberer') || 'Zauberei',
-            image: '/images/disciplines/Zauberer.webp',
-            description: 'Magische Momente und Illusionen für jedes Publikum.',
-            artistCount: 0
-          },
-          {
-            id: 'luftakrobatik',
-            name: t('artists.disciplines.luftakrobatik') || 'Luftakrobatik',
-            image: '/images/disciplines/Luftakrobatik.webp',
-            description: 'Schwebende Eleganz und atemberaubende Höhenakrobatik.',
-            artistCount: 0
-          },
-          {
-            id: 'handstand',
-            name: t('artists.disciplines.handstand') || 'Handstand',
-            image: '/images/disciplines/Handstand.webp',
-            description: 'Kraft, Balance und Präzision in perfekter Harmonie.',
-            artistCount: 0
-          }
-        ])
-        setAllImages(staticGalleryImages)
+        // Silently fail - page works with static images
+        console.warn('Gallery API unavailable:', error)
       }
     }
 
@@ -562,18 +544,25 @@ export default function Galerie() {
               >
                 {t('artists.filters.all')}
               </button>
-              {Array.from(new Set(allImages.map(img => img.category))).map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`gallery-filter-btn ${
-                    selectedCategory === category ? 'active' : ''
-                  } ${
-                    category === 'PepeShows Impressions' ? 'pepe-impressions' : ''
-                  }`}
-                >
-                  {category === 'PepeShows Impressions' ? '⭐ ' : ''}{category}
-                </button>
+              {Array.from(new Set(allImages.map(img => img.category)))
+                .sort((a, b) => {
+                  // "Start" comes first, then alphabetically
+                  if (a === 'Start') return -1
+                  if (b === 'Start') return 1
+                  return a.localeCompare(b)
+                })
+                .map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`gallery-filter-btn ${
+                      selectedCategory === category ? 'active' : ''
+                    } ${
+                      category === 'PepeShows Impressions' ? 'pepe-impressions' : ''
+                    }`}
+                  >
+                    {category === 'PepeShows Impressions' ? 'Impressions' : category}
+                  </button>
               ))}
             </div>
           </div>

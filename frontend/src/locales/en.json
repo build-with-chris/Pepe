@@ -52,6 +52,7 @@
     "artists": {
   "quote": "Our artists are world champions, international champions, and proven professionals in their disciplines.",
   "filters": { "all": "All" },
+  "results": "{{count}} results",
   "results_one": "{{count}} result",
   "results_other": "{{count}} results",
   "loading": "Loading artists…",

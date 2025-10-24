@@ -17,7 +17,8 @@
       "Bash(npm run dev:*)",
       "Bash(vercel list:*)",
       "Bash(vercel:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

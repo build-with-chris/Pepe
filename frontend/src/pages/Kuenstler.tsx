@@ -32,35 +32,31 @@ export default function Kuenstler() {
 
 
   useEffect(() => {
+    // Set loading to false immediately to render page
+    setLoading(false)
+
     const fetchArtists = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
-        console.log('Fetching artists from:', `${baseUrl}/api/artists`)
-        
+
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          // Add timeout to prevent hanging requests
-          signal: AbortSignal.timeout(10000) // 10 second timeout
+          // Shorter timeout for better UX
+          signal: AbortSignal.timeout(5000) // 5 second timeout
         })
-        
-        console.log('Response status:', response.status)
-        
+
         if (response.ok) {
           const data = await response.json()
-          console.log('Artists data received:', data.length, 'artists')
           setArtists(data)
           setFilteredArtists(data)
-        } else {
-          console.error('Failed to fetch artists, status:', response.status)
         }
       } catch (error) {
-        console.error('Failed to fetch artists:', error)
-      } finally {
-        setLoading(false)
+        // Silently fail - page works without backend data
+        console.warn('Artists API unavailable:', error)
       }
     }
 

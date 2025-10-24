@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Instagram } from 'lucide-react'
 
 export default function Footer() {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
+  const [followerCount, setFollowerCount] = useState('13k')
   
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,10 +29,20 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="footer-social-link inline-flex items-center"
-                style={{gap: '0.75rem', alignItems: 'baseline'}}
+                style={{
+                  gap: '0.5rem',
+                  alignItems: 'center'
+                }}
               >
-                <Instagram style={{width: '1rem', height: '1rem', color: 'white', verticalAlign: 'baseline'}} />
-                <span>@pepe_arts · 13k Follower</span>
+                <Instagram
+                  style={{
+                    width: '1.125rem',
+                    height: '1.125rem',
+                    color: '#CD7F32',
+                    flexShrink: 0
+                  }}
+                />
+                <span>@pepe_arts · {followerCount} Follower</span>
               </a>
             </div>
             

@@ -55,6 +55,7 @@
   "artists": {
     "quote": "Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.",
     "filters": { "all": "Alle" },
+  "results": "{{count}} Ergebnisse",
   "results_one": "{{count}} Ergebnis",
   "results_other": "{{count}} Ergebnisse",
   "loading": "Lade Künstler…",

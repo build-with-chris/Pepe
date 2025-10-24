@@ -119,8 +119,8 @@ export function StepContent({
           <h3 className="wizard-step-title">Wie viele Künstler möchten Sie buchen?</h3>
           <p className="wizard-step-subtitle">Die Anzahl der Künstler bestimmt das Format Ihrer Show</p>
 
-          <div className="choice-grid choice-grid-two">
-            {teamSizes.slice(0, 2).map((size) => (
+          <div className="choice-grid choice-grid-three">
+            {teamSizes.map((size) => (
               <ChoiceCard
                 key={size.value}
                 image={size.image}
