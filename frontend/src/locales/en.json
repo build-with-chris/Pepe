@@ -745,7 +745,7 @@
         "secondaryCta": "Explore shows"
       },
       "excellence": {
-        "heading": "We don’t do average – we deliver excellence.",
+        "heading": "We don't do average – we deliver excellence.",
         "copy": "Our performers are world champions, internationally acclaimed talents and proven experts in their disciplines.",
         "note": "Each discipline highlights real references and where it shines best for your event."
       },
@@ -765,26 +765,7 @@
         "description": "We create commercial shows, promote culture, and run our own base.\nThis way we combine experience, network, and passion – making PepeShows true experts for unforgettable experiences.",
         "button": "To the agency"
       },
-      "viewAllArtists": "View all artists"
-    },
-
-    "shows": {
-      "formats": {
-        "title": "Our Show Formats",
-        "subtitle": "From short solo acts to full-evening variety shows – discover our professional show formats."
-      },
-      "available": {
-        "title": "Available Shows",
-        "subtitle": "Explore our current show portfolio from the database."
-      },
-      "filter": {
-        "title": "Shows by category",
-        "all": "All shows"
-      }
-    },
-
-    "logos3": { "heading": "These clients trust Pepe" },
-    "home": {
+      "viewAllArtists": "View all artists",
       "categories": {
         "title": "Show Categories",
         "subtitle": "Our Repertoire",
@@ -794,7 +775,7 @@
             "description": "Individual Artists in Top Form"
           },
           "duo": {
-            "title": "Duo Acts", 
+            "title": "Duo Acts",
             "description": "Perfect Synchronization"
           },
           "variete": {
@@ -816,7 +797,22 @@
         }
       }
     },
-  
+
+    "shows": {
+      "formats": {
+        "title": "Our Show Formats",
+        "subtitle": "From short solo acts to full-evening variety shows – discover our professional show formats."
+      },
+      "available": {
+        "title": "Available Shows",
+        "subtitle": "Explore our current show portfolio from the database."
+      },
+      "filter": {
+        "title": "Shows by category",
+        "all": "All shows"
+      }
+    },
+
     "logos3": { "heading": "These clients trust Pepe" },
   
     "mediamaterial": {

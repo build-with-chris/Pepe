@@ -3235,15 +3235,20 @@
   
   .choice-card {
     flex-direction: row;
-    min-height: 120px;
+    min-height: 140px;
     height: auto;
     align-items: stretch;
+    align-self: stretch;
   }
-  
+
   .choice-card-image {
     width: 120px;
-    height: auto;
+    height: 120px;
     flex-shrink: 0;
+  }
+
+  .choice-card-image img {
+    object-fit: cover;
   }
   
   .choice-card-content {
