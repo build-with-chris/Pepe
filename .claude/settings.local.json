@@ -19,7 +19,11 @@
       "Bash(vercel:*)",
       "Bash(git log:*)",
       "Bash(awk:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(node:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

@@ -52,12 +52,10 @@ function DotCloudImage({
   dynamicDensity = false,
 }: DotCloudImageProps) {
 
-  console.log("[DotCloud]", disciplineId, "🔵 Component render");
-
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [scrollProgress, setScrollProgress] = useState(1); // Start at 1.0 (fully formed) until scroll calculates actual position
+  const [scrollProgress, setScrollProgress] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -66,50 +64,35 @@ function DotCloudImage({
   const manualProgress = isManualMode ? manualAnimationPosition / 100 : 0;
 
   // Intersection Observer - only load when component is near viewport
-  // Using useLayoutEffect to ensure it runs AFTER ref is attached to DOM
   useLayoutEffect(() => {
-    console.log("[DotCloud]", disciplineId, "🟢 Intersection Observer useLayoutEffect running");
     const container = containerRef.current;
-    if (!container) {
-      console.log("[DotCloud]", disciplineId, "❌ No container ref yet");
-      return;
-    }
-
-    console.log("[DotCloud]", disciplineId, "✅ Container ref exists, creating observer");
+    if (!container) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          console.log("[DotCloud]", disciplineId, "Intersection:", entry.isIntersecting, "ratio:", entry.intersectionRatio);
           if (entry.isIntersecting) {
-            console.log("[DotCloud]", disciplineId, "IS VISIBLE!");
             setIsVisible(true);
-            observer.disconnect(); // Only observe once
+            observer.disconnect();
           }
         });
       },
       {
-        rootMargin: '200px', // Start loading 200px before entering viewport
+        rootMargin: '200px',
       }
     );
 
-    console.log("[DotCloud]", disciplineId, "Observing element...");
     observer.observe(container);
 
     return () => {
-      console.log("[DotCloud]", disciplineId, "Cleanup: disconnecting observer");
       observer.disconnect();
     };
   }, [disciplineId]);
 
   // Load particles - only when visible
   useEffect(() => {
-    if (!isVisible) {
-      console.log("[DotCloud]", disciplineId, "Not visible yet, waiting...");
-      return; // Wait until component is visible
-    }
+    if (!isVisible) return;
 
-    console.log("[DotCloud]", disciplineId, "Component visible, loading particles...");
     let mounted = true;
 
     const loadParticles = async () => {
@@ -117,21 +100,17 @@ function DotCloudImage({
         setIsLoading(true);
         setError(null);
 
-        // Extract base icon name (e.g., "cyrwheel-small" -> "cyrwheel")
         const baseIconName = disciplineId.split('-')[0];
         const imagePath = `/doticons/${baseIconName}.jpg`;
-        console.log("[DotCloud]", disciplineId, "Loading from:", imagePath);
 
         const particleData = await imageToParticles({
           imagePath,
-          sampleGap, // User-configurable (1-250)
-          densityMultiplier: density * 1.2, // Increased density for better coverage
+          sampleGap,
+          densityMultiplier: density * 1.2,
           canvasSize: 128,
           minDotSize,
           maxDotSize,
         });
-
-        console.log("[DotCloud]", disciplineId, "Loaded", particleData.length, "particles");
 
         if (mounted) {
           setParticles(particleData);
@@ -139,7 +118,7 @@ function DotCloudImage({
         }
       } catch (err) {
         if (mounted) {
-          console.error("[DotCloud]", disciplineId, "Load error:", err);
+          console.error("[DotCloud] Load error:", disciplineId, err);
           setError(err instanceof Error ? err.message : 'Failed to load image');
           setIsLoading(false);
         }
