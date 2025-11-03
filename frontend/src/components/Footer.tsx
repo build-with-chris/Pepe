@@ -6,8 +6,7 @@ import { Instagram } from 'lucide-react'
 export default function Footer() {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
-  const [followerCount, setFollowerCount] = useState('13k')
-  
+
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Newsletter subscription logic here
@@ -30,7 +29,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="footer-social-link inline-flex items-center"
                 style={{
-                  gap: '0.5rem',
+                  gap: '0.75rem',
                   alignItems: 'center'
                 }}
               >
@@ -42,7 +41,7 @@ export default function Footer() {
                     flexShrink: 0
                   }}
                 />
-                <span>@pepe_arts · {followerCount} Follower</span>
+                <span>@pepe_arts</span>
               </a>
             </div>
             
