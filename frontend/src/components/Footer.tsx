@@ -59,7 +59,7 @@ export default function Footer() {
             <img
               src="/logos/SVG/PEPE_logos_shows.svg"
               alt="Pepe Shows Logo"
-              style={{ height: '48px', width: 'auto', marginBottom: '1.5rem' }}
+              style={{ height: '96px', width: 'auto', marginBottom: '1.5rem' }}
             />
             
             {/* Instagram */}

@@ -60,7 +60,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
                 src="/logos/SVG/PEPE_logos_shows.svg"
                 alt="Pepe Shows Logo"
                 className="nav-logo-svg"
-                style={{ height: '40px', width: 'auto' }}
+                style={{ height: '80px', width: 'auto' }}
               />
             </Link>
           </div>
