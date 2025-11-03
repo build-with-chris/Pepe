@@ -1,5 +1,6 @@
 // import React from 'react' - not needed in modern React
-import DotCloudImage from './ui/DotCloudImage'
+// DotCloudImage replaced with static PNGs for performance
+// import DotCloudImage from './ui/DotCloudImage'
 
 interface ChoiceCardProps {
   image: string
@@ -41,17 +42,15 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
       <div className="choice-card-image" style={{ opacity: selected ? 1 : 0.5 }}>
         {useDotIcon ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-            <DotCloudImage
-              disciplineId={iconName}
-              size={150}
-              density={0.35}
-              color="var(--pepe-gold)"
-              sampleGap={1}
-              minDotSize={0.8}
-              maxDotSize={3.0}
-              manualAnimationPosition={100}
-              aspectRatio={iconName === 'logo' ? 3 : 1}
-              noGlow={!selected}
+            <img
+              src={`/doticons-png/${iconName}-${selected ? 'active' : 'inactive'}.png`}
+              alt={label}
+              style={{
+                width: '150px',
+                height: '150px',
+                objectFit: 'contain',
+                transition: 'opacity 0.3s ease'
+              }}
             />
           </div>
         ) : (

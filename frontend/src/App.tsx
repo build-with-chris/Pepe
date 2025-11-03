@@ -47,6 +47,7 @@ const Agentur = lazy(() => import('./pages/Agentur'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const DotCloudDemo = lazy(() => import('./pages/DotCloudDemo'))
 const DisciplinesCarousel = lazy(() => import('./pages/DisciplinesCarousel'))
+const GeneratePNGs = lazy(() => import('./pages/GeneratePNGs'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -111,6 +112,9 @@ function App() {
 
               {/* Demo route for DotCloud particle system */}
               <Route path="/demo/dotcloud" element={<DotCloudDemo />} />
+
+              {/* PNG Generator utility */}
+              <Route path="/generate-pngs" element={<GeneratePNGs />} />
 
               {/* Authentication routes - use working components */}
               <Route path="/anmelden" element={<LoginForm />} />
