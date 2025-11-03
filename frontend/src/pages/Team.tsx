@@ -51,16 +51,13 @@ export default function Team() {
 
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-8 mb-8">
-              {/* Community Image Placeholder */}
-              <div className="card">
-                <div className="aspect-[4/3] bg-gradient-to-br from-pepe-ink to-pepe-black flex items-center justify-center">
-                  <div className="text-center text-pepe-t48">
-                    <svg className="w-24 h-24 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <p className="text-sm">Gemeinsames Training im PepeDome</p>
-                  </div>
-                </div>
+              {/* Community Image */}
+              <div className="card overflow-hidden">
+                <img
+                  src="/images/About1/About1.2.webp"
+                  alt="Gemeinsames Training im PepeDome"
+                  className="w-full h-full object-cover aspect-[4/3]"
+                />
               </div>
 
               {/* Community Text */}
