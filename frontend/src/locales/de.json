@@ -732,67 +732,78 @@
   "logos3": { "heading": "Diese Kunden vertrauen auf Pepe" },
   "mediamaterial": {
     "hero": {
-      "title": "Mediamaterial",
-      "subtitle": "Alles für eure Promo – an einem Ort",
-      "description": "Logos, Titelbilder, Pressetexte und Trailer. Dazu optional Pakete je Disziplin, damit ihr genau das bewerben könnt, was ihr gebucht habt.",
-      "download_button": "Komplettes Media-Kit (ZIP)",
-      "youtube_button": "YouTube-Trailer"
+      "kicker": "Mediamaterial",
+      "title": "Alles für eure Promo –\n an einem Ort",
+      "subtitle": "Logos, Titelbilder, Pressetexte und Trailer. Dazu optional Pakete je Disziplin, damit ihr genau das bewerben könnt, was ihr gebucht habt.",
+      "buttons": {
+        "zip": "Komplettes Media-Kit (ZIP)",
+        "trailer": "YouTube-Trailer"
+      }
     },
     "general": {
-      "title": "Allgemeines Mediamaterial",
+      "title": "Allgemeines Mediamaterial"
+    },
+    "cards": {
       "logos": {
         "title": "Logos (SVG/PNG)",
-        "description": "Farbig, Schwarz, Weiß – mit/ohne Hintergrund.",
-        "download_button": "Logo-Pack (ZIP)",
-        "brand_guide_button": "Brand-Guide (Seite)"
+        "desc": "Farbig, Schwarz, Weiß – mit/ohne Hintergrund.",
+        "zip": "Logo-Pack (ZIP)",
+        "brandguide": "Brand-Guide (Seite)"
       },
-      "headers": {
+      "header": {
         "title": "Titel- / Headerbild",
-        "description": "High-Res Header für Plakate, Websites & Social.",
-        "format_16_9": "Header 16:9 (JPG)",
-        "format_5_4": "Header 5:4 (JPG)"
+        "desc": "High-Res Header für Plakate, Websites & Social.",
+        "h169": "Header 16:9 (JPG)",
+        "h54": "Header 5:4 (JPG)"
       },
       "press": {
         "title": "Pressemappe / Fact Sheet",
-        "description": "Kurzvorstellung, USP, Kontakt & Rider.",
-        "press_button": "Pressemappe (Seite)",
-        "rider_button": "Technik-Rider (Seite)"
+        "desc": "Kurzvorstellung, USP, Kontakt & Rider.",
+        "page": "Pressemappe (Seite)",
+        "rider": "Technik-Rider (Seite)"
       },
       "trailer": {
         "title": "Trailer (Kurzclip)",
-        "description": "Kurzvorschau für eure Kanäle.",
-        "download_button": "Download (WEBM)",
-        "youtube_button": "YouTube-Trailer"
+        "desc": "Kurzvorschau für eure Kanäle.",
+        "webm": "Download (WEBM)",
+        "youtube": "YouTube-Trailer"
       },
       "qr": {
         "title": "QR-Code zum Trailer",
-        "description": "Für Flyer, Plakate & Programme.",
-        "png_button": "QR-Code (PNG)",
-        "svg_button": "QR-Code (SVG)"
+        "desc": "Für Flyer, Plakate & Programme.",
+        "png": "QR-Code (PNG)",
+        "svg": "QR-Code (SVG)"
       }
     },
     "disciplines": {
       "title": "Disziplinen – Materialpakete",
-      "description": "Für gezielte Promo: pro Disziplin 2–3 Fotos, kurzer Textbaustein und ggf. ein Poster-Template.",
-      "expand_button": "aufklappen",
-      "download_all_button": "Alle Disziplin-Pakete (ZIP)",
-      "cyr_wheel": {
-        "title": "Cyr-Wheel",
-        "description": "Atemberaubende Artistik im rotierenden Rad."
-      },
-      "juggling": {
-        "title": "Jonglage",
-        "description": "Präzision, Rhythmus und Humor – modern inszeniert."
-      },
-      "acrobatics": {
-        "title": "Akrobatik",
-        "description": "Dynamische Hebefiguren und kraftvolle Soli."
+      "subtitle": "Für gezielte Promo: pro Disziplin 2–3 Fotos, kurzer Textbaustein und ggf. ein Poster-Template.",
+      "expand": "aufklappen",
+      "collapse": "zuklappen",
+      "imageAlt": "{{name}} Beispielbild {{index}}",
+      "allZip": "Alle Disziplin-Pakete (ZIP)",
+      "items": {
+        "cyr": {
+          "name": "Cyr-Wheel",
+          "teaser": "Atemberaubende Artistik im rotierenden Rad.",
+          "zip": "Foto-Pack (ZIP)",
+          "copy": "Textbausteine (TXT)",
+          "poster": "Poster A3 (PDF)"
+        },
+        "jonglage": {
+          "name": "Jonglage",
+          "teaser": "Präzision, Rhythmus und Humor – modern inszeniert.",
+          "zip": "Foto-Pack (ZIP)",
+          "copy": "Textbausteine (TXT)"
+        },
+        "akrobatik": {
+          "name": "Akrobatik",
+          "teaser": "Dynamische Hebefiguren und kraftvolle Soli.",
+          "zip": "Foto-Pack (ZIP)",
+          "copy": "Textbausteine (TXT)",
+          "poster": "Poster A3 (PDF)"
+        }
       }
-    },
-    "cta": {
-      "title": "Alles für Ihre Promotion",
-      "download_button": "Komplettes Media-Kit (ZIP)",
-      "questions_button": "Fragen zum Material"
     }
   },
   "nav": {

@@ -27,6 +27,7 @@ const Anfragen = lazy(() => import('./pages/Anfragen'))
 const Mediamaterial = lazy(() => import('./pages/Mediamaterial'))
 const Presskit = lazy(() => import('./pages/Presskit'))
 const Pressemappe = lazy(() => import('./pages/Pressemappe'))
+const TechnicalRider = lazy(() => import('./pages/TechnicalRider'))
 const Team = lazy(() => import('./pages/Team'))
 const LoginForm = lazy(() => import('./components/login-form').then(m => ({ default: m.Login })))
 const SignUp = lazy(() => import('./components/SignUp'))
@@ -106,6 +107,7 @@ function App() {
                 <Route path="/mediamaterial" element={<Mediamaterial />} />
                 <Route path="/presskit" element={<Presskit />} />
                 <Route path="/pressemappe" element={<Pressemappe />} />
+                <Route path="/technical-rider" element={<TechnicalRider />} />
                 <Route path="/team" element={<Team />} />
                 <Route path="/agentur" element={<Agentur />} />
 

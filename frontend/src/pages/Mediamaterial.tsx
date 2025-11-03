@@ -71,7 +71,7 @@ export default function Mediamaterial() {
             <MediaCard
               title={t("mediamaterial.cards.header.title")}
               description={t("mediamaterial.cards.header.desc")}
-              preview="src/assets/PEPE.png"
+              preview="/src/assets/PEPE.webp"
               downloads={[
                 { label: t("mediamaterial.cards.header.h169"), href: "/images/Brandguide/Header Pepe 16:9.jpg" },
                 { label: t("mediamaterial.cards.header.h54"), href: "/images/Brandguide/Header Pepe 5:4.jpg" },
