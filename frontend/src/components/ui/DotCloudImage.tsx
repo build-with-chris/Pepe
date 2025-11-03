@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, memo } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, memo } from 'react';
 import { imageToParticles, type Particle } from '@/lib/imageToDots';
 
 export interface DotCloudImageProps {
@@ -66,8 +66,9 @@ function DotCloudImage({
   const manualProgress = isManualMode ? manualAnimationPosition / 100 : 0;
 
   // Intersection Observer - only load when component is near viewport
-  useEffect(() => {
-    console.log("[DotCloud]", disciplineId, "🟢 Intersection Observer useEffect running");
+  // Using useLayoutEffect to ensure it runs AFTER ref is attached to DOM
+  useLayoutEffect(() => {
+    console.log("[DotCloud]", disciplineId, "🟢 Intersection Observer useLayoutEffect running");
     const container = containerRef.current;
     if (!container) {
       console.log("[DotCloud]", disciplineId, "❌ No container ref yet");
