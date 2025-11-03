@@ -55,7 +55,75 @@ export default function Mediamaterial() {
             <h2 className="h1 mb-6">{t('mediamaterial.general.title')}</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Featured Cards - Pressemappe & Technical Rider */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
+            {/* Pressemappe - Featured */}
+            <div className="card hover:border-pepe-gold transition-all bg-gradient-to-br from-pepe-ink to-pepe-black">
+              <div className="card-body p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-4 bg-pepe-gold/10 rounded-xl">
+                    <Info className="h-10 w-10 text-pepe-gold" />
+                  </div>
+                  <div>
+                    <h3 className="h2 text-pepe-gold">{t("mediamaterial.cards.press.title")}</h3>
+                    <p className="body-md text-pepe-t80 mt-1">{t("mediamaterial.cards.press.desc")}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild size="lg" className="btn-primary flex-1">
+                    <a href="/pressemappe" target="_blank" rel="noreferrer">
+                      <LinkIcon className="mr-2 h-5 w-5" />
+                      {t("mediamaterial.cards.press.page")}
+                    </a>
+                  </Button>
+                  <Button asChild size="lg" variant="secondary" className="flex-1">
+                    <a href="/technical-rider" target="_blank" rel="noreferrer">
+                      <LinkIcon className="mr-2 h-5 w-5" />
+                      {t("mediamaterial.cards.press.rider")}
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Trailer - Featured */}
+            <div className="card hover:border-pepe-gold transition-all">
+              <div className="card-body p-0 flex flex-col">
+                <AspectRatio ratio={16 / 9}>
+                  <video
+                    src="/videos/Vorschauloop.webm"
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    aria-label="Trailer Vorschauvideo"
+                    className="h-full w-full object-cover rounded-t-xl"
+                  />
+                </AspectRatio>
+                <div className="p-6">
+                  <h3 className="h3 text-pepe-gold mb-2">{t("mediamaterial.cards.trailer.title")}</h3>
+                  <p className="body-sm text-pepe-t80 mb-4">{t("mediamaterial.cards.trailer.desc")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm">
+                      <a href="/videos/Vorschauloop.webm" download>
+                        <Download className="mr-2 h-4 w-4" />
+                        {t("mediamaterial.cards.trailer.webm")}
+                      </a>
+                    </Button>
+                    <Button asChild size="sm" variant="secondary">
+                      <a href="https://www.youtube.com/watch?v=dXHLaIkezTM" target="_blank" rel="noreferrer">
+                        <Video className="mr-2 h-4 w-4" />
+                        {t("mediamaterial.cards.trailer.youtube")}
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Regular Cards - Logos & Header */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Logos */}
             <MediaCard
               title={t("mediamaterial.cards.logos.title")}
@@ -77,97 +145,6 @@ export default function Mediamaterial() {
                 { label: t("mediamaterial.cards.header.h54"), href: "/images/Brandguide/Header Pepe 5:4.jpg" },
               ]}
             />
-
-            {/* Pressemappe */}
-            <MediaCard
-              title={t("mediamaterial.cards.press.title")}
-              description={t("mediamaterial.cards.press.desc")}
-              preview={<Info className="h-16 w-16 text-pepe-t48 mx-auto" />}
-              downloads={[
-                { label: t("mediamaterial.cards.press.page"), href: "/pressemappe", external: true },
-                { label: t("mediamaterial.cards.press.rider"), href: "/technical-rider", external: true },
-              ]}
-            />
-
-            {/* Trailer (Kurzclip) */}
-            <MediaCard
-              title={t("mediamaterial.cards.trailer.title")}
-              description={t("mediamaterial.cards.trailer.desc")}
-              video="/videos/Vorschauloop.webm"
-              downloads={[
-                { label: t("mediamaterial.cards.trailer.webm"), href: "/videos/Vorschauloop.webm" },
-                { label: t("mediamaterial.cards.trailer.youtube"), href: "https://www.youtube.com/watch?v=dXHLaIkezTM", external: true },
-              ]}
-            />
-
-            {/* QR-Code */}
-            <MediaCard
-              title={t("mediamaterial.cards.qr.title")}
-              description={t("mediamaterial.cards.qr.desc")}
-              preview="/media/general/qr-trailer.png"
-              downloads={[
-                { label: t("mediamaterial.cards.qr.png"), href: "/media/general/qr-trailer.png" },
-                { label: t("mediamaterial.cards.qr.svg"), href: "/media/general/qr-trailer.svg" },
-              ]}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Disciplines Section - New Design with Original Expandable Content */}
-      <section className="section bg-pepe-ink">
-        <div className="stage-container">
-          <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">{t('mediamaterial.disciplines.title')}</h2>
-            <p className="body-lg max-w-3xl mx-auto text-pepe-t80">
-              {t('mediamaterial.disciplines.subtitle')}
-            </p>
-          </div>
-
-          <div className="space-y-4 max-w-5xl mx-auto">
-            <Disziplin
-              name={t("mediamaterial.disciplines.items.cyr.name")}
-              slug="cyr"
-              teaser={t("mediamaterial.disciplines.items.cyr.teaser")}
-              images={["/media/disciplines/cyr/cyr-1.jpg", "/media/disciplines/cyr/cyr-2.jpg", "/media/disciplines/cyr/cyr-3.jpg"]}
-              downloads={[
-                { label: t("mediamaterial.disciplines.items.cyr.zip"), href: "/media/disciplines/cyr/cyr-photos.zip" },
-                { label: t("mediamaterial.disciplines.items.cyr.copy"), href: "/media/disciplines/cyr/cyr-copy.txt" },
-                { label: t("mediamaterial.disciplines.items.cyr.poster"), href: "/media/disciplines/cyr/cyr-poster-a3.pdf" },
-              ]}
-            />
-
-            <Disziplin
-              name={t("mediamaterial.disciplines.items.jonglage.name")}
-              slug="jonglage"
-              teaser={t("mediamaterial.disciplines.items.jonglage.teaser")}
-              images={["/media/disciplines/jonglage/j-1.jpg", "/media/disciplines/jonglage/j-2.jpg"]}
-              downloads={[
-                { label: t("mediamaterial.disciplines.items.jonglage.zip"), href: "/media/disciplines/jonglage/j-photos.zip" },
-                { label: t("mediamaterial.disciplines.items.jonglage.copy"), href: "/media/disciplines/jonglage/j-copy.txt" },
-              ]}
-            />
-
-            <Disziplin
-              name={t("mediamaterial.disciplines.items.akrobatik.name")}
-              slug="akrobatik"
-              teaser={t("mediamaterial.disciplines.items.akrobatik.teaser")}
-              images={["/media/disciplines/akrobatik/a-1.jpg", "/media/disciplines/akrobatik/a-2.jpg", "/media/disciplines/akrobatik/a-3.jpg"]}
-              downloads={[
-                { label: t("mediamaterial.disciplines.items.akrobatik.zip"), href: "/media/disciplines/akrobatik/a-photos.zip" },
-                { label: t("mediamaterial.disciplines.items.akrobatik.copy"), href: "/media/disciplines/akrobatik/a-copy.txt" },
-                { label: t("mediamaterial.disciplines.items.akrobatik.poster"), href: "/media/disciplines/akrobatik/a-poster-a3.pdf" },
-              ]}
-            />
-          </div>
-
-          <div className="text-center mt-12">
-            <Button asChild size="lg" className="btn-primary">
-              <a href="/media/disciplines/all_disciplines.zip" download>
-                <FolderDown className="mr-2 h-5 w-5" />
-                {t("mediamaterial.disciplines.allZip")}
-              </a>
-            </Button>
           </div>
         </div>
       </section>
@@ -268,56 +245,3 @@ function MediaCard(props: {
   );
 }
 
-function Disziplin(props: {
-  name: string;
-  slug: string;
-  teaser: string;
-  images: string[];
-  downloads: DownloadLink[];
-}) {
-  const { name, teaser, images, downloads } = props;
-  const { t } = useTranslation();
-
-  return (
-    <details className="group card hover:border-pepe-gold/50 transition-all">
-      <summary className="cursor-pointer list-none p-6">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h3 className="h2 text-pepe-gold">{name}</h3>
-          <p className="body-md text-pepe-t80 mt-1">{teaser}</p>
-          <span className="body-sm text-pepe-t60 mt-2 group-open:hidden">
-            {t("mediamaterial.disciplines.expand")} ▼
-          </span>
-          <span className="body-sm text-pepe-t60 mt-2 hidden group-open:inline">
-            {t("mediamaterial.disciplines.collapse")} ▲
-          </span>
-        </div>
-      </summary>
-
-      <div className="px-6 pb-6">
-        <div className="grid gap-4 sm:grid-cols-3 mb-6">
-          {images.map((src, i) => (
-            <AspectRatio key={i} ratio={4 / 5}>
-              <img
-                src={src}
-                alt={t("mediamaterial.disciplines.imageAlt", { name, index: i + 1 })}
-                className="h-full w-full rounded-lg object-cover border border-pepe-line"
-                loading="lazy"
-              />
-            </AspectRatio>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-2">
-          {downloads.map((d, i) => (
-            <Button key={i} asChild size="sm">
-              <a href={d.href} download>
-                <Download className="mr-2 h-4 w-4" />
-                {d.label}
-              </a>
-            </Button>
-          ))}
-        </div>
-      </div>
-    </details>
-  );
-}
