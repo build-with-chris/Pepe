@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { imageToParticles, type Particle } from '@/lib/imageToDots';
 
 export interface DotCloudImageProps {
@@ -58,52 +58,45 @@ export default function DotCloudImage({
   const [scrollProgress, setScrollProgress] = useState(1); // Start at 1.0 (fully formed) until scroll calculates actual position
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Use manual position if provided, otherwise use scroll progress
   const isManualMode = manualAnimationPosition !== undefined;
   const manualProgress = isManualMode ? manualAnimationPosition / 100 : 0;
 
-  // Callback ref - runs when element is mounted
-  const setContainerRef = useCallback((element: HTMLDivElement | null) => {
-    if (!element) return;
-
-    console.log("[DotCloud]", disciplineId, "Callback ref set, creating observer");
-    containerRef.current = element;
-
-    // Clean up existing observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
+  // Intersection Observer - only load when component is near viewport
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      console.log("[DotCloud]", disciplineId, "No container ref yet");
+      return;
     }
 
-    // Create new observer
+    console.log("[DotCloud]", disciplineId, "✅ Container ref exists, creating observer");
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          console.log("[DotCloud]", disciplineId, "Intersection:", entry.isIntersecting);
+          console.log("[DotCloud]", disciplineId, "Intersection:", entry.isIntersecting, "ratio:", entry.intersectionRatio);
           if (entry.isIntersecting) {
+            console.log("[DotCloud]", disciplineId, "IS VISIBLE!");
             setIsVisible(true);
-            observer.disconnect();
+            observer.disconnect(); // Only observe once
           }
         });
       },
       {
-        rootMargin: '200px',
+        rootMargin: '200px', // Start loading 200px before entering viewport
       }
     );
 
-    observer.observe(element);
-    observerRef.current = observer;
-  }, [disciplineId]);
+    console.log("[DotCloud]", disciplineId, "Observing element...");
+    observer.observe(container);
 
-  // Cleanup observer on unmount
-  useEffect(() => {
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
+      console.log("[DotCloud]", disciplineId, "Cleanup: disconnecting observer");
+      observer.disconnect();
     };
-  }, []);
+  }, [disciplineId]);
 
   // Load particles - only when visible
   useEffect(() => {
@@ -310,7 +303,7 @@ export default function DotCloudImage({
 
   return (
     <div
-      ref={setContainerRef}
+      ref={containerRef}
       className={`dot-cloud-container ${className}`}
       style={{
         width: containerWidth,
