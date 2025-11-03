@@ -66,11 +66,17 @@ export default function DotCloudImage({
   // Intersection Observer - only load when component is near viewport
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      console.log("[DotCloud]", disciplineId, "No container ref");
+      return;
+    }
+
+    console.log("[DotCloud]", disciplineId, "Setting up Intersection Observer");
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          console.log("[DotCloud]", disciplineId, "Intersection:", entry.isIntersecting);
           if (entry.isIntersecting) {
             setIsVisible(true);
             observer.disconnect(); // Only observe once
@@ -91,8 +97,12 @@ export default function DotCloudImage({
 
   // Load particles - only when visible
   useEffect(() => {
-    if (!isVisible) return; // Wait until component is visible
+    if (!isVisible) {
+      console.log("[DotCloud]", disciplineId, "Not visible yet, waiting...");
+      return; // Wait until component is visible
+    }
 
+    console.log("[DotCloud]", disciplineId, "Component visible, loading particles...");
     let mounted = true;
 
     const loadParticles = async () => {
@@ -103,6 +113,8 @@ export default function DotCloudImage({
         // Extract base icon name (e.g., "cyrwheel-small" -> "cyrwheel")
         const baseIconName = disciplineId.split('-')[0];
         const imagePath = `/doticons/${baseIconName}.jpg`;
+        console.log("[DotCloud]", disciplineId, "Loading from:", imagePath);
+
         const particleData = await imageToParticles({
           imagePath,
           sampleGap, // User-configurable (1-250)
@@ -112,13 +124,15 @@ export default function DotCloudImage({
           maxDotSize,
         });
 
+        console.log("[DotCloud]", disciplineId, "Loaded", particleData.length, "particles");
+
         if (mounted) {
           setParticles(particleData);
           setIsLoading(false);
         }
       } catch (err) {
         if (mounted) {
-          console.error("[DotIcon]", disciplineId, "Load error:", err);
+          console.error("[DotCloud]", disciplineId, "Load error:", err);
           setError(err instanceof Error ? err.message : 'Failed to load image');
           setIsLoading(false);
         }
