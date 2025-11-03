@@ -6,6 +6,43 @@ import { Instagram } from 'lucide-react'
 export default function Footer() {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
+  const [followerCount, setFollowerCount] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Fetch Instagram follower count from Instagram Basic Display API
+    const fetchFollowerCount = async () => {
+      try {
+        const accessToken = import.meta.env.VITE_INSTAGRAM_ACCESS_TOKEN
+        if (!accessToken) {
+          console.warn('Instagram access token not configured')
+          return
+        }
+
+        const response = await fetch(
+          `https://graph.instagram.com/me?fields=followers_count&access_token=${accessToken}`
+        )
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch follower count')
+        }
+
+        const data = await response.json()
+        const count = data.followers_count
+
+        // Format count (e.g., 13500 -> "13.5k")
+        const formatted = count >= 1000
+          ? `${(count / 1000).toFixed(1)}k`
+          : count.toString()
+
+        setFollowerCount(formatted)
+      } catch (error) {
+        console.error('Error fetching Instagram followers:', error)
+        // Silently fail - just don't show count
+      }
+    }
+
+    fetchFollowerCount()
+  }, [])
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +78,10 @@ export default function Footer() {
                     flexShrink: 0
                   }}
                 />
-                <span>@pepe_arts</span>
+                <span>
+                  @pepe_arts
+                  {followerCount && ` · ${followerCount} Follower`}
+                </span>
               </a>
             </div>
             
