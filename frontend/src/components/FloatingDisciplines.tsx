@@ -201,22 +201,34 @@ export default function FloatingDisciplines({
         }
 
         .discipline-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: rgba(255, 215, 0, 0.3);
+          /* Minimum touch target: 48x48px for accessibility */
+          min-width: 48px;
+          min-height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           border: none;
+          background: transparent;
           padding: 0;
           cursor: pointer;
           transition: all 0.3s ease;
         }
 
-        .discipline-dot:hover {
+        .discipline-dot::before {
+          content: '';
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: rgba(255, 215, 0, 0.3);
+          transition: all 0.3s ease;
+        }
+
+        .discipline-dot:hover::before {
           background: rgba(255, 215, 0, 0.5);
           transform: scale(1.2);
         }
 
-        .discipline-dot.active {
+        .discipline-dot.active::before {
           background: var(--pepe-gold);
           width: 30px;
           border-radius: 5px;

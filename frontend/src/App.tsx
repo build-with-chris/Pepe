@@ -1,10 +1,12 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
-import Buhnenzauber from './components/Buhnenzauber'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import './index.css'
+
+// Lazy load Buhnenzauber - only when needed
+const Buhnenzauber = lazy(() => import('./components/Buhnenzauber'))
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -68,6 +70,16 @@ const PageLoader = () => (
 )
 
 function App() {
+  const [showBuhnenzauber, setShowBuhnenzauber] = useState(false)
+
+  // Defer Buhnenzauber loading until after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowBuhnenzauber(true)
+    }, 1000) // Load after 1 second delay
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="min-h-screen">
       <ScrollToTop />
@@ -82,17 +94,21 @@ function App() {
         {/* Regular pages with nav/footer */}
         <Route path="*" element={
           <>
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              zIndex: 999,
-              pointerEvents: 'none'
-            }}>
-              <Buhnenzauber />
-            </div>
+            {showBuhnenzauber && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 999,
+                pointerEvents: 'none'
+              }}>
+                <Suspense fallback={null}>
+                  <Buhnenzauber />
+                </Suspense>
+              </div>
+            )}
             <Navigation />
             <Suspense fallback={<PageLoader />}>
               <Routes>
