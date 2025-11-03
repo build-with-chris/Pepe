@@ -1293,24 +1293,57 @@
   },
   "team": {
     "hero": {
-      "title": "Netzwerk von Weltklasse-Künstlern",
-      "description": "Wir sind ein breites Netz aus den besten Artisten ihres Fachs – vom 7-fachen Jonglage-Weltmeister über die Cyr-Wheel-Weltmeisterin bis hin zum Olympia-Kader-Breakdancer und dem deutschen Meister der Zauberkunst. Geleitet von PepeShows Michael Heiduk und Christoph Hermann – beide selbst Artisten aus Leidenschaft."
+      "title": "Unser Team",
+      "tagline": "Eine Community aus Weltklasse-Künstlern, die gemeinsam Außergewöhnliches erschafft."
+    },
+    "whoWeAre": {
+      "title": "Wer wir sind",
+      "intro_paragraph1": "Wir sind mehr als eine Agentur – wir sind eine eingeschworene Gemeinschaft aus Profis, die ihre Leidenschaft für Artistik jeden Tag gemeinsam leben. Pepe Shows vereint Weltmeister, Olympia-Kader und preisgekrönte Künstler: vom 7-fachen Jonglage-Weltmeister über die Cyr-Wheel-Weltmeisterin bis hin zum Breakdancer aus dem Olympia-Kader und dem deutschen Meister der Zauberkunst.",
+      "intro_paragraph2": "Im PepeDome trainieren wir zusammen, tauschen uns aus, feilen an neuer Choreografie und wachsen aneinander. Was uns wirklich auszeichnet, ist unser Teamgeist. Wir verstehen uns als Künstlerfamilie, in der Qualität und Herzlichkeit Hand in Hand gehen. Diese enge Verbundenheit spürt man auf der Bühne – jede Performance wird zu einem authentischen Erlebnis."
     },
     "champions": {
       "title": "In unserem Team finden sich wahre Champions",
       "juggling": "7-facher Jonglage-Weltmeister",
-      "cyr_wheel": "Cyr-Wheel-Weltmeisterin", 
+      "cyr_wheel": "Cyr-Wheel-Weltmeisterin",
       "breakdancer": "Breakdancer aus dem Olympia-Kader",
       "magician": "Deutscher Meister der Zauberkunst",
       "description": "Wir bringen sie zusammen, um Events unvergesslich zu machen – präzise, eindrucksvoll und auf höchstem Niveau."
     },
+    "founders": {
+      "title": "Michael & Christoph",
+      "michael_name": "Michael Heiduk",
+      "michael_bio": "Michael bringt über 30 Jahre Bühnenerfahrung mit – als Clown, Pantomime, Jongleur und Moderator hat er unzählige Bühnen weltweit erobert. Seine Reise begann an der Schauspielschule, doch seine wahre Leidenschaft fand er in der Clownerie: dieser einzigartigen Kunst, Menschen zum Lachen und Staunen zu bringen. Mit seinem tiefen Verständnis für Timing, Emotion und Publikum sowie seiner internationalen Vernetzung in der Artistenszene ist Michael das kreative Herzstück von Pepe Shows – ein Visionär, der weiß, wie man unvergessliche Momente schafft.",
+      "christoph_name": "Christoph Hermann",
+      "christoph_bio": "Christoph ist der energiegeladene Gegenpol: jung, dynamisch und immer in Bewegung. Als Akrobat und Cyr-Wheel-Artist lebt er für die Perfektion jeder Drehung, jedes Sprungs. Seine technische Affinität gepaart mit echtem Unternehmergeist macht ihn zum innovativen Motor der Agentur. Christoph liebt es, Grenzen zu verschieben, Neues zu erschaffen und mit Disziplin und Leidenschaft Projekte voranzutreiben. Wo Michael die künstlerische Seele einbringt, sorgt Christoph für frischen Wind und zukunftsorientiertes Denken – gemeinsam eine unschlagbare Kombination."
+    },
+    "community": {
+      "title": "Gemeinsam stark",
+      "paragraph1": "Bei uns wächst niemand allein. Im PepeDome treffen sich unsere Künstler*innen regelmäßig zum gemeinsamen Training, tauschen Tricks und Techniken aus, inspirieren sich gegenseitig und feilen zusammen an neuen Ideen. Diese kreative Atmosphäre schweißt zusammen – nicht durch Verträge, sondern durch echte Verbindung, gegenseitigen Respekt und die gemeinsame Leidenschaft für Perfektion.",
+      "paragraph2": "Jede*r von uns perfektioniert seine Kunst mit Hingabe und Disziplin. Doch die wahre Magie entsteht im Team: wenn verschiedene Talente aufeinandertreffen, wenn aus individueller Exzellenz ein gemeinsames Erlebnis wird, das begeistert und berührt. Genau diese Energie spürt man auf der Bühne – und genau deshalb funktionieren unsere Shows.",
+      "closing": "Wer bei Pepe Shows bucht, bekommt mehr als eine Show – er wird Teil einer Bewegung, die begeistert."
+    },
+    "servicePromise": {
+      "title": "Was Kunden erwartet",
+      "intro": "Wenn Sie mit Pepe Shows zusammenarbeiten, können Sie sich auf eines verlassen: Wir machen es Ihnen leicht. Von der ersten Anfrage bis zum letzten Applaus stehen wir für klare Kommunikation, verlässliche Abläufe und Künstler, die ihr Handwerk auf höchstem Niveau beherrschen.",
+      "point1_title": "Professionalität und Zuverlässigkeit",
+      "point1_text": "Bei uns gibt es keine unangenehmen Überraschungen. Termine werden eingehalten, Absprachen sind verbindlich, und unsere Künstler*innen kommen vorbereitet – immer. Wir verstehen, dass Ihr Event reibungslos ablaufen muss, und genau dafür sorgen wir.",
+      "point2_title": "Künstler auf höchstem Niveau",
+      "point2_text": "Unsere Artisten sind keine Hobbyakrobaten – sie sind Weltmeister, Olympia-Kader und preisgekrönte Profis, die ihre Kunst mit Leidenschaft und Perfektion leben. Jeder Auftritt ist durchdacht, jede Bewegung sitzt. Qualität, auf die Sie sich verlassen können.",
+      "point3_title": "Reibungslose Kommunikation",
+      "point3_text": "Sie haben Fragen? Wir antworten schnell und klar. Sie brauchen Anpassungen? Wir finden Lösungen. Mit uns arbeiten bedeutet: direkte Ansprechpartner, die selbst aus der Branche kommen und genau wissen, worauf es ankommt.",
+      "point4_title": "Begeisterung bei jedem Auftritt",
+      "point4_text": "Am Ende zählt nur eins: Hat es funktioniert? Hat das Publikum gestaunt? War es unvergesslich? Unsere Shows sind darauf ausgelegt, genau das zu liefern – nicht nur technisch einwandfrei, sondern emotional mitreißend. Begeisterung ist unser Standard.",
+      "closing": "Zusammenarbeit mit Pepe Shows ist einfach, inspirierend und ergebnissicher. Weil wir wissen, was Sie brauchen – und weil wir es liefern."
+    },
     "about": {
       "title": "Über uns",
-      "leadership": "Geleitet und organisiert wird PepeShows von <strong class=\"text-pepe-gold\">{{michael}}</strong> und <strong class=\"text-pepe-gold\"> {{christoph}}</strong> – beide selbst Artisten aus Leidenschaft.",
+      "leadership": "Geleitet und organisiert wird PepeShows von <strong>{{michael}}</strong> und <strong>{{christoph}}</strong> – beide selbst Artisten aus Leidenschaft.",
       "perspective": "Mit dieser doppelten Perspektive – Künstler und Veranstalter – wissen wir genau, worauf es ankommt: Professionalität, reibungslose Abläufe und Acts, die dein Publikum begeistern."
     },
     "cta": {
-      "title": "Unser Team für Ihr Event",
+      "title": "Warum Pepe?",
+      "message": "Wir lieben, was wir tun – und das spürt man. In jeder Bewegung, jedem Auftritt, jeder Zusammenarbeit. Wir sind keine gesichtslose Agentur, sondern eine Community aus Künstler*innen, die Leidenschaft und Können vereint. Wenn du nach mehr als nur einer Show suchst – nach einem Erlebnis, das bleibt – dann bist du hier richtig.",
+      "closing": "Lass uns gemeinsam etwas bewegen – im wahrsten Sinne des Wortes.",
       "request_button": "Jetzt anfragen",
       "artists_button": "Künstler entdecken"
     }
