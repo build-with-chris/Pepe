@@ -57,25 +57,7 @@ export default function Shows() {
   useEffect(() => {
     // Set loading to false immediately
     setLoading(false)
-
-    const fetchShows = async () => {
-      const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
-
-      try {
-        const response = await fetch(`${baseUrl}/api/shows`, {
-          signal: AbortSignal.timeout(3000) // Even shorter timeout
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setShows(data)
-        }
-      } catch (error) {
-        // Silently fail - page works without backend shows
-        console.warn('Shows API unavailable:', error)
-      }
-    }
-
-    fetchShows()
+    // Shows API endpoint doesn't exist yet - page works with static content
   }, [])
 
   const resolveImageUrl = (imageUrl?: string) => {
