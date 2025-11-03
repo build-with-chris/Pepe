@@ -67,33 +67,46 @@ export default function DotCloudImage({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
-      console.log("[DotCloud]", disciplineId, "No container ref");
-      return;
+      console.log("[DotCloud]", disciplineId, "No container ref, retrying...");
+      // Retry after a frame - ref might not be set yet
+      const rafId = requestAnimationFrame(() => {
+        const retryContainer = containerRef.current;
+        if (!retryContainer) {
+          console.error("[DotCloud]", disciplineId, "Still no container ref after retry!");
+          return;
+        }
+        setupObserver(retryContainer);
+      });
+      return () => cancelAnimationFrame(rafId);
     }
 
-    console.log("[DotCloud]", disciplineId, "Setting up Intersection Observer");
+    setupObserver(container);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          console.log("[DotCloud]", disciplineId, "Intersection:", entry.isIntersecting);
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            observer.disconnect(); // Only observe once
-          }
-        });
-      },
-      {
-        rootMargin: '200px', // Start loading 200px before entering viewport
-      }
-    );
+    function setupObserver(element: HTMLDivElement) {
+      console.log("[DotCloud]", disciplineId, "Setting up Intersection Observer");
 
-    observer.observe(container);
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            console.log("[DotCloud]", disciplineId, "Intersection:", entry.isIntersecting);
+            if (entry.isIntersecting) {
+              setIsVisible(true);
+              observer.disconnect(); // Only observe once
+            }
+          });
+        },
+        {
+          rootMargin: '200px', // Start loading 200px before entering viewport
+        }
+      );
 
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
+      observer.observe(element);
+
+      return () => {
+        observer.disconnect();
+      };
+    }
+  }, [disciplineId]);
 
   // Load particles - only when visible
   useEffect(() => {
