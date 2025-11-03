@@ -56,7 +56,11 @@ export default function Footer() {
         <div className="footer-content">
           {/* Brand Section */}
           <div className="footer-brand">
-            <h3 className="h3 mb-6">Pepe Shows</h3>
+            <img
+              src="/logos/SVG/PEPE_logos_shows.svg"
+              alt="Pepe Shows Logo"
+              style={{ height: '48px', width: 'auto', marginBottom: '1.5rem' }}
+            />
             
             {/* Instagram */}
             <div className="mb-8">

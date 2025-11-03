@@ -48,6 +48,7 @@ const NotFound = lazy(() => import('./pages/NotFound'))
 const DotCloudDemo = lazy(() => import('./pages/DotCloudDemo'))
 const DisciplinesCarousel = lazy(() => import('./pages/DisciplinesCarousel'))
 const GeneratePNGs = lazy(() => import('./pages/GeneratePNGs'))
+const ColorDemo = lazy(() => import('./pages/ColorDemo'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -110,8 +111,9 @@ function App() {
                 <Route path="/team" element={<Team />} />
                 <Route path="/agentur" element={<Agentur />} />
 
-              {/* Demo route for DotCloud particle system */}
+              {/* Demo routes */}
               <Route path="/demo/dotcloud" element={<DotCloudDemo />} />
+              <Route path="/demo/colors" element={<ColorDemo />} />
 
               {/* PNG Generator utility */}
               <Route path="/generate-pngs" element={<GeneratePNGs />} />

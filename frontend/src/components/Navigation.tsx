@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import logoIcon from '../assets/Logos/icon_pepe.svg'
 
 interface NavigationProps {
   className?: string
@@ -54,21 +53,15 @@ export default function Navigation({ className = '' }: NavigationProps) {
     >
       <div className="stage-container">
         <div className="nav-content">
-          {/* Enhanced Logo Section */}
+          {/* Logo */}
           <div className="nav-brand">
             <Link to="/" className="nav-brand-link">
-              {/* Logo SVG */}
-              <img 
-                src={logoIcon} 
-                alt="Pepe Logo" 
+              <img
+                src="/logos/SVG/PEPE_logos_shows.svg"
+                alt="Pepe Shows Logo"
                 className="nav-logo-svg"
+                style={{ height: '40px', width: 'auto' }}
               />
-              
-              {/* Pepe Text */}
-              <span className="nav-brand-text">PEPE</span>
-              
-              {/* Shows Text */}
-              <span className="nav-shows-text">SHOWS</span>
             </Link>
           </div>
           
