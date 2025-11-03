@@ -389,7 +389,7 @@ export default function Galerie() {
                 {t('gallery23.headingDesktop') || 'We don\'t believe in average – with us it\'s excellence.'}
               </h2>
               <p className="body-lg mb-6">
-                Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.
+                {t('artists.quote') || 'Weltklasse-Künstler mit internationaler Erfahrung.'}
               </p>
               <p className="body text-pepe-t64 mb-0">
                 {t('gallery23.subtitle') || 'Wählen Sie eine Disziplin, um Referenzen, Einsätze und passende Künstler zu sehen.'}
