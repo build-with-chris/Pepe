@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import Buhnenzauber from '../components/Buhnenzauber'
 import DotCloudImage from '../components/ui/DotCloudImage'
 import FloatingDisciplines from '../components/FloatingDisciplines'
 import heroImage from '../assets/PepeHero.webp'
@@ -497,9 +496,6 @@ export default function Home() {
               </div>
               <div className="bento-card-header">
                 <h2 className="bento-title">{t('bento1.hero.title')}</h2>
-                <div className="bento-sparkles">
-                  <Buhnenzauber />
-                </div>
               </div>
               <div className="bento-destination-tag">
                 <span>Booking Assistant</span>

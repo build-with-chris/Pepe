@@ -119,6 +119,15 @@ export default function FloatingDisciplines({
   const currentDiscipline = filteredDisciplines[currentIndex]
   const iconKey = disciplineToIcon[currentDiscipline.name.toLowerCase()]
 
+  // Responsive icon size
+  const getIconSize = () => {
+    if (typeof window === 'undefined') return 300
+    const width = window.innerWidth
+    if (width < 480) return 200 // Small mobile
+    if (width < 768) return 250 // Mobile/tablet
+    return 300 // Desktop
+  }
+
   return (
     <>
       <div
@@ -134,7 +143,7 @@ export default function FloatingDisciplines({
           <DotCloudImage
             key={`${iconKey}-${currentIndex}`}
             disciplineId={iconKey}
-            size={300}
+            size={getIconSize()}
             color={iconKey === 'world' ? '#FFFFFF' : 'var(--pepe-gold)'}
             manualAnimationPosition={animationPosition}
           />
@@ -165,7 +174,7 @@ export default function FloatingDisciplines({
         .floating-disciplines-single {
           max-width: 600px;
           margin: 0 auto;
-          padding: var(--space-12) 0;
+          padding: var(--space-8) var(--space-4);
           position: relative;
         }
 
@@ -196,39 +205,117 @@ export default function FloatingDisciplines({
         .discipline-dots {
           display: flex;
           justify-content: center;
+          flex-wrap: wrap;
           gap: var(--space-2);
           margin-top: var(--space-8);
+          padding: 0 var(--space-4);
+          max-width: 100%;
         }
 
         .discipline-dot {
+          /* Minimum touch target: 48x48px for accessibility */
+          min-width: 48px;
+          min-height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          background: transparent;
+          padding: 0;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          flex-shrink: 0;
+        }
+
+        .discipline-dot::before {
+          content: '';
           width: 10px;
           height: 10px;
           border-radius: 50%;
           background: rgba(255, 215, 0, 0.3);
-          border: none;
-          padding: 0;
-          cursor: pointer;
           transition: all 0.3s ease;
         }
 
-        .discipline-dot:hover {
+        .discipline-dot:hover::before {
           background: rgba(255, 215, 0, 0.5);
           transform: scale(1.2);
         }
 
-        .discipline-dot.active {
+        .discipline-dot.active::before {
           background: var(--pepe-gold);
           width: 30px;
           border-radius: 5px;
         }
 
         @media (max-width: 768px) {
-          .floating-discipline-label {
-            font-size: var(--text-2xl);
+          .floating-disciplines-single {
+            padding: var(--space-6) var(--space-4);
           }
 
           .floating-icon-container {
-            min-height: 250px;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto var(--space-4);
+          }
+
+          .floating-discipline-label {
+            font-size: var(--text-xl);
+          }
+
+          .discipline-dots {
+            margin-top: var(--space-6);
+            gap: var(--space-1);
+            padding: 0 var(--space-2);
+          }
+
+          .discipline-dot {
+            min-width: 36px;
+            min-height: 36px;
+          }
+
+          .discipline-dot::before {
+            width: 8px;
+            height: 8px;
+          }
+
+          .discipline-dot.active::before {
+            width: 20px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .floating-disciplines-single {
+            padding: var(--space-4) var(--space-2);
+          }
+
+          .floating-icon-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto var(--space-3);
+          }
+
+          .floating-discipline-label {
+            font-size: var(--text-lg);
+          }
+
+          .discipline-dots {
+            margin-top: var(--space-4);
+            gap: 4px;
+            padding: 0 var(--space-2);
+          }
+
+          .discipline-dot {
+            min-width: 32px;
+            min-height: 32px;
+          }
+
+          .discipline-dot::before {
+            width: 6px;
+            height: 6px;
+          }
+
+          .discipline-dot.active::before {
+            width: 16px;
           }
         }
       `}</style>

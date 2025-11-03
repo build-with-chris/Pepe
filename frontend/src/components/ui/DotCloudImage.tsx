@@ -56,14 +56,43 @@ export default function DotCloudImage({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(1); // Start at 1.0 (fully formed) until scroll calculates actual position
+  const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Use manual position if provided, otherwise use scroll progress
   const isManualMode = manualAnimationPosition !== undefined;
   const manualProgress = isManualMode ? manualAnimationPosition / 100 : 0;
 
-  // Load particles
+  // Intersection Observer - only load when component is near viewport
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            observer.disconnect(); // Only observe once
+          }
+        });
+      },
+      {
+        rootMargin: '200px', // Start loading 200px before entering viewport
+      }
+    );
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Load particles - only when visible
+  useEffect(() => {
+    if (!isVisible) return; // Wait until component is visible
+
     let mounted = true;
 
     const loadParticles = async () => {
@@ -101,7 +130,7 @@ export default function DotCloudImage({
     return () => {
       mounted = false;
     };
-  }, [disciplineId, density, sampleGap, minDotSize, maxDotSize]);
+  }, [isVisible, disciplineId, density, sampleGap, minDotSize, maxDotSize]);
 
   // Scroll-based animation trigger (only when not in manual mode)
   useEffect(() => {

@@ -1,10 +1,12 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
-import Buhnenzauber from './components/Buhnenzauber'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import './index.css'
+
+// Lazy load Buhnenzauber - only when needed
+const Buhnenzauber = lazy(() => import('./components/Buhnenzauber'))
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -27,6 +29,7 @@ const Anfragen = lazy(() => import('./pages/Anfragen'))
 const Mediamaterial = lazy(() => import('./pages/Mediamaterial'))
 const Presskit = lazy(() => import('./pages/Presskit'))
 const Pressemappe = lazy(() => import('./pages/Pressemappe'))
+const TechnicalRider = lazy(() => import('./pages/TechnicalRider'))
 const Team = lazy(() => import('./pages/Team'))
 const LoginForm = lazy(() => import('./components/login-form').then(m => ({ default: m.Login })))
 const SignUp = lazy(() => import('./components/SignUp'))
@@ -69,6 +72,16 @@ const PageLoader = () => (
 )
 
 function App() {
+  const [showBuhnenzauber, setShowBuhnenzauber] = useState(false)
+
+  // Defer Buhnenzauber loading until after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowBuhnenzauber(true)
+    }, 1000) // Load after 1 second delay
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="min-h-screen">
       <ScrollToTop />
@@ -83,17 +96,21 @@ function App() {
         {/* Regular pages with nav/footer */}
         <Route path="*" element={
           <>
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              zIndex: 999,
-              pointerEvents: 'none'
-            }}>
-              <Buhnenzauber />
-            </div>
+            {showBuhnenzauber && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 999,
+                pointerEvents: 'none'
+              }}>
+                <Suspense fallback={null}>
+                  <Buhnenzauber />
+                </Suspense>
+              </div>
+            )}
             <Navigation />
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -108,6 +125,7 @@ function App() {
                 <Route path="/mediamaterial" element={<Mediamaterial />} />
                 <Route path="/presskit" element={<Presskit />} />
                 <Route path="/pressemappe" element={<Pressemappe />} />
+                <Route path="/technical-rider" element={<TechnicalRider />} />
                 <Route path="/team" element={<Team />} />
                 <Route path="/agentur" element={<Agentur />} />
 
