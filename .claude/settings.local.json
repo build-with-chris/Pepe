@@ -18,7 +18,8 @@
       "Bash(vercel list:*)",
       "Bash(vercel:*)",
       "Bash(git log:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
