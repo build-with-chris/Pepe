@@ -87,40 +87,46 @@ export default function Team() {
             <h2 className="h1 mb-8">{t('team.founders.title')}</h2>
           </div>
 
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+          <div className="max-w-6xl mx-auto grid grid-cols-2 gap-6">
             {/* Michael Card */}
-            <div className="card hover:border-pepe-gold/50 transition-all">
-              <div className="card-body">
-                {/* Image Placeholder */}
-                <div className="aspect-square bg-gradient-to-br from-pepe-black to-pepe-ink flex items-center justify-center mb-6 rounded-xl overflow-hidden">
-                  <div className="text-center text-pepe-t48">
-                    <svg className="w-32 h-32 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
+            <div className="card hover:border-pepe-gold/50 transition-all overflow-hidden flex flex-col">
+              <div className="card-body p-0 flex flex-col">
+                {/* Michael Image */}
+                <div className="w-full aspect-square max-h-[300px] overflow-hidden flex-shrink-0">
+                  <img
+                    src="/images/Michi.webp"
+                    alt="Michael Heiduk"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <h3 className="h2 text-pepe-gold mb-4">{t('team.founders.michael_name')}</h3>
-                <p className="body-lg text-pepe-t80 leading-relaxed">
-                  {t('team.founders.michael_bio')}
-                </p>
+                {/* Text unter dem Bild */}
+                <div className="p-6 flex-grow flex flex-col">
+                  <h3 className="h4 text-pepe-gold mb-3">{t('team.founders.michael_name')}</h3>
+                  <p className="body-md text-pepe-t80 leading-relaxed flex-grow">
+                    {t('team.founders.michael_bio')}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Christoph Card */}
-            <div className="card hover:border-pepe-gold/50 transition-all">
-              <div className="card-body">
-                {/* Image Placeholder */}
-                <div className="aspect-square bg-gradient-to-br from-pepe-black to-pepe-ink flex items-center justify-center mb-6 rounded-xl overflow-hidden">
-                  <div className="text-center text-pepe-t48">
-                    <svg className="w-32 h-32 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
+            <div className="card hover:border-pepe-gold/50 transition-all overflow-hidden flex flex-col">
+              <div className="card-body p-0 flex flex-col">
+                {/* Christoph Image */}
+                <div className="w-full aspect-square max-h-[300px] overflow-hidden flex-shrink-0">
+                  <img
+                    src="/images/Chris.webp"
+                    alt="Christoph Hermann"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <h3 className="h2 text-pepe-gold mb-4">{t('team.founders.christoph_name')}</h3>
-                <p className="body-lg text-pepe-t80 leading-relaxed">
-                  {t('team.founders.christoph_bio')}
-                </p>
+                {/* Text unter dem Bild */}
+                <div className="p-6 flex-grow flex flex-col">
+                  <h4 className="h4 text-pepe-gold mb-3">{t('team.founders.christoph_name')}</h4>
+                  <p className="body-md text-pepe-t80 leading-relaxed flex-grow">
+                    {t('team.founders.christoph_bio')}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
