@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, memo } from 'react';
 import { imageToParticles, type Particle } from '@/lib/imageToDots';
 
 export interface DotCloudImageProps {
@@ -36,7 +36,7 @@ export interface DotCloudImageProps {
  * - Scroll into view: particles converge to form image (0-100% based on viewport position)
  * - Hover: maintain formed state
  */
-export default function DotCloudImage({
+function DotCloudImage({
   disciplineId,
   size = 400,
   color = 'var(--pepe-gold)',
@@ -52,6 +52,8 @@ export default function DotCloudImage({
   dynamicDensity = false,
 }: DotCloudImageProps) {
 
+  console.log("[DotCloud]", disciplineId, "🔵 Component render");
+
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,9 +67,10 @@ export default function DotCloudImage({
 
   // Intersection Observer - only load when component is near viewport
   useEffect(() => {
+    console.log("[DotCloud]", disciplineId, "🟢 Intersection Observer useEffect running");
     const container = containerRef.current;
     if (!container) {
-      console.log("[DotCloud]", disciplineId, "No container ref yet");
+      console.log("[DotCloud]", disciplineId, "❌ No container ref yet");
       return;
     }
 
@@ -575,3 +578,6 @@ export default function DotCloudImage({
     </div>
   );
 }
+
+// Memoize to prevent re-renders from parent component state changes
+export default memo(DotCloudImage);
