@@ -1,26 +1,126 @@
 import { Link } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
+import { useState, useEffect } from 'react'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel"
+import { useIsMobile } from "@/hooks/use-mobile"
+
+// Künstler-Bilder für den Slider
+const artistImages = [
+  { src: '/images/Kuenstler/slide1.webp', srcLg: '/images/Kuenstler/slide1-lg.webp', alt: 'Künstler 1' },
+  { src: '/images/Kuenstler/slide2.webp', srcLg: '/images/Kuenstler/slide2-lg.webp', alt: 'Künstler 2' },
+  { src: '/images/Kuenstler/slide3.webp', srcLg: '/images/Kuenstler/slide3-lg.webp', alt: 'Künstler 3' },
+  { src: '/images/Kuenstler/slide4.webp', srcLg: undefined, alt: 'Künstler 4' },
+  { src: '/images/Kuenstler/slide5.webp', srcLg: '/images/Kuenstler/slide5-lg.webp', alt: 'Künstler 5' },
+  { src: '/images/Kuenstler/slide6.webp', srcLg: '/images/Kuenstler/slide6-lg.webp', alt: 'Künstler 6' },
+  { src: '/images/Kuenstler/slide7.webp', srcLg: undefined, alt: 'Künstler 7' },
+]
 
 export default function Team() {
   const { t } = useTranslation();
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+  const isMobile = useIsMobile()
+
+  // Auto-Play alle 2,5 Sekunden
+  useEffect(() => {
+    if (!api) return
+
+    const interval = setInterval(() => {
+      api.scrollNext()
+    }, 2500) // 2.5 Sekunden
+
+    return () => clearInterval(interval)
+  }, [api])
+
+  // Aktuellen Index verfolgen
+  useEffect(() => {
+    if (!api) return
+
+    setCurrent(api.selectedScrollSnap())
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap())
+    })
+  }, [api])
+
   return (
     <main>
-      {/* Hero Section - Streamlined */}
-      <section className="section-hero bg-gradient-dark">
-        <div className="stage-container">
-          <div className="hero-content text-center">
-            <h1 className="display-1 display-gradient mb-6">
-              {t('team.hero.title')}
-            </h1>
-            <p className="display-3 text-pepe-gold/90 max-w-3xl mx-auto font-light">
-              {t('team.hero.tagline')}
-            </p>
+      {/* Hero Section - Streamlined mit Slider */}
+      <section className="section-hero bg-gradient-dark relative overflow-hidden" style={{ minHeight: '70vh', height: '70vh' }}>
+        {/* Künstler Slider - Füllt die gesamte Hero-Section */}
+        <div className="absolute inset-0 w-full h-full z-20">
+          <Carousel
+            setApi={setApi}
+            opts={{
+              align: "start",
+              loop: true,
+              slidesToScroll: 1,
+              containScroll: "trimSnaps",
+            }}
+            className="w-full h-full"
+          >
+            <CarouselContent className="h-full -ml-0 ml-0">
+              {artistImages.map((image, index) => (
+                <CarouselItem key={index} className="pl-0 basis-full h-full" style={{ width: '100%', height: '100%', minWidth: '100%', flexShrink: 0, flexGrow: 0 }}>
+                  <div className="relative w-full h-full flex items-end justify-center" style={{ width: '100%', height: '100%', position: 'relative', paddingBottom: '2%' }}>
+                    <img
+                      src={image.srcLg || image.src}
+                      alt={image.alt}
+                      className="object-contain"
+                      style={{ width: '85%', maxHeight: '70%', objectFit: 'contain', display: 'block', zIndex: 5 }}
+                      loading={index < 3 ? "eager" : "lazy"}
+                    />
+                    {/* Overlay für bessere Textlesbarkeit */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60 z-10"></div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+        {/* Hero Content - Über den Bildern */}
+        <div className="relative z-10 flex flex-col justify-start pt-20" style={{ minHeight: '70vh', height: '70vh' }}>
+          <div className="stage-container">
+            <div className="hero-content text-center">
+              <h1 className="display-1 display-gradient mb-6">
+                {t('team.hero.title')}
+              </h1>
+              <p className="text-xl md:text-4xl lg:text-5xl xl:text-6xl text-pepe-gold/90 max-w-3xl mx-auto font-semibold leading-relaxed">
+                Eine Community aus Weltklasse-Künstlern,<br />
+                die gemeinsam Außergewöhnliches erschafft.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dots Indicator */}
+        <div className="absolute bottom-8 left-0 right-0 z-10">
+          <div className="stage-container">
+            <div className="flex justify-center gap-2">
+              {artistImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => api?.scrollTo(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === current
+                      ? 'bg-pepe-gold w-6'
+                      : 'bg-pepe-gold/40 hover:bg-pepe-gold/60'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Who We Are Section */}
-      <section className="section">
+      <section className="section" style={{ paddingTop: 'var(--space-4)' }}>
         <div className="stage-container">
           <div className="section-header text-center mb-12">
             <h2 className="h1 mb-8">{t('team.whoWeAre.title')}</h2>
@@ -87,7 +187,15 @@ export default function Team() {
             <h2 className="h1 mb-8">{t('team.founders.title')}</h2>
           </div>
 
-          <div className="max-w-6xl mx-auto grid grid-cols-2 gap-6">
+          <div 
+            className="max-w-6xl mx-auto gap-6"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+              gap: '1.5rem'
+            }}
+          >
+            {/* Mobile: untereinander, Desktop: nebeneinander */}
             {/* Michael Card */}
             <div className="card hover:border-pepe-gold/50 transition-all overflow-hidden flex flex-col">
               <div className="card-body p-0 flex flex-col">
