@@ -127,12 +127,12 @@ const Navbar01Page = () => {
                 EN
               </button>
             </div>
-            {/* User Avatar (links to profile) */}
+            {/* User Avatar (links to profile) - only visible on desktop */}
             {user && (
               <Link
                 to="/profile"
                 aria-label={t("nav.profile", { defaultValue: "Profil" })}
-                className="hidden sm:inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                className="hidden lg:inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               >
                 <Avatar
                   className={`h-8 w-8 border transition ${
@@ -150,18 +150,18 @@ const Navbar01Page = () => {
             )}
             {/* Hamburger (mobile & tablet) */}
             <button
-              className="lg:hidden inline-flex items-center justify-center rounded-md p-2 sm:p-3 md:p-4 text-white/90 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
+              className="lg:hidden inline-flex items-center justify-center rounded-md p-2 text-white hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
               aria-label={t("nav.openMenu")}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(true)}
             >
               <svg
-                className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8"
+                className="w-7 h-7"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
