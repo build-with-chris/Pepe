@@ -11,13 +11,13 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 // Künstler-Bilder für den Slider
 const artistImages = [
-  { src: '/images/Kuenstler/slide1.webp', srcLg: '/images/Kuenstler/slide1-lg.webp', alt: 'Künstler 1' },
-  { src: '/images/Kuenstler/slide2.webp', srcLg: '/images/Kuenstler/slide2-lg.webp', alt: 'Künstler 2' },
-  { src: '/images/Kuenstler/slide3.webp', srcLg: '/images/Kuenstler/slide3-lg.webp', alt: 'Künstler 3' },
-  { src: '/images/Kuenstler/slide4.webp', srcLg: undefined, alt: 'Künstler 4' },
-  { src: '/images/Kuenstler/slide5.webp', srcLg: '/images/Kuenstler/slide5-lg.webp', alt: 'Künstler 5' },
-  { src: '/images/Kuenstler/slide6.webp', srcLg: '/images/Kuenstler/slide6-lg.webp', alt: 'Künstler 6' },
-  { src: '/images/Kuenstler/slide7.webp', srcLg: undefined, alt: 'Künstler 7' },
+  { src: '/images/kuenstlerpage/slide1.webp', srcLg: '/images/kuenstlerpage/slide1-lg.webp', alt: 'Künstler 1' },
+  { src: '/images/kuenstlerpage/slide2.webp', srcLg: '/images/kuenstlerpage/slide2-lg.webp', alt: 'Künstler 2' },
+  { src: '/images/kuenstlerpage/slide3.webp', srcLg: '/images/kuenstlerpage/slide3-lg.webp', alt: 'Künstler 3' },
+  { src: '/images/kuenstlerpage/slide4.webp', srcLg: undefined, alt: 'Künstler 4' },
+  { src: '/images/kuenstlerpage/slide5.webp', srcLg: undefined, alt: 'Künstler 5' },
+  { src: '/images/kuenstlerpage/slide6.webp', srcLg: undefined, alt: 'Künstler 6' },
+  { src: '/images/kuenstlerpage/slide7.webp', srcLg: undefined, alt: 'Künstler 7' },
 ]
 
 export default function Team() {
@@ -50,7 +50,7 @@ export default function Team() {
   return (
     <main>
       {/* Hero Section - Streamlined mit Slider */}
-      <section className="section-hero bg-gradient-dark relative overflow-hidden" style={{ minHeight: '70vh', height: '70vh' }}>
+      <section className="section-hero bg-gradient-dark relative overflow-hidden" style={{ minHeight: '50vh', height: '50vh' }}>
         {/* Künstler Slider - Füllt die gesamte Hero-Section */}
         <div className="absolute inset-0 w-full h-full z-20">
           <Carousel
@@ -66,16 +66,16 @@ export default function Team() {
             <CarouselContent className="h-full -ml-0 ml-0">
               {artistImages.map((image, index) => (
                 <CarouselItem key={index} className="pl-0 basis-full h-full" style={{ width: '100%', height: '100%', minWidth: '100%', flexShrink: 0, flexGrow: 0 }}>
-                  <div className="relative w-full h-full flex items-end justify-center" style={{ width: '100%', height: '100%', position: 'relative', paddingBottom: '2%' }}>
+                  <div className="relative w-full h-full flex items-end justify-center" style={{ width: '100%', height: '100%', position: 'relative' }}>
                     <img
-                      src={image.srcLg || image.src}
+                      src={isMobile ? image.src : (image.srcLg || image.src)}
                       alt={image.alt}
                       className="object-contain"
-                      style={{ width: '85%', maxHeight: '70%', objectFit: 'contain', display: 'block', zIndex: 5 }}
+                      style={{ width: '85%', maxHeight: '90%', objectFit: 'contain', objectPosition: 'bottom center', display: 'block', position: 'relative', zIndex: 5, marginTop: 'auto' }}
                       loading={index < 3 ? "eager" : "lazy"}
                     />
                     {/* Overlay für bessere Textlesbarkeit */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60 z-10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" style={{ zIndex: 10, pointerEvents: 'none' }}></div>
                   </div>
                 </CarouselItem>
               ))}
@@ -84,7 +84,7 @@ export default function Team() {
         </div>
 
         {/* Hero Content - Über den Bildern */}
-        <div className="relative z-10 flex flex-col justify-start pt-20" style={{ minHeight: '70vh', height: '70vh' }}>
+        <div className="relative z-10 flex flex-col justify-center items-center" style={{ minHeight: '50vh', height: '50vh' }}>
           <div className="stage-container">
             <div className="hero-content text-center">
               <h1 className="display-1 display-gradient mb-6">
