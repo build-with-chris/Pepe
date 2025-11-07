@@ -7,9 +7,11 @@ import './i18n'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </BrowserRouter>,
+  <StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </BrowserRouter>
+  </StrictMode>,
 )

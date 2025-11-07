@@ -1,9 +1,10 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import Navigation from './components/Navigation'
+import Navbar01Page from './components/navbar-01/navbar-01'
 import Footer from './components/Footer'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import './index.css'
+import './i18n'
 
 // Lazy load Buhnenzauber - only when needed
 const Buhnenzauber = lazy(() => import('./components/Buhnenzauber'))
@@ -111,7 +112,7 @@ function App() {
                 </Suspense>
               </div>
             )}
-            <Navigation />
+            <Navbar01Page />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public routes */}

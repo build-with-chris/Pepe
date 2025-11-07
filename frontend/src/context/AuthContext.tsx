@@ -71,10 +71,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // initial session
+    // initial session - check both getSession and hash params
     (async () => {
       try {
         const sb = await getSupabase();
+
+        // First check if there's a hash fragment (OAuth redirect)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+
+        if (accessToken) {
+          // Let Supabase handle the OAuth callback
+          await sb.auth.getSession();
+          // Small delay to let onAuthStateChange trigger
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
         const { data, error } = await sb.auth.getSession();
         if (error) {
           console.warn('[Auth] getSession error:', error.message);
@@ -83,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           return;
         }
-        
+
         const session: Session | null = data.session;
         if (session) {
           const u = session.user;
@@ -103,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let subscription: { unsubscribe: () => void } | null = null;
     (async () => {
       const sb = await getSupabase();
-      const { data: listenerData } = sb.auth.onAuthStateChange((_: any, newSession: any) => {
+      const { data: listenerData } = sb.auth.onAuthStateChange((event: any, newSession: any) => {
         if (newSession) {
           const u = newSession.user;
           setToken(newSession.access_token);
