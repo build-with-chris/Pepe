@@ -243,28 +243,6 @@ function DotCloudImage({
     };
   }, [disciplineId, isManualMode, reverseScroll, isLoading, particles.length]);
 
-  if (error) {
-    return (
-      <div
-        className={`flex items-center justify-center ${className}`}
-        style={{ width: size, height: size }}
-      >
-        <p className="text-sm text-red-500">Failed to load icon</p>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div
-        className={`flex items-center justify-center ${className}`}
-        style={{ width: size, height: size }}
-      >
-        <div className="dot-cloud-loader" />
-      </div>
-    );
-  }
-
   // Scale factor from 128px canvas to display size
   const scaleY = size / 128;
   const scaleX = scaleY * aspectRatio; // X axis scales with aspect ratio
@@ -283,6 +261,7 @@ function DotCloudImage({
   // Calculate container dimensions based on aspect ratio
   const containerWidth = size * aspectRatio;
   const containerHeight = size;
+  const shouldRenderParticles = !isLoading && !error && particles.length > 0;
 
   return (
     <div
@@ -313,7 +292,7 @@ function DotCloudImage({
         // Debug indicator disabled
         return null;
       })()}
-      {particles.map((particle, index) => {
+      {shouldRenderParticles && particles.map((particle, index) => {
         // Dynamic density: EXTREME aggressive reduction - starts IMMEDIATELY!
         // At threshold 10: 100% particles
         // At threshold 9: 70% particles (30% GONE immediately!)
@@ -468,7 +447,7 @@ function DotCloudImage({
       })}
 
       {/* Single global glow behind center - very blurry (disabled if noGlow) */}
-      {!noGlow && (
+      {!noGlow && shouldRenderParticles && (
         <div
           className="dot-glow"
           style={{
@@ -484,6 +463,18 @@ function DotCloudImage({
             zIndex: -1,
           }}
         />
+      )}
+
+      {/* Loader / error overlay */}
+      {(isLoading || error) && (
+        <div className="dot-cloud-status-overlay">
+          {isLoading && !error && <div className="dot-cloud-loader" />}
+          {error && (
+            <p className="dot-cloud-error">
+              Failed to load icon
+            </p>
+          )}
+        </div>
       )}
 
 
@@ -508,6 +499,23 @@ function DotCloudImage({
 
         .dot-particle.glow-particle {
           animation: glowPulse 3s ease-in-out infinite !important;
+        }
+
+        .dot-cloud-status-overlay {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+          background: transparent;
+          z-index: 10;
+        }
+
+        .dot-cloud-error {
+          color: #ff6b6b;
+          font-size: var(--text-sm);
+          font-weight: 500;
         }
 
         @keyframes glowPulse {
