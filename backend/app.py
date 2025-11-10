@@ -277,12 +277,28 @@ def debug_whoami():
 @app.get("/healthz")
 def healthz():
     """Simple health check that verifies DB connectivity."""
+    # Use engine directly for more reliable connection testing
     try:
-        db.session.execute(text("SELECT 1"))
+        # Test connection using engine directly (bypasses session issues)
+        with db.engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            result.fetchone()  # Actually fetch the result
         return jsonify({"status": "ok"}), 200
     except Exception as e:
         app.logger.exception("Health check failed: %s", e)
-        return error_response("internal_error", f"DB unavailable: {str(e)}", 503)
+        
+        # Try one more time with a fresh connection
+        try:
+            # Force engine to create a new connection
+            db.engine.dispose()
+            with db.engine.connect() as conn:
+                result = conn.execute(text("SELECT 1"))
+                result.fetchone()
+            app.logger.info("Health check recovered after engine dispose")
+            return jsonify({"status": "ok", "recovered": True}), 200
+        except Exception as retry_error:
+            app.logger.exception("Health check failed after retry: %s", retry_error)
+            return error_response("internal_error", f"DB unavailable: {str(e)}", 503)
 
 
 # Migration endpoint removed after successful migration
