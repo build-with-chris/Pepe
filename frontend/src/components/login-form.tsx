@@ -135,7 +135,7 @@ export function Login({
       // Decide where to route after login based on database artists table
       const role = (supUser.app_metadata as any)?.role;
       const isAdmin = Boolean(me?.is_admin || role === 'admin');
-      
+
       console.log('User type check:', {
         userEmail: supUser.email,
         userRole: role,
@@ -143,14 +143,14 @@ export function Login({
         isAdmin,
         hasBackendProfile: Boolean(me)
       });
-      
+
       if (!meOk || !me) {
         alert("Dein Profil konnte nicht geladen werden. Bitte versuche es erneut oder kontaktiere den Support.");
         const sb = await getSupabase();
         await sb.auth.signOut();
         return;
       }
-      
+
       if (isAdmin) {
         navigate('/admin/dashboard');
       } else {
@@ -180,7 +180,7 @@ export function Login({
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/profile`,
+          redirectTo: `${window.location.origin}/onboarding`,
           queryParams: { mode: 'login' },
         },
       });
@@ -200,78 +200,104 @@ export function Login({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6 w-full md:max-w-screen-md mx-auto", className)} {...props}>
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Admin & Artist Login</CardTitle>
-          <CardDescription>
-            Login with your Google account or email/password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="" onSubmit={handleSignIn}>
-            <div className="grid gap-6">
-              <div className="flex flex-col gap-4">
-                <Button type="button" variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={loading || oauthLoading}>
-                  Login with Google
-                </Button>
+    <div className="min-h-screen flex items-center justify-center px-4 py-24 bg-gradient-to-b from-black via-gray-900 to-black">
+      <div className={cn("w-full max-w-md mx-auto", className)} {...props}>
+        <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+          <CardHeader className="text-center space-y-2 pb-6">
+            <CardTitle className="text-2xl font-bold text-white">Admin & Artist Login</CardTitle>
+            <CardDescription className="text-gray-400">
+              Login with your Google account or email/password
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-white/20 bg-white hover:bg-white/90 text-black"
+              onClick={handleGoogleLogin}
+              disabled={loading || oauthLoading}
+            >
+              <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+              </svg>
+              Login with Google
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10" />
               </div>
-              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
-              </div>
-              <div className="grid gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    data-ph-no-capture
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    autoComplete="email"
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <a
-                      href="#"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      Forgot your password?
-                    </a>
-                  </div>
-                  <Input
-                    data-ph-no-capture
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                  />
-                </div>
-                <Button type="submit" className="w-full mt-2" disabled={loading || oauthLoading}>
-                  Login
-                </Button>
-              </div>
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link to="/signup" className="underline underline-offset-4">
-                  Sign up
-                </Link>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-gray-900 px-2 text-gray-400">Or continue with</span>
               </div>
             </div>
-          </form>
-        </CardContent>
-      </Card>
-      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-white">Email</Label>
+                <Input
+                  data-ph-no-capture
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  autoComplete="email"
+                  className="bg-black/40 border-white/20 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-white">Password</Label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <Input
+                  data-ph-no-capture
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  className="bg-black/40 border-white/20 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={loading || oauthLoading}
+              >
+                {loading ? "Signing in..." : "Login"}
+              </Button>
+            </form>
+
+            <div className="text-center text-sm text-gray-400">
+              Don&apos;t have an account?{" "}
+              <Link to="/signup" className="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline">
+                Sign up
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="text-center text-xs text-gray-500 mt-6">
+          By continuing, you agree to our{" "}
+          <Link to="/terms" className="underline underline-offset-4 hover:text-gray-400">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="underline underline-offset-4 hover:text-gray-400">
+            Privacy Policy
+          </Link>
+        </div>
       </div>
     </div>
   );

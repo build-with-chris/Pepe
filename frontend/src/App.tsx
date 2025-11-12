@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import Navbar01Page from './components/navbar-01/navbar-01'
+import Navigation from './components/Navigation'
 import Footer from './components/Footer'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import './index.css'
@@ -41,9 +41,14 @@ const Terms = lazy(() => import('./pages/Terms'))
 const ArtistGuidlines = lazy(() => import('./pages/ArtistGuidlines'))
 const Admin = lazy(() => import('./pages/Admin'))
 const Artists = lazy(() => import('./pages/Artists'))
+const Invoices = lazy(() => import('./pages/Invoices'))
+const PendingGigs = lazy(() => import('./pages/PendingGigs'))
+const OfferEditPage = lazy(() => import('./pages/OfferEditPage'))
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'))
 const Kalender = lazy(() => import('./pages/Kalender'))
 const MyGigs = lazy(() => import('./pages/MyGigs'))
+const MeineAnfragen = lazy(() => import('./pages/MeineAnfragen/MeineAnfragen'))
+const Buchhaltung = lazy(() => import('./pages/Buchhaltung/Buchhaltung'))
 const Impressum = lazy(() => import('./pages/Impressum'))
 const Datenschutz = lazy(() => import('./pages/Datenschutz'))
 const AGB = lazy(() => import('./pages/AGB'))
@@ -112,7 +117,7 @@ function App() {
                 </Suspense>
               </div>
             )}
-            <Navbar01Page />
+            <Navigation />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public routes */}
@@ -158,8 +163,17 @@ function App() {
               <Route path="/admin/kuenstler" element={<ProtectedRoute requiredRole="admin" />}>
                 <Route index element={<Artists />} />
               </Route>
+              <Route path="/admin/rechnungen" element={<ProtectedRoute requiredRole="admin" />}>
+                <Route index element={<Invoices />} />
+              </Route>
+              <Route path="/admin/anstehende-gigs" element={<ProtectedRoute requiredRole="admin" />}>
+                <Route index element={<PendingGigs />} />
+              </Route>
+              <Route path="/admin/requests/:reqId/offers/:offerId/edit" element={<ProtectedRoute requiredRole="admin" />}>
+                <Route index element={<OfferEditPage />} />
+              </Route>
 
-              {/* Legacy admin route */}
+              {/* Legacy admin routes */}
               <Route path="/admin/artists" element={<ProtectedRoute requiredRole="admin" />}>
                 <Route index element={<Artists />} />
               </Route>
@@ -173,6 +187,12 @@ function App() {
               </Route>
               <Route path="/meine-gigs" element={<ProtectedRoute />}>
                 <Route index element={<MyGigs />} />
+              </Route>
+              <Route path="/meine-anfragen" element={<ProtectedRoute />}>
+                <Route index element={<MeineAnfragen />} />
+              </Route>
+              <Route path="/buchhaltung" element={<ProtectedRoute />}>
+                <Route index element={<Buchhaltung />} />
               </Route>
 
               {/* Legacy English routes for backwards compatibility */}

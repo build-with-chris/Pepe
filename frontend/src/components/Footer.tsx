@@ -1,48 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Instagram } from 'lucide-react'
 
 export default function Footer() {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
-  const [followerCount, setFollowerCount] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Fetch Instagram follower count from Instagram Basic Display API
-    const fetchFollowerCount = async () => {
-      try {
-        const accessToken = import.meta.env.VITE_INSTAGRAM_ACCESS_TOKEN
-        if (!accessToken) {
-          console.warn('Instagram access token not configured')
-          return
-        }
-
-        const response = await fetch(
-          `https://graph.instagram.com/me?fields=followers_count&access_token=${accessToken}`
-        )
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch follower count')
-        }
-
-        const data = await response.json()
-        const count = data.followers_count
-
-        // Format count (e.g., 13500 -> "13.5k")
-        const formatted = count >= 1000
-          ? `${(count / 1000).toFixed(1)}k`
-          : count.toString()
-
-        setFollowerCount(formatted)
-      } catch (error) {
-        console.error('Error fetching Instagram followers:', error)
-        // Silently fail - just don't show count
-      }
-    }
-
-    fetchFollowerCount()
-  }, [])
+  const followerCount = '45k' // Static follower count
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,16 +32,16 @@ export default function Footer() {
                 href="https://www.instagram.com/pepe_arts/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="footer-social-link inline-flex items-center"
+                className="footer-social-link inline-flex"
                 style={{
-                  gap: '0.75rem',
-                  alignItems: 'center'
+                  gap: '0.5rem',
+                  alignItems: 'baseline'
                 }}
               >
                 <Instagram
                   style={{
-                    width: '1.125rem',
-                    height: '1.125rem',
+                    width: '0.875rem',
+                    height: '0.875rem',
                     color: '#CD7F32',
                     flexShrink: 0
                   }}

@@ -1,6 +1,6 @@
 // import React from 'react' - not needed in modern React
 // DotCloudImage replaced with static PNGs for performance
-// import DotCloudImage from './ui/DotCloudImage'
+import DotCloudImage from './ui/DotCloudImage'
 
 interface ChoiceCardProps {
   image: string
