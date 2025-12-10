@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from config import Config
 from models import db, Artist
-from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_identity, jwt_required
+from flask_jwt_extended import JWTManager
 from routes.api_routes       import api_bp
 from routes.auth_routes  import auth_bp
 from routes.admin_routes import admin_bp
@@ -9,6 +9,7 @@ from flasgger import Swagger
 from flask_cors import CORS
 from routes.request_routes import booking_bp
 from flask_migrate import Migrate
+from helpers.clerk_auth import verify_clerk_token
 
 from sqlalchemy import text
 
@@ -59,7 +60,7 @@ jwt = JWTManager(app)
 # --- Guard all /api/admin routes via DB flag (Option A) ---
 @app.before_request
 def _admin_gate_by_db():
-    """Require a valid JWT and artists.is_admin = true for any /api/admin/* route."""
+    """Require a valid Clerk token and artists.is_admin = true for any /api/admin/* route."""
     path = request.path or ""
     # Only guard admin endpoints; Swagger and health checks are elsewhere
     if not path.startswith("/api/admin"):
@@ -69,35 +70,29 @@ def _admin_gate_by_db():
     if request.method == "OPTIONS":
         return None
 
-    # 1) Verify JWT present and valid
-    try:
-        verify_jwt_in_request()
-    except Exception:
-        # Consistent error format
+    # 1) Verify Clerk token present and valid
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
         return error_response("unauthorized", "Missing or invalid token", 401)
 
+    token = auth_header[7:]  # Remove 'Bearer ' prefix
+    claims = verify_clerk_token(token)
+
+    if not claims:
+        return error_response("unauthorized", "Invalid or expired token", 401)
+
     # 2) Load user and check DB flag
-    uid = get_jwt_identity()
+    uid = claims.get('sub')  # Clerk user ID
     app.logger.info(f"ADMIN_GATE: path={path} uid={uid}")
     artist = None
 
-    # Try integer primary key first (local Artist.id)
-    try:
-        if uid is not None:
-            uid_int = int(uid)
-            artist = Artist.query.get(uid_int)
-            if artist:
-                app.logger.info(f"ADMIN_GATE: resolved by int PK -> artist_id={artist.id} email={getattr(artist,'email',None)} is_admin={getattr(artist,'is_admin',None)}")
-    except (TypeError, ValueError):
-        artist = None
-
-    # Fallback: resolve via Supabase UUID stored on Artist.supabase_user_id
-    if artist is None and isinstance(uid, str):
+    # Resolve via Clerk user ID stored on Artist.supabase_user_id
+    if uid and isinstance(uid, str):
         from sqlalchemy import func
         try:
             artist = Artist.query.filter(func.lower(Artist.supabase_user_id) == uid.lower()).first()
             if artist is not None:
-                app.logger.info(f"ADMIN_GATE: resolved by supabase_user_id -> artist_id={artist.id} email={getattr(artist,'email',None)} is_admin={getattr(artist,'is_admin',None)}")
+                app.logger.info(f"ADMIN_GATE: resolved by clerk_user_id -> artist_id={artist.id} email={getattr(artist,'email',None)} is_admin={getattr(artist,'is_admin',None)}")
         except Exception:
             artist = None
 
@@ -250,21 +245,29 @@ def debug_cors():
     }
 
 @app.get("/__debug/whoami")
-@jwt_required()
 def debug_whoami():
-    uid = get_jwt_identity()
+    """Debug endpoint to verify Clerk token and user lookup."""
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return error_response("unauthorized", "Missing or invalid token", 401)
+
+    token = auth_header[7:]
+    claims = verify_clerk_token(token)
+
+    if not claims:
+        return error_response("unauthorized", "Invalid or expired token", 401)
+
+    uid = claims.get('sub')
     artist = None
-    try:
-        uid_int = int(uid)
-        artist = Artist.query.get(uid_int)
-    except Exception:
-        pass
-    if artist is None and isinstance(uid, str):
+
+    if uid and isinstance(uid, str):
         from sqlalchemy import func
         artist = Artist.query.filter(func.lower(Artist.supabase_user_id) == uid.lower()).first()
+
     return jsonify({
         "uid": uid,
         "artist_found": bool(artist),
+        "clerk_claims": {k: v for k, v in claims.items() if k not in ['iat', 'exp', 'nbf']},
         "artist": {
             "id": getattr(artist, 'id', None),
             "email": getattr(artist, 'email', None),

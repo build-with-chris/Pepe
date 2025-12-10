@@ -1,256 +1,357 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useSignUp } from "@clerk/clerk-react";
 import { useNavigate, Link } from "react-router-dom";
-import { getSupabase } from "@/lib/supabase";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useTranslation } from "react-i18next";
-import posthog from "@/lib/posthog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
+
+const inputClassName = "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#D4A574]/50 focus:ring-[#D4A574]/20";
 
 export default function SignUp() {
+  const { signUp, isLoaded, setActive } = useSignUp();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("handleSignUp triggered", { name, email, password });
+    if (!isLoaded || !signUp) return;
+
     setLoading(true);
-    setMessage(null);
+    setError("");
+
     try {
-      const sb = await getSupabase();
-      const { data, error } = await sb.auth.signUp({
-        email,
+      await signUp.create({
+        emailAddress: email,
         password,
-        options: {
-          data: {
-            full_name: name,
-            name: name
-          }
-        }
+        firstName,
+        lastName,
       });
-      console.log("Supabase signUp result:", { data, error });
+
+      // Send email verification code
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setPendingVerification(true);
+    } catch (err: any) {
+      console.error("Sign up error:", err);
+      setError(err.errors?.[0]?.message || "Registrierung fehlgeschlagen. Bitte versuche es erneut.");
+    } finally {
       setLoading(false);
-      if (error) {
-        setMessage(error.message);
-        try { posthog.capture('signup_failed', { reason: error.message }); } catch {}
-      } else {
-        setMessage(t("signup.success"));
-        try { posthog.capture('signup_success', { method: 'email' }); } catch {}
-        setTimeout(() => {
-          console.log("Navigating to /login after successful sign-up");
-          navigate("/login");
-        }, 3000);
+    }
+  };
+
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded || !signUp) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await signUp.attemptEmailAddressVerification({
+        code: verificationCode,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        navigate("/kuenstler-richtlinien");
       }
-    } catch (err) {
-      console.error("handleSignUp exception:", err);
-      setMessage("Unexpected error during signup");
+    } catch (err: any) {
+      console.error("Verification error:", err);
+      setError(err.errors?.[0]?.message || "Verifizierung fehlgeschlagen. Bitte überprüfe den Code.");
+    } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignUp = async () => {
-    if (oauthLoading) return;
-    setOauthLoading(true);
-    setMessage(null);
+    if (!isLoaded || !signUp) return;
+
     try {
-      try { posthog.capture('oauth_start', { provider: 'google', mode: 'signup' }); } catch {}
-      const sb = await getSupabase();
-      const { error } = await sb.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/onboarding`,
-          queryParams: { mode: "signup" },
-        },
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/kuenstler-richtlinien",
       });
-      if (error) {
-        console.error("Google sign-in error:", error);
-        setMessage(error.message);
-        try { posthog.capture('signup_failed', { stage: 'oauth', provider: 'google', reason: error.message }); } catch {}
-        setOauthLoading(false);
-      }
-    } catch (err) {
-      console.error("handleGoogleSignUp exception:", err);
-      setMessage("Unexpected error during Google signup");
-      setOauthLoading(false);
+    } catch (err: any) {
+      console.error("Google sign up error:", err);
+      setError("Google Registrierung fehlgeschlagen");
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-24 bg-gradient-to-b from-black via-gray-900 to-black">
-      <div className="w-full max-w-md mx-auto">
-        <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
-          <CardHeader className="text-center space-y-2 pb-6">
+  // Verification screen
+  if (pendingVerification) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4 py-12"
+        style={{ background: 'var(--pepe-black)' }}
+      >
+        <Card className="w-full max-w-md bg-[#1A1A1A]/80 backdrop-blur-xl border-white/10 shadow-2xl">
+          <CardHeader className="space-y-1 text-center">
+            <div className="mx-auto w-12 h-12 bg-[#D4A574]/20 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="w-6 h-6 text-[#D4A574]" />
+            </div>
             <CardTitle className="text-2xl font-bold text-white">
-              {t("signup.form.title") || "Create your account"}
+              E-Mail bestätigen
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Sign up to manage your bookings and performances
+              Wir haben einen Code an <span className="text-white">{email}</span> gesendet
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full border-white/20 bg-white hover:bg-white/90 text-black"
-              onClick={handleGoogleSignUp}
-              disabled={loading || oauthLoading}
-            >
-              <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-              </svg>
-              {t("signup.form.google") || "Sign up with Google"}
-            </Button>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-gray-900 px-2 text-gray-400">Or continue with email</span>
-              </div>
-            </div>
+          <CardContent>
+            <form onSubmit={handleVerification} className="space-y-4">
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
 
-            {message && (
-              <div className={`text-sm text-center p-3 rounded-lg ${
-                message.includes('success') || message.includes('erfolgreich')
-                  ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
-              }`}>
-                {message}
-              </div>
-            )}
-
-            <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-white">
-                  {t("signup.form.namePlaceholder") || "Full Name"}
+                <Label htmlFor="code" className="text-gray-300">
+                  Bestätigungscode
                 </Label>
                 <Input
-                  id="name"
+                  id="code"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="123456"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  className={cn(inputClassName, "text-center text-2xl tracking-widest")}
+                  maxLength={6}
                   required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="bg-black/40 border-white/20 text-white placeholder:text-gray-500"
+                  disabled={loading}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">
-                  {t("signup.form.emailPlaceholder") || "Email"}
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-black/40 border-white/20 text-white placeholder:text-gray-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">
-                  {t("signup.form.passwordPlaceholder") || "Password"}
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Create a strong password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-black/40 border-white/20 text-white placeholder:text-gray-500"
-                  minLength={6}
-                />
-                <p className="text-xs text-gray-500">
-                  Must be at least 6 characters
-                </p>
               </div>
 
               <Button
                 type="submit"
-                disabled={loading || oauthLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-[#D4A574] hover:bg-[#E6B887] text-black font-semibold py-6 rounded-xl transition-all duration-200"
+                disabled={loading}
               >
-                {loading ? t("signup.form.loading") || "Creating account..." : t("signup.form.submit") || "Create account"}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifizieren...
+                  </>
+                ) : (
+                  "E-Mail bestätigen"
+                )}
               </Button>
-            </form>
 
-            <div className="text-center text-sm text-gray-400">
-              {t("signup.form.already") || "Already have an account?"}{" "}
-              <Link to="/login" className="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline">
-                {t("signup.form.login") || "Login"}
-              </Link>
-            </div>
+              <p className="text-center text-gray-400 text-sm">
+                Keinen Code erhalten?{" "}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (signUp) {
+                      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+                    }
+                  }}
+                  className="text-[#D4A574] hover:text-[#E6B887] font-medium transition-colors"
+                >
+                  Erneut senden
+                </button>
+              </p>
+            </form>
           </CardContent>
         </Card>
-
-        <div className="text-center text-xs text-gray-500 mt-6">
-          By continuing, you agree to our{" "}
-          <Link to="/terms" className="underline underline-offset-4 hover:text-gray-400">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link to="/privacy" className="underline underline-offset-4 hover:text-gray-400">
-            Privacy Policy
-          </Link>
-        </div>
-
-        {/* Info Section Below */}
-        <div className="mt-12 p-6 border border-white/10 rounded-lg bg-white/5 backdrop-blur-sm">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            {t("signup.info.benefitsTitle") || "Why join us?"}
-          </h3>
-          <ul className="space-y-3 text-sm text-gray-300">
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{t("signup.info.benefits.li1") || "Manage all your bookings in one place"}</span>
-            </li>
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{t("signup.info.benefits.li2") || "Track your performance schedule"}</span>
-            </li>
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{t("signup.info.benefits.li3") || "Access to exclusive opportunities"}</span>
-            </li>
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{t("signup.info.benefits.li4") || "Direct communication with clients"}</span>
-            </li>
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{t("signup.info.benefits.li5") || "Professional support from our team"}</span>
-            </li>
-          </ul>
-        </div>
       </div>
+    );
+  }
+
+  // Registration form
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{ background: 'var(--pepe-black)' }}
+    >
+      <Card className="w-full max-w-md bg-[#1A1A1A]/80 backdrop-blur-xl border-white/10 shadow-2xl">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold text-white">
+            Konto erstellen
+          </CardTitle>
+          <CardDescription className="text-gray-400">
+            Werde Teil unserer Künstler-Community
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Google Sign Up */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full bg-white hover:bg-gray-100 text-black border-0 font-medium py-6"
+            onClick={handleGoogleSignUp}
+            disabled={loading}
+          >
+            <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+            Mit Google registrieren
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full bg-white/10" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-[#1A1A1A] px-2 text-gray-500">
+                oder mit E-Mail
+              </span>
+            </div>
+          </div>
+
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="text-gray-300">
+                  Vorname
+                </Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="Max"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className={inputClassName}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-gray-300">
+                  Nachname
+                </Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Mustermann"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className={inputClassName}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-300">
+                E-Mail
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="deine@email.de"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClassName}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">
+                Passwort
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={cn(inputClassName, "pr-10")}
+                  required
+                  disabled={loading}
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Mindestens 8 Zeichen
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-[#D4A574] hover:bg-[#E6B887] text-black font-semibold py-6 rounded-xl transition-all duration-200"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Registrieren...
+                </>
+              ) : (
+                "Konto erstellen"
+              )}
+            </Button>
+
+            <p className="text-xs text-gray-500 text-center">
+              Mit der Registrierung akzeptierst du unsere{" "}
+              <Link to="/agb" className="text-[#D4A574] hover:underline">
+                AGB
+              </Link>{" "}
+              und{" "}
+              <Link to="/datenschutz" className="text-[#D4A574] hover:underline">
+                Datenschutzrichtlinien
+              </Link>
+            </p>
+          </form>
+
+          <p className="text-center text-gray-400 text-sm">
+            Bereits registriert?{" "}
+            <Link
+              to="/anmelden"
+              className="text-[#D4A574] hover:text-[#E6B887] font-medium transition-colors"
+            >
+              Jetzt anmelden
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/context/AuthContext'
+import { UserButton } from '@clerk/clerk-react'
 
 interface NavigationProps {
   className?: string
@@ -11,6 +13,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
   const { t, i18n } = useTranslation()
+  const { isSignedIn, isLoaded, user } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,7 +23,6 @@ export default function Navigation({ className = '' }: NavigationProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Add/remove body class when mobile menu opens/closes
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.classList.add('mobile-menu-open')
@@ -32,7 +34,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
     }
   }, [isMobileMenuOpen])
 
-  const navLinks = [
+  const publicLinks = [
     { href: '/', label: t('nav.home') },
     { href: '/kuenstler', label: t('nav.artists') },
     { href: '/shows', label: t('nav.shows') },
@@ -45,7 +47,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
   }
 
   return (
-    <nav 
+    <nav
       className={`nav fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'backdrop-blur-md bg-black/90' : 'bg-transparent'
       } ${className}`}
@@ -64,10 +66,10 @@ export default function Navigation({ className = '' }: NavigationProps) {
               />
             </Link>
           </div>
-          
+
           {/* Desktop Navigation */}
           <div className="nav-links">
-            {navLinks.map((link) => (
+            {publicLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
@@ -77,10 +79,10 @@ export default function Navigation({ className = '' }: NavigationProps) {
               </Link>
             ))}
           </div>
-          
+
           {/* Desktop Actions */}
           <div className="nav-actions">
-            {/* Compact Language Switch - Show only inactive choice */}
+            {/* Language Switch */}
             <div className="nav-language-compact">
               <button
                 onClick={() => changeLanguage(i18n.language === 'de' ? 'en' : 'de')}
@@ -90,9 +92,45 @@ export default function Navigation({ className = '' }: NavigationProps) {
               </button>
             </div>
 
-            <Link to="/anfragen" className="btn btn-primary btn-xs">
-              {t('nav.booking')}
-            </Link>
+            {/* Auth Section */}
+            {isLoaded && isSignedIn ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/profile"
+                  className="nav-link text-sm"
+                >
+                  {t('nav.profile', 'Profil')}
+                </Link>
+                {user?.is_admin && (
+                  <Link
+                    to="/admin/dashboard"
+                    className="nav-link text-sm text-[#D4A574]"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8",
+                      userButtonPopoverCard: "bg-[#1A1A1A] border border-[#333]",
+                      userButtonPopoverActionButton: "text-white hover:bg-white/10",
+                      userButtonPopoverActionButtonText: "text-white",
+                      userButtonPopoverFooter: "hidden",
+                    }
+                  }}
+                />
+              </div>
+            ) : isLoaded ? (
+              <div className="flex items-center gap-2">
+                <Link to="/login" className="nav-link text-sm">
+                  Login
+                </Link>
+                <Link to="/anfragen" className="btn btn-primary btn-xs">
+                  {t('nav.booking')}
+                </Link>
+              </div>
+            ) : null}
           </div>
 
           {/* Mobile Menu Button */}
@@ -108,16 +146,19 @@ export default function Navigation({ className = '' }: NavigationProps) {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay - Full Screen */}
+      {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="mobile-menu-overlay">
           <div className="mobile-menu-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
           <div className="mobile-menu-content">
             <div className="mobile-menu-header">
               <Link to="/" className="nav-brand-link" onClick={() => setIsMobileMenuOpen(false)}>
-                <img src={logoIcon} alt="Pepe Logo" className="nav-logo-svg" />
-                <span className="nav-brand-text">PEPE</span>
-                <span className="nav-shows-text">SHOWS</span>
+                <img
+                  src="/logos/SVG/PEPE_logos_shows.svg"
+                  alt="Pepe Logo"
+                  className="nav-logo-svg"
+                  style={{ height: '40px' }}
+                />
               </Link>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -131,7 +172,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
             </div>
             <div className="mobile-menu-body">
               <nav className="mobile-menu-nav">
-                {navLinks.map((link) => (
+                {publicLinks.map((link) => (
                   <Link
                     key={link.href}
                     to={link.href}
@@ -141,6 +182,36 @@ export default function Navigation({ className = '' }: NavigationProps) {
                     {link.label}
                   </Link>
                 ))}
+
+                {/* Auth links for mobile */}
+                {isLoaded && isSignedIn ? (
+                  <>
+                    <Link
+                      to="/profile"
+                      className="mobile-menu-link"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {t('nav.profile', 'Mein Profil')}
+                    </Link>
+                    {user?.is_admin && (
+                      <Link
+                        to="/admin/dashboard"
+                        className="mobile-menu-link text-[#D4A574]"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
+                  </>
+                ) : isLoaded ? (
+                  <Link
+                    to="/login"
+                    className="mobile-menu-link"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                ) : null}
               </nav>
 
               {/* Mobile Language Switch */}
@@ -164,9 +235,25 @@ export default function Navigation({ className = '' }: NavigationProps) {
               </div>
 
               <div className="mobile-menu-cta">
-                <Link to="/anfragen" className="btn btn-primary btn-lg mobile-menu-cta-btn" onClick={() => setIsMobileMenuOpen(false)}>
-                  {t('nav.booking')}
-                </Link>
+                {isLoaded && isSignedIn ? (
+                  <div className="flex items-center justify-center gap-4">
+                    <UserButton
+                      appearance={{
+                        elements: {
+                          avatarBox: "w-10 h-10",
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Link
+                    to="/anfragen"
+                    className="btn btn-primary btn-lg mobile-menu-cta-btn"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {t('nav.booking')}
+                  </Link>
+                )}
               </div>
             </div>
           </div>

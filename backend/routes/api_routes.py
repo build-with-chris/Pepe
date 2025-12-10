@@ -1,6 +1,5 @@
-from flask import request, jsonify
+from flask import request, jsonify, g
 from flask import Blueprint
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from services.calculate_price import calculate_price
 from flasgger import swag_from
 from managers.artist_manager import ArtistManager
@@ -10,6 +9,7 @@ from models import Availability, Discipline, db
 from sqlalchemy import func
 import logging
 from helpers.http_responses import error_response
+from helpers.clerk_auth import clerk_auth_required, get_clerk_user_id, get_clerk_claims
 
 from datetime import datetime
 import os
@@ -82,27 +82,33 @@ def process_image_for_upload(image_file, max_width=1200, max_height=1200, qualit
 
 
 def get_current_user():
-    """Gibt ein Tupel (user_id, artist) des aktuell authentifizierten JWT-Users zurück.
+    """Gibt ein Tupel (user_id, artist) des aktuell authentifizierten Clerk-Users zurück.
     Reihenfolge:
-      1) Lookup per supabase_user_id (JWT identity)
-      2) Fallback per E-Mail aus JWT-Claims und ggf. UID verknüpfen
+      1) Lookup per clerk_user_id (stored in supabase_user_id or clerk_user_id column)
+      2) Fallback per E-Mail aus Clerk-Claims und ggf. UID verknüpfen
       3) Falls noch nichts gefunden, aber eine E-Mail vorhanden ist: Minimal-Artist automatisch anlegen (status='unsubmitted')
     """
-    user_id = get_jwt_identity()
+    user_id = get_clerk_user_id()
     artist = None
 
-    # 1) Direkt über UID versuchen
+    # 1) Direkt über UID versuchen (Clerk user_id stored in supabase_user_id or clerk_user_id)
     try:
         artist = artist_mgr.get_artist_by_supabase_user_id(user_id)
+        if not artist:
+            # Try clerk_user_id column if exists
+            artist = artist_mgr.get_artist_by_clerk_user_id(user_id) if hasattr(artist_mgr, 'get_artist_by_clerk_user_id') else None
     except Exception:
         artist = None
 
     # 2) Fallback per E-Mail (und UID verknüpfen)
     if not artist:
         try:
-            claims = get_jwt()
-            email = claims.get("email") or claims.get("user_metadata", {}).get("email")
-            name = claims.get("name") or claims.get("user_metadata", {}).get("name")
+            claims = get_clerk_claims() or {}
+            # Clerk stores email differently - check various paths
+            email = claims.get("email") or claims.get("primary_email_address") or claims.get("email_addresses", [{}])[0].get("email_address") if claims.get("email_addresses") else None
+            name = claims.get("name") or claims.get("first_name", "") + " " + claims.get("last_name", "")
+            name = name.strip() if name else None
+
             if email:
                 fallback = artist_mgr.get_artist_by_email(email)
                 if fallback:
@@ -117,7 +123,7 @@ def get_current_user():
                         new_artist = Artist(
                             name=name or (email.split("@")[0] if isinstance(email, str) else None),
                             email=email,
-                            supabase_user_id=user_id,
+                            supabase_user_id=user_id,  # Store Clerk user_id here
                             approval_status="unsubmitted",
                         )
                         db.session.add(new_artist)
@@ -151,12 +157,12 @@ def list_artists():
 
 
 @api_bp.route('/artists', methods=['POST'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_post.yml')
 def create_artist():
     """Create a new artist with the provided data."""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = get_clerk_user_id()
         data = request.json or {}
         disciplines = data.get('disciplines')
         if not disciplines:
@@ -189,7 +195,7 @@ def create_artist():
 # Own artist profile: read
 
 @api_bp.route('/artists/me', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_me_get.yml')
 def get_my_artist():
     """Return the current user's artist profile including image and bio."""
@@ -219,7 +225,7 @@ def get_my_artist():
 
 # New endpoint: Accept artist guidelines
 @api_bp.route('/artists/me/accept_guidelines', methods=['POST'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_me_accept_guidelines_post.yml', validation=False)
 def accept_my_guidelines():
     """Mark the current artist as having accepted the guidelines."""
@@ -245,7 +251,7 @@ def accept_my_guidelines():
 
 # Explizite Freigabe anfordern (Status -> pending)
 @api_bp.route('/artists/me/submit_review', methods=['POST'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_me_submit_review_post.yml', validation=False)
 def submit_my_profile_for_review():
     """Set the current artist's approval status to 'pending' (unless already approved)."""
@@ -272,7 +278,7 @@ def submit_my_profile_for_review():
 
 
 @api_bp.route('/artists/me/profile', methods=['PUT', 'PATCH'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_me_profile_put.yml')
 def update_my_profile():
     """Update the current artist's profile fields (name, address, phone, prices, disciplines, media)."""
@@ -384,11 +390,11 @@ def update_my_profile():
 
 
 @api_bp.route('/artists/me/ensure', methods=['POST'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_me_ensure_post.yml', validation=False)
 def ensure_my_artist():
     """Ensure an artist row exists and is linked to the current Supabase user."""
-    user_id = get_jwt_identity()
+    user_id = get_clerk_user_id()
 
     # 1) Direct lookup by UID
     try:
@@ -417,7 +423,7 @@ def ensure_my_artist():
         }), 200
 
     # 2) Fallback: claim orphan by email (case-insensitive)
-    claims = get_jwt()
+    claims = get_clerk_claims()
     raw_email = (claims.get('email') or claims.get('user_metadata', {}).get('email') or '').strip()
     raw_name = (claims.get('name') or claims.get('user_metadata', {}).get('name') or None)
 
@@ -492,7 +498,7 @@ def ensure_my_artist():
     }), 200
 
 @api_bp.route('/artists/email/<string:email>', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_email_get.yml')
 def get_artist_by_email(email):
     artist = artist_mgr.get_artist_by_email(email)
@@ -529,12 +535,12 @@ def get_artist_public(artist_id):
 
 # Corrected DELETE endpoint for artists
 @api_bp.route('/artists/<int:artist_id>', methods=['DELETE'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_delete.yml')
 def delete_artist(artist_id):
     """Delete an artist entry if the current user is allowed (admin, owner, or orphan self)."""
-    current_user_id = get_jwt_identity()
-    claims = get_jwt()
+    current_user_id = get_clerk_user_id()
+    claims = get_clerk_claims()
     jwt_email = None
     try:
         jwt_email = claims.get("email") or claims.get("user_metadata", {}).get("email")
@@ -562,12 +568,12 @@ def delete_artist(artist_id):
 
 
 @api_bp.route('/artists/<int:artist_id>', methods=['PUT', 'PATCH'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/artists_put.yml')
 def update_artist(artist_id):
     """Update an existing artist profile by ID."""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = get_clerk_user_id()
         current_user = artist_mgr.get_artist_by_supabase_user_id(current_user_id)
         data = request.json or {}
         logger.info(f'Update attempt for artist {artist_id} by user {current_user_id}')
@@ -625,7 +631,7 @@ def update_artist(artist_id):
 # Availability
 
 @api_bp.route('/availability', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/availability_get.yml')
 def get_availability():
     """Return availability slots for the current artist or another artist if allowed."""
@@ -671,7 +677,7 @@ def get_availability():
 
 
 @api_bp.route('/availability', methods=['POST'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/availability_post.yml')
 def add_availability():
     """Add one or more availability slots for the current artist (or another if admin)."""
@@ -731,7 +737,7 @@ def add_availability():
 
 
 @api_bp.route('/availability', methods=['PUT'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/availability_put.yml')
 def replace_availability():
     """Replace all availability slots for the current artist (or another if admin)."""
@@ -765,7 +771,7 @@ def replace_availability():
 
 
 @api_bp.route('/availability/<int:slot_id>', methods=['DELETE'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/availability_delete.yml')
 def remove_availability(slot_id):
     """Remove one availability slot by ID if the user is owner or admin."""
@@ -782,11 +788,11 @@ def remove_availability(slot_id):
     avail_mgr.remove_availability(slot_id)
     return jsonify({'deleted': slot_id})
 @api_bp.route('/requests/requests', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/booking_requests_get.yml')
 def list_my_booking_requests():
     """Return booking requests relevant to the current artist (with recommendations)."""
-    user_id = get_jwt_identity()
+    user_id = get_clerk_user_id()
     logger.debug(f"list_my_booking_requests called with supabase_user_id={user_id}")
     artist = artist_mgr.get_artist_by_supabase_user_id(user_id)
     if not artist:
@@ -813,7 +819,7 @@ def list_my_booking_requests():
 
 # Combined GET/PUT endpoint for artist offer
 @api_bp.route('/requests/requests/<int:req_id>/offer', methods=['GET', 'PUT'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/requests_offer_get_put.yml')
 def artist_offer(req_id):
     """GET: Return the artist's offer for a request. PUT: Save or update the artist's offer."""
@@ -860,7 +866,7 @@ except Exception:
 
 
 @api_bp.route('/invoices', methods=['POST'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/invoices_post.yml', validation=False)
 def create_invoice_entry():
     """Register an invoice entry for the current artist. Requires storage_path and optional fields."""
@@ -929,7 +935,7 @@ def create_invoice_entry():
 
 
 @api_bp.route('/invoices', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/invoices_get.yml', validation=False)
 def list_invoices():
     """List all registered invoices of the current artist (if Invoice model is available)."""
@@ -963,7 +969,7 @@ def list_invoices():
 # ===== GAGE CALCULATION ENDPOINTS =====
 
 @api_bp.route('/artists/me/gage-criteria', methods=['PUT'])
-@jwt_required()
+@clerk_auth_required
 def update_my_gage_criteria():
     """Update gage calculation criteria for the current artist."""
     user_id, artist = get_current_user()
@@ -1023,7 +1029,7 @@ def update_my_gage_criteria():
 
 
 @api_bp.route('/artists/me/gage-calculation', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 def get_my_gage_calculation():
     """Get detailed gage calculation breakdown for the current artist."""
     user_id, artist = get_current_user()
@@ -1043,7 +1049,7 @@ def get_my_gage_calculation():
 
 
 @api_bp.route('/artists/me/gage-criteria', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 def get_my_gage_criteria():
     """Get current gage criteria for the artist."""
     user_id, artist = get_current_user()
@@ -1079,7 +1085,7 @@ def get_my_gage_criteria():
 # ===== IMAGE UPLOAD ENDPOINTS =====
 
 @api_bp.route('/artists/me/upload-image', methods=['POST'])
-@jwt_required()
+@clerk_auth_required
 def upload_artist_image():
     """Upload and process profile or gallery images for the current artist."""
     user_id, artist = get_current_user()

@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { DashboardCard } from '@/components/DashboardCard';
+import { Loader2, Calendar, MapPin } from 'lucide-react';
 
 interface Gig {
   id: number;
@@ -78,68 +81,106 @@ const MyGigs: React.FC = () => {
   }, [gigs]);
 
   return (
-    <div className="max-w-5xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6">{t('myGigs.title')}</h1>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-white">{t('myGigs.title')}</h1>
 
-      {loading && <p>{t('myGigs.loading')}</p>}
-      {error && <p className="text-red-400">{error}</p>}
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-2" />
+            <span className="text-gray-400">{t('myGigs.loading')}</span>
+          </div>
+        )}
 
-      {!loading && !error && (
-        <>
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">{t('myGigs.upcoming')}</h2>
-            {upcoming.length === 0 ? (
-              <p className="text-gray-400">{t('myGigs.noUpcoming')}</p>) : (
-              <ul className="space-y-3">
-                {upcoming.map(g => {
-                  const dt = parseEventDateTime(g.event_date, g.event_time);
-                  return (
-                    <li key={`up-${g.id}`} className="bg-gray-800 rounded p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                          <div className="font-medium">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
-                          <div className="text-sm text-gray-300">{g.client_name || ''}</div>
-                        </div>
-                        <div className="text-sm text-gray-200">
-                          <div className='mb-3'>📅 {formatDateTimeDE(dt)}</div>
-                          {g.event_address && <div>📍 {g.event_address}</div>}
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+        {/* Error State */}
+        {error && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300">
+            {error}
+          </div>
+        )}
 
-          <section>
-            <h2 className="text-xl font-semibold mb-4">{t('myGigs.past')}</h2>
-            {past.length === 0 ? (
-              <p className="text-gray-400">{t('myGigs.noPast')}</p>) : (
-              <ul className="space-y-3">
-                {past.map(g => {
-                  const dt = parseEventDateTime(g.event_date, g.event_time);
-                  return (
-                    <li key={`past-${g.id}`} className="bg-gray-900 rounded p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                          <div className="font-medium">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
-                          <div className="text-sm text-gray-300">{g.client_name || ''}</div>
+        {!loading && !error && (
+          <>
+            {/* Upcoming Gigs */}
+            <section className="space-y-4">
+              <h2 className="text-xl font-semibold text-white">{t('myGigs.upcoming')}</h2>
+              {upcoming.length === 0 ? (
+                <DashboardCard className="text-center py-8">
+                  <p className="text-gray-400">{t('myGigs.noUpcoming')}</p>
+                </DashboardCard>
+              ) : (
+                <div className="space-y-3">
+                  {upcoming.map(g => {
+                    const dt = parseEventDateTime(g.event_date, g.event_time);
+                    return (
+                      <DashboardCard key={`up-${g.id}`} className="hover:border-white/20 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div>
+                            <div className="font-medium text-white">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
+                            <div className="text-sm text-gray-400">{g.client_name || ''}</div>
+                          </div>
+                          <div className="text-sm space-y-1">
+                            <div className="flex items-center text-gray-300">
+                              <Calendar className="w-4 h-4 mr-2 text-blue-400" />
+                              {formatDateTimeDE(dt)}
+                            </div>
+                            {g.event_address && (
+                              <div className="flex items-center text-gray-300">
+                                <MapPin className="w-4 h-4 mr-2 text-blue-400" />
+                                {g.event_address}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-200">
-                          <div>📅 {formatDateTimeDE(dt)}</div>
-                          {g.event_address && <div>📍 {g.event_address}</div>}
+                      </DashboardCard>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            {/* Past Gigs */}
+            <section className="space-y-4">
+              <h2 className="text-xl font-semibold text-white">{t('myGigs.past')}</h2>
+              {past.length === 0 ? (
+                <DashboardCard className="text-center py-8">
+                  <p className="text-gray-400">{t('myGigs.noPast')}</p>
+                </DashboardCard>
+              ) : (
+                <div className="space-y-3">
+                  {past.map(g => {
+                    const dt = parseEventDateTime(g.event_date, g.event_time);
+                    return (
+                      <DashboardCard key={`past-${g.id}`} className="opacity-70 hover:opacity-100 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div>
+                            <div className="font-medium text-white">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
+                            <div className="text-sm text-gray-400">{g.client_name || ''}</div>
+                          </div>
+                          <div className="text-sm space-y-1">
+                            <div className="flex items-center text-gray-400">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              {formatDateTimeDE(dt)}
+                            </div>
+                            {g.event_address && (
+                              <div className="flex items-center text-gray-400">
+                                <MapPin className="w-4 h-4 mr-2" />
+                                {g.event_address}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        </>
-      )}
-    </div>
+                      </DashboardCard>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </DashboardLayout>
   );
 };
 

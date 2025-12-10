@@ -58,6 +58,7 @@ const DotCloudDemo = lazy(() => import('./pages/DotCloudDemo'))
 const DisciplinesCarousel = lazy(() => import('./pages/DisciplinesCarousel'))
 const GeneratePNGs = lazy(() => import('./pages/GeneratePNGs'))
 const ColorDemo = lazy(() => import('./pages/ColorDemo'))
+const SSOCallback = lazy(() => import('./pages/SSOCallback'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -145,6 +146,7 @@ function App() {
               {/* Authentication routes - use working components */}
               <Route path="/anmelden" element={<LoginForm />} />
               <Route path="/registrieren" element={<SignUp />} />
+              <Route path="/sso-callback" element={<SSOCallback />} />
               <Route path="/kuenstler-richtlinien" element={<ArtistGuidlines />} />
               <Route path="/onboarding" element={<ArtistGuidlines />} />
 

@@ -1,7 +1,23 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDownIcon } from '@heroicons/react/24/solid';
+import { MoreVertical, Check, Trash2, Loader2 } from 'lucide-react';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { DashboardCard } from '@/components/DashboardCard';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const API_BASE: string = (import.meta.env.VITE_API_URL as string) || '';
 const api = (path: string) => `${API_BASE}${path}`.replace(/([^:]\/)\/+/g, '$1');
@@ -41,8 +57,6 @@ export default function Admin() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string>('receivedDesc');
-
-  const [expandedActions, setExpandedActions] = useState<number | null>(null);
 
   async function handleAcceptRequest(id: number) {
     if (!token) return;
@@ -156,80 +170,123 @@ export default function Admin() {
   }, [dashboardData?.offers, sortOption]);
 
   return (
-    <div className="w-screen bg-black min-h-screen text-white">
-      <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin-Bereich</h1>
-      <p>Willkommen im Admin-Panel! Hier kannst du Einstellungen verwalten.</p>
-      {dashboardData?.offers && (
-        <div className="mb-4">
-          <label className="mr-2">
-            Sortieren nach:
-            <select
-              className="ml-2 bg-gray-700 text-white rounded px-2 py-1"
-              value={sortOption}
-              onChange={e => setSortOption(e.target.value)}
-            >
-              <option value="receivedDesc">Eingang (neueste zuerst)</option>
-              <option value="receivedAsc">Eingang (älteste zuerst)</option>
-              <option value="dateAsc">Eventdatum aufsteigend</option>
-              <option value="dateDesc">Eventdatum absteigend</option>
-              <option value="statusAsc">Status A–Z</option>
-              <option value="statusDesc">Status Z–A</option>
-            </select>
-          </label>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Admin-Bereich</h1>
+            <p className="text-gray-400 mt-1">Willkommen im Admin-Panel! Hier kannst du Einstellungen verwalten.</p>
+          </div>
+
+          {dashboardData?.offers && (
+            <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-[220px] bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Sortieren nach..." />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-white/10">
+                <SelectItem value="receivedDesc">Eingang (neueste zuerst)</SelectItem>
+                <SelectItem value="receivedAsc">Eingang (älteste zuerst)</SelectItem>
+                <SelectItem value="dateAsc">Eventdatum aufsteigend</SelectItem>
+                <SelectItem value="dateDesc">Eventdatum absteigend</SelectItem>
+                <SelectItem value="statusAsc">Status A–Z</SelectItem>
+                <SelectItem value="statusDesc">Status Z–A</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
-      )}
-      {loading && <p>Lade Dashboard-Daten...</p>}
-      {error && <p className="text-red-500">Fehler: {error}</p>}
-      {sortedOffers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {sortedOffers.map((offer: any) => (
-            <div
-              key={offer.id}
-              className="cursor-pointer bg-gray-800 shadow rounded p-4"
-              onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
-            >
-              <h2 className="text-lg font-semibold mb-2">Anfrage #{offer.id}</h2>
-              <div className="text-sm space-y-1">
-                <p><span className="font-medium">Kunde:</span> {offer.client_name} ({offer.client_email})</p>
-                <p><span className="font-medium">Datum:</span> {offer.event_date} {offer.event_time}</p>
-                <p><span className="font-medium">Eingegangen:</span> {formatDate(getReceivedAt(offer))}</p>
-                {offer.status && (<p><span className="font-medium">Status:</span> {offer.status}</p>)}
-              </div>
-              <div className="mt-3 flex items-center justify-end">
-                <div className="relative">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setExpandedActions(expandedActions === offer.id ? null : offer.id); }}
-                    className="flex items-center gap-1 rounded bg-gray-700 px-2 py-1 text-sm text-white hover:bg-gray-600"
-                    title="Aktionen anzeigen"
-                  >
-                    Aktionen <ChevronDownIcon className="w-4 h-4" />
-                  </button>
-                  {expandedActions === offer.id && (
-                    <div className="absolute right-0 mt-1 w-32 rounded bg-gray-800 shadow-lg border border-gray-700 z-10">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleAcceptRequest(offer.id); setExpandedActions(null); }}
-                        className="block w-full text-left px-3 py-2 text-sm text-emerald-400 hover:bg-gray-700"
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+            <span className="ml-3 text-gray-400">Lade Dashboard-Daten...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300">
+            Fehler: {error}
+          </div>
+        )}
+
+        {/* Offers Grid */}
+        {sortedOffers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sortedOffers.map((offer: any) => (
+              <DashboardCard
+                key={offer.id}
+                className="cursor-pointer hover:border-white/20 transition-all"
+                onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-white">Anfrage #{offer.id}</h2>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
+                      <DropdownMenuItem
+                        onClick={(e) => { e.stopPropagation(); handleAcceptRequest(offer.id); }}
+                        className="text-emerald-400 focus:text-emerald-300 focus:bg-white/5"
                       >
+                        <Check className="mr-2 h-4 w-4" />
                         Annehmen
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteRequest(offer.id); setExpandedActions(null); }}
-                        className="block w-full text-left px-3 py-2 text-sm text-rose-400 hover:bg-gray-700"
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => { e.stopPropagation(); handleDeleteRequest(offer.id); }}
+                        className="text-red-400 focus:text-red-300 focus:bg-white/5"
                       >
+                        <Trash2 className="mr-2 h-4 w-4" />
                         Löschen
-                      </button>
-                    </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="text-sm space-y-2 text-gray-300">
+                  <p>
+                    <span className="text-gray-500">Kunde:</span>{' '}
+                    <span className="text-white">{offer.client_name}</span>
+                    <span className="text-gray-500 ml-1">({offer.client_email})</span>
+                  </p>
+                  <p>
+                    <span className="text-gray-500">Datum:</span>{' '}
+                    <span className="text-white">{offer.event_date} {offer.event_time}</span>
+                  </p>
+                  <p>
+                    <span className="text-gray-500">Eingegangen:</span>{' '}
+                    <span className="text-white">{formatDate(getReceivedAt(offer))}</span>
+                  </p>
+                  {offer.status && (
+                    <p>
+                      <span className="text-gray-500">Status:</span>{' '}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        offer.status === 'akzeptiert'
+                          ? 'bg-emerald-500/20 text-emerald-300'
+                          : offer.status === 'abgelehnt'
+                          ? 'bg-red-500/20 text-red-300'
+                          : 'bg-yellow-500/20 text-yellow-300'
+                      }`}>
+                        {offer.status}
+                      </span>
+                    </p>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        !loading && <p>Keine Angebote gefunden.</p>
-      )}
+              </DashboardCard>
+            ))}
+          </div>
+        ) : (
+          !loading && (
+            <DashboardCard className="text-center py-12">
+              <p className="text-gray-400">Keine Angebote gefunden.</p>
+            </DashboardCard>
+          )
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

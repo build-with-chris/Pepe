@@ -3,11 +3,13 @@ import { useAuth } from "@/context/AuthContext";
 import { getSupabase } from "@/lib/supabase";
 import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/upload";
 import { useNavigate } from "react-router-dom";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { ProfileForm } from "../components/ProfileForm";
 import { ProfileStatusBanner } from "../components/ProfileStatusBanner";
 import { useTranslation } from "react-i18next";
 import { fetchWithRetry, ValidationError, AuthError, ForbiddenError, ConflictError, NetworkError, NotFoundError } from "@/lib/http";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
 
 const PROFILE_BUCKET = import.meta.env.VITE_SUPABASE_PROFILE_BUCKET || "profiles";
 const baseUrl = import.meta.env.VITE_API_URL;
@@ -420,93 +422,113 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 text-white">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{t('profileSetup.title')}</h1>
-        {locked && (
-          <button
-            ref={unlockBtnRef}
-            id="unlock-profile-button"
-            type="button"
-            onClick={() => {
-              setLocked(false);
-              setSuccess(false);
-            }}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md border border-gray-700 shadow"
-            aria-label={t('profileSetup.editAria')}
-          >
-            <Pencil className="w-4 h-4" />
-            {t('profileSetup.edit')}
-          </button>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">{t('profileSetup.title')}</h1>
+          {locked && (
+            <Button
+              ref={unlockBtnRef}
+              id="unlock-profile-button"
+              variant="outline"
+              onClick={() => {
+                setLocked(false);
+                setSuccess(false);
+              }}
+              className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
+              aria-label={t('profileSetup.editAria')}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              {t('profileSetup.edit')}
+            </Button>
+          )}
+        </div>
+
+        {/* Unlock Hint */}
+        {showUnlockHint && (
+          <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 backdrop-blur-sm px-4 py-3 text-sm text-yellow-200">
+            {t('profileSetup.lockedHint')}
+          </div>
         )}
-      </div>
-      {showUnlockHint && (
-        <div className="mb-4 rounded-md border border-yellow-500/30 bg-yellow-500/15 px-3 py-2 text-sm text-yellow-200">
-          {t('profileSetup.lockedHint')}
-        </div>
-      )}
-      {error && (
-        <p className="text-red-500 mb-4" role="alert" aria-live="assertive">{error}</p>
-      )}
-      {success && (
-        <div className="mb-4 text-green-300 bg-green-900/20 border border-green-700 rounded p-3" role="status" aria-live="polite">
-          {t('profileSetup.success.saved')}
-        </div>
-      )}
-      <ProfileStatusBanner
-        status={approvalStatus}
-        rejectionReason={rejectionReason}
-        className="mb-4"
-        onEdit={() => { setLocked(false); setSuccess(false); }}
-        onOpenGuidelines={() => {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }}
-        supportEmail="info@pepeshows.de"
-      />
-      <div className="relative">
-        <ProfileForm
-          profile={profile}
-          setProfile={setProfileAdapter}
-          locked={locked}
-          onSubmit={handleSubmit}
-          fieldErrors={fieldErrors}
+
+        {/* Error Message */}
+        {error && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300" role="alert" aria-live="assertive">
+            {error}
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="rounded-xl border border-green-500/30 bg-green-500/10 backdrop-blur-sm px-4 py-3 text-green-300" role="status" aria-live="polite">
+            {t('profileSetup.success.saved')}
+          </div>
+        )}
+
+        {/* Status Banner */}
+        <ProfileStatusBanner
+          status={approvalStatus}
+          rejectionReason={rejectionReason}
+          className="rounded-xl"
+          onEdit={() => { setLocked(false); setSuccess(false); }}
+          onOpenGuidelines={() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }}
+          supportEmail="info@pepeshows.de"
         />
-        {locked && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="rounded-md border border-white/20 bg-black/70 p-4 text-sm text-white max-w-md text-center">
-              <p className="mb-3">{t('profileSetup.lockedHint')}</p>
-              <button
-                ref={unlockBtnRef}
-                id="unlock-profile-button"
-                type="button"
-                onClick={() => { setLocked(false); setSuccess(false); }}
-                className="inline-flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md border border-gray-700 shadow"
-                aria-label={t('profileSetup.editAria')}
-              >
-                <Pencil className="w-4 h-4" />
-                {t('profileSetup.edit')}
-              </button>
+
+        {/* Profile Form Card */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 relative">
+          <ProfileForm
+            profile={profile}
+            setProfile={setProfileAdapter}
+            locked={locked}
+            onSubmit={handleSubmit}
+            fieldErrors={fieldErrors}
+          />
+          {locked && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-2xl">
+              <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-xl p-6 text-white max-w-md text-center">
+                <p className="mb-4 text-gray-300">{t('profileSetup.lockedHint')}</p>
+                <Button
+                  ref={unlockBtnRef}
+                  id="unlock-profile-button"
+                  variant="outline"
+                  onClick={() => { setLocked(false); setSuccess(false); }}
+                  className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                  aria-label={t('profileSetup.editAria')}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  {t('profileSetup.edit')}
+                </Button>
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Delete Section */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+          <p className="mb-3 text-sm text-gray-400">{t('profileSetup.delete.help')}</p>
+          <Button
+            variant="outline"
+            onClick={handleDeleteArtist}
+            disabled={loading}
+            className="border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {t('profileSetup.delete.cta')}
+          </Button>
+        </div>
+
+        {/* Debug Info */}
+        {backendDebug && (
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 text-xs whitespace-pre-wrap text-gray-400">
+            <strong className="text-gray-300">{t('profileSetup.debug.title')}</strong>
+            <div className="mt-2">{backendDebug}</div>
           </div>
         )}
       </div>
-      <div className="mt-8 border-t border-white/10 pt-4">
-        <p className="mb-2 text-sm text-white/60">{t('profileSetup.delete.help')}</p>
-        <button
-          type="button"
-          onClick={handleDeleteArtist}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-md border border-red-700/60 px-3 py-2 text-red-200 hover:bg-red-800/20 disabled:opacity-50"
-        >
-          {t('profileSetup.delete.cta')}
-        </button>
-      </div>
-      {backendDebug && (
-        <div className="mt-4 p-3 bg-gray-900 border border-gray-800 rounded text-xs whitespace-pre-wrap text-gray-300">
-          <strong>{t('profileSetup.debug.title')}</strong>
-          <div>{backendDebug}</div>
-        </div>
-      )}
-    </div>
+    </DashboardLayout>
   );
 }

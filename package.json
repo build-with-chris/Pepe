@@ -12,6 +12,7 @@
     "lint": "cd frontend && npm run lint"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.58.1",
     "radix-ui": "^1.4.3"
   }
 }

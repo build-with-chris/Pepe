@@ -1,147 +1,100 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { getSupabase } from '../lib/supabase';
-import type {Session} from '@supabase/supabase-js';
-import type {ReactNode} from 'react';
+import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
+import type { ReactNode } from 'react';
 
 interface UserPayload {
-  sub: string;           // User ID
-  email?: string;        // User email
-  role?: string;         // e.g., 'artist' or 'admin'
-  [key: string]: any;    // any additional claims
+  sub: string;
+  email?: string;
+  role?: string;
+  is_admin?: boolean;
+  [key: string]: any;
 }
 
 interface AuthContextValue {
   user: UserPayload | null;
   token: string | null;
-  getSupabase: () => Promise<SupabaseClient>;
-  setUser: (u: UserPayload | null) => void; // kept for backward compatibility
-  setToken: (t: string | null) => void;
+  isLoaded: boolean;
+  isSignedIn: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserPayload | null>(null);
+  const { isLoaded, isSignedIn, getToken, signOut: clerkSignOut } = useClerkAuth();
+  const { user: clerkUser } = useUser();
   const [token, setToken] = useState<string | null>(null);
-
-  // Ensure profiles row in Supabase is synced with backend artist id on login
-  async function syncSupabaseProfileWithBackend(u: { id: string; email?: string }, accessToken: string) {
-    try {
-      const backendUrl = import.meta.env.VITE_API_URL as string;
-      if (!backendUrl || !accessToken || !u?.id) return;
-
-      // 1) Try to ensure artist exists in backend and get the id
-      try {
-        const res = await fetch(`${backendUrl}/api/artists/me/ensure`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        
-        if (res.ok) {
-          const artist = await res.json();
-          // Skip profiles sync - table schema mismatch
-          // if (artist?.id) {
-          //   try {
-          //     const sb = await getSupabase();
-          //     const { error: upsertErr } = await sb
-          //       .from('profiles')
-          //       .upsert(
-          //         {
-          //           user_id: u.id,
-          //           email: u.email ?? null,
-          //         },
-          //         { onConflict: 'user_id' }
-          //       );
-          //     if (upsertErr) console.warn('[Auth] profiles.upsert error (non-critical):', upsertErr);
-          //   } catch (profileErr) {
-          //     console.warn('[Auth] profiles table operation failed (non-critical):', profileErr);
-          //   }
-          // }
-        } else {
-          const errorData = await res.json().catch(() => ({ message: 'Unknown error' }));
-          console.warn('[Auth] Backend artist ensure failed (non-critical):', res.status, errorData);
-        }
-      } catch (backendErr) {
-        console.warn('[Auth] Backend request failed (non-critical):', backendErr);
-      }
-    } catch (e) {
-      console.warn('[Auth] Profile sync error (non-critical):', e);
-    }
-  }
+  const [user, setUser] = useState<UserPayload | null>(null);
 
   useEffect(() => {
-    // initial session - check both getSession and hash params
-    (async () => {
-      try {
-        const sb = await getSupabase();
+    if (!isLoaded) return;
 
-        // First check if there's a hash fragment (OAuth redirect)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
+    const syncAuth = async () => {
+      if (isSignedIn && clerkUser) {
+        try {
+          const clerkToken = await getToken();
+          setToken(clerkToken);
 
-        if (accessToken) {
-          // Let Supabase handle the OAuth callback
-          await sb.auth.getSession();
-          // Small delay to let onAuthStateChange trigger
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
+          const userPayload: UserPayload = {
+            sub: clerkUser.id,
+            email: clerkUser.primaryEmailAddress?.emailAddress,
+            role: (clerkUser.publicMetadata as any)?.role,
+          };
 
-        const { data, error } = await sb.auth.getSession();
-        if (error) {
-          console.warn('[Auth] getSession error:', error.message);
-          // Clear any invalid session data
+          if (clerkToken) {
+            try {
+              const API = import.meta.env.VITE_API_URL;
+
+              await fetch(`${API}/api/artists/me/ensure`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${clerkToken}`
+                },
+              });
+
+              const meRes = await fetch(`${API}/api/artists/me`, {
+                headers: { Authorization: `Bearer ${clerkToken}` },
+              });
+
+              if (meRes.ok) {
+                const me = await meRes.json();
+                userPayload.is_admin = Boolean(me?.is_admin);
+              }
+            } catch (e) {
+              console.warn('[Auth] Backend sync error:', e);
+            }
+          }
+
+          setUser(userPayload);
+        } catch (e) {
+          console.error('[Auth] Token error:', e);
           setToken(null);
           setUser(null);
-          return;
         }
-
-        const session: Session | null = data.session;
-        if (session) {
-          const u = session.user;
-          setToken(session.access_token);
-          setUser({ sub: u.id, email: u.email || undefined, role: (u.app_metadata as any)?.role || undefined });
-          (window as any).supabaseClient = sb;
-          // sync Supabase profiles with backend artist link on initial session
-          syncSupabaseProfileWithBackend({ id: u.id, email: u.email ?? undefined }, session.access_token);
-        }
-      } catch (error) {
-        console.error('[Auth] Session initialization error:', error);
+      } else {
         setToken(null);
         setUser(null);
       }
-    })();
-
-    let subscription: { unsubscribe: () => void } | null = null;
-    (async () => {
-      const sb = await getSupabase();
-      const { data: listenerData } = sb.auth.onAuthStateChange((event: any, newSession: any) => {
-        if (newSession) {
-          const u = newSession.user;
-          setToken(newSession.access_token);
-          setUser({ sub: u.id, email: u.email || undefined, role: (u.app_metadata as any)?.role || undefined });
-          // sync profiles link whenever session changes (login/refresh)
-          syncSupabaseProfileWithBackend({ id: u.id, email: u.email ?? undefined }, newSession.access_token);
-        } else {
-          setToken(null);
-          setUser(null);
-        }
-        (window as any).supabaseClient = sb;
-      });
-      if (listenerData && typeof listenerData.subscription?.unsubscribe === 'function') {
-        subscription = listenerData.subscription;
-      }
-    })();
-
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
     };
-  }, []);
+
+    syncAuth();
+  }, [isLoaded, isSignedIn, clerkUser, getToken]);
+
+  const signOut = async () => {
+    await clerkSignOut();
+    setToken(null);
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, token, getSupabase, setUser, setToken }}>
+    <AuthContext.Provider value={{
+      user,
+      token,
+      isLoaded,
+      isSignedIn: Boolean(isSignedIn),
+      signOut
+    }}>
       {children}
     </AuthContext.Provider>
   );

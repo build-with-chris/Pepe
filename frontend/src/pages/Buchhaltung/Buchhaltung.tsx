@@ -4,6 +4,9 @@ import { getSupabase } from '@/lib/supabase';
 import UploadSection from "./components/UploadSection";
 import RegisteredTable from "./components/RegisteredTable";
 import EarningsSummary from "./components/EarningsSummary";
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { DashboardCard } from '@/components/DashboardCard';
+
 // Konfiguration für den Storage-Bucket (default: invoices)
 const INVOICE_BUCKET = import.meta.env.VITE_SUPABASE_INVOICES_BUCKET || 'invoices';
 
@@ -291,51 +294,61 @@ export default function Buhaltung() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6">🧾 Money money money</h1>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-white">Money money money</h1>
 
-      {/* Upload & Archiv */}
-      {/* Hidden file input (kept in Page to wire onChange to Supabase upload) */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept="application/pdf,image/jpeg,image/png,image/webp"
-        onChange={onUpload}
-        disabled={!artistId || uploading}
-        className="hidden"
-      />
+        {/* Hidden file input (kept in Page to wire onChange to Supabase upload) */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          onChange={onUpload}
+          disabled={!artistId || uploading}
+          className="hidden"
+        />
 
-      <UploadSection
-        amount={amount}
-        setAmount={setAmount}
-        invoiceDate={invoiceDate}
-        setInvoiceDate={setInvoiceDate}
-        note={note}
-        setNote={setNote}
-        uploading={uploading}
-        invError={invError}
-        canUpload={Boolean(artistId)}
-        onPick={() => fileInputRef.current?.click()}
-        onRefreshList={() => artistId && listInvoices(artistId)}
-        invoices={invoices}
-      />
+        {/* Upload Section */}
+        <DashboardCard>
+          <UploadSection
+            amount={amount}
+            setAmount={setAmount}
+            invoiceDate={invoiceDate}
+            setInvoiceDate={setInvoiceDate}
+            note={note}
+            setNote={setNote}
+            uploading={uploading}
+            invError={invError}
+            canUpload={Boolean(artistId)}
+            onPick={() => fileInputRef.current?.click()}
+            onRefreshList={() => artistId && listInvoices(artistId)}
+            invoices={invoices}
+          />
+        </DashboardCard>
 
-      <RegisteredTable
-        rows={registered}
-        error={regError}
-        fmtAmount={fmtAmount}
-      />
+        {/* Registered Invoices Table */}
+        <DashboardCard title="Registrierte Rechnungen">
+          <RegisteredTable
+            rows={registered}
+            error={regError}
+            fmtAmount={fmtAmount}
+          />
+        </DashboardCard>
 
-      <EarningsSummary
-        month={{ total: monthTotal, count: monthCount }}
-        year={{ total: yearTotal, count: yearCount }}
-        error={error}
-      />
+        {/* Earnings Summary */}
+        <DashboardCard title="Verdienst">
+          <EarningsSummary
+            month={{ total: monthTotal, count: monthCount }}
+            year={{ total: yearTotal, count: yearCount }}
+            error={error}
+          />
+        </DashboardCard>
 
-      <p className="text-xs text-gray-500 mt-6">
-        Hinweis: Die Verdienstsummen basieren auf deiner angegebenen Gage (<code>artist_gage</code>) für akzeptierte Anfragen.
-      </p>
-    </div>
+        <p className="text-xs text-gray-500">
+          Hinweis: Die Verdienstsummen basieren auf deiner angegebenen Gage (<code className="text-gray-400">artist_gage</code>) für akzeptierte Anfragen.
+        </p>
+      </div>
+    </DashboardLayout>
   );
 }

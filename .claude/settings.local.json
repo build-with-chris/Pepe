@@ -23,7 +23,12 @@
       "Bash(node:*)",
       "Bash(git fetch:*)",
       "Bash(git merge:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(sqlite3:*)",
+      "Bash(python -m flask db upgrade:*)",
+      "Bash(pkill:*)",
+      "Bash(echo:*)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []

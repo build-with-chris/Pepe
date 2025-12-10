@@ -9,6 +9,9 @@ import type { AvailabilitySlot, ISODate } from "@/services/availabilityApi";
 import RangeActionsPanel from "../components/RangeActionsPanel";
 import AvailabilityLegend from "../components/AvailabilityLegend";
 import useRangeSelection from "@/hooks/useRangeSelection";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Loader2, RefreshCw } from "lucide-react";
 
 const baseUrl = import.meta.env.VITE_API_URL as string;
 
@@ -265,52 +268,81 @@ const CalendarPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="mx-auto w-full max-w-[28rem] md:max-w-[36rem]">
-        <h1 className="text-2xl font-bold mb-4 text-white">{t('calendar.title')}</h1>
-        <GuideAccordion />
-      </div>
-      {error && (
-        <div className="mb-2 text-red-600 flex items-center gap-3">
-          <div>{error}</div>
-          <button
-            className="text-sm underline"
-            onClick={() => fetchAvailability()}
-          >
-            {t('calendar.reload')}
-          </button>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="mx-auto w-full max-w-[28rem] md:max-w-[36rem]">
+          <h1 className="text-2xl font-bold text-white mb-4">{t('calendar.title')}</h1>
+          <GuideAccordion />
         </div>
-      )}
-      {loading && <div className="mb-2">{t('calendar.loading')}</div>}
-      <AvailabilityLegend />
-      <RangeActionsPanel
-        rangeStart={rangeStart}
-        rangeEnd={rangeEnd}
-        setRangeStart={setRangeStart}
-        setRangeEnd={setRangeEnd}
-        processingRange={false}
-        setProcessingRange={() => {}}
-        available={available}
-        addAvailability={addAvailability}
-        removeAvailability={removeAvailability}
-      />
-      <div className="w-full flex justify-center">
-        <Calendar
-          mode="multiple"
-          numberOfMonths={1}
-          onDayClick={handleDayClick as any}
-          modifiers={modifiers}
-          disabled={disabledDays}
-          initialFocus
-          className="mx-auto w-full max-w-[28rem] md:max-w-[36rem] [--cell-size:2.25rem] md:[--cell-size:2.75rem] lg:[--cell-size:3rem]"
-        />
-      </div>
-      {error && error.startsWith("Fehler beim Laden: 500") && (
-        <div className="mt-2 text-sm text-yellow-700">
-          {t('calendar.hints.backend500')}
+
+        {/* Error Message */}
+        {error && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
+            <span className="text-red-300">{error}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fetchAvailability()}
+              className="text-red-300 hover:text-red-200 hover:bg-red-500/10"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              {t('calendar.reload')}
+            </Button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-400 mr-2" />
+            <span className="text-gray-400">{t('calendar.loading')}</span>
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+          <AvailabilityLegend />
         </div>
-      )}
-    </div>
+
+        {/* Range Actions */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+          <RangeActionsPanel
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            setRangeStart={setRangeStart}
+            setRangeEnd={setRangeEnd}
+            processingRange={false}
+            setProcessingRange={() => {}}
+            available={available}
+            addAvailability={addAvailability}
+            removeAvailability={removeAvailability}
+          />
+        </div>
+
+        {/* Calendar */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+          <div className="w-full flex justify-center">
+            <Calendar
+              mode="multiple"
+              numberOfMonths={1}
+              onDayClick={handleDayClick as any}
+              modifiers={modifiers}
+              disabled={disabledDays}
+              initialFocus
+              className="mx-auto w-full max-w-[28rem] md:max-w-[36rem] [--cell-size:2.25rem] md:[--cell-size:2.75rem] lg:[--cell-size:3rem]"
+            />
+          </div>
+        </div>
+
+        {/* Backend 500 Hint */}
+        {error && error.startsWith("Fehler beim Laden: 500") && (
+          <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 backdrop-blur-sm px-4 py-3 text-sm text-yellow-300">
+            {t('calendar.hints.backend500')}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 };
 
