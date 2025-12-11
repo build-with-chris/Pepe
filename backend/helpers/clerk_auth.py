@@ -2,15 +2,23 @@
 """Clerk JWT verification helper for Flask backend."""
 
 import os
+import ssl
 import jwt
 from jwt import PyJWKClient
 from functools import wraps
 from flask import request, g, current_app
 from helpers.http_responses import error_response
 
+# Try to use certifi for SSL certificates (fixes macOS SSL issues)
+try:
+    import certifi
+    SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    SSL_CONTEXT = ssl.create_default_context()
+
 # Clerk JWKS URL - derived from publishable key
-# pk_test_YWJsZS1rb2ktOTUuY2xlcmsuYWNjb3VudHMuZGV2JA decodes to able-koi-95.clerk.accounts.dev
-CLERK_JWKS_URL = "https://able-koi-95.clerk.accounts.dev/.well-known/jwks.json"
+# pk_test_bmV4dC1xdWFpbC00OS5jbGVyay5hY2NvdW50cy5kZXYk decodes to next-quail-49.clerk.accounts.dev
+CLERK_JWKS_URL = "https://next-quail-49.clerk.accounts.dev/.well-known/jwks.json"
 
 # Cache the JWKS client
 _jwks_client = None
@@ -19,7 +27,8 @@ def get_jwks_client():
     """Get or create cached JWKS client."""
     global _jwks_client
     if _jwks_client is None:
-        _jwks_client = PyJWKClient(CLERK_JWKS_URL)
+        # Use custom SSL context with certifi certificates
+        _jwks_client = PyJWKClient(CLERK_JWKS_URL, ssl_context=SSL_CONTEXT)
     return _jwks_client
 
 
@@ -130,3 +139,53 @@ def clerk_auth_optional(fn):
 
         return fn(*args, **kwargs)
     return wrapper
+
+
+def get_user_role() -> str | None:
+    """Get the user's role from Clerk public metadata.
+
+    Returns:
+        Role string ('shows-artist', 'shows-admin') or None
+    """
+    claims = get_clerk_claims()
+    if claims:
+        # Clerk stores public_metadata in the JWT
+        metadata = claims.get('public_metadata', {}) or {}
+        return metadata.get('role')
+    return None
+
+
+def require_role(*allowed_roles):
+    """Decorator to require specific roles.
+
+    Usage:
+        @require_role("shows-admin")
+        def admin_only(): ...
+
+        @require_role("shows-admin", "shows-artist")
+        def admin_or_artist(): ...
+    """
+    def decorator(fn):
+        @wraps(fn)
+        @clerk_auth_required
+        def wrapper(*args, **kwargs):
+            role = get_user_role()
+            if role not in allowed_roles:
+                return error_response(
+                    "forbidden",
+                    f"Access denied. Required role: {', '.join(allowed_roles)}",
+                    403
+                )
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def is_admin() -> bool:
+    """Check if current user is shows-admin."""
+    return get_user_role() == "shows-admin"
+
+
+def is_artist() -> bool:
+    """Check if current user is shows-artist."""
+    return get_user_role() == "shows-artist"

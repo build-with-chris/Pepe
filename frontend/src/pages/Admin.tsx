@@ -1,10 +1,20 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { MoreVertical, Check, Trash2, Loader2 } from 'lucide-react';
+import {
+  MoreVertical,
+  Check,
+  Trash2,
+  Loader2,
+  CalendarDays,
+  TrendingUp,
+  Clock,
+  Search,
+  Filter
+} from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { DashboardCard } from '@/components/DashboardCard';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -34,7 +44,6 @@ function formatDate(value: any) {
 }
 
 function getReceivedAt(offer: any): Date | null {
-  // Prefer the booking request's real creation timestamp
   const v =
     offer?.request_created_at ||
     offer?.booking_request_created_at ||
@@ -50,6 +59,35 @@ function getReceivedAt(offer: any): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ElementType;
+  trend?: string;
+  trendUp?: boolean;
+}
+
+function StatCard({ title, value, icon: Icon, trend, trendUp }: StatCardProps) {
+  return (
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-gray-400 text-sm font-medium">{title}</p>
+          <p className="text-3xl font-bold text-white mt-2">{value}</p>
+          {trend && (
+            <p className={`text-sm mt-2 ${trendUp ? 'text-emerald-400' : 'text-red-400'}`}>
+              {trendUp ? '↑' : '↓'} {trend}
+            </p>
+          )}
+        </div>
+        <div className="w-12 h-12 rounded-xl bg-[#D4A574]/20 flex items-center justify-center">
+          <Icon className="w-6 h-6 text-[#D4A574]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -57,6 +95,8 @@ export default function Admin() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string>('receivedDesc');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   async function handleAcceptRequest(id: number) {
     if (!token) return;
@@ -66,7 +106,6 @@ export default function Admin() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      // Update status locally
       setDashboardData((prev: any) => {
         if (!prev?.offers) return prev;
         return { ...prev, offers: prev.offers.map((o: any) => o.id === id ? { ...o, status: 'akzeptiert' } : o) };
@@ -81,7 +120,6 @@ export default function Admin() {
     const ok = window.confirm('Anfrage wirklich löschen?');
     if (!ok) return;
 
-    // Optimistic UI: entferne sofort aus der Liste
     setDashboardData((prev: any) => {
       if (!prev?.offers) return prev;
       return { ...prev, offers: prev.offers.filter((o: any) => o.id !== id) };
@@ -96,7 +134,6 @@ export default function Admin() {
         throw new Error(`HTTP ${res.status}`);
       }
     } catch (e) {
-      // Rollback bei Fehler: neu laden
       await new Promise(r => setTimeout(r, 0));
       setLoading(true);
       try {
@@ -124,8 +161,6 @@ export default function Admin() {
         return res.json();
       })
       .then(data => {
-        console.log('🚀 Raw dashboard data:', data);
-        // Entferne Artist-Verfügbarkeiten und Slots, bevor wir die Daten setzen
         const { availabilities, artistAvailability, slots, ...filtered } = data;
         setDashboardData(filtered);
         setLoading(false);
@@ -136,9 +171,27 @@ export default function Admin() {
       });
   }, [token]);
 
-  const sortedOffers = useMemo(() => {
+  const filteredAndSortedOffers = useMemo(() => {
     if (!dashboardData?.offers) return [] as any[];
-    const list = [...dashboardData.offers];
+
+    let list = [...dashboardData.offers];
+
+    // Filter by search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      list = list.filter((o: any) =>
+        o.client_name?.toLowerCase().includes(query) ||
+        o.client_email?.toLowerCase().includes(query) ||
+        String(o.id).includes(query)
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      list = list.filter((o: any) => o.status === statusFilter);
+    }
+
+    // Sort
     const byReceived = (a: any, b: any) => {
       const da = getReceivedAt(a);
       const db = getReceivedAt(b);
@@ -151,6 +204,7 @@ export default function Admin() {
       const tb = new Date(`${b.event_date}T${b.event_time || '00:00:00'}`).getTime();
       return ta - tb;
     };
+
     switch (sortOption) {
       case 'receivedAsc':
         return list.sort(byReceived);
@@ -167,124 +221,257 @@ export default function Admin() {
       default:
         return list.sort((a, b) => byReceived(b, a));
     }
-  }, [dashboardData?.offers, sortOption]);
+  }, [dashboardData?.offers, sortOption, searchQuery, statusFilter]);
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    if (!dashboardData?.offers) return { total: 0, pending: 0, accepted: 0, thisMonth: 0 };
+
+    const offers = dashboardData.offers;
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return {
+      total: offers.length,
+      pending: offers.filter((o: any) => !o.status || o.status === 'offen' || o.status === 'pending').length,
+      accepted: offers.filter((o: any) => o.status === 'akzeptiert').length,
+      thisMonth: offers.filter((o: any) => {
+        const d = getReceivedAt(o);
+        return d && d >= thisMonthStart;
+      }).length,
+    };
+  }, [dashboardData?.offers]);
+
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      'akzeptiert': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      'abgelehnt': 'bg-red-500/20 text-red-300 border-red-500/30',
+      'offen': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+      'pending': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+    };
+    return styles[status] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+  };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Admin-Bereich</h1>
-            <p className="text-gray-400 mt-1">Willkommen im Admin-Panel! Hier kannst du Einstellungen verwalten.</p>
-          </div>
+    <DashboardLayout title="Admin Dashboard">
+      <div className="space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Gesamt Anfragen"
+            value={stats.total}
+            icon={CalendarDays}
+          />
+          <StatCard
+            title="Offene Anfragen"
+            value={stats.pending}
+            icon={Clock}
+          />
+          <StatCard
+            title="Akzeptiert"
+            value={stats.accepted}
+            icon={Check}
+          />
+          <StatCard
+            title="Diesen Monat"
+            value={stats.thisMonth}
+            icon={TrendingUp}
+          />
+        </div>
 
-          {dashboardData?.offers && (
-            <Select value={sortOption} onValueChange={setSortOption}>
-              <SelectTrigger className="w-[220px] bg-white/5 border-white/10 text-white">
-                <SelectValue placeholder="Sortieren nach..." />
+        {/* Filters */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Input
+                placeholder="Suche nach Kunde oder ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[160px] bg-white/5 border-white/10 text-white">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-white/10">
-                <SelectItem value="receivedDesc">Eingang (neueste zuerst)</SelectItem>
-                <SelectItem value="receivedAsc">Eingang (älteste zuerst)</SelectItem>
-                <SelectItem value="dateAsc">Eventdatum aufsteigend</SelectItem>
-                <SelectItem value="dateDesc">Eventdatum absteigend</SelectItem>
-                <SelectItem value="statusAsc">Status A–Z</SelectItem>
-                <SelectItem value="statusDesc">Status Z–A</SelectItem>
+                <SelectItem value="all">Alle Status</SelectItem>
+                <SelectItem value="offen">Offen</SelectItem>
+                <SelectItem value="akzeptiert">Akzeptiert</SelectItem>
+                <SelectItem value="abgelehnt">Abgelehnt</SelectItem>
               </SelectContent>
             </Select>
-          )}
+
+            {/* Sort */}
+            <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-full sm:w-[200px] bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Sortieren" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-white/10">
+                <SelectItem value="receivedDesc">Neueste zuerst</SelectItem>
+                <SelectItem value="receivedAsc">Älteste zuerst</SelectItem>
+                <SelectItem value="dateAsc">Event aufsteigend</SelectItem>
+                <SelectItem value="dateDesc">Event absteigend</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
             <span className="ml-3 text-gray-400">Lade Dashboard-Daten...</span>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-6 py-4 text-red-300">
             Fehler: {error}
           </div>
         )}
 
-        {/* Offers Grid */}
-        {sortedOffers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sortedOffers.map((offer: any) => (
-              <DashboardCard
-                key={offer.id}
-                className="cursor-pointer hover:border-white/20 transition-all"
-                onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-white">Anfrage #{offer.id}</h2>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
-                      <DropdownMenuItem
-                        onClick={(e) => { e.stopPropagation(); handleAcceptRequest(offer.id); }}
-                        className="text-emerald-400 focus:text-emerald-300 focus:bg-white/5"
-                      >
-                        <Check className="mr-2 h-4 w-4" />
-                        Annehmen
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => { e.stopPropagation(); handleDeleteRequest(offer.id); }}
-                        className="text-red-400 focus:text-red-300 focus:bg-white/5"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Löschen
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+        {/* Requests Table/Cards */}
+        {!loading && !error && (
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">ID</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Kunde</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Event</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Eingegangen</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Status</th>
+                    <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredAndSortedOffers.map((offer: any) => (
+                    <tr
+                      key={offer.id}
+                      className="hover:bg-white/5 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
+                    >
+                      <td className="px-6 py-4">
+                        <span className="text-white font-mono">#{offer.id}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="text-white font-medium">{offer.client_name}</p>
+                          <p className="text-gray-500 text-sm">{offer.client_email}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-300">{offer.event_date} {offer.event_time}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-400">{formatDate(getReceivedAt(offer))}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {offer.status && (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
+                            {offer.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
+                            <DropdownMenuItem
+                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleAcceptRequest(offer.id); }}
+                              className="text-emerald-400 focus:text-emerald-300 focus:bg-white/5"
+                            >
+                              <Check className="mr-2 h-4 w-4" />
+                              Annehmen
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDeleteRequest(offer.id); }}
+                              className="text-red-400 focus:text-red-300 focus:bg-white/5"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Löschen
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                <div className="text-sm space-y-2 text-gray-300">
-                  <p>
-                    <span className="text-gray-500">Kunde:</span>{' '}
-                    <span className="text-white">{offer.client_name}</span>
-                    <span className="text-gray-500 ml-1">({offer.client_email})</span>
-                  </p>
-                  <p>
-                    <span className="text-gray-500">Datum:</span>{' '}
-                    <span className="text-white">{offer.event_date} {offer.event_time}</span>
-                  </p>
-                  <p>
-                    <span className="text-gray-500">Eingegangen:</span>{' '}
-                    <span className="text-white">{formatDate(getReceivedAt(offer))}</span>
-                  </p>
-                  {offer.status && (
-                    <p>
-                      <span className="text-gray-500">Status:</span>{' '}
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        offer.status === 'akzeptiert'
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : offer.status === 'abgelehnt'
-                          ? 'bg-red-500/20 text-red-300'
-                          : 'bg-yellow-500/20 text-yellow-300'
-                      }`}>
-                        {offer.status}
-                      </span>
-                    </p>
-                  )}
+            {/* Mobile Cards */}
+            <div className="lg:hidden divide-y divide-white/10">
+              {filteredAndSortedOffers.map((offer: any) => (
+                <div
+                  key={offer.id}
+                  className="p-4 hover:bg-white/5 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <span className="text-white font-mono text-sm">#{offer.id}</span>
+                      {offer.status && (
+                        <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
+                          {offer.status}
+                        </span>
+                      )}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
+                        <DropdownMenuItem
+                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleAcceptRequest(offer.id); }}
+                          className="text-emerald-400"
+                        >
+                          <Check className="mr-2 h-4 w-4" />
+                          Annehmen
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDeleteRequest(offer.id); }}
+                          className="text-red-400"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Löschen
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <p className="text-white font-medium">{offer.client_name}</p>
+                  <p className="text-gray-500 text-sm">{offer.client_email}</p>
+                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-400">
+                    <span>{offer.event_date}</span>
+                    <span>•</span>
+                    <span>{formatDate(getReceivedAt(offer))}</span>
+                  </div>
                 </div>
-              </DashboardCard>
-            ))}
+              ))}
+            </div>
+
+            {/* Empty State */}
+            {filteredAndSortedOffers.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-400">Keine Anfragen gefunden.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          !loading && (
-            <DashboardCard className="text-center py-12">
-              <p className="text-gray-400">Keine Angebote gefunden.</p>
-            </DashboardCard>
-          )
         )}
       </div>
     </DashboardLayout>

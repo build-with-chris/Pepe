@@ -144,15 +144,15 @@ function App() {
               <Route path="/generate-pngs" element={<GeneratePNGs />} />
 
               {/* Authentication routes - use working components */}
-              <Route path="/anmelden" element={<LoginForm />} />
-              <Route path="/registrieren" element={<SignUp />} />
+              <Route path="/anmelden/*" element={<LoginForm />} />
+              <Route path="/registrieren/*" element={<SignUp />} />
               <Route path="/sso-callback" element={<SSOCallback />} />
               <Route path="/kuenstler-richtlinien" element={<ArtistGuidlines />} />
               <Route path="/onboarding" element={<ArtistGuidlines />} />
 
               {/* Legacy English routes for backwards compatibility */}
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/signup" element={<SignUp />} />
+              <Route path="/login/*" element={<LoginForm />} />
+              <Route path="/signup/*" element={<SignUp />} />
               <Route path="/artist-guidelines" element={<ArtistGuidlines />} />
 
               {/* Admin routes (protected) */}

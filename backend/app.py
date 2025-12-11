@@ -110,7 +110,7 @@ allowed_patterns = [o.strip() for o in origins_env.split(",") if o.strip()]
 # Fallback, falls ENV leer ist
 if not allowed_patterns:
     allowed_patterns = [
-        "http://localhost:5173",
+        "http://localhost:*",  # Allow all localhost ports for dev
         "https://pepeshows.de",
         "https://*.vercel.app",  # allow Vercel preview domains via wildcard
     ]

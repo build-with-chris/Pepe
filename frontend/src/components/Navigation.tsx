@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/context/AuthContext'
-import { UserButton } from '@clerk/clerk-react'
+import { useAuth, UserButton, useUser } from '@clerk/clerk-react'
 
 interface NavigationProps {
   className?: string
@@ -13,7 +12,8 @@ export default function Navigation({ className = '' }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
   const { t, i18n } = useTranslation()
-  const { isSignedIn, isLoaded, user } = useAuth()
+  const { isSignedIn, isLoaded } = useAuth()
+  const { user } = useUser()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,7 +101,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
                 >
                   {t('nav.profile', 'Profil')}
                 </Link>
-                {user?.is_admin && (
+                {(user?.publicMetadata as any)?.role === 'shows-admin' && (
                   <Link
                     to="/admin/dashboard"
                     className="nav-link text-sm text-[#D4A574]"
