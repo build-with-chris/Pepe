@@ -96,14 +96,14 @@ export default function Navigation({ className = '' }: NavigationProps) {
             {isLoaded && isSignedIn ? (
               <div className="flex items-center gap-3">
                 <Link
-                  to="/profile"
+                  to="/profil"
                   className="nav-link text-sm"
                 >
                   {t('nav.profile', 'Profil')}
                 </Link>
                 {(user?.publicMetadata as any)?.role === 'shows-admin' && (
                   <Link
-                    to="/admin/dashboard"
+                    to="/admin"
                     className="nav-link text-sm text-[#D4A574]"
                   >
                     Admin
@@ -187,15 +187,15 @@ export default function Navigation({ className = '' }: NavigationProps) {
                 {isLoaded && isSignedIn ? (
                   <>
                     <Link
-                      to="/profile"
+                      to="/profil"
                       className="mobile-menu-link"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {t('nav.profile', 'Mein Profil')}
                     </Link>
-                    {user?.is_admin && (
+                    {(user?.publicMetadata as any)?.role === 'shows-admin' && (
                       <Link
-                        to="/admin/dashboard"
+                        to="/admin"
                         className="mobile-menu-link text-[#D4A574]"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >

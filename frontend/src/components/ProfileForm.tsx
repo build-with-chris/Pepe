@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Upload, X, ImageIcon } from "lucide-react";
 
 interface ProfileFormProps {
   profile: {
@@ -33,9 +34,6 @@ const availableDisciplines = [
   "Akrobatik", "Jonglage", "Zaubershow", "Tanz", "Feuershow", "Musik",
   "Comedy", "Pantomime", "Breakdance", "Cyr Wheel", "Luftakrobatik"
 ];
-
-// Shared input styling for glass-morphism effect
-const inputClassName = "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#D4A574]/50 focus:ring-[#D4A574]/20 disabled:opacity-50 disabled:cursor-not-allowed";
 
 export function ProfileForm({
   profile,
@@ -86,7 +84,6 @@ export function ProfileForm({
               value={profile.name}
               onChange={(e) => setProfile({ name: e.target.value })}
               disabled={locked}
-              className={inputClassName}
             />
             {fieldErrors.name && (
               <p className="text-red-400 text-sm">{fieldErrors.name}</p>
@@ -103,7 +100,6 @@ export function ProfileForm({
               value={profile.phoneNumber}
               onChange={(e) => setProfile({ phoneNumber: e.target.value })}
               disabled={locked}
-              className={inputClassName}
             />
             {fieldErrors.phoneNumber && (
               <p className="text-red-400 text-sm">{fieldErrors.phoneNumber}</p>
@@ -126,7 +122,6 @@ export function ProfileForm({
               value={profile.street}
               onChange={(e) => setProfile({ street: e.target.value })}
               disabled={locked}
-              className={inputClassName}
             />
             {fieldErrors.street && (
               <p className="text-red-400 text-sm">{fieldErrors.street}</p>
@@ -143,7 +138,6 @@ export function ProfileForm({
               value={profile.postalCode}
               onChange={(e) => setProfile({ postalCode: e.target.value })}
               disabled={locked}
-              className={inputClassName}
             />
             {fieldErrors.postalCode && (
               <p className="text-red-400 text-sm">{fieldErrors.postalCode}</p>
@@ -162,7 +156,6 @@ export function ProfileForm({
               value={profile.city}
               onChange={(e) => setProfile({ city: e.target.value })}
               disabled={locked}
-              className={inputClassName}
             />
             {fieldErrors.city && (
               <p className="text-red-400 text-sm">{fieldErrors.city}</p>
@@ -179,7 +172,6 @@ export function ProfileForm({
               value={profile.country}
               onChange={(e) => setProfile({ country: e.target.value })}
               disabled={locked}
-              className={inputClassName}
             />
             {fieldErrors.country && (
               <p className="text-red-400 text-sm">{fieldErrors.country}</p>
@@ -244,7 +236,6 @@ export function ProfileForm({
               disabled={locked}
               min="0"
               step="50"
-              className={inputClassName}
             />
             {fieldErrors.priceMin && (
               <p className="text-red-400 text-sm">{fieldErrors.priceMin}</p>
@@ -263,7 +254,6 @@ export function ProfileForm({
               disabled={locked}
               min="0"
               step="50"
-              className={inputClassName}
             />
             {fieldErrors.priceMax && (
               <p className="text-red-400 text-sm">{fieldErrors.priceMax}</p>
@@ -283,7 +273,7 @@ export function ProfileForm({
           onChange={(e) => setProfile({ bio: e.target.value })}
           disabled={locked}
           rows={4}
-          className={cn(inputClassName, "resize-none")}
+          className="resize-none"
           placeholder={t('profileForm.sections.aboutMe')}
         />
         {fieldErrors.bio && (

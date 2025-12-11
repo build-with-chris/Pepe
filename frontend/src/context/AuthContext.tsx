@@ -35,12 +35,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const clerkToken = await getToken();
           setToken(clerkToken);
 
+          // Check admin role from Clerk's publicMetadata
+          const clerkRole = (clerkUser.publicMetadata as any)?.role;
+          const isAdminFromClerk = clerkRole === 'shows-admin' || clerkRole === 'admin';
+
           const userPayload: UserPayload = {
             sub: clerkUser.id,
             email: clerkUser.primaryEmailAddress?.emailAddress,
-            role: (clerkUser.publicMetadata as any)?.role,
+            role: clerkRole || 'artist', // Default role is artist
+            is_admin: isAdminFromClerk, // Admin status from Clerk metadata
+            user_metadata: {
+              full_name: clerkUser.fullName || undefined,
+              name: clerkUser.firstName || undefined,
+            },
           };
 
+          // Sync with backend
           if (clerkToken) {
             try {
               const API = import.meta.env.VITE_API_URL;
@@ -53,14 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 },
               });
 
-              const meRes = await fetch(`${API}/api/artists/me`, {
+              await fetch(`${API}/api/artists/me`, {
                 headers: { Authorization: `Bearer ${clerkToken}` },
               });
-
-              if (meRes.ok) {
-                const me = await meRes.json();
-                userPayload.is_admin = Boolean(me?.is_admin);
-              }
             } catch (e) {
               console.warn('[Auth] Backend sync error:', e);
             }

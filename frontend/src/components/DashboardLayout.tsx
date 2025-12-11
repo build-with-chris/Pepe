@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { UserButton } from '@clerk/clerk-react';
 import {
   User,
   Calendar,
@@ -11,11 +12,9 @@ import {
   Users,
   Receipt,
   Clock,
-  ChevronLeft,
-  Sparkles
+  Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,21 +26,22 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
-  adminOnly?: boolean;
 }
 
-const userNavItems: NavItem[] = [
+// Artist portal navigation - available to all logged in users
+const artistNavItems: NavItem[] = [
   { label: 'Profil', href: '/profil', icon: User },
   { label: 'Kalender', href: '/kalender', icon: Calendar },
   { label: 'Meine Gigs', href: '/meine-gigs', icon: FileText },
   { label: 'Meine Anfragen', href: '/meine-anfragen', icon: Clock },
 ];
 
+// Admin navigation - only for admins
 const adminNavItems: NavItem[] = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard, adminOnly: true },
-  { label: 'Künstler', href: '/admin/kuenstler', icon: Users, adminOnly: true },
-  { label: 'Rechnungen', href: '/admin/rechnungen', icon: Receipt, adminOnly: true },
-  { label: 'Anstehende Gigs', href: '/admin/anstehende-gigs', icon: Clock, adminOnly: true },
+  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { label: 'Künstler', href: '/admin/kuenstler', icon: Users },
+  { label: 'Rechnungen', href: '/admin/rechnungen', icon: Receipt },
+  { label: 'Anstehende Gigs', href: '/admin/anstehende-gigs', icon: Clock },
 ];
 
 export function DashboardLayout({ children, className = '', title }: DashboardLayoutProps) {
@@ -49,10 +49,14 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const isAdmin = user?.is_admin || user?.role === 'shows-admin';
+  // Admin check from Clerk publicMetadata role
+  const isAdmin = user?.is_admin === true;
   const isAdminRoute = location.pathname.startsWith('/admin');
 
-  const navItems = isAdminRoute ? [...adminNavItems, ...userNavItems] : [...userNavItems, ...(isAdmin ? adminNavItems : [])];
+  // Artists only see artist nav, Admins see both (admin first when on admin routes)
+  const navItems = isAdmin
+    ? (isAdminRoute ? [...adminNavItems, ...artistNavItems] : [...artistNavItems, ...adminNavItems])
+    : artistNavItems;
 
   return (
     <div className={cn('min-h-screen bg-[#0A0A0A]', className)}>
@@ -71,17 +75,18 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4A574] to-[#B8956A] flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-black" />
-            </div>
-            <span className="font-semibold text-white">Pepe Shows</span>
+        {/* Sidebar Header - Logo matching main nav */}
+        <div className="h-20 flex items-center justify-between px-4 border-b border-white/10">
+          <Link to="/" className="flex items-center">
+            <img
+              src="/logos/SVG/PEPE_logos_shows.svg"
+              alt="Pepe Shows Logo"
+              className="h-12 w-auto"
+            />
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 text-gray-400 hover:text-white"
+            className="lg:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -89,47 +94,66 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
 
         {/* Navigation */}
         <nav className="p-4 space-y-1">
-          {isAdminRoute && isAdmin && (
-            <div className="mb-4">
-              <span className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Admin
+          {/* Section Label for Admin */}
+          {isAdmin && isAdminRoute && (
+            <div className="mb-4 pb-2 border-b border-white/5">
+              <span className="px-3 text-xs font-semibold text-[#D4A574] uppercase tracking-wider">
+                Admin Bereich
               </span>
             </div>
           )}
 
-          {navItems.map((item) => {
+          {/* Section Label for Artist Portal */}
+          {!isAdminRoute && (
+            <div className="mb-4 pb-2 border-b border-white/5">
+              <span className="px-3 text-xs font-semibold text-[#D4A574] uppercase tracking-wider">
+                Künstler Portal
+              </span>
+            </div>
+          )}
+
+          {navItems.map((item, index) => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
-
-            if (item.adminOnly && !isAdmin) return null;
+            const isFirstAdminItem = isAdmin && !isAdminRoute && index === artistNavItems.length;
+            const isFirstArtistItem = isAdmin && isAdminRoute && index === adminNavItems.length;
 
             return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-[#D4A574]/20 text-[#D4A574]'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+              <React.Fragment key={item.href}>
+                {/* Separator between sections */}
+                {(isFirstAdminItem || isFirstArtistItem) && (
+                  <div className="my-4 pt-4 border-t border-white/5">
+                    <span className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      {isFirstAdminItem ? 'Admin' : 'Künstler'}
+                    </span>
+                  </div>
                 )}
-              >
-                <Icon className="w-5 h-5" />
-                {item.label}
-              </Link>
+                <Link
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'bg-[#D4A574]/15 text-[#D4A574] border border-[#D4A574]/20'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  )}
+                >
+                  <Icon className={cn('w-5 h-5', isActive && 'text-[#D4A574]')} />
+                  {item.label}
+                </Link>
+              </React.Fragment>
             );
           })}
         </nav>
 
-        {/* Back to Home */}
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* Bottom Section */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-[#111111]">
           <Link
             to="/"
-            className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:text-white hover:bg-white/5 transition-all duration-200"
           >
-            <ChevronLeft className="w-4 h-4" />
-            Zurück zur Website
+            <Home className="w-5 h-5" />
+            Zur Website
           </Link>
         </div>
       </aside>
@@ -142,7 +166,7 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 text-gray-400 hover:text-white"
+                className="lg:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -151,19 +175,35 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              {isAdmin && !isAdminRoute && (
-                <Link to="/admin">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#D4A574]/30 text-[#D4A574] hover:bg-[#D4A574]/10"
-                  >
-                    <LayoutDashboard className="w-4 h-4 mr-2" />
-                    Admin
-                  </Button>
+            <div className="flex items-center gap-3">
+              {/* Admin Switch Button - only show to admins */}
+              {isAdmin && (
+                <Link
+                  to={isAdminRoute ? '/profil' : '/admin'}
+                  className={cn(
+                    'hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    isAdminRoute
+                      ? 'text-gray-400 hover:text-white hover:bg-white/5'
+                      : 'text-[#D4A574] bg-[#D4A574]/10 hover:bg-[#D4A574]/20'
+                  )}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  {isAdminRoute ? 'Künstler Portal' : 'Admin'}
                 </Link>
               )}
+
+              {/* User Button from Clerk */}
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-9 h-9",
+                    userButtonPopoverCard: "bg-[#1A1A1A] border border-white/10",
+                    userButtonPopoverActionButton: "text-white hover:bg-white/10",
+                    userButtonPopoverActionButtonText: "text-white",
+                    userButtonPopoverFooter: "hidden",
+                  }
+                }}
+              />
             </div>
           </div>
         </header>
