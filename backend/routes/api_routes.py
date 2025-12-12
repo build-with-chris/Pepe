@@ -460,21 +460,26 @@ def ensure_my_artist():
             artist = None
 
     if not artist:
-        # Create minimal linked artist even if email is missing; name can fallback to local-part
+        # Create minimal linked artist - name and email required by model
         try:
-            name_value = raw_name or (raw_email.split('@')[0] if isinstance(raw_email, str) and '@' in raw_email else None)
+            name_value = raw_name or (raw_email.split('@')[0] if isinstance(raw_email, str) and '@' in raw_email else None) or 'Neuer Künstler'
+            email_value = email_norm or raw_email or f'{user_id}@clerk.placeholder'
+
+            logger.info(f'ensure_my_artist: Creating new artist for uid={user_id}, name={name_value}, email={email_value}')
+
             new_artist = Artist(
                 name=name_value,
-                email=(email_norm or raw_email or None),
+                email=email_value,
                 supabase_user_id=user_id,
                 approval_status='unsubmitted',
             )
             db.session.add(new_artist)
             db.session.commit()
             artist = new_artist
-        except Exception:
+        except Exception as e:
+            logger.exception(f'ensure_my_artist: Failed to create artist for uid={user_id}: {e}')
             db.session.rollback()
-            return error_response('internal_error', 'Unable to ensure artist for current user', 500)
+            return error_response('internal_error', f'Unable to ensure artist for current user: {str(e)}', 500)
 
     # Return unified payload
     return jsonify({

@@ -45,26 +45,6 @@ export default function Profile() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const unlockBtnRef = useRef<HTMLButtonElement | null>(null);
-  const [showUnlockHint, setShowUnlockHint] = useState(false);
-  const hintTimeoutRef = useRef<number | null>(null);
-
-  const requestUnlock = () => {
-    setShowUnlockHint(true);
-    if (hintTimeoutRef.current) window.clearTimeout(hintTimeoutRef.current);
-    hintTimeoutRef.current = window.setTimeout(() => setShowUnlockHint(false), 3000);
-
-    const el = unlockBtnRef.current;
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const y = rect.top + window.scrollY - 80;
-      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-      try { el.focus(); } catch {}
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => () => { if (hintTimeoutRef.current) window.clearTimeout(hintTimeoutRef.current); }, []);
 
   useEffect(() => {
     if (!user) navigate("/login");
@@ -162,10 +142,10 @@ export default function Profile() {
     }
 
     if (!backendArtistId) {
-      const ensured = await fetchWithRetry(`${baseUrl}/api/artists/me/ensure`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    }).then(r => r.json()).catch(() => null);
+      await fetchWithRetry(`${baseUrl}/api/artists/me/ensure`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      }).catch(() => null);
     }
 
     setLoading(true);
@@ -369,11 +349,6 @@ export default function Profile() {
     }
   };
 
-  const toggleDiscipline = (d: string) => {
-    if (locked) return;
-    setDisciplines(prev => (prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]));
-  };
-
   const profile = {
     name,
     address,
@@ -425,18 +400,20 @@ export default function Profile() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">{t('profileSetup.title')}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">{t('profileSetup.title')}</h1>
+            <p className="text-gray-400 mt-1">Verwalte dein Künstlerprofil und Informationen</p>
+          </div>
           {locked && (
             <Button
               ref={unlockBtnRef}
               id="unlock-profile-button"
-              variant="outline"
               onClick={() => {
                 setLocked(false);
                 setSuccess(false);
               }}
-              className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
+              className="bg-[#D4A574] hover:bg-[#E6B887] text-black font-medium"
               aria-label={t('profileSetup.editAria')}
             >
               <Pencil className="w-4 h-4 mr-2" />
@@ -444,13 +421,6 @@ export default function Profile() {
             </Button>
           )}
         </div>
-
-        {/* Unlock Hint */}
-        {showUnlockHint && (
-          <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 backdrop-blur-sm px-4 py-3 text-sm text-yellow-200">
-            {t('profileSetup.lockedHint')}
-          </div>
-        )}
 
         {/* Error Message */}
         {error && (
@@ -478,8 +448,8 @@ export default function Profile() {
           supportEmail="info@pepeshows.de"
         />
 
-        {/* Profile Form Card */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 relative">
+        {/* Profile Form - now uses Card components internally */}
+        <div className="relative">
           <ProfileForm
             profile={profile}
             setProfile={setProfileAdapter}
@@ -488,15 +458,18 @@ export default function Profile() {
             fieldErrors={fieldErrors}
           />
           {locked && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-2xl">
-              <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-xl p-6 text-white max-w-md text-center">
-                <p className="mb-4 text-gray-300">{t('profileSetup.lockedHint')}</p>
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
+              <div className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-8 text-white max-w-md text-center shadow-2xl">
+                <div className="w-12 h-12 rounded-full bg-[#D4A574]/10 flex items-center justify-center mx-auto mb-4">
+                  <Pencil className="w-6 h-6 text-[#D4A574]" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Profil bearbeiten</h3>
+                <p className="mb-6 text-gray-400">{t('profileSetup.lockedHint')}</p>
                 <Button
                   ref={unlockBtnRef}
                   id="unlock-profile-button"
-                  variant="outline"
                   onClick={() => { setLocked(false); setSuccess(false); }}
-                  className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                  className="bg-[#D4A574] hover:bg-[#E6B887] text-black font-medium"
                   aria-label={t('profileSetup.editAria')}
                 >
                   <Pencil className="w-4 h-4 mr-2" />
@@ -507,18 +480,26 @@ export default function Profile() {
           )}
         </div>
 
-        {/* Delete Section */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-          <p className="mb-3 text-sm text-gray-400">{t('profileSetup.delete.help')}</p>
-          <Button
-            variant="outline"
-            onClick={handleDeleteArtist}
-            disabled={loading}
-            className="border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {t('profileSetup.delete.cta')}
-          </Button>
+        {/* Danger Zone */}
+        <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-2 rounded-lg bg-red-500/10">
+              <Trash2 className="w-5 h-5 text-red-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-400 mb-1">Gefahrenzone</h3>
+              <p className="text-sm text-gray-400 mb-4">{t('profileSetup.delete.help')}</p>
+              <Button
+                variant="outline"
+                onClick={handleDeleteArtist}
+                disabled={loading}
+                className="border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {t('profileSetup.delete.cta')}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Debug Info */}

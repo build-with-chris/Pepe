@@ -28,7 +28,11 @@
       "Bash(python -m flask db upgrade:*)",
       "Bash(pkill:*)",
       "Bash(echo:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(lsof:*)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(python app.py:*)",
+      "Bash(xargs kill -9)"
     ],
     "deny": [],
     "ask": []
