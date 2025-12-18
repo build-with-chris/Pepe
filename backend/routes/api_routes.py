@@ -104,8 +104,14 @@ def get_current_user():
     if not artist:
         try:
             claims = get_clerk_claims() or {}
+            # DEBUG: Log all JWT claims to see what Clerk sends
+            logger.info(f"DEBUG Clerk JWT claims: {list(claims.keys())}")
+            logger.info(f"DEBUG Clerk JWT full: {claims}")
+
             # Clerk stores email differently - check various paths
             email = claims.get("email") or claims.get("primary_email_address") or claims.get("email_addresses", [{}])[0].get("email_address") if claims.get("email_addresses") else None
+            logger.info(f"DEBUG Extracted email: {email}")
+
             name = claims.get("name") or claims.get("first_name", "") + " " + claims.get("last_name", "")
             name = name.strip() if name else None
 
