@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getSupabase } from "@/lib/supabase";
-import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/upload";
+import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/blobUpload";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
 import { ProfileForm } from "../components/ProfileForm";
@@ -11,7 +10,6 @@ import { fetchWithRetry, ValidationError, AuthError, ForbiddenError, ConflictErr
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 
-const PROFILE_BUCKET = import.meta.env.VITE_SUPABASE_PROFILE_BUCKET || "profiles";
 const baseUrl = import.meta.env.VITE_API_URL;
 
 export default function Profile() {
@@ -154,24 +152,23 @@ export default function Profile() {
       if (!user?.email) throw new Error(t('profileSetup.errors.userEmailMissing'));
 
       let effectiveId = backendArtistId || "new-id";
-      const sb = await getSupabase();
+
+      // Upload profile image to Vercel Blob
       let imageUrl = await uploadProfileImage(
         profileImageFile,
         effectiveId,
-        PROFILE_BUCKET,
-        sb,
         setProfileImageUrl,
         setBackendDebug,
         profileImageUrl
       );
 
+      // Upload gallery images to Vercel Blob
       let mergedGalleryUrls = await uploadGalleryImages(
         galleryFiles,
         effectiveId,
-        PROFILE_BUCKET,
-        sb,
         galleryUrls,
-        setGalleryUrls
+        setGalleryUrls,
+        setBackendDebug
       );
 
       const nextStatus = approvalStatus === 'approved' ? 'approved' : 'pending';
@@ -397,14 +394,11 @@ export default function Profile() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title={t('profileSetup.title')}>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header with actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white">{t('profileSetup.title')}</h1>
-            <p className="text-gray-400 mt-1">Verwalte dein Künstlerprofil und Informationen</p>
-          </div>
+          <p className="text-gray-400">{t('profileSetup.subtitle', { defaultValue: 'Verwalte dein Künstlerprofil und Informationen' })}</p>
           {locked && (
             <Button
               ref={unlockBtnRef}

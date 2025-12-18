@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Calendar } from "@/components/ui/calendar";
-import GuideAccordion from "../components/GuideAccordion";
 import { useAuth } from '../context/AuthContext';
 import { toLocalDate, formatISODate } from "@/utils/calendar";
 import { deleteAvailability } from "@/services/availabilityApi";
@@ -268,14 +267,8 @@ const CalendarPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title={t('calendar.title')}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="mx-auto w-full max-w-[28rem] md:max-w-[36rem]">
-          <h1 className="text-2xl font-bold text-white mb-4">{t('calendar.title')}</h1>
-          <GuideAccordion />
-        </div>
-
         {/* Error Message */}
         {error && (
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 flex items-center justify-between">

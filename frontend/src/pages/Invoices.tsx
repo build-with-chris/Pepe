@@ -1,8 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Search, Receipt, RefreshCw, ExternalLink, CheckCircle, XCircle, FileCheck, Upload, Loader2 } from 'lucide-react';
 
-// Types matching backend shape from routes/api_routes.py (list endpoint suggestion)
-// Extend as your backend returns more fields
 interface AdminInvoice {
   id: number;
   artist_id: number;
@@ -10,10 +19,9 @@ interface AdminInvoice {
   status?: 'uploaded' | 'verified' | 'paid' | 'rejected' | string;
   amount_cents?: number | null;
   currency?: string | null;
-  invoice_date?: string | null; // ISO date
+  invoice_date?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
-  // optional denormalized fields from backend for convenience
   artist_name?: string;
   artist_email?: string;
 }
@@ -22,6 +30,29 @@ type SortKey = 'created_at' | 'invoice_date' | 'amount_cents' | 'status' | 'arti
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || '').trim();
 
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ElementType;
+  color: string;
+}
+
+function StatCard({ title, value, icon: Icon, color }: StatCardProps) {
+  return (
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 lg:p-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-gray-400 text-sm font-medium mb-1">{title}</p>
+          <p className="text-2xl lg:text-3xl font-bold text-white">{value}</p>
+        </div>
+        <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
+          <Icon className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminInvoicesPage() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -29,7 +60,7 @@ export default function AdminInvoicesPage() {
   const [invoices, setInvoices] = useState<AdminInvoice[]>([]);
 
   const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'uploaded' | 'verified' | 'paid' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -50,6 +81,16 @@ export default function AdminInvoicesPage() {
       return d.toLocaleDateString('de-DE');
     } catch { return iso; }
   }
+
+  // Stats
+  const stats = useMemo(() => {
+    return {
+      total: invoices.length,
+      uploaded: invoices.filter(i => i.status === 'uploaded' || !i.status).length,
+      verified: invoices.filter(i => i.status === 'verified').length,
+      paid: invoices.filter(i => i.status === 'paid').length,
+    };
+  }, [invoices]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -91,7 +132,7 @@ export default function AdminInvoicesPage() {
     setError(null);
     try {
       if (!BACKEND) {
-        throw new Error('VITE_BACKEND_URL (oder VITE_API_URL) ist nicht gesetzt');
+        throw new Error('VITE_API_URL ist nicht gesetzt');
       }
       const res = await fetch(`${BACKEND}/api/admin/invoices`, {
         headers: {
@@ -124,7 +165,7 @@ export default function AdminInvoicesPage() {
     setError(null);
     try {
       if (!BACKEND) {
-        throw new Error('VITE_BACKEND_URL (oder VITE_API_URL) ist nicht gesetzt');
+        throw new Error('VITE_API_URL ist nicht gesetzt');
       }
       const res = await fetch(`${BACKEND}/api/admin/invoices/${id}`, {
         method: 'PATCH',
@@ -139,7 +180,6 @@ export default function AdminInvoicesPage() {
         const txt = await res.text();
         throw new Error(`HTTP ${res.status}: ${txt}`);
       }
-      // optimistic refresh
       await fetchAll();
     } catch (e: any) {
       console.error('[AdminInvoices] patch error', e);
@@ -147,165 +187,226 @@ export default function AdminInvoicesPage() {
     }
   }
 
-  useEffect(() => { fetchAll(); /* eslint-disable-next-line */ }, [token]);
-
+  useEffect(() => { fetchAll(); }, [token]);
 
   async function openInvoice(id: number) {
-  if (!token) return;
-  try {
-    if (!BACKEND) throw new Error('VITE_BACKEND_URL (oder VITE_API_URL) ist nicht gesetzt');
-    const res = await fetch(`${BACKEND}/api/admin/invoices/${id}/url`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
+    if (!token) return;
+    try {
+      if (!BACKEND) throw new Error('VITE_API_URL ist nicht gesetzt');
+      const res = await fetch(`${BACKEND}/api/admin/invoices/${id}/url`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`HTTP ${res.status}: ${txt}`);
+      }
+      const data = await res.json();
+      const url = data?.url as string | undefined;
+      if (!url) throw new Error('Keine URL erhalten');
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e: any) {
+      console.error('[AdminInvoices] open error', e);
+      setError(e?.message || 'Konnte Datei nicht öffnen');
     }
-    const data = await res.json();
-    const url = data?.url as string | undefined;
-    if (!url) throw new Error('Keine URL erhalten');
-    window.open(url, '_blank', 'noopener,noreferrer');
-  } catch (e: any) {
-    console.error('[AdminInvoices] open error', e);
-    setError(e?.message || 'Konnte Datei nicht öffnen');
   }
-}
 
-
-  const SortHeader: React.FC<{ k: SortKey; label: string }> = ({ k, label }) => (
-    <button
-      className="flex items-center gap-1 hover:underline"
-      onClick={() => {
-        if (sortKey === k) {
-          setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-        } else {
-          setSortKey(k);
-          setSortDir('desc');
-        }
-      }}
-      title={`Nach ${label} sortieren`}
-    >
-      <span>{label}</span>
-      {sortKey === k && <span className="text-xs opacity-70">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-    </button>
-  );
+  const getStatusBadge = (status?: string) => {
+    const s = status || 'uploaded';
+    const styles: Record<string, string> = {
+      'paid': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      'rejected': 'bg-red-500/20 text-red-300 border-red-500/30',
+      'verified': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      'uploaded': 'bg-gray-500/20 text-gray-300 border-gray-500/30',
+    };
+    const labels: Record<string, string> = {
+      'paid': 'Bezahlt',
+      'rejected': 'Abgelehnt',
+      'verified': 'Geprüft',
+      'uploaded': 'Hochgeladen',
+    };
+    return (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${styles[s] || styles.uploaded}`}>
+        {labels[s] || s}
+      </span>
+    );
+  };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-white">Rechnungen (Admin)</h1>
-
-      {!BACKEND && (
-        <div className="mt-2 p-2 border border-amber-400 text-amber-200 rounded bg-amber-950/20">
-          Hinweis: BACKEND-URL ist nicht gesetzt. Bitte <code>VITE_BACKEND_URL</code> (oder <code>VITE_API_URL</code>) in der Frontend <code>.env</code> eintragen.
+    <DashboardLayout title="Rechnungen">
+      <div className="space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <StatCard title="Gesamt" value={stats.total} icon={Receipt} color="bg-[#D4A574]/20" />
+          <StatCard title="Hochgeladen" value={stats.uploaded} icon={Upload} color="bg-gray-500/20" />
+          <StatCard title="Geprüft" value={stats.verified} icon={FileCheck} color="bg-amber-500/20" />
+          <StatCard title="Bezahlt" value={stats.paid} icon={CheckCircle} color="bg-emerald-500/20" />
         </div>
-      )}
 
-      {/* Toolbar */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Suche: Künstler, E-Mail, Dateiname"
-          className="px-3 py-2 rounded border border-white/20 bg-transparent text-white placeholder:text-white/50 min-w-[260px]"
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
-          className="px-3 py-2 rounded border border-white/20 bg-transparent text-white"
-        >
-          <option value="all" className="bg-black">Alle Status</option>
-          <option value="uploaded" className="bg-black">Hochgeladen</option>
-          <option value="verified" className="bg-black">Geprüft</option>
-          <option value="paid" className="bg-black">Bezahlt</option>
-          <option value="rejected" className="bg-black">Abgelehnt</option>
-        </select>
-        <button
-          onClick={fetchAll}
-          className="ml-auto px-3 py-2 rounded border border-white/20 hover:bg-white/10 text-white"
-        >Neu laden</button>
-      </div>
+        {/* Error for missing backend */}
+        {!BACKEND && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm px-6 py-5 text-amber-300">
+            Hinweis: VITE_API_URL ist nicht gesetzt. Bitte in der Frontend .env eintragen.
+          </div>
+        )}
 
-      {error && (
-        <div className="mt-4 p-3 rounded border border-red-400 text-red-200 bg-red-950/20">
-          {error}
+        {/* Filters */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 lg:p-6">
+          <div className="flex flex-col sm:flex-row gap-4 lg:gap-5">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Input
+                placeholder="Suche: Künstler, E-Mail, Datei..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-11 py-3 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              />
+            </div>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px] py-3 bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-white/10">
+                <SelectItem value="all">Alle Status</SelectItem>
+                <SelectItem value="uploaded">Hochgeladen</SelectItem>
+                <SelectItem value="verified">Geprüft</SelectItem>
+                <SelectItem value="paid">Bezahlt</SelectItem>
+                <SelectItem value="rejected">Abgelehnt</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              onClick={fetchAll}
+              disabled={loading}
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10 py-3 px-5"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Neu laden
+            </Button>
+          </div>
         </div>
-      )}
 
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full text-left text-white/90 min-w-[800px]">
-          <thead>
-            <tr className="border-b border-white/10 text-white">
-              <th className="py-2 pr-4"><SortHeader k="created_at" label="Hochgeladen" /></th>
-              <th className="py-2 pr-4"><SortHeader k="artist_name" label="Künstler" /></th>
-              <th className="py-2 pr-4">Datei</th>
-              <th className="py-2 pr-4"><SortHeader k="invoice_date" label="Rechnungsdatum" /></th>
-              <th className="py-2 pr-4"><SortHeader k="amount_cents" label="Betrag" /></th>
-              <th className="py-2 pr-4"><SortHeader k="status" label="Status" /></th>
-              <th className="py-2 pr-4">Aktionen</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={7} className="py-6 text-center text-white/70">Lade…</td></tr>
-            ) : sorted.length === 0 ? (
-              <tr><td colSpan={7} className="py-6 text-center text-white/70">Keine Rechnungen gefunden</td></tr>
-            ) : (
-              sorted.map(inv => (
-                <tr key={inv.id} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="py-2 pr-4 whitespace-nowrap">{fmtDate(inv.created_at)}</td>
-                  <td className="py-2 pr-4">
-                    <div className="font-medium">{inv.artist_name || `Artist #${inv.artist_id}`}</div>
-                    <div className="text-xs text-white/60">{inv.artist_email || '—'}</div>
-                  </td>
-                  <td className="py-2 pr-4 max-w-[320px]">
-                    <div className="truncate" title={inv.storage_path}>{inv.storage_path}</div>
-                  </td>
-                  <td className="py-2 pr-4 whitespace-nowrap">{fmtDate(inv.invoice_date)}</td>
-                  <td className="py-2 pr-4 whitespace-nowrap">{fmtAmount(inv.amount_cents, inv.currency || 'EUR')}</td>
-                  <td className="py-2 pr-4 whitespace-nowrap">
-                    <span className={
-                      inv.status === 'paid' ? 'text-green-300' :
-                      inv.status === 'rejected' ? 'text-red-300' :
-                      inv.status === 'verified' ? 'text-amber-300' : 'text-white/80'
-                    }>
-                      {inv.status || 'uploaded'}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-4 whitespace-nowrap flex items-center gap-2">
-                    <button
-                      onClick={() => openInvoice(inv.id)}
-                      className="px-2 py-1 rounded border border-white/20 hover:bg-white/10"
-                      title="Datei öffnen"
-                    >Öffnen</button>
+        {/* Error */}
+        {error && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-6 py-4 text-red-300">
+            {error}
+          </div>
+        )}
 
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
+            <span className="ml-3 text-gray-400">Lade Rechnungen...</span>
+          </div>
+        )}
+
+        {/* Table */}
+        {!loading && (
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Hochgeladen</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Künstler</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Datei</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Datum</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Betrag</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Status</th>
+                    <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {sorted.length === 0 ? (
+                    <tr><td colSpan={7} className="py-12 text-center text-gray-500">Keine Rechnungen gefunden</td></tr>
+                  ) : sorted.map(inv => (
+                    <tr key={inv.id} className="hover:bg-white/5">
+                      <td className="px-6 py-4 text-gray-400 text-sm">{fmtDate(inv.created_at)}</td>
+                      <td className="px-6 py-4">
+                        <div className="text-white font-medium">{inv.artist_name || `Artist #${inv.artist_id}`}</div>
+                        <div className="text-gray-500 text-sm">{inv.artist_email || '—'}</div>
+                      </td>
+                      <td className="px-6 py-4 max-w-[200px]">
+                        <div className="text-gray-400 text-sm truncate" title={inv.storage_path}>{inv.storage_path}</div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-400 text-sm">{fmtDate(inv.invoice_date)}</td>
+                      <td className="px-6 py-4 text-white font-medium">{fmtAmount(inv.amount_cents, inv.currency)}</td>
+                      <td className="px-6 py-4">{getStatusBadge(inv.status)}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openInvoice(inv.id)}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                          {inv.status !== 'paid' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => patchInvoice(inv.id, { status: 'paid' })}
+                              className="text-emerald-400 hover:text-emerald-300"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {inv.status !== 'rejected' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => patchInvoice(inv.id, { status: 'rejected' })}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden divide-y divide-white/10">
+              {sorted.length === 0 ? (
+                <div className="py-12 text-center text-gray-500">Keine Rechnungen gefunden</div>
+              ) : sorted.map(inv => (
+                <div key={inv.id} className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-white font-medium">{inv.artist_name || `Artist #${inv.artist_id}`}</p>
+                      <p className="text-gray-500 text-sm">{inv.artist_email || '—'}</p>
+                    </div>
+                    {getStatusBadge(inv.status)}
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">{fmtDate(inv.created_at)}</span>
+                    <span className="text-white font-medium">{fmtAmount(inv.amount_cents, inv.currency)}</span>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => openInvoice(inv.id)} className="flex-1 text-gray-400 border-white/10">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Öffnen
+                    </Button>
                     {inv.status !== 'paid' && (
-                      <button
-                        onClick={() => patchInvoice(inv.id, { status: 'paid' })}
-                        className="px-2 py-1 rounded border border-white/20 hover:bg-white/10"
-                        title="Als bezahlt markieren"
-                      >Bezahlt</button>
+                      <Button size="sm" onClick={() => patchInvoice(inv.id, { status: 'paid' })} className="bg-emerald-600 hover:bg-emerald-500">
+                        Bezahlt
+                      </Button>
                     )}
-                    {inv.status !== 'verified' && (
-                      <button
-                        onClick={() => patchInvoice(inv.id, { status: 'verified' })}
-                        className="px-2 py-1 rounded border border-white/20 hover:bg-white/10"
-                        title="Als geprüft markieren"
-                      >Geprüft</button>
-                    )}
-                    {inv.status !== 'rejected' && (
-                      <button
-                        onClick={() => patchInvoice(inv.id, { status: 'rejected' })}
-                        className="px-2 py-1 rounded border border-white/20 hover:bg-white/10"
-                        title="Ablehnen"
-                      >Ablehnen</button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

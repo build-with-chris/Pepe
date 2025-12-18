@@ -1,14 +1,11 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getSupabase } from '@/lib/supabase';
+import { put } from '@vercel/blob';
 import UploadSection from "./components/UploadSection";
 import RegisteredTable from "./components/RegisteredTable";
 import EarningsSummary from "./components/EarningsSummary";
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { DashboardCard } from '@/components/DashboardCard';
-
-// Konfiguration für den Storage-Bucket (default: invoices)
-const INVOICE_BUCKET = import.meta.env.VITE_SUPABASE_INVOICES_BUCKET || 'invoices';
 
 interface RequestItem {
   id: number;
@@ -58,7 +55,6 @@ export default function Buhaltung() {
   const [registered, setRegistered] = useState<RegisteredInvoice[]>([]);
   const [regError, setRegError] = useState<string | null>(null);
 
-  const [uid, setUid] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // 1) Eigenen Artist laden (für artistId)
@@ -82,23 +78,6 @@ export default function Buhaltung() {
     })();
     return () => { mounted = false; };
   }, [token]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const supabase = await getSupabase();
-        const { data, error } = await supabase.auth.getUser();
-        if (error) throw error;
-        if (!mounted) return;
-        setUid(data.user?.id ?? null);
-      } catch (e) {
-        console.error('❌ supabase.auth.getUser failed', e);
-        if (mounted) setUid(null);
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
 
   // 2) Eigene Anfragen laden (für Verdienstübersicht)
   useEffect(() => {
@@ -125,71 +104,26 @@ export default function Buhaltung() {
     return () => { mounted = false; };
   }, [token]);
 
-  // 3) Rechnungen aus dem Storage listen
-  const listInvoices = async (aid: number) => {
-    try {
-      const supabase = await getSupabase();
-      setInvError(null);
-      if (!uid) throw new Error('Kein Supabase-User erkannt');
-      const prefix = `user/${uid}`;
-      const { data, error } = await supabase.storage
-        .from(INVOICE_BUCKET)
-        .list(prefix, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-      if (error) throw error;
-
-      const items: InvoiceFile[] = [];
-      for (const f of data || []) {
-        const path = `${prefix}/${f.name}`;
-        // signierte URL (1h) – für Private Buckets
-        const { data: signed, error: signErr } = await supabase.storage
-          .from(INVOICE_BUCKET)
-          .createSignedUrl(path, 60 * 60);
-        if (signErr) {
-          console.warn('⚠️ createSignedUrl fehlgeschlagen, nutze publicUrl', signErr);
-          const { data: pub } = supabase.storage.from(INVOICE_BUCKET).getPublicUrl(path);
-          items.push({ name: f.name, url: pub.publicUrl, size: f.metadata?.size, created_at: f.created_at as any });
-        } else {
-          items.push({ name: f.name, url: signed.signedUrl, size: f.metadata?.size, created_at: f.created_at as any });
-        }
-      }
-      setInvoices(items);
-    } catch (e: any) {
-      console.error('❌ list invoices failed', e);
-      setInvError(e?.message || 'Rechnungen konnten nicht geladen werden');
-    }
-  };
-
+  // 3) Registrierte Rechnungen aus Backend laden
   const listRegistered = async () => {
     try {
       setRegError(null);
-      const supabase = await getSupabase();
       const baseUrl = import.meta.env.VITE_API_URL as string;
       const res = await fetch(`${baseUrl}/api/invoices`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.status === 204) { setRegistered([]); return; }
+      if (res.status === 204) { setRegistered([]); setInvoices([]); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const rows = (await res.json()) as RegisteredInvoice[];
+      setRegistered(rows);
 
-      // try to map each storage_path to a temporary signed URL (if it belongs to this uid)
-      if (uid) {
-        const enriched: RegisteredInvoice[] = [];
-        for (const r of rows) {
-          const path = r.storage_path;
-          if (path && path.startsWith(`user/${uid}/`)) {
-            try {
-              const { data: signed } = await supabase.storage
-                .from(INVOICE_BUCKET)
-                .createSignedUrl(path, 60 * 30);
-              (r as any).signed_url = signed?.signedUrl;
-            } catch {}
-          }
-          enriched.push(r);
-        }
-        setRegistered(enriched);
-      } else {
-        setRegistered(rows);
-      }
+      // Build invoice list from registered invoices (Vercel Blob URLs are public)
+      const items: InvoiceFile[] = rows.map(r => ({
+        name: r.storage_path.split('/').pop() || r.storage_path,
+        url: r.storage_path, // storage_path now stores the full Vercel Blob URL
+        created_at: r.created_at || undefined,
+      }));
+      setInvoices(items);
     } catch (e: any) {
       console.error('❌ list registered invoices failed', e);
       setRegError(e?.message || 'Registrierte Rechnungen konnten nicht geladen werden');
@@ -197,14 +131,13 @@ export default function Buhaltung() {
   };
 
   useEffect(() => {
-    if (artistId && uid) {
-      listInvoices(artistId);
+    if (artistId) {
       listRegistered();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistId, uid]);
+  }, [artistId]);
 
-  // Upload-Handler (PDF oder Bild)
+  // Upload-Handler (PDF oder Bild) - using Vercel Blob
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!artistId) return;
     const files = e.target.files;
@@ -212,25 +145,19 @@ export default function Buhaltung() {
     setUploading(true);
     setInvError(null);
     try {
-      const supabase = await getSupabase();
-      if (!uid) throw new Error('Kein Supabase-User erkannt');
-      const prefix = `user/${uid}`;
       const backendUrl = import.meta.env.VITE_API_URL as string;
 
       for (const file of Array.from(files)) {
-        const ext = (file.name.split('.').pop() || '').toLowerCase();
         const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
-        const path = `${prefix}/${safeName}`;
+        const pathname = `invoices/${artistId}/${safeName}`;
 
-        const { error: upErr } = await supabase.storage
-          .from(INVOICE_BUCKET)
-          .upload(path, file, {
-            contentType: file.type || (ext ? `application/${ext}` : 'application/octet-stream'),
-            upsert: false,
-          });
-        if (upErr) throw upErr;
+        // Upload to Vercel Blob
+        const { url } = await put(pathname, file, {
+          access: 'public',
+          contentType: file.type || 'application/octet-stream',
+        });
 
-        // OPTIONAL: Rechnung im Backend registrieren (falls Endpoint vorhanden)
+        // Register invoice in backend with the Blob URL as storage_path
         try {
           await fetch(`${backendUrl}/api/invoices`, {
             method: 'POST',
@@ -239,7 +166,7 @@ export default function Buhaltung() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              storage_path: path,
+              storage_path: url, // Store the full Vercel Blob URL
               amount_cents: amount ? Math.round(parseFloat(amount.replace(',', '.')) * 100) : undefined,
               currency: 'EUR',
               invoice_date: invoiceDate || undefined,
@@ -247,12 +174,11 @@ export default function Buhaltung() {
             }),
           });
         } catch (regErr) {
-          console.warn('⚠️ Backend-Registrierung der Rechnung fehlgeschlagen (optional):', regErr);
+          console.warn('⚠️ Backend-Registrierung der Rechnung fehlgeschlagen:', regErr);
         }
       }
-      if (artistId) await listInvoices(artistId);
       await listRegistered();
-      // optional: Felder zurücksetzen
+      // Reset form fields
       setAmount('');
       setInvoiceDate('');
       setNote('');
@@ -294,9 +220,8 @@ export default function Buhaltung() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Buchhaltung">
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">Money money money</h1>
 
         {/* Hidden file input (kept in Page to wire onChange to Supabase upload) */}
         <input
@@ -322,7 +247,7 @@ export default function Buhaltung() {
             invError={invError}
             canUpload={Boolean(artistId)}
             onPick={() => fileInputRef.current?.click()}
-            onRefreshList={() => artistId && listInvoices(artistId)}
+            onRefreshList={() => listRegistered()}
             invoices={invoices}
           />
         </DashboardCard>

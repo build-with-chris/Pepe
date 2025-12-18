@@ -1,8 +1,14 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
+import type { ReactNode } from "react";
 
-export function ProtectedRoute({ requiredRole }: { requiredRole?: string }) {
+interface ProtectedRouteProps {
+  requiredRole?: string;
+  children?: ReactNode;
+}
+
+export function ProtectedRoute({ requiredRole, children }: ProtectedRouteProps) {
   const { user, isLoaded, isSignedIn } = useAuth();
 
   // Show loader while Clerk is loading
@@ -27,5 +33,6 @@ export function ProtectedRoute({ requiredRole }: { requiredRole?: string }) {
     }
   }
 
-  return <Outlet />;
+  // Return children if provided, otherwise use Outlet for nested routes
+  return children ? <>{children}</> : <Outlet />;
 }

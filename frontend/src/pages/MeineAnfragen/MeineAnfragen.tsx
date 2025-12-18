@@ -175,9 +175,8 @@ const MeineAnfragen: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title={t('requests.title', { defaultValue: 'Meine Anfragen' })}>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">Stay up to date</h1>
 
         {/* Tabs */}
         <div className="flex gap-3">

@@ -81,21 +81,19 @@ const MyGigs: React.FC = () => {
   }, [gigs]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">{t('myGigs.title')}</h1>
-
+    <DashboardLayout title={t('myGigs.title')}>
+      <div className="space-y-8">
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-2" />
-            <span className="text-gray-400">{t('myGigs.loading')}</span>
+            <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
+            <span className="ml-3 text-gray-400">{t('myGigs.loading')}</span>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-6 py-4 text-red-300">
             {error}
           </div>
         )}
@@ -103,31 +101,31 @@ const MyGigs: React.FC = () => {
         {!loading && !error && (
           <>
             {/* Upcoming Gigs */}
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold text-white">{t('myGigs.upcoming')}</h2>
+            <section className="space-y-5">
+              <h2 className="text-lg font-semibold text-white">{t('myGigs.upcoming')}</h2>
               {upcoming.length === 0 ? (
-                <DashboardCard className="text-center py-8">
+                <DashboardCard className="text-center py-10">
                   <p className="text-gray-400">{t('myGigs.noUpcoming')}</p>
                 </DashboardCard>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {upcoming.map(g => {
                     const dt = parseEventDateTime(g.event_date, g.event_time);
                     return (
-                      <DashboardCard key={`up-${g.id}`} className="hover:border-white/20 transition-all">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <DashboardCard key={`up-${g.id}`} className="hover:border-[#D4A574]/30 transition-all p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                           <div>
-                            <div className="font-medium text-white">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
-                            <div className="text-sm text-gray-400">{g.client_name || ''}</div>
+                            <div className="font-medium text-white text-base">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
+                            <div className="text-sm text-gray-400 mt-1">{g.client_name || ''}</div>
                           </div>
-                          <div className="text-sm space-y-1">
+                          <div className="text-sm space-y-2">
                             <div className="flex items-center text-gray-300">
-                              <Calendar className="w-4 h-4 mr-2 text-blue-400" />
+                              <Calendar className="w-4 h-4 mr-3 text-[#D4A574]" />
                               {formatDateTimeDE(dt)}
                             </div>
                             {g.event_address && (
                               <div className="flex items-center text-gray-300">
-                                <MapPin className="w-4 h-4 mr-2 text-blue-400" />
+                                <MapPin className="w-4 h-4 mr-3 text-[#D4A574]" />
                                 {g.event_address}
                               </div>
                             )}
@@ -141,31 +139,31 @@ const MyGigs: React.FC = () => {
             </section>
 
             {/* Past Gigs */}
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold text-white">{t('myGigs.past')}</h2>
+            <section className="space-y-5">
+              <h2 className="text-lg font-semibold text-white">{t('myGigs.past')}</h2>
               {past.length === 0 ? (
-                <DashboardCard className="text-center py-8">
+                <DashboardCard className="text-center py-10">
                   <p className="text-gray-400">{t('myGigs.noPast')}</p>
                 </DashboardCard>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {past.map(g => {
                     const dt = parseEventDateTime(g.event_date, g.event_time);
                     return (
-                      <DashboardCard key={`past-${g.id}`} className="opacity-70 hover:opacity-100 transition-all">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <DashboardCard key={`past-${g.id}`} className="opacity-70 hover:opacity-100 transition-all p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                           <div>
-                            <div className="font-medium text-white">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
-                            <div className="text-sm text-gray-400">{g.client_name || ''}</div>
+                            <div className="font-medium text-white text-base">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
+                            <div className="text-sm text-gray-400 mt-1">{g.client_name || ''}</div>
                           </div>
-                          <div className="text-sm space-y-1">
+                          <div className="text-sm space-y-2">
                             <div className="flex items-center text-gray-400">
-                              <Calendar className="w-4 h-4 mr-2" />
+                              <Calendar className="w-4 h-4 mr-3" />
                               {formatDateTimeDE(dt)}
                             </div>
                             {g.event_address && (
                               <div className="flex items-center text-gray-400">
-                                <MapPin className="w-4 h-4 mr-2" />
+                                <MapPin className="w-4 h-4 mr-3" />
                                 {g.event_address}
                               </div>
                             )}

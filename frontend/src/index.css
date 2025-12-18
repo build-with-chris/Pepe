@@ -3,6 +3,9 @@
    Core styles and design system imports
    ======================================== */
 
+/* Tailwind CSS v4 */
+@import "tailwindcss";
+
 /* Import Design System */
 @import './styling/tokens.css';
 @import './styling/typography.css';
@@ -49,10 +52,37 @@ body.mobile-menu-open .hero-logo-doticon {
 
 /* ===== Universal Layout System ===== */
 
-/* Main content offset for fixed navbar */
-main {
+/* Main content offset for fixed navbar - only for public pages with Navigation */
+main:not(.dashboard-main) {
   flex: 1;
   padding-top: var(--navbar-height, 80px);
+}
+
+/* Dashboard main - no navbar padding */
+main.dashboard-main {
+  flex: 1;
+  padding-top: 0;
+}
+
+/* Dashboard main content area - offset for fixed sidebar on large screens */
+.main-content-area {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  .main-content-area {
+    margin-left: 260px;
+  }
+}
+
+/* Dashboard list items - remove default bullets */
+.dashboard-main ul {
+  list-style: none;
+}
+
+.dashboard-main li {
+  list-style: none;
 }
 
 /* Stage container - the main theater stage */

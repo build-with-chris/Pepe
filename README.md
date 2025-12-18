@@ -1,45 +1,103 @@
-# Pepe Booking Wizard 🧙‍♂️✨
+# Pepe Shows - Artist Booking Platform
 
-Willkommen beim Frontend-Projekt **pepe-frontend-app**!  
-Hier entsteht ein schicker, moderner **Buchungswizard**, der die Kommunikation mit unserem eigenen Backend übernimmt – voll automatisiert, voll in Style, voll React!
+A full-stack booking application for an artist agency with artist management, booking requests, and invoicing.
 
----
+## Tech Stack
 
-## 🔗 API-Anbindung
+### Frontend
+- React + TypeScript + Vite
+- Tailwind CSS + shadcn/ui
+- Clerk Authentication
+- Vercel Blob Storage (images/documents)
 
-Alle Daten holt sich diese App von unserer eigenen API:  
-👉 [Pepe Backend API Docs](https://pepe-backend-4nid.onrender.com/apidocs/#/)
+### Backend
+- Python Flask + SQLAlchemy
+- PostgreSQL (Render)
+- Clerk JWT verification
 
-Diese Schnittstelle wurde eigens programmiert und liefert alles, was der Wizard zum Leben braucht: Verfügbarkeiten, Anfragen, Buchungen & Co.
+## Project Structure
 
----
+```
+pepe-shows/
+├── frontend/          # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── lib/storage/  # Vercel Blob upload utils
+│   │   └── context/
+│   └── .env
+├── backend/           # Flask backend
+│   ├── routes/
+│   ├── models.py
+│   ├── app.py
+│   └── .env
+└── README.md
+```
 
-## 🛠️ Tech-Stack
+## Storage Structure (Vercel Blob)
 
-- ⚛️ **React**
-- 🧠 **TypeScript**
-- ⚡️ **Vite**
-- 🎨 **Tailwind CSS**
-- 🍄 **shadcn/ui** (für stylische Komponenten)
+```
+├── artists/{artistId}/profile.webp      # Profile image
+├── artists/{artistId}/hero.webp         # Hero/banner image
+├── artists/{artistId}/gallery/{ts}.webp # Gallery images
+└── invoices/{artistId}/{filename}       # Invoice documents
+```
 
----
+## Setup
 
-## 🚧 Was hier passieren wird
+### Prerequisites
+- Node.js 18+
+- Python 3.11+
+- PostgreSQL database (Render)
+- Clerk account
+- Vercel account with Blob storage
 
-Auf dieser Frontendseite bauen wir einen mehrstufigen Buchungsprozess mit:
+### Environment Variables
 
-1. **Datumsauswahl & Verfügbarkeit prüfen**
-2. **Künstler- und Showauswahl**
-3. **Kundendaten eingeben**
-4. **Zusammenfassung & Bestätigung**
-5. **Abschicken – boom! 🎉**
+**Frontend** (`frontend/.env`):
+```env
+VITE_API_URL=http://localhost:5001
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxx
+```
 
----
+**Backend** (`backend/.env`):
+```env
+CLERK_SECRET_KEY=sk_test_xxx
+DATABASE_URL=postgresql://user:pass@host:5432/db
+FLASK_ENV=development
+```
 
-## 📦 Installation & Entwicklung
+### Installation
 
 ```bash
-git clone https://github.com/dein-user/pepe-frontend-app.git
-cd pepe-frontend-app
-npm install
+# Install all dependencies
+npm run install:all
+
+# Start development (both frontend and backend)
 npm run dev
+
+# Or start separately:
+npm run dev:frontend  # Frontend on :5173
+npm run dev:backend   # Backend on :5001
+```
+
+## Deployment
+
+- **Frontend**: Vercel (auto-deploy from main branch)
+- **Backend**: Render
+- **Database**: Render PostgreSQL
+- **Storage**: Vercel Blob
+
+## API Documentation
+
+Swagger UI available at `/api-docs/` when backend is running.
+
+## Features
+
+- Artist profile management with image uploads
+- Booking request system
+- Availability calendar
+- Invoice management
+- Admin dashboard
+- Multi-language support (DE/EN)

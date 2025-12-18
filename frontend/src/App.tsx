@@ -9,6 +9,34 @@ import './i18n'
 // Lazy load Buhnenzauber - only when needed
 const Buhnenzauber = lazy(() => import('./components/Buhnenzauber'))
 
+// Routes that should NOT show public Navigation/Footer (dashboard routes)
+const DASHBOARD_ROUTES = [
+  '/admin',
+  '/profil',
+  '/profile',
+  '/profile-setup',
+  '/kalender',
+  '/calendar',
+  '/meine-gigs',
+  '/gigs',
+  '/meine-anfragen',
+  '/buchhaltung',
+  '/dashboard',
+  '/login',
+  '/signup',
+  '/anmelden',
+  '/registrieren',
+  '/carousel',
+  '/richtlinien',
+]
+
+// Check if current path is a dashboard route
+function isDashboardRoute(pathname: string): boolean {
+  return DASHBOARD_ROUTES.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
+  )
+}
+
 // Scroll to top on route change
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -46,6 +74,7 @@ const PendingGigs = lazy(() => import('./pages/PendingGigs'))
 const OfferEditPage = lazy(() => import('./pages/OfferEditPage'))
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'))
 const Kalender = lazy(() => import('./pages/Kalender'))
+const Richtlinien = lazy(() => import('./pages/Richtlinien'))
 const MyGigs = lazy(() => import('./pages/MyGigs'))
 const MeineAnfragen = lazy(() => import('./pages/MeineAnfragen/MeineAnfragen'))
 const Buchhaltung = lazy(() => import('./pages/Buchhaltung/Buchhaltung'))
@@ -78,160 +107,127 @@ const PageLoader = () => (
   </div>
 )
 
-function App() {
+// Layout wrapper that conditionally shows Navigation/Footer
+function AppLayout() {
+  const { pathname } = useLocation()
   const [showBuhnenzauber, setShowBuhnenzauber] = useState(false)
+  const showPublicLayout = !isDashboardRoute(pathname)
 
   // Defer Buhnenzauber loading until after initial render
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowBuhnenzauber(true)
-    }, 1000) // Load after 1 second delay
+    }, 1000)
     return () => clearTimeout(timer)
   }, [])
 
   return (
+    <>
+      {/* Buhnenzauber only on public pages */}
+      {showPublicLayout && showBuhnenzauber && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 999,
+          pointerEvents: 'none'
+        }}>
+          <Suspense fallback={null}>
+            <Buhnenzauber />
+          </Suspense>
+        </div>
+      )}
+
+      {/* Navigation only on public pages */}
+      {showPublicLayout && <Navigation />}
+
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Fullscreen carousel */}
+          <Route path="/carousel" element={<DisciplinesCarousel />} />
+
+          {/* Auth pages */}
+          <Route path="/login/*" element={<LoginForm />} />
+          <Route path="/signup/*" element={<SignUp />} />
+          <Route path="/anmelden/*" element={<LoginForm />} />
+          <Route path="/registrieren/*" element={<SignUp />} />
+
+          {/* Admin routes */}
+          <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
+          <Route path="/admin/kuenstler" element={<ProtectedRoute requiredRole="admin"><Artists /></ProtectedRoute>} />
+          <Route path="/admin/rechnungen" element={<ProtectedRoute requiredRole="admin"><Invoices /></ProtectedRoute>} />
+          <Route path="/admin/anstehende-gigs" element={<ProtectedRoute requiredRole="admin"><PendingGigs /></ProtectedRoute>} />
+          <Route path="/admin/requests/:reqId/offers/:offerId/edit" element={<ProtectedRoute requiredRole="admin"><OfferEditPage /></ProtectedRoute>} />
+          <Route path="/admin/artists" element={<ProtectedRoute requiredRole="admin"><Artists /></ProtectedRoute>} />
+
+          {/* Artist portal routes */}
+          <Route path="/profil" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
+          <Route path="/kalender" element={<ProtectedRoute><Kalender /></ProtectedRoute>} />
+          <Route path="/meine-gigs" element={<ProtectedRoute><MyGigs /></ProtectedRoute>} />
+          <Route path="/meine-anfragen" element={<ProtectedRoute><MeineAnfragen /></ProtectedRoute>} />
+          <Route path="/buchhaltung" element={<ProtectedRoute><Buchhaltung /></ProtectedRoute>} />
+          <Route path="/richtlinien" element={<ProtectedRoute><Richtlinien /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
+          <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
+          <Route path="/calendar" element={<ProtectedRoute><Kalender /></ProtectedRoute>} />
+          <Route path="/gigs" element={<ProtectedRoute><MyGigs /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/kuenstler" element={<Kuenstler />} />
+          <Route path="/shows" element={<Shows />} />
+          <Route path="/galerie" element={<Galerie />} />
+          <Route path="/kontakt" element={<Kontakt />} />
+          <Route path="/anfragen" element={<Anfragen />} />
+          <Route path="/mediamaterial" element={<Mediamaterial />} />
+          <Route path="/presskit" element={<Presskit />} />
+          <Route path="/pressemappe" element={<Pressemappe />} />
+          <Route path="/technical-rider" element={<TechnicalRider />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/agentur" element={<Agentur />} />
+
+          {/* Demo routes */}
+          <Route path="/demo/dotcloud" element={<DotCloudDemo />} />
+          <Route path="/demo/colors" element={<ColorDemo />} />
+
+          {/* PNG Generator utility */}
+          <Route path="/generate-pngs" element={<GeneratePNGs />} />
+
+          {/* SSO and onboarding routes */}
+          <Route path="/sso-callback" element={<SSOCallback />} />
+          <Route path="/kuenstler-richtlinien" element={<ArtistGuidlines />} />
+          <Route path="/onboarding" element={<ArtistGuidlines />} />
+          <Route path="/artist-guidelines" element={<ArtistGuidlines />} />
+
+          {/* Legal pages */}
+          <Route path="/impressum" element={<Impressum />} />
+          <Route path="/datenschutz" element={<Datenschutz />} />
+          <Route path="/agb" element={<AGB />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/imprint" element={<Imprint />} />
+          <Route path="/terms" element={<Terms />} />
+
+          {/* 404 fallback */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+
+      {/* Footer only on public pages */}
+      {showPublicLayout && <Footer />}
+    </>
+  )
+}
+
+function App() {
+  return (
     <div className="min-h-screen">
       <ScrollToTop />
-      <Routes>
-        {/* Fullscreen carousel - no nav/footer */}
-        <Route path="/carousel" element={
-          <Suspense fallback={<PageLoader />}>
-            <DisciplinesCarousel />
-          </Suspense>
-        } />
-
-        {/* Regular pages with nav/footer */}
-        <Route path="*" element={
-          <>
-            {showBuhnenzauber && (
-              <div style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                zIndex: 999,
-                pointerEvents: 'none'
-              }}>
-                <Suspense fallback={null}>
-                  <Buhnenzauber />
-                </Suspense>
-              </div>
-            )}
-            <Navigation />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/kuenstler" element={<Kuenstler />} />
-                <Route path="/shows" element={<Shows />} />
-                <Route path="/galerie" element={<Galerie />} />
-                <Route path="/kontakt" element={<Kontakt />} />
-                <Route path="/anfragen" element={<Anfragen />} />
-                <Route path="/mediamaterial" element={<Mediamaterial />} />
-                <Route path="/presskit" element={<Presskit />} />
-                <Route path="/pressemappe" element={<Pressemappe />} />
-                <Route path="/technical-rider" element={<TechnicalRider />} />
-                <Route path="/team" element={<Team />} />
-                <Route path="/agentur" element={<Agentur />} />
-
-              {/* Demo routes */}
-              <Route path="/demo/dotcloud" element={<DotCloudDemo />} />
-              <Route path="/demo/colors" element={<ColorDemo />} />
-
-              {/* PNG Generator utility */}
-              <Route path="/generate-pngs" element={<GeneratePNGs />} />
-
-              {/* Authentication routes - use working components */}
-              <Route path="/anmelden/*" element={<LoginForm />} />
-              <Route path="/registrieren/*" element={<SignUp />} />
-              <Route path="/sso-callback" element={<SSOCallback />} />
-              <Route path="/kuenstler-richtlinien" element={<ArtistGuidlines />} />
-              <Route path="/onboarding" element={<ArtistGuidlines />} />
-
-              {/* Legacy English routes for backwards compatibility */}
-              <Route path="/login/*" element={<LoginForm />} />
-              <Route path="/signup/*" element={<SignUp />} />
-              <Route path="/artist-guidelines" element={<ArtistGuidlines />} />
-
-              {/* Admin routes (protected) */}
-              <Route path="/admin" element={<ProtectedRoute requiredRole="admin" />}>
-                <Route index element={<Admin />} />
-              </Route>
-              <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin" />}>
-                <Route index element={<Admin />} />
-              </Route>
-              <Route path="/admin/kuenstler" element={<ProtectedRoute requiredRole="admin" />}>
-                <Route index element={<Artists />} />
-              </Route>
-              <Route path="/admin/rechnungen" element={<ProtectedRoute requiredRole="admin" />}>
-                <Route index element={<Invoices />} />
-              </Route>
-              <Route path="/admin/anstehende-gigs" element={<ProtectedRoute requiredRole="admin" />}>
-                <Route index element={<PendingGigs />} />
-              </Route>
-              <Route path="/admin/requests/:reqId/offers/:offerId/edit" element={<ProtectedRoute requiredRole="admin" />}>
-                <Route index element={<OfferEditPage />} />
-              </Route>
-
-              {/* Legacy admin routes */}
-              <Route path="/admin/artists" element={<ProtectedRoute requiredRole="admin" />}>
-                <Route index element={<Artists />} />
-              </Route>
-
-              {/* User profile routes (protected) - German names */}
-              <Route path="/profil" element={<ProtectedRoute />}>
-                <Route index element={<ProfileSetup />} />
-              </Route>
-              <Route path="/kalender" element={<ProtectedRoute />}>
-                <Route index element={<Kalender />} />
-              </Route>
-              <Route path="/meine-gigs" element={<ProtectedRoute />}>
-                <Route index element={<MyGigs />} />
-              </Route>
-              <Route path="/meine-anfragen" element={<ProtectedRoute />}>
-                <Route index element={<MeineAnfragen />} />
-              </Route>
-              <Route path="/buchhaltung" element={<ProtectedRoute />}>
-                <Route index element={<Buchhaltung />} />
-              </Route>
-
-              {/* Legacy English routes for backwards compatibility */}
-              <Route path="/profile" element={<ProtectedRoute />}>
-                <Route index element={<ProfileSetup />} />
-              </Route>
-              <Route path="/profile-setup" element={<ProtectedRoute />}>
-                <Route index element={<ProfileSetup />} />
-              </Route>
-              <Route path="/calendar" element={<ProtectedRoute />}>
-                <Route index element={<Kalender />} />
-              </Route>
-              <Route path="/gigs" element={<ProtectedRoute />}>
-                <Route index element={<MyGigs />} />
-              </Route>
-
-              {/* Legacy dashboard */}
-              <Route path="/dashboard" element={<Dashboard />} />
-
-              {/* Legal pages - German versions */}
-              <Route path="/impressum" element={<Impressum />} />
-              <Route path="/datenschutz" element={<Datenschutz />} />
-              <Route path="/agb" element={<AGB />} />
-
-              {/* Legacy legal pages - English versions */}
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/imprint" element={<Imprint />} />
-              <Route path="/terms" element={<Terms />} />
-
-                {/* 404 fallback */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            <Footer />
-          </>
-        } />
-      </Routes>
+      <AppLayout />
     </div>
   )
 }
