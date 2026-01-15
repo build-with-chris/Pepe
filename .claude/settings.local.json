@@ -32,7 +32,13 @@
       "Bash(lsof:*)",
       "Bash(source .venv/bin/activate)",
       "Bash(python app.py:*)",
-      "Bash(xargs kill -9)"
+      "Bash(xargs kill -9)",
+      "Bash(python -c:*)",
+      "Bash(npx clerk --help:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(python -m pytest tests/test_crud_operations.py -v --tb=short --ignore-glob='*pagination*' -k 'not pagination')",
+      "Bash(python -m pytest:*)"
     ],
     "deny": [],
     "ask": []
