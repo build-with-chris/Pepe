@@ -1,55 +1,46 @@
-import path from "path";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
-import { cloudflare } from "@cloudflare/vite-plugin";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
-
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), cloudflare()],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // Workaround für Porsche Cookie Banner Loader
-      "@porscheofficial/cookie-consent-banner/loader":
-        "@porscheofficial/cookie-consent-banner/dist/loader",
     },
   },
-  optimizeDeps: {
-    include: ["react", "react-dom", "@porscheofficial/cookie-consent-banner-react"],
-    exclude: [
-      // Damit esbuild den fehlerhaften Entry nicht anfasst
-      "@porscheofficial/cookie-consent-banner/loader",
-      // Analytics nicht vorab pre-bundlen – wird on-demand geladen
-      "posthog-js",
-    ],
+  server: {
+    port: 5173
   },
   build: {
-    sourcemap: false,
-    cssCodeSplit: true,
-    modulePreload: { polyfill: false },
+    // Optimize chunk splitting
     rollupOptions: {
       output: {
         manualChunks: {
-          // Split heavy deps into their own async chunks
-          recharts: ["recharts"],
-          radix: [
-            "@radix-ui/react-tooltip",
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-popover",
-            "@radix-ui/react-toggle-group",
-          ],
-          supabase: ["@supabase/supabase-js"],
-          ui_misc: ["sonner"],
-          react: ["react", "react-dom"],
-          motion: ["framer-motion"],
-          embla: ["embla-carousel", "embla-carousel-autoplay"],
-          i18n: ["i18next", "react-i18next"],
-        },
-      },
+          // Separate vendor chunks
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'i18n': ['react-i18next', 'i18next'],
+          // Heavy components in separate chunks
+          'ui-components': [
+            './src/components/ui/DotCloudImage.tsx',
+            './src/components/FloatingDisciplines.tsx'
+          ]
+        }
+      }
     },
-    // Only a warning threshold; actual size optimised via lazy routes + vendor chunks
-    chunkSizeWarningLimit: 1500,
-  },
-});
+    // Enable minification and tree-shaking
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.logs in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug']
+      }
+    },
+    // Optimize chunk size
+    chunkSizeWarningLimit: 600,
+    // CSS code splitting
+    cssCodeSplit: true
+  }
+})

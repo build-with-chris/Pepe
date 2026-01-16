@@ -1,65 +1,85 @@
-/** Returns a Date in local time from a YYYY-MM-DD string. Returns null if invalid. */
-export function toLocalDate(iso: string | null | undefined): Date | null {
-  if (!iso || typeof iso !== 'string') return null;
-  const parts = iso.split('-');
-  if (parts.length !== 3) return null;
-  const [yStr, mStr, dStr] = parts;
-  const y = Number(yStr);
-  const m = Number(mStr);
-  const d = Number(dStr);
-  if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return null;
-  if (y < 1000 || m < 1 || m > 12 || d < 1 || d > 31) return null;
-  const dt = new Date(y, m - 1, d);
-  // Validate round-trip to guard against things like 2025-02-31
-  return (
-    dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d
-  ) ? dt : null;
-}
+// Calendar utility functions for date handling
 
-/** Formats a Date to YYYY-MM-DD in local time. Returns empty string if invalid. */
-export function formatISODate(date: Date | null | undefined): string {
-  if (!(date instanceof Date) || isNaN(date.getTime())) return '';
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-/** Returns an inclusive array of dates from start to end (local). */
-export function getDateRange(start: Date, end: Date): Date[] {
-  if (!(start instanceof Date) || isNaN(start.getTime())) return [];
-  if (!(end instanceof Date) || isNaN(end.getTime())) return [];
-  const from = start <= end ? start : end;
-  const to = start <= end ? end : start;
-  const days: Date[] = [];
-  const cur = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-  const stop = new Date(to.getFullYear(), to.getMonth(), to.getDate());
-  while (cur <= stop) {
-    days.push(new Date(cur));
-    cur.setDate(cur.getDate() + 1);
+export function toLocalDate(dateInput: Date | string): Date {
+  if (typeof dateInput === 'string') {
+    // Parse ISO date string to local date
+    const date = new Date(dateInput);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   }
-  return days;
+  return new Date(dateInput);
 }
 
-/** True if a value is a valid Date object. */
-export function isValidDate(value: unknown): value is Date {
-  return value instanceof Date && !isNaN(value.getTime());
+export function formatISODate(date: Date): string {
+  // Format date as ISO string (YYYY-MM-DD)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-/** Adds days to a date and returns a new Date (does not mutate input). */
+export function parseISODate(isoString: string): Date {
+  // Parse ISO date string (YYYY-MM-DD) to Date object
+  const [year, month, day] = isoString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function formatDisplayDate(date: Date, locale = 'en-US'): string {
+  // Format date for display purposes
+  return date.toLocaleDateString(locale, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+export function formatTime(date: Date, locale = 'en-US'): string {
+  // Format time for display purposes
+  return date.toLocaleTimeString(locale, {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+export function isToday(date: Date): boolean {
+  const today = new Date();
+  return formatISODate(date) === formatISODate(today);
+}
+
+export function isSameDay(date1: Date, date2: Date): boolean {
+  return formatISODate(date1) === formatISODate(date2);
+}
+
 export function addDays(date: Date, days: number): Date {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  d.setDate(d.getDate() + days);
-  return d;
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
 }
 
-/** Clamp a date range to a maximum number of days. */
-export function clampRange(start: Date, end: Date, maxDays = 366): { start: Date; end: Date } {
-  const asc = start <= end;
-  const from = asc ? start : end;
-  const to = asc ? end : start;
-  const ms = to.getTime() - from.getTime();
-  const maxMs = maxDays * 24 * 60 * 60 * 1000;
-  if (ms <= maxMs) return { start: from, end: to };
-  return { start: from, end: addDays(from, maxDays) };
+export function startOfWeek(date: Date): Date {
+  const result = new Date(date);
+  const day = result.getDay();
+  const diff = result.getDate() - day;
+  result.setDate(diff);
+  return result;
+}
+
+export function endOfWeek(date: Date): Date {
+  const result = startOfWeek(date);
+  result.setDate(result.getDate() + 6);
+  return result;
+}
+
+export function getDateRange(startDate: Date, endDate: Date): Date[] {
+  // Generate array of dates between start and end (inclusive)
+  const dates: Date[] = [];
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+  
+  while (current <= end) {
+    dates.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return dates;
 }

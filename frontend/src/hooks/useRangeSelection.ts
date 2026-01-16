@@ -1,121 +1,59 @@
+import { useState, useCallback } from 'react';
 
+interface UseRangeSelectionOptions {
+  disabledBefore?: Date;
+}
 
-import { useCallback, useMemo, useState } from "react";
-
-export type UseRangeSelectionOptions = {
-  /** Prevent selecting dates before this (e.g., startOfToday) */
-  disabledBefore?: Date | null;
-  /** Notify whenever the selection changes */
-  onChange?: (start: Date | null, end: Date | null) => void;
-};
-
-export type UseRangeSelection = {
+interface UseRangeSelectionReturn {
   rangeStart: Date | null;
   rangeEnd: Date | null;
-  /** sets start (normalizes time to midnight) */
-  setRangeStart: (d: Date | null) => void;
-  /** sets end (normalizes time to midnight) */
-  setRangeEnd: (d: Date | null) => void;
-  /** clear selection */
-  resetRange: () => void;
-  /** click handler you can pass to the calendar */
+  setRangeStart: (date: Date | null) => void;
+  setRangeEnd: (date: Date | null) => void;
   handleDayClick: (date: Date) => void;
-};
-
-function stripTime(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
 }
 
-function isSameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
+const useRangeSelection = (options: UseRangeSelectionOptions = {}): UseRangeSelectionReturn => {
+  const [rangeStart, setRangeStart] = useState<Date | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
 
-function isBefore(a: Date, b: Date) {
-  return stripTime(a).getTime() < stripTime(b).getTime();
-}
+  const handleDayClick = useCallback((date: Date) => {
+    // Check if date is disabled
+    if (options.disabledBefore && date < options.disabledBefore) {
+      return;
+    }
 
-/**
- * Hook to manage a simple two-click range selection
- * Behavior:
- *  - 1st click sets start
- *  - 2nd click sets end (if before start, it swaps so start <= end)
- *  - 3rd click starts a new range beginning at the clicked day
- *  - clicking the same day twice makes a 1-day range (start === end)
- */
-export function useRangeSelection(options: UseRangeSelectionOptions = {}): UseRangeSelection {
-  const { disabledBefore = null, onChange } = options;
-
-  const [rangeStart, _setStart] = useState<Date | null>(null);
-  const [rangeEnd, _setEnd] = useState<Date | null>(null);
-
-  const setRangeStart = useCallback((d: Date | null) => {
-    const v = d ? stripTime(d) : null;
-    _setStart(v);
-    if (onChange) onChange(v, rangeEnd);
-  }, [onChange, rangeEnd]);
-
-  const setRangeEnd = useCallback((d: Date | null) => {
-    const v = d ? stripTime(d) : null;
-    _setEnd(v);
-    if (onChange) onChange(rangeStart, v);
-  }, [onChange, rangeStart]);
-
-  const resetRange = useCallback(() => {
-    _setStart(null);
-    _setEnd(null);
-    if (onChange) onChange(null, null);
-  }, [onChange]);
-
-  const handleDayClick = useCallback((day: Date) => {
-    const date = stripTime(day);
-
-    // guard: ignore disabled dates
-    if (disabledBefore && isBefore(date, disabledBefore)) return;
-
-    // no start yet → set start
-    if (!rangeStart && !rangeEnd) {
+    // If no range start, set it
+    if (!rangeStart) {
       setRangeStart(date);
+      setRangeEnd(null);
       return;
     }
 
-    // start set, end not set → set end (normalize order, allow same-day range)
+    // If range start exists but no end, set end
     if (rangeStart && !rangeEnd) {
-      if (isSameDay(date, rangeStart)) {
-        setRangeEnd(rangeStart); // 1-day range
-        return;
+      // Ensure end is after start
+      if (date >= rangeStart) {
+        setRangeEnd(date);
+      } else {
+        // If clicking before start, reset and use as new start
+        setRangeStart(date);
+        setRangeEnd(null);
       }
-      if (isBefore(date, rangeStart)) {
-        // swap so start <= end
-        _setEnd(rangeStart);
-        _setStart(date);
-        if (onChange) onChange(date, rangeStart);
-        return;
-      }
-      setRangeEnd(date);
       return;
     }
 
-    // both set → start a new selection beginning at clicked date
-    _setStart(date);
-    _setEnd(null);
-    if (onChange) onChange(date, null);
-  }, [disabledBefore, onChange, rangeStart, rangeEnd, setRangeStart, setRangeEnd]);
+    // If both start and end exist, reset and start new selection
+    setRangeStart(date);
+    setRangeEnd(null);
+  }, [rangeStart, rangeEnd, options.disabledBefore]);
 
-  // memoize return to keep referential stability in consumers
-  return useMemo(() => ({
+  return {
     rangeStart,
     rangeEnd,
     setRangeStart,
     setRangeEnd,
-    resetRange,
     handleDayClick,
-  }), [rangeStart, rangeEnd, setRangeStart, setRangeEnd, resetRange, handleDayClick]);
-}
+  };
+};
 
 export default useRangeSelection;

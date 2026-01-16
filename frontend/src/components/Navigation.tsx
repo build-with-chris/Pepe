@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import logoIcon from '../assets/Logos/icon_pepe.svg'
+import { useAuth, UserButton, useUser } from '@clerk/clerk-react'
 
 interface NavigationProps {
   className?: string
@@ -12,6 +12,8 @@ export default function Navigation({ className = '' }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
   const { t, i18n } = useTranslation()
+  const { isSignedIn, isLoaded } = useAuth()
+  const { user } = useUser()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,7 +23,18 @@ export default function Navigation({ className = '' }: NavigationProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const navLinks = [
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.classList.add('mobile-menu-open')
+    } else {
+      document.body.classList.remove('mobile-menu-open')
+    }
+    return () => {
+      document.body.classList.remove('mobile-menu-open')
+    }
+  }, [isMobileMenuOpen])
+
+  const publicLinks = [
     { href: '/', label: t('nav.home') },
     { href: '/kuenstler', label: t('nav.artists') },
     { href: '/shows', label: t('nav.shows') },
@@ -35,84 +48,32 @@ export default function Navigation({ className = '' }: NavigationProps) {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`nav fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'backdrop-blur-md bg-black/90' : 'bg-transparent'
       } ${className}`}
-      style={{
-        height: '80px',
-      } as React.CSSProperties}
+      style={{ '--navbar-height': '80px' } as React.CSSProperties}
     >
-      <div
-        className="max-w-6xl mx-auto px-4"
-      >
-        <div className="flex items-center justify-between h-full">
-          {/* Enhanced Logo Section */}
-          <div>
-            <Link
-              to="/"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                textDecoration: 'none',
-                color: '#FFFFFF'
-              }}
-            >
-              {/* Logo SVG */}
+      <div className="stage-container">
+        <div className="nav-content">
+          {/* Logo */}
+          <div className="nav-brand">
+            <Link to="/" className="nav-brand-link">
               <img
-                src={logoIcon}
-                alt="Pepe Logo"
-                style={{
-                  width: '32px',
-                  height: '32px'
-                }}
+                src="/logos/SVG/PEPE_logos_shows.svg"
+                alt="Pepe Shows Logo"
+                className="nav-logo-svg"
+                style={{ height: '80px', width: 'auto' }}
               />
-
-              {/* Pepe Text */}
-              <span
-                style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 'bold',
-                  color: '#FFFFFF',
-                  fontFamily: "'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-                }}
-              >
-                PEPE
-              </span>
-
-              {/* Shows Text */}
-              <span
-                style={{
-                  fontSize: '1rem',
-                  fontWeight: 'normal',
-                  color: '#D4A574',
-                  fontFamily: "'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-                }}
-              >
-                SHOWS
-              </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex gap-4">
-            {navLinks.map((link) => (
+          <div className="nav-links">
+            {publicLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                style={{
-                  padding: '0.5rem 1rem',
-                  textDecoration: 'none',
-                  color: location.pathname === link.href ? '#D4A574' : '#FFFFFF',
-                  fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-                  transition: 'color 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#D4A574'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = location.pathname === link.href ? '#D4A574' : '#FFFFFF'
-                }}
+                className={`nav-link ${location.pathname === link.href ? 'active' : ''}`}
               >
                 {link.label}
               </Link>
@@ -120,73 +81,66 @@ export default function Navigation({ className = '' }: NavigationProps) {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4">
-            {/* Compact Language Switch - Show only inactive choice */}
-            <button
-              onClick={() => changeLanguage(i18n.language === 'de' ? 'en' : 'de')}
-              style={{
-                padding: '0.25rem 0.5rem',
-                fontSize: '0.875rem',
-                background: 'transparent',
-                border: '1px solid #374151',
-                color: '#FFFFFF',
-                borderRadius: '0.375rem',
-                fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#D4A574'
-                e.currentTarget.style.color = '#D4A574'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#374151'
-                e.currentTarget.style.color = '#FFFFFF'
-              }}
-            >
-              {i18n.language === 'de' ? 'EN' : 'DE'}
-            </button>
+          <div className="nav-actions">
+            {/* Language Switch */}
+            <div className="nav-language-compact">
+              <button
+                onClick={() => changeLanguage(i18n.language === 'de' ? 'en' : 'de')}
+                className="lang-btn-compact"
+              >
+                {i18n.language === 'de' ? 'EN' : 'DE'}
+              </button>
+            </div>
 
-            <Link
-              to="/anfragen"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0.375rem 0.75rem',
-                fontSize: '0.875rem',
-                background: '#B8860B',
-                color: '#000000',
-                textDecoration: 'none',
-                borderRadius: '1rem',
-                fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-                fontWeight: '600',
-                transition: 'all 0.3s ease',
-                border: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#C69315'
-                e.currentTarget.style.color = '#FFFFFF'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#B8860B'
-                e.currentTarget.style.color = '#000000'
-                e.currentTarget.style.transform = 'translateY(0)'
-              }}
-            >
-              {t('nav.booking')}
-            </Link>
+            {/* Auth Section */}
+            {isLoaded && isSignedIn ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/profil"
+                  className="nav-link text-sm"
+                >
+                  {t('nav.profile', 'Profil')}
+                </Link>
+                {(user?.publicMetadata as any)?.role === 'shows-admin' && (
+                  <Link
+                    to="/admin"
+                    className="nav-link text-sm text-[#D4A574]"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8",
+                      userButtonPopoverCard: "bg-[#1A1A1A] border border-[#333]",
+                      userButtonPopoverActionButton: "text-white hover:bg-white/10",
+                      userButtonPopoverActionButtonText: "text-white",
+                      userButtonPopoverFooter: "hidden",
+                    }
+                  }}
+                />
+              </div>
+            ) : isLoaded ? (
+              <div className="flex items-center gap-2">
+                <Link to="/login" className="nav-link text-sm">
+                  Login
+                </Link>
+                <Link to="/anfragen" className="btn btn-primary btn-xs">
+                  {t('nav.booking')}
+                </Link>
+              </div>
+            ) : null}
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="block md:hidden p-2 text-white"
+            className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Menu öffnen"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         </div>
@@ -194,59 +148,112 @@ export default function Navigation({ className = '' }: NavigationProps) {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-60 md:hidden">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className="fixed right-0 top-0 h-full w-4/5 max-w-sm bg-neutral-900 border-l border-white/10">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h3 className="text-xl font-bold text-white">Menu</h3>
+        <div className="mobile-menu-overlay">
+          <div className="mobile-menu-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="mobile-menu-content">
+            <div className="mobile-menu-header">
+              <Link to="/" className="nav-brand-link" onClick={() => setIsMobileMenuOpen(false)}>
+                <img
+                  src="/logos/SVG/PEPE_logos_shows.svg"
+                  alt="Pepe Logo"
+                  className="nav-logo-svg"
+                  style={{ height: '40px' }}
+                />
+              </Link>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 text-white"
+                className="mobile-menu-close"
                 aria-label="Menu schließen"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M6 18l12-12" />
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`block text-lg py-2 text-white hover:text-yellow-300 transition-colors ${location.pathname === link.href ? 'text-yellow-300' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <div className="mobile-menu-body">
+              <nav className="mobile-menu-nav">
+                {publicLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className={`mobile-menu-link ${location.pathname === link.href ? 'active' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+
+                {/* Auth links for mobile */}
+                {isLoaded && isSignedIn ? (
+                  <>
+                    <Link
+                      to="/profil"
+                      className="mobile-menu-link"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {t('nav.profile', 'Mein Profil')}
+                    </Link>
+                    {(user?.publicMetadata as any)?.role === 'shows-admin' && (
+                      <Link
+                        to="/admin"
+                        className="mobile-menu-link text-[#D4A574]"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
+                  </>
+                ) : isLoaded ? (
+                  <Link
+                    to="/login"
+                    className="mobile-menu-link"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                ) : null}
+              </nav>
 
               {/* Mobile Language Switch */}
-              <div className="pt-4 border-t border-white/10">
-                <div className="mb-3">
-                  <span className="text-sm text-gray-400">{t('nav.language')}</span>
-                </div>
-                <div className="flex gap-2">
+              <div className="mobile-menu-language">
+                <span className="mobile-menu-language-label">{t('nav.language')}</span>
+                <div className="mobile-menu-language-buttons">
                   <button
                     onClick={() => changeLanguage('de')}
-                    className={`px-3 py-1 rounded text-sm ${i18n.language === 'de' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                    className={`mobile-menu-lang-btn ${i18n.language === 'de' ? 'active' : ''}`}
                   >
                     Deutsch
                   </button>
-                  <span className="text-gray-500">|</span>
+                  <span className="mobile-menu-lang-separator">|</span>
                   <button
                     onClick={() => changeLanguage('en')}
-                    className={`px-3 py-1 rounded text-sm ${i18n.language === 'en' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                    className={`mobile-menu-lang-btn ${i18n.language === 'en' ? 'active' : ''}`}
                   >
                     English
                   </button>
                 </div>
               </div>
 
-              <div className="pt-6 space-y-3">
-                <Link to="/anfragen" className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center px-4 py-2 rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                  {t('nav.booking')}
-                </Link>
+              <div className="mobile-menu-cta">
+                {isLoaded && isSignedIn ? (
+                  <div className="flex items-center justify-center gap-4">
+                    <UserButton
+                      appearance={{
+                        elements: {
+                          avatarBox: "w-10 h-10",
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Link
+                    to="/anfragen"
+                    className="btn btn-primary btn-lg mobile-menu-cta-btn"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {t('nav.booking')}
+                  </Link>
+                )}
               </div>
             </div>
           </div>

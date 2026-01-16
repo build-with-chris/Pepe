@@ -1,0 +1,8 @@
+name = "pepeshows-de-production"
+main = "_worker.js"
+compatibility_date = "2025-11-07"
+workers_dev = true
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"

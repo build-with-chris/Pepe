@@ -53,38 +53,70 @@
     }
   },
   "artists": {
-  "quote": "Wo Kunst zu Magie wird",
-  "filters": { "all": "Alle" },
-  "results_one": "{{count}} Ergebnis",
-  "results_other": "{{count}} Ergebnisse",
-  "loading": "Lade Künstler…",
-  "empty": "Noch keine Künstler verfügbar.",
-  "disciplines": {
-    "zauberer": "Zauberer",
-    "cyrWheel": "Cyr-Wheel",
-    "bodenakrobatik": "Bodenakrobatik",
-    "luftakrobatik": "Luftakrobatik",
-    "partnerakrobatik": "Partnerakrobatik",
-    "chinesePole": "Chinese Pole",
-    "hulaHoop": "Hula Hoop",
-    "handstand": "Handstand",
-    "contemporaryDance": "Contemporary Dance",
-    "breakdance": "Breakdance",
-    "teeterboard": "Teeterboard",
-    "jonglage": "Jonglage",
-    "moderation": "Moderation",
-    "pantomime": "Pantomime",
-    "feuershow": "Feuershow",
-    "clown": "Clown",
-    "_fallback_note": "Diese Keys sind Beispiele. Ergänze hier eure echten Disziplin-Bezeichnungen.",
-    "Cyr-Wheel": "Cyr-Wheel",
-    "Jonglage": "Jonglage"
+    "quote": "Weltklasse-Künstler mit internationaler Erfahrung.",
+    "filters": { "all": "Alle" },
+    "results": "{{count}} Ergebnisse",
+    "results_one": "{{count}} Ergebnis",
+    "results_other": "{{count}} Ergebnisse",
+    "loading": "Lade Künstler…",
+    "empty": "Noch keine Künstler verfügbar.",
+    "sectionTitle": "Unsere Künstler",
+    "sectionSubtitle": "Lernen Sie die talentierten Persönlichkeiten kennen, die unsere Vision zum Leben erwecken.",
+    "filterByDiscipline": "Nach Disziplin filtern",
+    "noResultsFor": "Keine Künstler für \"{{discipline}}\" gefunden",
+    "showAll": "Alle Künstler anzeigen",
+    "disciplinesTitle": "Unsere Disziplinen",
+    "disciplinesSubtitle": "Von klassischer Akrobatik bis zu modernen Performances – unsere Künstler beherrschen ein breites Spektrum an Disziplinen.",
+    "ctaKicker": "BEREIT FÜR IHR EVENT?",
+    "ctaTitle": "Den passenden Künstler finden",
+    "ctaSubtitle": "Nutzen Sie unseren Booking-Assistenten für eine maßgeschneiderte Künstlerempfehlung oder kontaktieren Sie uns direkt.",
+    "ctaContact": "Direkter Kontakt",
+    "title": "Künstlerverwaltung (Admin)",
+    "subtitle": "Übersicht aller Artists mit Status & Details",
+    "search": "Suche nach Name…",
+    "allStatus": "Alle Status",
+    "onlyPending": "Nur Pending",
+    "onlyApproved": "Nur Approved",
+    "onlyRejected": "Nur Rejected",
+    "onlyUnsubmitted": "Nur Unsubmitted",
+    "pendingFirst": "Pending zuerst",
+    "noImage": "Kein Bild",
+    "deleteArtist": "Artist löschen",
+    "deleteConfirm": "Artist \"{{name}}\" wirklich löschen?",
+    "noBio": "Keine Bio hinterlegt.",
+    "approve": "Approve",
+    "close": "Schließen",
+    "contactData": "Kontaktdaten",
+    "statusInfo": "Status",
+    "priceRange": "Preisrahmen",
+    "availability": "Verfügbarkeiten",
+    "noSlots": "— keine Slots —",
+    "gallery": "Galerie",
+    "noProfile": "Kein Profilbild",
+    "disciplines": {
+      "zauberer": "Zauberer",
+      "cyrWheel": "Cyr-Wheel",
+      "bodenakrobatik": "Bodenakrobatik",
+      "luftakrobatik": "Luftakrobatik",
+      "partnerakrobatik": "Partnerakrobatik",
+      "chinesePole": "Chinese Pole",
+      "hulaHoop": "Hula Hoop",
+      "handstand": "Handstand",
+      "contemporaryDance": "Contemporary Dance",
+      "breakdance": "Breakdance",
+      "teeterboard": "Teeterboard",
+      "jonglage": "Jonglage",
+      "moderation": "Moderation",
+      "pantomime": "Pantomime",
+      "_fallback_note": "Diese Keys sind Beispiele. Ergänze hier eure echten Disziplin-Bezeichnungen.",
+      "Cyr-Wheel": "Cyr-Wheel",
+      "Jonglage": "Jonglage"
+    },
+    "disciplinesShort": {
+      "contemporaryDance": "Contemporary",
+      "pantomimeEntertainment": "Pantomime"
+    }
   },
-  "disciplinesShort": {
-    "contemporaryDance": "Contemporary",
-    "pantomimeEntertainment": "Pantomime"
-  }
-},
   "bento1": {
     "hero": {
       "title": "Pepe Shows, die begeistern."
@@ -198,14 +230,6 @@
       "pantomimeEntertainment": {
         "label": "Pantomime",
         "description": "Wortlose Unterhaltung, Comedy und Interaktion."
-      },
-      "feuershow": {
-        "label": "Feuershow",
-        "description": "Spektakuläre Feuerdarbietungen und pyrotechnische Effekte."
-      },
-      "clown": {
-        "label": "Clown",
-        "description": "Humorvolle Darbietungen und interaktive Unterhaltung."
       }
     }
   },
@@ -563,6 +587,29 @@
     "cta": "Lass uns reden",
     "images": { "1": "Gala-Abende", "2": "Jubiläen", "3": "Corporate events", "4": "Festivals", "5": "LED Shows" }
   },
+  "gallery": {
+    "subtitle": "Entdecke unsere Künstler in Aktion",
+    "accordion": {
+      "artists": {
+        "title": "Vorhang auf für unsere Artisten",
+        "content": "Erleben Sie die faszinierende Welt des Zirkus und der Artistik. Unsere talentierten Künstler bringen Magie, Eleganz und Spannung auf jede Bühne. Von atemberaubender Akrobatik bis hin zu poetischen Pantomime-Aufführungen – jede Performance ist ein einzigartiges Erlebnis."
+      },
+      "ensemble": {
+        "title": "Unsere Künstler",
+        "content": "Ein internationales Ensemble aus erfahrenen Performern, die ihre Leidenschaft und ihr Können in jede Show einbringen. Jeder Künstler wurde sorgfältig ausgewählt und bringt seine eigene künstlerische Vision mit."
+      },
+      "categories": {
+        "title": "Show-Kategorien",
+        "content": "Von intimen Solo-Acts bis hin zu großartigen Ensemble-Performances. Unsere vielfältigen Kategorien umfassen Akrobatik, Theater, Magie, Feuershow und Varieté – für jeden Anlass das passende Format."
+      }
+    },
+    "cta": {
+      "kicker": "ERLEBEN SIE ES LIVE",
+      "title": "Buchen Sie Ihre Show",
+      "description": "Diese Impressionen zeigen nur einen kleinen Teil unseres Könnens. Erleben Sie die volle Magie live bei Ihrer Veranstaltung."
+    }
+  },
+  
   "gallery34": {
     "hint": "Klick für Details",
     "items": {
@@ -659,6 +706,26 @@
     "subtitle": "Wir bringen Visionen auf die Bühne – professionell, individuell und mit viel Leidenschaft."
   },
   "home": {
+    "hero": {
+      "kicker": "PEPE SHOWS",
+      "title": "Spektakuläre Acts. Klar organisiert.",
+      "claim": "München's führende Artistenagentur für unvergessliche Live-Performances",
+      "subtitle": "Wir bringen preisgekrönte Artistik auf Ihre Bühne – modular buchbar und perfekt abgestimmt auf Anlass, Budget und Location.",
+      "primaryCta": "Booking-Assistent starten",
+      "secondaryCta": "Shows entdecken"
+    },
+    "excellence": {
+      "heading": "Wir glauben nicht an Mittelmaß – bei uns gibt es Exzellenz.",
+      "copy": "Unsere Künstler:innen sind Weltmeister:innen, internationale Champions und ausgewiesene Profis in ihren Disziplinen.",
+      "note": "Jede Disziplin zeigt Ihnen echte Referenzen und Einsatzmöglichkeiten für Ihr Event."
+    },
+    "disciplines": {
+      "specialties": "Besonderheiten",
+      "applications": "Einsatzgebiete",
+      "artistCount": "{{count}} Künstler:in",
+      "artistCount_plural": "{{count}} Künstler:innen",
+      "artistCountFallback": "Künstler:innen aus unserem Netzwerk auf Anfrage"
+    },
     "findArtistTitle": "Finde den perfekten Showact",
     "findArtistSubtitle": "Beantworte nur wenige kurze Fragen und erhalte unverbindlich erste Vorschläge und Preise.",
     "findArtistButton": "Jetzt starten",
@@ -667,6 +734,21 @@
       "heading": "PepeShows – mehr als eine Künstlervermittlung",
       "description": "Wir kreieren kommerzielle Shows, fördern Kultur und betreiben unsere eigene Base.\nSo vereinen wir Erfahrung, Netzwerk und Leidenschaft – und machen PepeShows zu echten Experten für unvergessliche Erlebnisse.",
       "button": "Zur Agentur"
+    },
+    "viewAllArtists": "Alle Künstler ansehen"
+  },
+  "shows": {
+    "formats": {
+      "title": "Unsere Show-Formate",
+      "subtitle": "Von kurzem Solo-Act bis abendfüllendem Varieté - entdecken Sie unsere professionellen Show-Formate."
+    },
+    "available": {
+      "title": "Verfügbare Shows",
+      "subtitle": "Entdecken Sie unser aktuelles Show-Portfolio aus der Datenbank."
+    },
+    "filter": {
+      "title": "Shows nach Kategorie",
+      "all": "Alle Shows"
     }
   },
   "logos3": { "heading": "Diese Kunden vertrauen auf Pepe" },
@@ -675,15 +757,45 @@
       "kicker": "Mediamaterial",
       "title": "Alles für eure Promo –\n an einem Ort",
       "subtitle": "Logos, Titelbilder, Pressetexte und Trailer. Dazu optional Pakete je Disziplin, damit ihr genau das bewerben könnt, was ihr gebucht habt.",
-      "buttons": { "zip": "Komplettes Media-Kit (ZIP)", "trailer": "YouTube-Trailer" }
+      "buttons": {
+        "zip": "Komplettes Media-Kit (ZIP)",
+        "trailer": "YouTube-Trailer"
+      }
     },
-    "general": { "title": "Allgemeines Mediamaterial" },
+    "general": {
+      "title": "Allgemeines Mediamaterial"
+    },
     "cards": {
-      "logos": { "title": "Logos (SVG/PNG)", "desc": "Farbig, Schwarz, Weiß – mit/ohne Hintergrund.", "zip": "Logo-Pack (ZIP)", "brandguide": "Brand-Guide (Seite)" },
-      "header": { "title": "Titel- / Headerbild", "desc": "High-Res Header für Plakate, Websites & Social.", "h169": "Header 16:9 (JPG)", "h54": "Header 5:4 (JPG)" },
-      "press": { "title": "Pressemappe / Fact Sheet", "desc": "Kurzvorstellung, USP, Kontakt & Rider.", "page": "Pressemappe (Seite)", "rider": "Technik-Rider (Seite)" },
-      "trailer": { "title": "Trailer (Kurzclip)", "desc": "Kurzvorschau für eure Kanäle.", "webm": "Download (WEBM)", "youtube": "YouTube-Trailer" },
-      "qr": { "title": "QR-Code zum Trailer", "desc": "Für Flyer, Plakate & Programme.", "png": "QR-Code (PNG)", "svg": "QR-Code (SVG)" }
+      "logos": {
+        "title": "Logos (SVG/PNG)",
+        "desc": "Farbig, Schwarz, Weiß – mit/ohne Hintergrund.",
+        "zip": "Logo-Pack (ZIP)",
+        "brandguide": "Brand-Guide (Seite)"
+      },
+      "header": {
+        "title": "Titel- / Headerbild",
+        "desc": "High-Res Header für Plakate, Websites & Social.",
+        "h169": "Header 16:9 (JPG)",
+        "h54": "Header 5:4 (JPG)"
+      },
+      "press": {
+        "title": "Pressemappe / Fact Sheet",
+        "desc": "Kurzvorstellung, USP, Kontakt & Rider.",
+        "page": "Pressemappe (Seite)",
+        "rider": "Technik-Rider (Seite)"
+      },
+      "trailer": {
+        "title": "Trailer (Kurzclip)",
+        "desc": "Kurzvorschau für eure Kanäle.",
+        "webm": "Download (WEBM)",
+        "youtube": "YouTube-Trailer"
+      },
+      "qr": {
+        "title": "QR-Code zum Trailer",
+        "desc": "Für Flyer, Plakate & Programme.",
+        "png": "QR-Code (PNG)",
+        "svg": "QR-Code (SVG)"
+      }
     },
     "disciplines": {
       "title": "Disziplinen – Materialpakete",
@@ -693,9 +805,26 @@
       "imageAlt": "{{name}} Beispielbild {{index}}",
       "allZip": "Alle Disziplin-Pakete (ZIP)",
       "items": {
-        "cyr": { "name": "Cyr-Wheel", "teaser": "Atemberaubende Artistik im rotierenden Rad.", "zip": "Foto-Pack (ZIP)", "copy": "Textbausteine (TXT)", "poster": "Poster A3 (PDF)" },
-        "jonglage": { "name": "Jonglage", "teaser": "Präzision, Rhythmus und Humor – modern inszeniert.", "zip": "Foto-Pack (ZIP)", "copy": "Textbausteine (TXT)" },
-        "akrobatik": { "name": "Akrobatik", "teaser": "Dynamische Hebefiguren und kraftvolle Soli.", "zip": "Foto-Pack (ZIP)", "copy": "Textbausteine (TXT)", "poster": "Poster A3 (PDF)" }
+        "cyr": {
+          "name": "Cyr-Wheel",
+          "teaser": "Atemberaubende Artistik im rotierenden Rad.",
+          "zip": "Foto-Pack (ZIP)",
+          "copy": "Textbausteine (TXT)",
+          "poster": "Poster A3 (PDF)"
+        },
+        "jonglage": {
+          "name": "Jonglage",
+          "teaser": "Präzision, Rhythmus und Humor – modern inszeniert.",
+          "zip": "Foto-Pack (ZIP)",
+          "copy": "Textbausteine (TXT)"
+        },
+        "akrobatik": {
+          "name": "Akrobatik",
+          "teaser": "Dynamische Hebefiguren und kraftvolle Soli.",
+          "zip": "Foto-Pack (ZIP)",
+          "copy": "Textbausteine (TXT)",
+          "poster": "Poster A3 (PDF)"
+        }
       }
     }
   },
@@ -865,7 +994,12 @@
     },
     "phone": {
       "label": "Telefon",
-      "description": "Mo–Fr, 9–17 Uhr"
+      "description": "Mo–Fr, 9–17 Uhr",
+      "value": "+49 123 456 789"
+    },
+    "email": {
+      "label": "E-Mail",
+      "value": "info@pepeshows.de"
     },
     "chat": {
       "label": "Live Chat",
@@ -921,9 +1055,9 @@
       "basicData": "Basisdaten",
       "disciplines": "Disziplinen",
       "pricing": "Preisrahmen",
-      "profileImage": "Profilbild",
-      "gallery": "Galeriebilder",
-      "aboutMe": "Über mich"
+      "profileImage": "Profilbild Quadratisch 1:1 (max. 2mb)", 
+      "gallery": "Galeriebilder bitte Quer 4:3 oder 16:9",
+      "aboutMe": "Über mich - 1 Satz der catcht zu beginnt. Insgesamt max. 3 Sätze"
     },
     "labels": {
        "name": "Name",
@@ -1087,6 +1221,256 @@
       "year": "Aktuelles Jahr",
       "acceptedCount": "{{count}} angenommene Gigs",
       "note": "Hinweis: Die Verdienstsummen basieren auf deiner angegebenen Gage (artist_gage) für akzeptierte Anfragen."
+    }
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "description": "Die Seite, die Sie suchen, existiert nicht oder wurde verschoben.",
+    "homeButton": "Zur Startseite"
+  },
+  "myGigs": {
+    "title": "🎤 Meine Gigs",
+    "loading": "⏳ Lädt…",
+    "upcoming": "Bevorstehende Gigs",
+    "past": "Vergangene Gigs",
+    "noUpcoming": "Keine bevorstehenden Gigs.",
+    "noPast": "Keine vergangenen Gigs."
+  },
+  "admin": {
+    "title": "Admin-Bereich",
+    "welcome": "Willkommen im Admin-Panel! Hier kannst du Einstellungen verwalten.",
+    "sortBy": "Sortieren nach:",
+    "loadingDashboard": "Lade Dashboard-Daten...",
+    "noOffers": "Keine Angebote gefunden.",
+    "actions": "Aktionen",
+    "accept": "Annehmen",
+    "delete": "Löschen",
+    "deleteConfirm": "Anfrage wirklich löschen?",
+    "requestNumber": "Anfrage #{{id}}",
+    "client": "Kunde:",
+    "date": "Datum:",
+    "received": "Eingegangen:",
+    "status": "Status:",
+    "sortOptions": {
+      "receivedDesc": "Eingang (neueste zuerst)",
+      "receivedAsc": "Eingang (älteste zuerst)", 
+      "dateAsc": "Eventdatum aufsteigend",
+      "dateDesc": "Eventdatum absteigend",
+      "statusAsc": "Status A–Z",
+      "statusDesc": "Status Z–A"
+    }
+  },
+  "agentur": {
+    "hero": {
+      "title": "Netzwerk von Weltklasse-Künstlern"
+    },
+    "champions": {
+      "title": "In unserem Team finden sich wahre Champions",
+      "juggling": "7-facher Jonglage-Weltmeister",
+      "cyr_wheel": "Cyr-Wheel-Weltmeisterin", 
+      "breakdancer": "Breakdancer aus dem Olympia-Kader",
+      "magician": "Deutscher Meister der Zauberkunst",
+      "description": "Wir bringen sie zusammen, um Events unvergesslich zu machen – präzise, eindrucksvoll und auf höchstem Niveau."
+    },
+    "about": {
+      "title": "Über uns",
+      "leadership": "Geleitet und organisiert wird PepeShows von <strong class=\"text-pepe-gold\">{{michael}}</strong> und <strong class=\"text-pepe-gold\"> {{christoph}}</strong> – beide selbst Artisten aus Leidenschaft.",
+      "perspective": "Mit dieser doppelten Perspektive – Künstler und Veranstalter – wissen wir genau, worauf es ankommt: Professionalität, reibungslose Abläufe und Acts, die dein Publikum begeistern."
+    },
+    "why": {
+      "title": "Warum PepeShows?",
+      "expertise": {
+        "title": "Künstler-Expertise",
+        "description": "Wir verstehen beide Seiten – als Künstler und Veranstalter."
+      },
+      "level": {
+        "title": "Weltklasse-Niveau", 
+        "description": "Champions und Meister ihres Fachs in unserem Netzwerk."
+      },
+      "shows": {
+        "title": "Unvergessliche Shows",
+        "description": "Präzise, eindrucksvoll und auf höchstem Niveau."
+      }
+    },
+    "cta": {
+      "title": "Lassen Sie uns Ihr Event unvergesslich machen",
+      "request_button": "Jetzt anfragen",
+      "shows_button": "Shows entdecken"
+    }
+  },
+  "team": {
+    "hero": {
+      "title": "Unser Team",
+      "tagline": "Eine Community aus Weltklasse-Künstlern, die gemeinsam Außergewöhnliches erschafft."
+    },
+    "whoWeAre": {
+      "title": "Wer wir sind",
+      "intro_paragraph1": "Wir sind mehr als eine Agentur – wir sind eine eingeschworene Gemeinschaft aus Profis, die ihre Leidenschaft für Artistik jeden Tag gemeinsam leben. Pepe Shows vereint Weltmeister, Olympia-Kader und preisgekrönte Künstler: vom 7-fachen Jonglage-Weltmeister über die Cyr-Wheel-Weltmeisterin bis hin zum Breakdancer aus dem Olympia-Kader und dem deutschen Meister der Zauberkunst.",
+      "intro_paragraph2": "Im PepeDome trainieren wir zusammen, tauschen uns aus, feilen an neuer Choreografie und wachsen aneinander. Was uns wirklich auszeichnet, ist unser Teamgeist. Wir verstehen uns als Künstlerfamilie, in der Qualität und Herzlichkeit Hand in Hand gehen. Diese enge Verbundenheit spürt man auf der Bühne – jede Performance wird zu einem authentischen Erlebnis."
+    },
+    "champions": {
+      "title": "In unserem Team finden sich wahre Champions",
+      "juggling": "7-facher Jonglage-Weltmeister",
+      "cyr_wheel": "Cyr-Wheel-Weltmeisterin",
+      "breakdancer": "Breakdancer aus dem Olympia-Kader",
+      "magician": "Deutscher Meister der Zauberkunst",
+      "description": "Wir bringen sie zusammen, um Events unvergesslich zu machen – präzise, eindrucksvoll und auf höchstem Niveau."
+    },
+    "founders": {
+      "title": "Michael & Christoph",
+      "michael_name": "Michael Heiduk",
+      "michael_bio": "Michael bringt über 30 Jahre Bühnenerfahrung mit – als Clown, Pantomime, Jongleur und Moderator hat er unzählige Bühnen weltweit erobert. Seine Reise begann an der Schauspielschule, doch seine wahre Leidenschaft fand er in der Clownerie: dieser einzigartigen Kunst, Menschen zum Lachen und Staunen zu bringen. Mit seinem tiefen Verständnis für Timing, Emotion und Publikum sowie seiner internationalen Vernetzung in der Artistenszene ist Michael das kreative Herzstück von Pepe Shows – ein Visionär, der weiß, wie man unvergessliche Momente schafft.",
+      "christoph_name": "Christoph Hermann",
+      "christoph_bio": "Christoph ist der energiegeladene Gegenpol: jung, dynamisch und immer in Bewegung. Als Akrobat und Cyr-Wheel-Artist lebt er für die Perfektion jeder Drehung, jedes Sprungs. Seine technische Affinität gepaart mit echtem Unternehmergeist macht ihn zum innovativen Motor der Agentur. Christoph liebt es, Grenzen zu verschieben, Neues zu erschaffen und mit Disziplin und Leidenschaft Projekte voranzutreiben. Wo Michael die künstlerische Seele einbringt, sorgt Christoph für frischen Wind und zukunftsorientiertes Denken – gemeinsam eine unschlagbare Kombination."
+    },
+    "community": {
+      "title": "Gemeinsam stark",
+      "paragraph1": "Bei uns wächst niemand allein. Im PepeDome treffen sich unsere Künstler*innen regelmäßig zum gemeinsamen Training, tauschen Tricks und Techniken aus, inspirieren sich gegenseitig und feilen zusammen an neuen Ideen. Diese kreative Atmosphäre schweißt zusammen – nicht durch Verträge, sondern durch echte Verbindung, gegenseitigen Respekt und die gemeinsame Leidenschaft für Perfektion.",
+      "paragraph2": "Jede*r von uns perfektioniert seine Kunst mit Hingabe und Disziplin. Doch die wahre Magie entsteht im Team: wenn verschiedene Talente aufeinandertreffen, wenn aus individueller Exzellenz ein gemeinsames Erlebnis wird, das begeistert und berührt. Genau diese Energie spürt man auf der Bühne – und genau deshalb funktionieren unsere Shows.",
+      "closing": "Wer bei Pepe Shows bucht, bekommt mehr als eine Show – er wird Teil einer Bewegung, die begeistert."
+    },
+    "servicePromise": {
+      "title": "Was Kunden erwartet",
+      "intro": "Wenn Sie mit Pepe Shows zusammenarbeiten, können Sie sich auf eines verlassen: Wir machen es Ihnen leicht. Von der ersten Anfrage bis zum letzten Applaus stehen wir für klare Kommunikation, verlässliche Abläufe und Künstler, die ihr Handwerk auf höchstem Niveau beherrschen.",
+      "point1_title": "Professionalität und Zuverlässigkeit",
+      "point1_text": "Bei uns gibt es keine unangenehmen Überraschungen. Termine werden eingehalten, Absprachen sind verbindlich, und unsere Künstler*innen kommen vorbereitet – immer. Wir verstehen, dass Ihr Event reibungslos ablaufen muss, und genau dafür sorgen wir.",
+      "point2_title": "Künstler auf höchstem Niveau",
+      "point2_text": "Unsere Artisten sind keine Hobbyakrobaten – sie sind Weltmeister, Olympia-Kader und preisgekrönte Profis, die ihre Kunst mit Leidenschaft und Perfektion leben. Jeder Auftritt ist durchdacht, jede Bewegung sitzt. Qualität, auf die Sie sich verlassen können.",
+      "point3_title": "Reibungslose Kommunikation",
+      "point3_text": "Sie haben Fragen? Wir antworten schnell und klar. Sie brauchen Anpassungen? Wir finden Lösungen. Mit uns arbeiten bedeutet: direkte Ansprechpartner, die selbst aus der Branche kommen und genau wissen, worauf es ankommt.",
+      "point4_title": "Begeisterung bei jedem Auftritt",
+      "point4_text": "Am Ende zählt nur eins: Hat es funktioniert? Hat das Publikum gestaunt? War es unvergesslich? Unsere Shows sind darauf ausgelegt, genau das zu liefern – nicht nur technisch einwandfrei, sondern emotional mitreißend. Begeisterung ist unser Standard.",
+      "closing": "Zusammenarbeit mit Pepe Shows ist einfach, inspirierend und ergebnissicher. Weil wir wissen, was Sie brauchen – und weil wir es liefern."
+    },
+    "about": {
+      "title": "Über uns",
+      "leadership": "Geleitet und organisiert wird PepeShows von <strong>{{michael}}</strong> und <strong>{{christoph}}</strong> – beide selbst Artisten aus Leidenschaft.",
+      "perspective": "Mit dieser doppelten Perspektive – Künstler und Veranstalter – wissen wir genau, worauf es ankommt: Professionalität, reibungslose Abläufe und Acts, die dein Publikum begeistern."
+    },
+    "cta": {
+      "title": "Warum Pepe?",
+      "message": "Wir lieben, was wir tun – und das spürt man. In jeder Bewegung, jedem Auftritt, jeder Zusammenarbeit. Wir sind keine gesichtslose Agentur, sondern eine Community aus Künstler*innen, die Leidenschaft und Können vereint. Wenn du nach mehr als nur einer Show suchst – nach einem Erlebnis, das bleibt – dann bist du hier richtig.",
+      "closing": "Lass uns gemeinsam etwas bewegen – im wahrsten Sinne des Wortes.",
+      "request_button": "Jetzt anfragen",
+      "artists_button": "Künstler entdecken"
+    }
+  },
+  "kontakt": {
+    "hero": {
+      "title": "Kontakt",
+      "description": "Wir sind für dich da."
+    },
+    "booking": {
+      "title": "Schnell & einfach zur Show",
+      "description": "Der schnellste Weg zu Ihrem Angebot: unser Booking-Assistent. Alle Infos eingeben, Angebot erhalten – einfach, unverbindlich & effizient.",
+      "button": "Booking-Assistent starten"
+    },
+    "methods": {
+      "email": {
+        "title": "E-Mail",
+        "description": "Auf E-Mails antworten wir in der Regel innerhalb von 24 Stunden.",
+        "button": "E-Mail schreiben",
+        "value": "info@pepeshows.de"
+      },
+      "space": {
+        "title": "Space",
+        "description": "Unser PepeDome im Ostpark München.",
+        "address": "PepeDome, Ostpark München, 81735",
+        "button": "Route planen"
+      },
+      "phone": {
+        "title": "Telefon",
+        "hours": "Mo–Fr, 9–17 Uhr",
+        "button": "Jetzt anrufen",
+        "value": "+49 159 04891419"
+      },
+      "chat": {
+        "title": "Live Chat",
+        "status": "Coming soon...",
+        "button": "Coming soon"
+      }
+    },
+    "clients": {
+      "title": "Diese Kunden vertrauen auf Pepe"
+    },
+    "cta": {
+      "title": "Bereit für Ihre Show?",
+      "booking_button": "Booking-Assistent starten",
+      "email_button": "Direkte E-Mail"
+    }
+  },
+  "mediamaterialNew": {
+    "hero": {
+      "title": "Mediamaterial",
+      "subtitle": "Alles für eure Promo – an einem Ort",
+      "description": "Logos, Titelbilder, Pressetexte und Trailer. Dazu optional Pakete je Disziplin, damit ihr genau das bewerben könnt, was ihr gebucht habt.",
+      "primaryButton": "Komplettes Media-Kit (ZIP)",
+      "secondaryButton": "YouTube-Trailer"
+    },
+    "general": {
+      "title": "Allgemeines Mediamaterial",
+      "logos": {
+        "title": "Logos (SVG/PNG)",
+        "desc": "Farbig, Schwarz, Weiß – mit/ohne Hintergrund.",
+        "zipButton": "Logo-Pack (ZIP)",
+        "guideButton": "Brand-Guide (Seite)"
+      },
+      "header": {
+        "title": "Titel- / Headerbild", 
+        "desc": "High-Res Header für Plakate, Websites & Social.",
+        "button169": "Header 16:9 (JPG)",
+        "button54": "Header 5:4 (JPG)"
+      },
+      "press": {
+        "title": "Pressemappe / Fact Sheet",
+        "desc": "Kurzvorstellung, USP, Kontakt & Rider.",
+        "pressButton": "Pressemappe (Seite)",
+        "riderButton": "Technik-Rider (Seite)"
+      },
+      "trailer": {
+        "title": "Trailer (Kurzclip)",
+        "desc": "Kurzvorschau für eure Kanäle.",
+        "downloadButton": "Download (WEBM)",
+        "youtubeButton": "YouTube-Trailer"
+      },
+      "qr": {
+        "title": "QR-Code zum Trailer",
+        "desc": "Für Flyer, Plakate & Programme.",
+        "pngButton": "QR-Code (PNG)",
+        "svgButton": "QR-Code (SVG)"
+      }
+    },
+    "disciplines": {
+      "title": "Disziplinen – Materialpakete",
+      "subtitle": "Für gezielte Promo: pro Disziplin 2–3 Fotos, kurzer Textbaustein und ggf. ein Poster-Template.",
+      "cyrWheel": {
+        "title": "Cyr-Wheel",
+        "desc": "Atemberaubende Artistik im rotierenden Rad."
+      },
+      "jonglage": {
+        "title": "Jonglage", 
+        "desc": "Präzision, Rhythmus und Humor – modern inszeniert."
+      },
+      "akrobatik": {
+        "title": "Akrobatik",
+        "desc": "Dynamische Hebefiguren und kraftvolle Soli."
+      },
+      "expandButton": "aufklappen",
+      "allButton": "Alle Disziplin-Pakete (ZIP)"
+    },
+    "cta": {
+      "title": "Alles für Ihre Promotion",
+      "primaryButton": "Komplettes Media-Kit (ZIP)",
+      "secondaryButton": "Fragen zum Material"
+    }
+  },
+  "referenzen": {
+    "hero": {
+      "title": "Unsere Referenzen"
+    },
+    "cta": {
+      "title": "Werden Sie unsere nächste Referenz",
+      "button": "Jetzt anfragen"
     }
   }
 

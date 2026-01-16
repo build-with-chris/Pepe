@@ -57,7 +57,6 @@ export default function UploadSection({
         </div>
 
         <p className="text-sm text-gray-300 mb-3">
-          {t('accounting.upload.hint', { code: <code>user/&lt;deine-UID&gt;</code> })}
           Lade hier deine Rechnungen zu bestätigten Gigs hoch (PDF, JPG, PNG, WEBP). Dateien werden im privaten Ordner <code>user/&lt;deine-UID&gt;</code> gespeichert.
         </p>
 

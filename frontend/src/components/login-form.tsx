@@ -1,269 +1,115 @@
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import React, { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
-import { getSupabase } from "@/lib/supabase";
-import posthog from "@/lib/posthog";
+import { SignIn } from "@clerk/clerk-react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useEffect, lazy, Suspense } from "react";
+import { useAuth } from "@clerk/clerk-react";
+import { dark } from "@clerk/themes";
 
-export function Login({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  const { setUser, setToken } = useAuth();
+const Buhnenzauber = lazy(() => import('./Buhnenzauber'));
+
+export function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState(false);
+  const location = useLocation();
+  const { isSignedIn, isLoaded } = useAuth();
 
-  const handleSignIn = async (
-    e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>
-  ) => {
-    e.preventDefault();
-    setLoading(true);
-    const API = import.meta.env.VITE_API_URL;
-    if (!API) {
-      console.warn("VITE_API_URL is not set – requests will fail.");
+  // Determine the current path for Clerk routing
+  const currentPath = location.pathname.startsWith("/login") ? "/login" : "/anmelden";
+  const signUpPath = currentPath === "/login" ? "/signup" : "/registrieren";
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate("/profil");
     }
-    try {
-      // Authenticate with Supabase
-      const sb = await getSupabase();
-      const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (signInError) {
-        console.error("Supabase signIn error:", signInError);
-        try { posthog.capture('login_failed', { stage: 'supabase', reason: signInError.message }); } catch {}
-        alert("Login failed: " + signInError.message);
-        return;
-      }
-      const session = signInData.session;
-      const supUser = signInData.user;
-      if (!session || !supUser) {
-        throw new Error("No session or user returned from Supabase");
-      }
-      const token = session.access_token;
-      // Verify Supabase JWT with backend
-      const verifyRes = await fetch(`${API}/auth/verify`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const verifyJson = await verifyRes.json().catch(() => ({}));
-      if (!verifyRes.ok) {
-        console.error("Verify failed:", verifyJson);
-        try { posthog.capture('login_failed', { stage: 'backend_verify', status: verifyRes.status, reason: (verifyJson && (verifyJson.message || verifyJson.error)) || 'verify_failed' }); } catch {}
-        alert("Token verification failed");
-        return;
-      }
-
-      // Update AuthContext with user identity
-      setToken(token);
-      setUser({
-        sub: supUser.id,
-        email: supUser.email || undefined,
-        role: (supUser.app_metadata as any)?.role || undefined,
-      });
-      try {
-        posthog.identify(supUser.id, {
-          email: supUser.email ?? undefined,
-          role: (supUser.app_metadata as any)?.role ?? undefined,
-          sign_in_provider: (supUser.app_metadata as any)?.provider ?? undefined,
-        });
-        posthog.capture('login_success', { method: 'password' });
-      } catch (e) {
-        console.warn('PostHog identify/capture failed', e);
-      }
-      // Ensure an Artist row exists / is linked for this Supabase user
-      try {
-        const ensureRes = await fetch(`${API}/api/artists/me/ensure`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!ensureRes.ok) {
-          const t = await ensureRes.text().catch(() => "");
-          console.warn("/api/artists/me/ensure failed:", ensureRes.status, t);
-        }
-      } catch (e) {
-        console.warn("ensure request error", e);
-      }
-      // Immediately verify that the artist is now resolvable
-      let meOk = false;
-      let me: any = null;
-      try {
-        const meRes = await fetch(`${API}/api/artists/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        meOk = meRes.ok;
-        me = await meRes.json().catch(() => null);
-      } catch (e) {
-        console.warn("/api/artists/me request error", e);
-      }
-      try {
-        posthog.capture(meOk ? 'artist_profile_loaded' : 'artist_profile_missing');
-      } catch {}
-
-      // Update user in AuthContext with backend admin flag so the UI can react immediately
-      try {
-        setUser({
-          sub: supUser.id,
-          email: supUser.email || undefined,
-          role: (supUser.app_metadata as any)?.role || undefined,
-          is_admin: Boolean(me?.is_admin),
-        });
-      } catch {}
-
-      // Decide where to route after login
-      const role = (supUser.app_metadata as any)?.role;
-      const isAdmin = Boolean(me?.is_admin) || role === 'admin';
-      if (isAdmin) {
-        navigate('/admin/dashboard');
-      } else {
-        if (!meOk) {
-          alert("Dein Profil konnte nicht geladen werden. Bitte versuche es erneut oder kontaktiere den Support.");
-        }
-        // Show Artist Guidelines once after admin approval, on next login
-        const approved = !!(me && (me.approved === true || me.isApproved === true || me.status === 'approved'));
-        const guidelinesAccepted = !!(me && (me.guidelinesAccepted === true || me.guidelinesAccepted === 1 || me.guidelines_accepted === true || me.guidelines_accepted === 1));
-        if (approved && !guidelinesAccepted) {
-          // Open the modal on the profile page via query param and custom event
-          navigate('/profile?guidelines=1');
-          try { window.dispatchEvent(new Event('artist:show-guidelines')); } catch {}
-        } else {
-          navigate('/profile');
-        }
-      }
-    } catch (err) {
-      console.error("handleSignIn exception:", err);
-      try { posthog.capture('login_exception', { message: err instanceof Error ? err.message : String(err) }); } catch {}
-      alert("Unexpected error during login: " + (err instanceof Error ? err.message : String(err)));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async (
-    e?: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>
-  ) => {
-    if (e && typeof (e as any).preventDefault === 'function') {
-      (e as any).preventDefault();
-    }
-    if (oauthLoading) return;
-    setOauthLoading(true);
-    try {
-      try { posthog.capture('oauth_start', { provider: 'google', mode: 'login' }); } catch {}
-      const sb = await getSupabase();
-      const { error } = await sb.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/onboarding`,
-          queryParams: { mode: 'login' },
-        },
-      });
-      if (error) {
-        console.error('Google OAuth error:', error);
-        try { posthog.capture('login_failed', { stage: 'oauth', provider: 'google', reason: error.message }); } catch {}
-        alert('Google Login failed: ' + error.message);
-        setOauthLoading(false);
-      }
-      // On success, Supabase will redirect to the provided URL; no further action needed here.
-    } catch (err) {
-      console.error('handleGoogleLogin exception:', err);
-      try { posthog.capture('login_exception', { provider: 'google', message: err instanceof Error ? err.message : String(err) }); } catch {}
-      alert('Unexpected error during Google login: ' + (err instanceof Error ? err.message : String(err)));
-      setOauthLoading(false);
-    }
-  };
+  }, [isLoaded, isSignedIn, navigate]);
 
   return (
-    <div className={cn("flex flex-col gap-6 w-full md:max-w-screen-md mx-auto", className)} {...props}>
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Login for Artists</CardTitle>
-          <CardDescription>
-            Login with your Apple or Google account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="" onSubmit={handleSignIn}>
-            <div className="grid gap-6">
-              <div className="flex flex-col gap-4">
-                <Button type="button" variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={loading || oauthLoading}>
-                  Login with Google
-                </Button>
-              </div>
-              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
-              </div>
-              <div className="grid gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    data-ph-no-capture
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    autoComplete="email"
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <a
-                      href="#"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      Forgot your password?
-                    </a>
-                  </div>
-                  <Input
-                    data-ph-no-capture
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                  />
-                </div>
-                <Button type="submit" className="w-full mt-2" disabled={loading || oauthLoading}>
-                  Login
-                </Button>
-              </div>
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link to="/signup" className="underline underline-offset-4">
-                  Sign up
-                </Link>
-              </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+    <div className="min-h-screen flex flex-col relative" style={{ background: '#0A0A0A' }}>
+      {/* Particle Backdrop */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <Suspense fallback={null}>
+          <Buhnenzauber />
+        </Suspense>
+      </div>
+
+      {/* Main Content - Centered */}
+      <div className="flex-1 flex items-center justify-center px-6 py-16 relative z-10">
+        <div className="w-full max-w-[420px]">
+          {/* Logo */}
+          <div className="flex justify-center mb-10">
+            <img
+              src="/logos/SVG/PEPE_logos_shows.svg"
+              alt="Pepe Shows"
+              className="h-24 w-auto"
+            />
+          </div>
+
+          {/* Header */}
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold text-white mb-3">Anmelden</h2>
+            <p className="text-gray-400 text-base leading-relaxed">
+              Melde dich an, um auf dein Künstler-Dashboard zuzugreifen.
+            </p>
+          </div>
+
+          {/* Clerk SignIn */}
+          <SignIn
+            appearance={{
+              baseTheme: dark,
+              variables: {
+                colorPrimary: "#D4A574",
+                colorBackground: "transparent",
+                colorInputBackground: "#0F0F0F",
+                colorInputText: "#FFFFFF",
+                colorTextOnPrimaryBackground: "#000000",
+                colorTextSecondary: "#9CA3AF",
+                borderRadius: "0.75rem",
+              },
+              elements: {
+                rootBox: "w-full flex justify-center",
+                card: "!bg-transparent shadow-none p-0 border-none w-full",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+                socialButtonsBlockButton: "bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 py-3",
+                socialButtonsBlockButtonText: "text-white font-medium",
+                socialButtonsProviderIcon: "brightness-0 invert",
+                dividerLine: "bg-white/10",
+                dividerText: "text-gray-500 text-sm py-4",
+                formFieldRow: "mb-5",
+                formFieldLabel: "text-gray-300 font-medium mb-2 text-sm",
+                formFieldInput: "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#D4A574] focus:ring-[#D4A574]/20 transition-all duration-200 py-3 px-4 text-base",
+                formButtonPrimary: "bg-gradient-to-r from-[#D4A574] to-[#B8956A] hover:from-[#E6B887] hover:to-[#D4A574] text-black font-semibold transition-all duration-200 shadow-lg shadow-[#D4A574]/25 py-3 mt-2",
+                footerActionLink: "text-[#D4A574] hover:text-[#E6B887] font-medium",
+                identityPreviewText: "text-white",
+                identityPreviewEditButton: "text-[#D4A574] hover:text-[#E6B887]",
+                formFieldInputShowPasswordButton: "text-gray-400 hover:text-white",
+                otpCodeFieldInput: "bg-white/5 border-white/10 text-white",
+                footer: "hidden",
+                formFieldAction: "text-[#D4A574] hover:text-[#E6B887]",
+                alert: "bg-red-500/10 border border-red-500/30 text-red-300 p-4 rounded-xl mb-4",
+                alertText: "text-red-300",
+              },
+            }}
+            routing="path"
+            path={currentPath}
+            signUpUrl={signUpPath}
+          />
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-500">
+              Noch kein Konto?{" "}
+              <Link to={signUpPath} className="text-[#D4A574] hover:text-[#E6B887] font-medium transition-colors">
+                Jetzt registrieren
+              </Link>
+            </p>
+          </div>
+
+          {/* Back to Home */}
+          <div className="mt-6 text-center">
+            <Link to="/" className="text-gray-500 hover:text-gray-300 transition-colors">
+              ← Zurück zur Startseite
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

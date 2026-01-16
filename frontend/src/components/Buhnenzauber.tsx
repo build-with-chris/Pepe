@@ -40,18 +40,18 @@ export default function Buhnenzauber({ className = '' }: BuhnenzauberProps) {
       maxLife: number
     }> = []
 
-    // Create particles
+    // Create particles that float upwards
     const createParticle = (x: number, y: number) => {
-      const angle = Math.random() * Math.PI * 2
-      const speed = Math.random() * 2 + 1
-      const life = Math.random() * 120 + 60
+      const angle = (Math.random() - 0.5) * 0.5 // Slight horizontal drift
+      const speed = Math.random() * 0.5 + 0.3
+      const life = Math.random() * 180 + 120 // Longer life: 120-300 frames
 
       particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        size: Math.random() * 3 + 1,
+        vy: -Math.abs(Math.random() * 1.5 + 0.5), // Always move upward (negative y)
+        size: Math.random() * 4 + 0.5, // Size variation: 0.5 to 4.5
         opacity: 1,
         life,
         maxLife: life
@@ -63,12 +63,12 @@ export default function Buhnenzauber({ className = '' }: BuhnenzauberProps) {
       const rect = canvas.getBoundingClientRect()
       mouseX = e.clientX - rect.left
       mouseY = e.clientY - rect.top
-      
-      // Create particles around cursor
-      if (Math.random() < 0.3) {
+
+      // Create particles around cursor (float upward from cursor position)
+      if (Math.random() < 0.6) {
         createParticle(
-          mouseX + (Math.random() - 0.5) * 30,
-          mouseY + (Math.random() - 0.5) * 30
+          mouseX + (Math.random() - 0.5) * 40,
+          mouseY + (Math.random() - 0.5) * 20
         )
       }
     }
@@ -84,29 +84,29 @@ export default function Buhnenzauber({ className = '' }: BuhnenzauberProps) {
         // Update position
         particle.x += particle.vx
         particle.y += particle.vy
-        
+
         // Update life
         particle.life--
         particle.opacity = particle.life / particle.maxLife
-        
-        // Add some drift
-        particle.vx *= 0.99
-        particle.vy *= 0.99
-        particle.vy += 0.02 // slight gravity
+
+        // Add gentle horizontal drift, maintain upward movement
+        particle.vx += (Math.random() - 0.5) * 0.05
+        particle.vx *= 0.98
+        particle.vy *= 0.995 // Very slight slowdown
         
         // Draw particle
         ctx.save()
-        ctx.globalAlpha = particle.opacity * 0.5 // Make particles subtle
+        ctx.globalAlpha = particle.opacity * 0.6 // Slightly more visible
         ctx.fillStyle = '#D4A574' // Pepe gold
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
         ctx.fill()
-        
-        // Add glow effect
-        ctx.shadowBlur = 10
+
+        // Add glow effect (stronger for larger particles)
+        ctx.shadowBlur = particle.size * 3
         ctx.shadowColor = '#D4A574'
         ctx.beginPath()
-        ctx.arc(particle.x, particle.y, particle.size * 0.5, 0, Math.PI * 2)
+        ctx.arc(particle.x, particle.y, particle.size * 0.6, 0, Math.PI * 2)
         ctx.fill()
         ctx.restore()
         
@@ -116,10 +116,18 @@ export default function Buhnenzauber({ className = '' }: BuhnenzauberProps) {
         }
       }
 
-      // Create ambient particles occasionally
-      if (Math.random() < 0.02) {
+      // Create ambient particles from bottom of screen
+      if (Math.random() < 0.15) {
         createParticle(
           Math.random() * canvas.width,
+          canvas.height + 10 // Start just below viewport
+        )
+      }
+
+      // Additional particles from sides
+      if (Math.random() < 0.05) {
+        createParticle(
+          Math.random() < 0.5 ? -10 : canvas.width + 10,
           Math.random() * canvas.height
         )
       }
@@ -148,7 +156,6 @@ export default function Buhnenzauber({ className = '' }: BuhnenzauberProps) {
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        zIndex: 2,
         opacity: 0.5
       }}
     />

@@ -1,23 +1,26 @@
-// index.tsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import App from './App';
-import './index.css';
-import { AuthProvider } from "@/context/AuthContext";
-import { initPostHog } from './lib/posthog'
-import { HelmetProvider } from "react-helmet-async";
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import { ClerkProvider } from '@clerk/clerk-react'
+import { AuthProvider } from './context/AuthContext'
+import './index.css'
+import './i18n'
+import App from './App.tsx'
 
-initPostHog();
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <HelmetProvider>
+if (!CLERK_PUBLISHABLE_KEY) {
+  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY')
+}
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      <BrowserRouter>
+        <AuthProvider>
           <App />
-        </HelmetProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+        </AuthProvider>
+      </BrowserRouter>
+    </ClerkProvider>
+  </StrictMode>,
+)

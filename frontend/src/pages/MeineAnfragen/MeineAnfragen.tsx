@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import List from "./components/List";
 import RequestCard from "./components/RequestCard";
-
 import { useTranslation } from 'react-i18next';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { DashboardCard } from '@/components/DashboardCard';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 function getReceivedAtTs(record: any): number {
   const v =
@@ -78,11 +81,14 @@ const MeineAnfragen: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
+      console.log('Lade Anfragen, Token:', token);
       setLoading(true);
       setError(null);
       try {
         const url = '/api/requests/requests';
+        console.log('Fetch URL:', import.meta.env.VITE_API_URL + url);
         const data = await apiFetch(url);
+        console.log('Rohdaten von /api/requests/requests:', data);
         // Erwartet ein Array direkt oder in { requests: [...] }
         const rawList: any[] = Array.isArray(data) ? data : data.requests || [];
         const list: Anfrage[] = rawList.map((item: any) => ({
@@ -92,6 +98,8 @@ const MeineAnfragen: React.FC = () => {
         // Sort by received/created date (newest first)
         list.sort((a, b) => getReceivedAtTs(b) - getReceivedAtTs(a));
         setAnfragen(list);
+        console.log('🕵️‍♀️ Loaded requests with all fields:', list);
+        console.log('🧐 Loaded statuses:', list.map(a => a.status));
       } catch (e: any) {
         console.error('Fehler beim Laden:', e);
         setError(e.message || t('requests.errors.loadFailed', { defaultValue: 'Fehler beim Laden der Anfragen' }));
@@ -104,6 +112,7 @@ const MeineAnfragen: React.FC = () => {
 
   const filtered = anfragen.filter(a => {
     const st = String(a.status).toLowerCase();
+    console.log(`🧐 Filtering id=${a.id}, raw='${a.status}', norm='${st}', tab='${activeTab}'`);
     if (activeTab === 'aktion') {
       // Zeige nur angefragte (noch nicht beantwortete) Anfragen
       return st === 'angefragt';
@@ -147,6 +156,7 @@ const MeineAnfragen: React.FC = () => {
     // Optimistische Aktualisierung von Status und Gage
     setAnfragen(prev => prev.map(a => a.id === id ? { ...a, status: 'angeboten', artist_gage: preisNum } : a));
     try {
+      console.log('🛰️ Sende Artist-Angebot PUT payload:', { price_offered: preisNum });
       const result = await apiFetch(`/api/requests/requests/${id}/offer`, {
         method: 'PUT',
         body: JSON.stringify({ price_offered: preisNum }),
@@ -165,53 +175,69 @@ const MeineAnfragen: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6 text-gray-300">Stay up to date</h1>
-      <div className="flex gap-3 mb-6">
-        <button
-          className={`px-4 py-2 rounded border transition-colors ${
-            activeTab === 'aktion'
-              ? 'bg-white text-black border-white'
-              : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700'
-          }`}
-          onClick={() => setActiveTab('aktion')}
-        >
-          {t('requests.tabs.actionNeeded', { defaultValue: 'Aktion nötig' })}
-        </button>
-        <button
-          className={`px-4 py-2 rounded border transition-colors ${
-            activeTab === 'alle'
-              ? 'bg-white text-black border-white'
-              : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700'
-          }`}
-          onClick={() => setActiveTab('alle')}
-        >
-          {t('requests.tabs.all', { defaultValue: 'Alle Anfragen' })}
-        </button>
+    <DashboardLayout title={t('requests.title', { defaultValue: 'Meine Anfragen' })}>
+      <div className="space-y-6">
+
+        {/* Tabs */}
+        <div className="flex gap-3">
+          <Button
+            variant={activeTab === 'aktion' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('aktion')}
+            className={activeTab === 'aktion'
+              ? 'bg-white text-black hover:bg-white/90'
+              : 'border-white/20 bg-white/5 hover:bg-white/10 text-white'}
+          >
+            {t('requests.tabs.actionNeeded', { defaultValue: 'Aktion nötig' })}
+          </Button>
+          <Button
+            variant={activeTab === 'alle' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('alle')}
+            className={activeTab === 'alle'
+              ? 'bg-white text-black hover:bg-white/90'
+              : 'border-white/20 bg-white/5 hover:bg-white/10 text-white'}
+          >
+            {t('requests.tabs.all', { defaultValue: 'Alle Anfragen' })}
+          </Button>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-2" />
+            <span className="text-gray-400">{t('requests.loading', { defaultValue: 'Lade Anfragen…' })}</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300">
+            {error}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && filtered.length === 0 && (
+          <DashboardCard className="text-center py-12">
+            <p className="text-gray-400">{t('requests.empty', { defaultValue: 'Keine Anfragen in dieser Ansicht.' })}</p>
+          </DashboardCard>
+        )}
+
+        {/* Requests List */}
+        <List variant="stack" ariaLabel={t('requests.title', { defaultValue: 'Meine Anfragen' })}>
+          {filtered.map(anfrage => (
+            <RequestCard
+              key={anfrage.id}
+              request={anfrage}
+              activeTab={activeTab}
+              offerInput={offerInputs[anfrage.id as any] ?? String(anfrage.recommended_price_min)}
+              onOfferChange={handleOfferChange}
+              onSendOffer={sendOffer}
+              submitting={submitting === anfrage.id}
+            />
+          ))}
+        </List>
       </div>
-
-      {loading && <div className="text-gray-300">{t('requests.loading', { defaultValue: 'Lade Anfragen…' })}</div>}
-      {error && <div className="text-red-400 mb-4">{error}</div>}
-
-
-      {!loading && filtered.length === 0 && (
-        <div className="text-center text-gray-400">{t('requests.empty', { defaultValue: 'Keine Anfragen in dieser Ansicht.' })}</div>
-      )}
-
-      <List variant="stack" ariaLabel={t('requests.title', { defaultValue: 'Meine Anfragen' })}>
-        {filtered.map(anfrage => (
-          <RequestCard
-            key={anfrage.id}
-            request={anfrage}
-            activeTab={activeTab}
-            offerInput={offerInputs[anfrage.id as any] ?? String(anfrage.recommended_price_min)}
-            onOfferChange={handleOfferChange}
-            onSendOffer={sendOffer}
-            submitting={submitting === anfrage.id}
-          />
-        ))}
-      </List>
-    </div>
+    </DashboardLayout>
   );
 };
 

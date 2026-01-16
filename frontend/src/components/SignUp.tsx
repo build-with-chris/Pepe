@@ -1,155 +1,118 @@
-import React, { useState } from "react";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { useNavigate } from "react-router-dom";
-import { getSupabase } from "@/lib/supabase";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
+import { SignUp as ClerkSignUp } from "@clerk/clerk-react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useEffect, lazy, Suspense } from "react";
+import { useAuth } from "@clerk/clerk-react";
+import { dark } from "@clerk/themes";
 
-export default function SignUp() {
+const Buhnenzauber = lazy(() => import('./Buhnenzauber'));
+
+export function SignUp() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const location = useLocation();
+  const { isSignedIn, isLoaded } = useAuth();
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage(null);
-    const sb = await getSupabase();
-    const { data, error } = await sb.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
-          name: name
-        }
-      }
-    });
-    setLoading(false);
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage(t("signup.success"));
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
-    }
-  };
+  // Determine the current path for Clerk routing
+  const currentPath = location.pathname.startsWith("/signup") ? "/signup" : "/registrieren";
+  const signInPath = currentPath === "/signup" ? "/login" : "/anmelden";
 
-  const handleGoogleSignUp = async () => {
-    setMessage(null);
-    const sb = await getSupabase();
-    const { error } = await sb.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/onboarding`,
-        queryParams: { mode: "signup" },
-      },
-    });
-    if (error) {
-      console.error("Google sign-in error:", error);
-      setMessage(error.message);
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate("/profil");
     }
-  };
+  }, [isLoaded, isSignedIn, navigate]);
 
   return (
-    <div className="relative bg-black text-white min-h-screen flex items-center justify-center overflow-hidden">
-      {/* subtle glow background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"></div>
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-700/30 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-black/40 rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex flex-col relative" style={{ background: '#0A0A0A' }}>
+      {/* Particle Backdrop */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <Suspense fallback={null}>
+          <Buhnenzauber />
+        </Suspense>
+      </div>
 
-      <div className="relative z-10 w-full md:w-4/5 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-12 px-6 py-12">
-        {/* Info Section */}
-        <div className="flex flex-col justify-center">
-   
-          <h2 className="text-3xl font-bold mb-6 leading-tight">{t("signup.info.title")}</h2>
-          <p className="mb-4 text-white/80">
-            {t("signup.info.p1")}
-          </p>
-          <p className="mb-6 text-white/80">
-            {t("signup.info.p2")}
-          </p>
-          <div className="border-t border-white/10 my-6"></div>
-          <h2 className="text-xl font-semibold mb-3">{t("signup.info.benefitsTitle")}</h2>
-          <ul className="list-disc list-inside space-y-2 text-white/80">
-            <li>{t("signup.info.benefits.li1")}</li>
-            <li>{t("signup.info.benefits.li2")}</li>
-            <li>{t("signup.info.benefits.li3")}</li>
-            <li>{t("signup.info.benefits.li4")}</li>
-            <li>{t("signup.info.benefits.li5")}</li>
-          </ul>
-        </div>
-
-        {/* Form Section */}
-        <form
-          onSubmit={handleSignUp}
-          className="flex flex-col gap-4 bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-xl shadow-lg"
-        >
-          <div className="flex justify-center mb-4">
-            <DotLottieReact
-              src="https://lottie.host/811964bf-fed6-4d2f-9782-58bb72490ec3/SHtPNzKNxL.lottie"
-              loop
-              autoplay
-              style={{ width: "120px", height: "120px" }}
+      {/* Main Content - Centered */}
+      <div className="flex-1 flex items-center justify-center px-6 py-16 relative z-10">
+        <div className="w-full max-w-[420px]">
+          {/* Logo */}
+          <div className="flex justify-center mb-10">
+            <img
+              src="/logos/SVG/PEPE_logos_shows.svg"
+              alt="Pepe Shows"
+              className="h-24 w-auto"
             />
           </div>
-          <h2 className="text-3xl font-bold mb-4 text-center">{t("signup.form.title")}</h2>
-          {message && <p className="text-sm text-center text-white/70">{message}</p>}
-          <Input
-            id="name"
-            type="text"
-            placeholder={t("signup.form.namePlaceholder")}
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="bg-black/40 border-white/20 text-white placeholder:text-white/40"
+
+          {/* Header */}
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold text-white mb-3">Konto erstellen</h2>
+            <p className="text-gray-400 text-base leading-relaxed">
+              Registriere dich, um Teil unserer Künstler-Community zu werden.
+            </p>
+          </div>
+
+          {/* Clerk SignUp */}
+          <ClerkSignUp
+            appearance={{
+              baseTheme: dark,
+              variables: {
+                colorPrimary: "#D4A574",
+                colorBackground: "transparent",
+                colorInputBackground: "#0F0F0F",
+                colorInputText: "#FFFFFF",
+                colorTextOnPrimaryBackground: "#000000",
+                colorTextSecondary: "#9CA3AF",
+                borderRadius: "0.75rem",
+              },
+              elements: {
+                rootBox: "w-full flex justify-center",
+                card: "!bg-transparent shadow-none p-0 border-none w-full",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+                socialButtonsBlockButton: "bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 py-3",
+                socialButtonsBlockButtonText: "text-white font-medium",
+                socialButtonsProviderIcon: "brightness-0 invert",
+                dividerLine: "bg-white/10",
+                dividerText: "text-gray-500 text-sm py-4",
+                formFieldRow: "mb-5",
+                formFieldLabel: "text-gray-300 font-medium mb-2 text-sm",
+                formFieldInput: "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#D4A574] focus:ring-[#D4A574]/20 transition-all duration-200 py-3 px-4 text-base",
+                formButtonPrimary: "bg-gradient-to-r from-[#D4A574] to-[#B8956A] hover:from-[#E6B887] hover:to-[#D4A574] text-black font-semibold transition-all duration-200 shadow-lg shadow-[#D4A574]/25 py-3 mt-2",
+                footerActionLink: "text-[#D4A574] hover:text-[#E6B887] font-medium",
+                identityPreviewText: "text-white",
+                identityPreviewEditButton: "text-[#D4A574] hover:text-[#E6B887]",
+                formFieldInputShowPasswordButton: "text-gray-400 hover:text-white",
+                otpCodeFieldInput: "bg-white/5 border-white/10 text-white",
+                footer: "hidden",
+                formFieldAction: "text-[#D4A574] hover:text-[#E6B887]",
+                alert: "bg-red-500/10 border border-red-500/30 text-red-300 p-4 rounded-xl mb-4",
+                alertText: "text-red-300",
+              },
+            }}
+            routing="path"
+            path={currentPath}
+            signInUrl={signInPath}
           />
-          <Input
-            id="email"
-            type="email"
-            placeholder={t("signup.form.emailPlaceholder")}
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="bg-black/40 border-white/20 text-white placeholder:text-white/40"
-          />
-          <Input
-            id="password"
-            type="password"
-            placeholder={t("signup.form.passwordPlaceholder")}
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-black/40 border-white/20 text-white placeholder:text-white/40"
-          />
-          <Button
-            type="submit"
-            disabled={loading}
-            className="mt-2 bg-gradient-to-r from-blue-500 to-black hover:from-blue-600 hover:to-black text-white font-semibold py-2 rounded-lg transition-all"
-          >
-            {loading ? t("signup.form.loading") : t("signup.form.submit")}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleGoogleSignUp}
-            className="mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition-all"
-          >
-            {t("signup.form.google")}
-          </Button>
-          <p className="text-center text-sm mt-4 text-white/70">
-            {t("signup.form.already")}{" "}
-            <a href="/login" className="text-blue-400 hover:underline">
-              {t("signup.form.login")}
-            </a>
-          </p>
-        </form>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-500">
+              Bereits ein Konto?{" "}
+              <Link to={signInPath} className="text-[#D4A574] hover:text-[#E6B887] font-medium transition-colors">
+                Jetzt anmelden
+              </Link>
+            </p>
+          </div>
+
+          {/* Back to Home */}
+          <div className="mt-6 text-center">
+            <Link to="/" className="text-gray-500 hover:text-gray-300 transition-colors">
+              ← Zurück zur Startseite
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+export default SignUp;

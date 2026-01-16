@@ -1,0 +1,286 @@
+/* 3-Sided Artist Card Styles */
+
+.artist-card-3d-container {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  perspective: 1200px;
+  cursor: pointer;
+}
+
+.artist-card-3d-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.artist-card-3d-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Position each face */
+.artist-card-3d-front {
+  transform: rotateY(0deg);
+}
+
+.artist-card-3d-back {
+  transform: rotateY(120deg);
+}
+
+.artist-card-3d-side {
+  transform: rotateY(240deg);
+}
+
+/* Front Face Styles */
+.artist-card-3d-image {
+  position: relative;
+  width: 100%;
+  height: 60%;
+  overflow: hidden;
+}
+
+.artist-card-3d-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.artist-card-3d-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  pointer-events: none;
+}
+
+.artist-card-3d-content {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.artist-card-3d-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.artist-card-3d-disciplines {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.artist-card-3d-discipline {
+  padding: 4px 12px;
+  background: rgba(212, 175, 55, 0.2);
+  color: #d4af37;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.artist-card-3d-quote {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Back Face - Gallery Styles */
+.artist-card-3d-gallery {
+  flex: 1;
+  padding: 16px;
+}
+
+.artist-card-3d-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  height: 100%;
+}
+
+.artist-card-3d-gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+}
+
+.artist-card-3d-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.artist-card-3d-gallery-item:hover img {
+  transform: scale(1.05);
+}
+
+.artist-card-3d-no-gallery {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+}
+
+.artist-card-3d-gallery-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.artist-card-3d-gallery-count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+/* Side Face - Bio/Contact Styles */
+.artist-card-3d-bio {
+  padding: 24px;
+  flex: 1;
+}
+
+.artist-card-3d-bio-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.artist-card-3d-bio-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.artist-card-3d-info {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.artist-card-3d-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.artist-card-3d-info-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.artist-card-3d-info-value {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.artist-card-3d-available {
+  color: #4ade80;
+}
+
+.artist-card-3d-social {
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+}
+
+.artist-card-3d-social-link {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.artist-card-3d-social-link:hover {
+  background: rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+}
+
+/* Indicator */
+.artist-card-3d-indicator {
+  padding: 12px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.artist-card-3d-tap {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Rotation Dots */
+.artist-card-3d-dots {
+  position: absolute;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.artist-card-3d-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.artist-card-3d-dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.artist-card-3d-dot.active {
+  background: #d4af37;
+  transform: scale(1.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .artist-card-3d-container {
+    height: 420px;
+  }
+  
+  .artist-card-3d-name {
+    font-size: 20px;
+  }
+  
+  .artist-card-3d-content {
+    padding: 16px;
+  }
+}

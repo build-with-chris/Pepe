@@ -1,29 +1,18 @@
-import posthog from 'posthog-js';
-if (typeof window !== 'undefined') (window as any).posthog = posthog;
+import posthog from 'posthog-js'
 
-export function initPostHog() {
-  // In Dev standardmäßig ausschalten (optional)
-  const enableFromEnv = (import.meta.env.VITE_ENABLE_ANALYTICS ?? 'false') === 'true';
-  const isProd = import.meta.env.MODE === 'production';
-  // In Development nur aktivieren, wenn VITE_ENABLE_ANALYTICS=true gesetzt ist
-  if (!isProd && !enableFromEnv) return;
-
-
-  posthog.init(
-    import.meta.env.VITE_POSTHOG_KEY,
-    {
-      // Stelle sicher, dass du VITE_POSTHOG_HOST in deiner .env auf deinen eigenen CDN/Proxy setzt,
-      // z.B. https://analytics.pepeshows.de
-      api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://analytics.pepeshows.de',
-      autocapture: true,
-      capture_pageview: false,
-      person_profiles: 'identified_only',
-      session_recording: {
-        maskAllInputs: true,
-        maskTextSelector: '*[data-ph-no-capture="true"]'
+// Initialize PostHog only if key is provided
+if (typeof window !== 'undefined') {
+  const posthogKey = import.meta.env.VITE_POSTHOG_KEY;
+  if (posthogKey) {
+    posthog.init(posthogKey, {
+      api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://eu.posthog.com',
+      loaded: (posthog) => {
+        if (import.meta.env.VITE_NODE_ENV === 'development') posthog.debug()
       }
-    }
-  );
+    })
+  } else {
+    console.warn('[PostHog] Skipping initialization: VITE_POSTHOG_KEY not set')
+  }
 }
 
-export default posthog;
+export default posthog

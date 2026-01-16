@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import Buhnenzauber from '../components/Buhnenzauber'
+import DotCloudImage from '../components/ui/DotCloudImage'
+import FloatingDisciplines from '../components/FloatingDisciplines'
 import heroImage from '../assets/PepeHero.webp'
 
 interface Artist {
@@ -19,8 +20,64 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
   const [isStackPaused, setIsStackPaused] = useState(false)
+  const [randomIcon1, setRandomIcon1] = useState('cyrwheel')
+  const [autoAnimPosition, setAutoAnimPosition] = useState(0)
+  const [responsibilityWorldPosition, setResponsibilityWorldPosition] = useState(0)
+  const [responsibilityWorldClicked, setResponsibilityWorldClicked] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
+
+  // Available icons for random shuffling
+  const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole', 'hulahoop', 'flooracrobatics', 'moderation']
+
+  // Map discipline names to icon names for DotCloudImage
+  const disciplineToIcon: Record<string, string> = {
+    'contemporary dance': 'contemporary',
+    'chinese pole': 'pole',
+    'cyr-wheel': 'cyrwheel',
+    'cyr wheel': 'cyrwheel',
+    'hula hoop': 'hulahoop',
+    'bodenakrobatik': 'flooracrobatics',
+    'breakdance': 'breakdance',
+    'handstand': 'handstand',
+    'jonglage': 'juggling',
+    'luftakrobatik': 'luftakrobatik',
+    'moderation': 'moderation',
+    'pantomime': 'pantomime',
+    'partnerakrobatik': 'partnerakrobatik',
+    'zauberer': 'magician',
+    'zauberei': 'magician',
+    'verantwortung': 'world'
+  }
+
+  // Shuffle random icons every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newIcon1 = availableIcons[Math.floor(Math.random() * availableIcons.length)]
+      setRandomIcon1(newIcon1)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Animation synced to accordion opening - starts from 0 when card becomes active
+  useEffect(() => {
+    let animationFrame: number
+    const startTime = performance.now()
+    const duration = 8000 // 8 seconds for slow animation
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = (elapsed % duration) / duration
+      const position = Math.sin(progress * Math.PI * 2) * 50 + 50 // 0-100 oscillation
+      setAutoAnimPosition(position)
+      animationFrame = requestAnimationFrame(animate)
+    }
+
+    animationFrame = requestAnimationFrame(animate)
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame)
+    }
+  }, [expandedDiscipline]) // Reset animation when accordion changes
 
   const handleArtistClick = (artistId: number) => {
     navigate(`/kuenstler?flip=${artistId}`)
@@ -155,6 +212,26 @@ export default function Home() {
   }
 
   useEffect(() => {
+    // Use hardcoded disciplines with all icons
+    const hardcodedDisciplines = [
+      { id: '1', name: 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Spektakuläre Akrobatik im Riesenrad', artistCount: 5 },
+      { id: '2', name: 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Meisterhafte Objekt-Manipulation', artistCount: 8 },
+      { id: '3', name: 'Zauberer', image: '/images/disciplines/Zauberer.webp', description: 'Magische Illusionen', artistCount: 6 },
+      { id: '4', name: 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Urbane Tanzkunst', artistCount: 4 },
+      { id: '5', name: 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft und Balance', artistCount: 7 },
+      { id: '6', name: 'Pantomime', image: '/images/disciplines/Pantomime.webp', description: 'Stumme Komödie', artistCount: 3 },
+      { id: '7', name: 'Contemporary Dance', image: '/images/disciplines/Contemporary_Dance.webp', description: 'Moderne Choreografie', artistCount: 5 },
+      { id: '8', name: 'Partnerakrobatik', image: '/images/disciplines/Partnerakrobatik.webp', description: 'Synchrone Bewegungen', artistCount: 6 },
+      { id: '9', name: 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Artistik in der Luft', artistCount: 9 },
+      { id: '10', name: 'Chinese Pole', image: '/images/disciplines/Chinese_Pole.webp', description: 'Vertikale Akrobatik', artistCount: 4 },
+      { id: '11', name: 'Verantwortung', image: '/images/disciplines/World.webp', description: 'Nachhaltigkeit und soziale Verantwortung', artistCount: 0 },
+    ]
+
+    setDisciplines(hardcodedDisciplines)
+
+    // Set loading to false immediately
+    setLoading(false)
+
     const fetchArtists = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
@@ -164,39 +241,23 @@ export default function Home() {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(5000) // Shorter timeout
         })
-        
+
         if (response.ok) {
           const data = await response.json()
           // Shuffle artists randomly and take only 4
           const shuffled = data.sort(() => 0.5 - Math.random())
           setArtists(shuffled.slice(0, 4))
-          
-          // Create disciplines from all artists data
-          const dynamicDisciplines = createDisciplinesFromArtists(data)
-          setDisciplines(dynamicDisciplines.length > 0 ? dynamicDisciplines : [
-            // Fallback disciplines if database is empty
-            {
-              id: 'zauberer',
-              name: t('artists.disciplines.zauberer') || 'Zauberei',
-              image: '/images/disciplines/Zauberer.webp',
-              description: 'Magische Momente und Illusionen für jedes Publikum.',
-              artistCount: 0
-            }
-          ])
-        } else {
-          console.error('Failed to fetch artists, status:', response.status)
         }
       } catch (error) {
-        console.error('Failed to fetch artists:', error)
-      } finally {
-        setLoading(false)
+        // Silently fail - page works without artist preview
+        console.warn('Artists API unavailable:', error)
       }
     }
 
     fetchArtists()
-  }, [t])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return ''
@@ -239,47 +300,186 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero Section - Full Viewport Height */}
-      <section className="hero-full">
-        {/* Background Hero Image */}
-        <div className="hero-background">
-          <img 
-            src={heroImage} 
-            alt="Pepe Shows Hero" 
-            className="hero-image"
+      {/* Hero - 100vh */}
+      <section style={{
+        position: 'relative',
+        height: '100vh',
+        overflow: 'visible'
+      }}>
+        {/* Background image - will be made sticky below */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 0
+        }}>
+          <img
+            src={heroImage}
+            alt="Pepe Shows Hero"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
           />
-          <div className="hero-overlay"></div>
-          <Buhnenzauber />
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.4)'
+          }} />
         </div>
-        
-        {/* Hero Content - Positioned Lower */}
-        <div className="hero-content-wrapper">
-          <div className="stage-container">
-            <div className="hero-content">
-              <div className="overline text-pepe-gold mb-4">{t('home.hero.kicker')}</div>
-              <h1 className="hero-title-elegant display-gradient mb-6">
-                {t('home.hero.title')}
-              </h1>
-              <div className="hero-actions">
-                <Link to="/anfragen" className="btn btn-primary btn-lg">
-                  {t('home.hero.primaryCta')}
-                </Link>
-                <Link to="/shows" className="btn btn-secondary btn-lg">
-                  {t('home.hero.secondaryCta')}
-                </Link>
-              </div>
-            </div>
+
+        <div style={{
+          position: 'absolute',
+          top: '66.67%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'clamp(1rem, 2.5vh, 2rem)',
+          textAlign: 'center',
+          maxWidth: '1200px',
+          width: '90%',
+          padding: '0 1rem'
+        }}>
+          <h1 className="hero-title-elegant display-gradient" style={{
+            fontSize: 'clamp(1.5rem, 6vw, 4rem)',
+            margin: 0,
+            lineHeight: 1.1,
+            maxWidth: '100%',
+            wordWrap: 'break-word'
+          }}>
+            {t('home.hero.title')}
+          </h1>
+
+          <p className="body-lg" style={{
+            color: 'var(--pepe-gold)',
+            margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
+            fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+            fontWeight: 500,
+            letterSpacing: '0.02em'
+          }}>
+            {t('home.hero.claim')}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            gap: 'clamp(0.5rem, 2vw, 1rem)',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+          }}>
+            <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
+              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+            }}>
+              {t('home.hero.primaryCta')}
+            </Link>
+            <Link to="/shows" className="btn btn-secondary btn-lg" style={{
+              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+            }}>
+              {t('home.hero.secondaryCta')}
+            </Link>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="scroll-indicator">
-          <div className="scroll-dot"></div>
+        <div style={{
+          position: 'absolute',
+          bottom: '5vh',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20
+        }}>
+          <div className="scroll-indicator">
+            <div className="scroll-dot"></div>
+          </div>
         </div>
       </section>
 
+      {/* Fixed background image - sticky until end of scroll section (200vh total) */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '200vh', // Covers hero (100vh) + scroll section (100vh)
+        zIndex: 0,
+        pointerEvents: 'none'
+      }}>
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          width: '100%',
+          height: '100vh',
+          overflow: 'hidden'
+        }}>
+          <img
+            src={heroImage}
+            alt="Pepe Shows Background"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)'
+          }} />
+        </div>
+      </div>
+
+      {/* Fixed Logo - visible from hero through scroll section */}
+      <div className="hero-logo-doticon" style={{
+        position: 'fixed',
+        top: typeof window !== 'undefined' && window.innerWidth < 768 ? '35%' : '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 50,
+        pointerEvents: 'none',
+        transition: 'opacity 0.3s ease, visibility 0.3s ease'
+      }}>
+        <DotCloudImage
+          disciplineId="logo"
+          size={typeof window !== 'undefined' && window.innerWidth < 768
+            ? Math.min(82, window.innerWidth * 0.32)
+            : 250}
+          color="var(--pepe-gold)"
+          aspectRatio={3}
+          density={0.5}
+          sampleGap={1}
+          minDotSize={1.4}
+          maxDotSize={2.5}
+          reverseScroll={true}
+          dynamicDensity={true}
+        />
+      </div>
+
+      {/* Scroll spacer + black focus section - 100vh - ends sticky background */}
+      <div style={{
+        position: 'relative',
+        height: '100vh',
+        background: 'linear-gradient(to bottom, transparent 0%, #000000 40%, #000000 60%, transparent 100%)',
+        zIndex: 1
+      }}>
+      </div>
+
       {/* Bento Grid Section */}
-      <section className="section bg-pepe-ink">
+      <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
         <div className="stage-container">
           <div className="bento-grid-square">
             {/* Main Circus Tent Card - Square Format */}
@@ -296,9 +496,6 @@ export default function Home() {
               </div>
               <div className="bento-card-header">
                 <h2 className="bento-title">{t('bento1.hero.title')}</h2>
-                <div className="bento-sparkles">
-                  <Buhnenzauber />
-                </div>
               </div>
               <div className="bento-destination-tag">
                 <span>Booking Assistant</span>
@@ -371,11 +568,49 @@ export default function Home() {
             </Link>
 
             {/* Taking Responsibility Card - Square Format */}
-            <Link to="/team" className="bento-card-square bento-card-responsibility-square bento-clickable">
-              <div className="bento-card-content">
-                <div className="responsibility-icon">
-                  <div className="circular-progress"></div>
-                </div>
+            <Link
+              to="/team"
+              className="bento-card-square bento-card-responsibility-square bento-clickable"
+              style={{ position: 'relative', overflow: 'hidden' }}
+              onMouseEnter={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(100)}
+              onMouseLeave={() => !responsibilityWorldClicked && setResponsibilityWorldPosition(0)}
+              onClick={(e) => {
+                e.preventDefault()
+                setResponsibilityWorldClicked(!responsibilityWorldClicked)
+                setResponsibilityWorldPosition(responsibilityWorldClicked ? 0 : 100)
+              }}
+            >
+              {/* World Icon Background - 100% container width, centered, 50% opacity */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '100%',
+                  height: '100%',
+                  zIndex: 0,
+                  opacity: 0.5,
+                  pointerEvents: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <DotCloudImage
+                  disciplineId="world"
+                  size={300}
+                  color="#FFFFFF"
+                  manualAnimationPosition={responsibilityWorldPosition}
+                  density={0.15}
+                  sampleGap={2}
+                  minDotSize={1.0}
+                  maxDotSize={4.0}
+                  noGlow={true}
+                />
+              </div>
+
+              <div className="bento-card-content" style={{ position: 'relative', zIndex: 1 }}>
                 <h3 className="bento-title">{t('bento1.responsibility.title')}</h3>
                 <p className="bento-text">
                   {t('bento1.responsibility.body1')}<br/>
@@ -387,23 +622,38 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* 100% Fairness Card - Square Format */}
-            <Link to="/referenzen" className="bento-card-square bento-card-fairness-square bento-clickable">
+            {/* Team Box - Full Width */}
+            <Link to="/team" className="bento-card-square bento-card-fairness-square bento-clickable">
               <div className="bento-card-content">
                 <h3 className="bento-title">{t('bento1.values.fairnessTitle')}</h3>
                 <p className="bento-text">
                   {t('bento1.values.fairnessBodyPrefix')} <span className="text-pepe-gold">{t('bento1.values.linkText')}</span>.
                 </p>
                 <div className="artist-avatars">
-                  <img src="/images/Slider/Artist1.webp" alt="Artist 1" className="avatar" />
-                  <img src="/images/Slider/Artist2.webp" alt="Artist 2" className="avatar" />
-                  <img src="/images/Slider/Artist3.webp" alt="Artist 3" className="avatar" />
-                  <img src="/images/Slider/Artist4.webp" alt="Artist 4" className="avatar" />
-                  <img src="/images/Slider/Artist5.webp" alt="Artist 5" className="avatar" />
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist1.webp" alt="Carmen" className="avatar" />
+                    <span className="team-member-name">Carmen</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist2.webp" alt="Jonas" className="avatar" />
+                    <span className="team-member-name">Jonas</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist3.webp" alt="Sophie" className="avatar" />
+                    <span className="team-member-name">Sophie</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist4.webp" alt="Dani" className="avatar" />
+                    <span className="team-member-name">Dani</span>
+                  </div>
+                  <div className="team-member">
+                    <img src="/images/Slider/Artist5.webp" alt="Jakob" className="avatar" />
+                    <span className="team-member-name">Jakob</span>
+                  </div>
                 </div>
               </div>
               <div className="bento-destination-tag">
-                <span>Referenzen</span>
+                <span>Unser Team</span>
               </div>
             </Link>
           </div>
@@ -472,7 +722,7 @@ export default function Home() {
 
           <div className="text-center mt-12">
             <Link to="/kuenstler" className="btn btn-secondary btn-lg">
-              Alle Künstler ansehen
+              {t('home.viewAllArtists') || 'Alle Künstler ansehen'}
             </Link>
           </div>
         </div>
@@ -497,52 +747,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Excellence Section with Animated Disciplines */}
+      {/* Excellence Section with Floating Disciplines */}
       <section className="section">
         <div className="stage-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
-            <div>
-              <h2 className="display-2 mb-6">{t('home.excellence.heading')}</h2>
-              <p className="body-lg mb-6">{t('home.excellence.copy')}</p>
-              <p className="body text-pepe-t64 mb-0">{t('home.excellence.note')}</p>
-            </div>
-            <div 
-              className="discipline-card-stack"
-              onMouseEnter={handleStackMouseEnter}
-              onMouseLeave={handleStackMouseLeave}
-            >
-              {disciplines.map((discipline, index) => (
-                <div 
-                  key={discipline.id} 
-                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
-                  style={{ '--index': index } as React.CSSProperties}
-                  onMouseEnter={() => handleDisciplineClick(index)}
-                >
-                  {/* Text-only display for closed cards */}
-                  <div className="discipline-text-only">
-                    {discipline.name}
-                  </div>
-                  
-                  {/* Image container for active card */}
-                  <div className="discipline-image-container">
-                    <img 
-                      src={discipline.image} 
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
-                  </div>
-                  
-                  {/* Enhanced Overlay content for active card */}
-                  <div className="discipline-overlay">
-                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
-                    <p className="discipline-description text-white/90 mb-6">
-                      {discipline.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="text-center mb-16">
+            <h2 className="display-2 mb-6">{t('home.excellence.heading')}</h2>
+            <p className="body-lg max-w-3xl mx-auto mb-6">{t('home.excellence.copy')}</p>
+            <p className="body text-pepe-t64">{t('home.excellence.note')}</p>
           </div>
+
+          <FloatingDisciplines
+            disciplines={disciplines}
+            disciplineToIcon={disciplineToIcon}
+          />
 
           {/* Client Logos */}
           <div className="text-center mb-10">

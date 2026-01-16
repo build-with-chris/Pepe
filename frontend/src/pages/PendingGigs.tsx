@@ -49,6 +49,7 @@ export default function AnstehendeGigs() {
         const list: AdminGig[] = Array.isArray(json) ? json : (json?.requests ?? []);
         if (!isMounted) return;
         setGigs(list);
+        console.log('📦 Admin gigs loaded:', list.length, list.map(g => g.id));
       } catch (e: any) {
         if (!isMounted) return;
         console.error('❌ PendingGigs fetch failed:', e);

@@ -13,3 +13,4 @@ alembic==1.11.1
 psycopg[binary]==3.2.9
 Pillow==10.4.0
 supabase==2.7.4
+PyJWT[crypto]==2.8.0

@@ -1,9 +1,9 @@
-import React, { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 /**
  * Technical Rider – Pepe Shows
- * Stil: dunkler Hintergrund (Pepe-Style), klare Cards, responsives Grid
+ * Merged version: New design system + Original content from main branch
  */
 
 type Detail = { labelKey: string; valueKey: string };
@@ -97,48 +97,52 @@ export default function TechnicalRider() {
   }, [t]);
 
   return (
-    <Fragment>
-      {/* Hero */}
-      <section className="bg-black py-16 md:py-24">
-        <div className="container mx-auto max-w-6xl">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="bg-gray-800 inline-flex items-center gap-2 rounded-md py-2 pl-4 pr-3">
-              <span className="text-white text-lg font-bold">{t("technicalRider.hero.kicker")}</span>
+    <main>
+      {/* Hero Section - New Design */}
+      <section className="section-hero bg-gradient-dark">
+        <div className="stage-container">
+          <div className="hero-content text-center">
+            <div className="inline-flex items-center gap-2 bg-pepe-ink border border-pepe-line rounded-lg px-4 py-2 mb-8">
+              <span className="text-pepe-white text-lg font-semibold">{t("technicalRider.hero.kicker")}</span>
             </div>
-            <h1 className="text-white mt-6 text-5xl font-semibold leading-tight md:text-6xl">
+
+            <h1 className="display-1 display-gradient mb-8">
               {t("technicalRider.hero.title")}
             </h1>
-            <p className="text-gray-300 mt-4 text-lg md:text-xl">
+
+            <p className="lead max-w-3xl mx-auto">
               {t("technicalRider.hero.subtitle")}
             </p>
           </div>
         </div>
       </section>
 
-      {/* Grid */}
-      <section className="bg-black pb-20">
-        <div className="container mx-auto max-w-6xl">
+      {/* Disciplines Grid - New Design with Original Content */}
+      <section className="section">
+        <div className="stage-container">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {DISZIPLINEN.map((d) => (
-              <article key={d.key} className="rounded-2xl border border-gray-800 bg-[#0b0b0b] p-6">
-                <h3 className="text-white text-2xl font-semibold mb-4">{d.name}</h3>
-                <dl className="space-y-3">
-                  {d.details.map((detail, idx) => (
-                    <div key={idx}>
-                      <dt className="text-gray-400 text-sm font-medium uppercase tracking-wide">
-                        {t(`technicalRider.labels.${detail.labelKey}`)}
-                      </dt>
-                      <dd className="text-gray-200 text-base">
-                        {t(`technicalRider.values.${d.key}.${detail.valueKey}`)}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+              <article key={d.key} className="card hover:border-pepe-gold/50 transition-all">
+                <div className="card-body">
+                  <h3 className="h3 text-pepe-gold mb-4">{d.name}</h3>
+                  <dl className="space-y-3">
+                    {d.details.map((detail, idx) => (
+                      <div key={idx}>
+                        <dt className="text-pepe-t60 text-sm font-medium uppercase tracking-wide mb-1">
+                          {t(`technicalRider.labels.${detail.labelKey}`)}
+                        </dt>
+                        <dd className="body-md text-pepe-t90">
+                          {t(`technicalRider.values.${d.key}.${detail.valueKey}`)}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
               </article>
             ))}
           </div>
         </div>
       </section>
-    </Fragment>
+    </main>
   );
 }

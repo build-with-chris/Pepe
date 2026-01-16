@@ -14,7 +14,7 @@ export function formatDateTimeDE(value: any): string {
 }
 
 /**
- * Versucht aus verschiedenen möglichen Feldern das „Eingegangen am“ Datum zu bestimmen.
+ * Versucht aus verschiedenen möglichen Feldern das „Eingegangen am" Datum zu bestimmen.
  * Nutze überall die gleichen Feldnamen, und ergänze hier zentral neue Aliase.
  */
 export function getReceivedAt(offer: any): Date | null {

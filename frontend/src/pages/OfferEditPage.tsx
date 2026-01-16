@@ -36,6 +36,7 @@ export default function OfferEditPage() {
       return;
     }
 
+    console.log('🛠️ handleArtistStatusChange →', { reqId, artistId, newStatus, remark });
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/api/admin/requests/${reqId}/artist_status/${artistId}`,
@@ -64,6 +65,7 @@ export default function OfferEditPage() {
     const confirmAll = window.confirm('Willst du wirklich ALLE Artists auf "storniert" setzen?');
     if (!confirmAll) return;
     try {
+      console.log('🛠️ handleBulkCancel →', { reqId });
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/api/admin/requests/${reqId}/artist_status`,
         {
@@ -101,6 +103,7 @@ export default function OfferEditPage() {
       `${baseUrl}/api/admin/requests/all`,
       { headers: { Authorization: `Bearer ${token}` } }
     ).then(async res => {
+      console.log('🎯 admin requests all response status:', res.status);
       const text = await res.text().catch(() => '');
       if (!res.ok) {
         console.error('admin requests all failed:', res.status, text);
@@ -115,6 +118,7 @@ export default function OfferEditPage() {
           ? json.requests
           : [];
       const ids = list.map((r:any) => r && r.id);
+      console.log('🧾 admin requests count:', list.length, 'ids:', ids);
       if (!Array.isArray(list) || list.length === 0) {
         console.warn('⚠️ admin requests: leere Liste oder unbekanntes Format', json);
       }
@@ -125,6 +129,7 @@ export default function OfferEditPage() {
       `${baseUrl}/api/admin/requests/${reqId}/admin_offers`,
       { headers: { Authorization: `Bearer ${token}` } }
     ).then(res => {
+      console.log('🎯 admin_offers response status:', res.status);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     });
@@ -133,12 +138,15 @@ export default function OfferEditPage() {
       `${baseUrl}/api/admin/requests/${reqId}/artist_status`,
       { headers: { Authorization: `Bearer ${token}` } }
     ).then(res => {
+      console.log('🎯 artist_status response status:', res.status);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     });
     Promise.all([reqsPromise, offersPromise, artistStatusesPromise])
       .then(([reqList, offers, artistStatusesList]) => {
         // Debug: Suche Request in admin list
+        console.log('🔎 Suche Request in admin list nach reqId=', reqId, 'typ:', typeof reqId);
+        console.log('📦 Erstes Element der Liste (falls vorhanden):', reqList[0]);
         const targetIdNum = Number(reqId);
         const reqData = reqList.find((r: any) => Number(r.id) === targetIdNum);
         if (!reqData) {
@@ -164,10 +172,13 @@ export default function OfferEditPage() {
           for (const row of artistStatusesList) {
             if (!row) continue;
             const idNum = Number((row as any).artist_id);
+            console.log('🧩 per-artist status row', row, '→ parsed artist_id:', idNum, 'raw type:', typeof (row as any).artist_id);
             if (!Number.isFinite(idNum)) continue;
             mapStatus[idNum] = (row as any).status;
             mapGage[idNum] = ((row as any).requested_gage ?? null);
           }
+          console.log('🧭 mapped artistStatuses =', mapStatus);
+          console.log('🧭 mapped artistGages    =', mapGage);
           setArtistStatuses(mapStatus);
           setArtistGages(mapGage);
         }
@@ -185,6 +196,16 @@ export default function OfferEditPage() {
               }
               setArtistNameById(nameMap);
               // Debug log loaded data
+              console.log('🔍 OfferEditPage loaded:', {
+                requestData: reqData,
+                adminOffers: offers,
+                artistStatuses: artistStatusesList,
+                artistNameById: nameMap,
+                recMin,
+                recMax,
+                gage,
+                notes
+              });
             })
             .catch(err => console.error('Fehler beim Laden der Künstlernamen:', err));
         }
@@ -228,6 +249,15 @@ export default function OfferEditPage() {
     return <p className="p-6 text-red-500">Fehler: {error}</p>;
   }
   // Debug log before render
+  console.log('🔄 Rendering OfferEditPage with state:', {
+    requestData,
+    adminOffers,
+    artistStatuses,
+    artistGages,
+    artistNameById,
+    gage,
+    notes
+  });
 
   // Typed artistIds to avoid implicit any in map
   const artistIds: number[] = Array.isArray(requestData?.artist_ids)
@@ -274,6 +304,7 @@ export default function OfferEditPage() {
               </button>
             </div>
             {artistIds.map((artistId: number, idx: number) => {
+              console.log('🔁 Rendering artist card idx:', idx, 'artistId:', artistId, 'adminOffer:', adminOffers[idx]);
               return (
               <div key={artistId} className="bg-gray-800 p-4 rounded shadow">
                 <p><strong>Künstler:</strong> {artistNameById[artistId] ?? artistId}</p>
