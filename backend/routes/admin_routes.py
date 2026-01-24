@@ -19,6 +19,16 @@ logger = logging.getLogger(__name__)
 HERE = os.path.dirname(__file__)
 SWAG = lambda name: os.path.join(HERE, '..', 'resources', 'swagger', name)
 
+
+def filter_blob_url(url):
+    """Filtert Blob-URLs heraus - gibt None zurück, wenn es eine Blob-URL ist."""
+    if not url or not isinstance(url, str):
+        return url
+    if url.strip().startswith('blob:'):
+        logger.warning(f'Blob-URL detected and filtered: {url[:50]}...')
+        return None
+    return url
+
 """
 Admin-Modul: Enthält alle Endpunkte zum Verwalten von Buchungsanfragen,
 Admin-Angeboten und Dashboard-Daten. Nur für Admin-User zugänglich.
@@ -363,7 +373,7 @@ def list_artists_by_status():
                 'rejection_reason': getattr(a, 'rejection_reason', None),
                 'approved_at': a.approved_at.isoformat() if getattr(a, 'approved_at', None) else None,
                 'approved_by': getattr(a, 'approved_by', None),
-                'profile_image_url': getattr(a, 'profile_image_url', None),
+                'profile_image_url': filter_blob_url(getattr(a, 'profile_image_url', None)),
                 'gallery_urls': getattr(a, 'gallery_urls', []),
                 'disciplines': [d.name for d in getattr(a, 'disciplines', [])] if getattr(a, 'disciplines', None) else [],
                 'bio': getattr(a, 'bio', None),

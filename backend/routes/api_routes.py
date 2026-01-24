@@ -24,6 +24,16 @@ artist_mgr = ArtistManager()
 avail_mgr = AvailabilityManager()
 request_mgr = BookingRequestManager()
 
+
+def filter_blob_url(url):
+    """Filtert Blob-URLs heraus - gibt None zurück, wenn es eine Blob-URL ist."""
+    if not url or not isinstance(url, str):
+        return url
+    if url.strip().startswith('blob:'):
+        logger.warning(f'Blob-URL detected and filtered: {url[:50]}...')
+        return None
+    return url
+
 """
 API-Modul: Beinhaltet Endpunkte für Artists, Verfügbarkeit und Buchungsanfragen.
 """
@@ -160,7 +170,7 @@ def list_artists():
         'id': a.id,
         'name': a.name,
         'disciplines': [d.name for d in a.disciplines],
-        'profile_image_url': getattr(a, 'profile_image_url', None),
+        'profile_image_url': filter_blob_url(getattr(a, 'profile_image_url', None)),
         'bio': getattr(a, 'bio', None),
         'instagram': getattr(a, 'instagram', None),
         'gallery_urls': getattr(a, 'gallery_urls', []) or []
@@ -222,7 +232,7 @@ def get_my_artist():
         'disciplines': [d.name for d in artist.disciplines],
         'price_min': getattr(artist, 'price_min', None),
         'price_max': getattr(artist, 'price_max', None),
-        'profile_image_url': getattr(artist, 'profile_image_url', None),
+        'profile_image_url': filter_blob_url(getattr(artist, 'profile_image_url', None)),
         'bio': getattr(artist, 'bio', None),
         'instagram': getattr(artist, 'instagram', None),
         'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
@@ -325,11 +335,18 @@ def update_my_profile():
         if not isinstance(gallery_urls, list):
             return error_response('validation_error', 'gallery_urls must be a list of URLs', 400)
         gallery_urls = [str(u).strip() for u in gallery_urls if isinstance(u, (str, bytes))]
+        # Filtere Blob-URLs aus der Galerie
+        gallery_urls = [filter_blob_url(u) for u in gallery_urls if filter_blob_url(u) is not None]
         if len(gallery_urls) > 9:
             return error_response('validation_error', 'gallery_urls may contain at most 9 items', 400)
 
     if disciplines is not None and not isinstance(disciplines, list):
         return error_response('validation_error', 'disciplines must be a list of strings', 400)
+    
+    # Validierung: Blob-URLs werden nicht akzeptiert
+    if img_url is not None:
+        if isinstance(img_url, str) and img_url.strip().startswith('blob:'):
+            return error_response('validation_error', 'Blob-URLs are not allowed. Please upload the image properly.', 400)
 
     try:
         # Primitive Felder
@@ -346,7 +363,9 @@ def update_my_profile():
 
         # Social / Media
         if img_url is not None:
-            artist.profile_image_url = (img_url or None)
+            # Filtere Blob-URLs heraus
+            filtered_url = filter_blob_url(img_url)
+            artist.profile_image_url = filtered_url
         if bio is not None:
             artist.bio = (str(bio).strip()[:1000] if bio is not None else None)
         if instagram is not None:
@@ -386,7 +405,7 @@ def update_my_profile():
             'disciplines': [d.name for d in artist.disciplines],
             'price_min': getattr(artist, 'price_min', None),
             'price_max': getattr(artist, 'price_max', None),
-            'profile_image_url': getattr(artist, 'profile_image_url', None),
+            'profile_image_url': filter_blob_url(getattr(artist, 'profile_image_url', None)),
             'bio': getattr(artist, 'bio', None),
             'instagram': getattr(artist, 'instagram', None),
             'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
@@ -422,7 +441,7 @@ def ensure_my_artist():
             'disciplines': [d.name for d in artist.disciplines],
             'price_min': getattr(artist, 'price_min', None),
             'price_max': getattr(artist, 'price_max', None),
-            'profile_image_url': getattr(artist, 'profile_image_url', None),
+            'profile_image_url': filter_blob_url(getattr(artist, 'profile_image_url', None)),
             'bio': getattr(artist, 'bio', None),
             'instagram': getattr(artist, 'instagram', None),
             'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
@@ -502,7 +521,7 @@ def ensure_my_artist():
         'disciplines': [d.name for d in artist.disciplines],
         'price_min': getattr(artist, 'price_min', None),
         'price_max': getattr(artist, 'price_max', None),
-        'profile_image_url': getattr(artist, 'profile_image_url', None),
+        'profile_image_url': filter_blob_url(getattr(artist, 'profile_image_url', None)),
         'bio': getattr(artist, 'bio', None),
         'instagram': getattr(artist, 'instagram', None),
         'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
@@ -539,7 +558,7 @@ def get_artist_public(artist_id):
             'id': artist.id,
             'name': artist.name,
             'disciplines': [d.name for d in artist.disciplines],
-            'profile_image_url': getattr(artist, 'profile_image_url', None),
+            'profile_image_url': filter_blob_url(getattr(artist, 'profile_image_url', None)),
             'bio': getattr(artist, 'bio', None),
             'instagram': getattr(artist, 'instagram', None),
             'gallery_urls': getattr(artist, 'gallery_urls', []) or []
