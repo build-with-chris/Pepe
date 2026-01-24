@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,18 @@ export function ProfileForm({
   fieldErrors
 }: ProfileFormProps) {
   const { t } = useTranslation();
+
+  // Verwaltung der Blob-URLs für Galerie-Dateien
+  const galleryBlobUrls = useMemo(() => {
+    return profile.galleryFiles.map(file => URL.createObjectURL(file));
+  }, [profile.galleryFiles]);
+
+  // Aufräumen der Blob-URLs beim Unmount oder wenn sich die Dateien ändern
+  useEffect(() => {
+    return () => {
+      galleryBlobUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [galleryBlobUrls]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -415,7 +427,7 @@ export function ProfileForm({
                 {profile.galleryFiles.map((file, index) => (
                   <div key={`file-${index}`} className="relative group aspect-square">
                     <img
-                      src={URL.createObjectURL(file)}
+                      src={galleryBlobUrls[index]}
                       alt={`New ${index + 1}`}
                       className="w-full h-full object-cover rounded-xl border border-[#D4A574]/30"
                     />

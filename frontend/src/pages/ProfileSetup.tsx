@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/blobUpload";
 import { useNavigate } from "react-router-dom";
@@ -43,6 +43,34 @@ export default function Profile() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const unlockBtnRef = useRef<HTMLButtonElement | null>(null);
+  const profileImageBlobUrlRef = useRef<string | null>(null);
+
+  // Verwaltung der Blob-URL für das Profilbild
+  const profileImageBlobUrl = useMemo(() => {
+    // Alte Blob-URL aufräumen, wenn vorhanden
+    if (profileImageBlobUrlRef.current) {
+      URL.revokeObjectURL(profileImageBlobUrlRef.current);
+      profileImageBlobUrlRef.current = null;
+    }
+    
+    // Neue Blob-URL erstellen, wenn eine Datei vorhanden ist
+    if (profileImageFile) {
+      const url = URL.createObjectURL(profileImageFile);
+      profileImageBlobUrlRef.current = url;
+      return url;
+    }
+    return null;
+  }, [profileImageFile]);
+
+  // Aufräumen beim Unmount
+  useEffect(() => {
+    return () => {
+      if (profileImageBlobUrlRef.current) {
+        URL.revokeObjectURL(profileImageBlobUrlRef.current);
+        profileImageBlobUrlRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) navigate("/login");
@@ -109,7 +137,13 @@ export default function Profile() {
         setPriceMin(me.price_min ?? 700);
         setPriceMax(me.price_max ?? 900);
         setBio(me.bio || "");
-        setProfileImageUrl(me.profile_image_url || null);
+        // Prüfe, ob die URL eine Blob-URL ist - wenn ja, ignorieren wir sie, da sie ungültig ist
+        const imageUrl = me.profile_image_url || null;
+        if (imageUrl && imageUrl.startsWith('blob:')) {
+          setProfileImageUrl(null);
+        } else {
+          setProfileImageUrl(imageUrl);
+        }
         setGalleryUrls(Array.isArray(me.gallery_urls) ? me.gallery_urls : []);
         setApprovalStatus((me.approval_status as any) ?? 'unsubmitted');
         setRejectionReason(me.rejection_reason ?? null);
@@ -187,7 +221,10 @@ export default function Profile() {
         gallery_urls: mergedGalleryUrls,
         approval_status: nextStatus,
       };
-      if (imageUrl) payload.profile_image_url = imageUrl;
+      // Nur echte URLs speichern, keine Blob-URLs
+      if (imageUrl && !imageUrl.startsWith('blob:')) {
+        payload.profile_image_url = imageUrl;
+      }
 
       const saveRes = await fetchWithRetry(`${baseUrl}/api/artists/me/profile`, {
         method: "PATCH",
@@ -222,7 +259,13 @@ export default function Profile() {
         setPriceMin(saved.price_min ?? priceMin);
         setPriceMax(saved.price_max ?? priceMax);
         setBio(saved.bio || "");
-        setProfileImageUrl(saved.profile_image_url || imageUrl || null);
+        // Prüfe, ob die URL eine Blob-URL ist - wenn ja, ignorieren wir sie
+        const savedImageUrl = saved.profile_image_url || imageUrl || null;
+        if (savedImageUrl && savedImageUrl.startsWith('blob:')) {
+          setProfileImageUrl(null);
+        } else {
+          setProfileImageUrl(savedImageUrl);
+        }
         setGalleryUrls(Array.isArray(saved.gallery_urls) ? saved.gallery_urls : mergedGalleryUrls);
         setGalleryFiles([]);
         setApprovalStatus((saved.approval_status as any) ?? nextStatus);
@@ -346,6 +389,10 @@ export default function Profile() {
     }
   };
 
+  // Verwende die Blob-URL für die Vorschau, wenn eine Datei vorhanden ist, sonst die gespeicherte URL
+  // Prüfe auch, ob die gespeicherte URL eine ungültige Blob-URL ist
+  const effectiveProfileImageUrl = profileImageBlobUrl || (profileImageUrl && !profileImageUrl.startsWith('blob:') ? profileImageUrl : null);
+
   const profile = {
     name,
     address,
@@ -358,7 +405,7 @@ export default function Profile() {
     priceMin,
     priceMax,
     bio,
-    profileImageUrl,
+    profileImageUrl: effectiveProfileImageUrl,
     galleryUrls,
     galleryFiles,
   };
@@ -381,10 +428,8 @@ export default function Profile() {
     if (typeof next.profileImageFile !== "undefined" && next.profileImageFile) {
       const file = next.profileImageFile as File;
       setProfileImageFile(file);
-      try {
-        const preview = URL.createObjectURL(file);
-        setProfileImageUrl(preview);
-      } catch {}
+      // Die Blob-URL wird jetzt durch useMemo verwaltet
+      // Wir setzen hier keine URL mehr, da useMemo das übernimmt
     }
 
     if (typeof next.galleryFiles !== "undefined" && next.galleryFiles) {
