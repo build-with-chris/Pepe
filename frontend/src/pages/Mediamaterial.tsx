@@ -2,6 +2,9 @@ import { Download, FileText, Image as ImageIcon, Video, FolderDown, Link as Link
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
+import LogoPepe from "../assets/LogoPepe.png";
+import PepeWebp from "../assets/PEPE.webp";
+import PepeLogosZip from "../assets/Logos/PepeLogos.zip";
 
 // Pepe Mediamaterial – Seite für Veranstalter
 // Merged version: New design system + Original content from main branch
@@ -32,7 +35,7 @@ export default function Mediamaterial() {
 
             <div className="hero-actions">
               <Button asChild size="lg" className="btn-primary">
-                <a href="/media/pepe_media_kit.zip" download>
+                <a href={PepeLogosZip} download>
                   <FolderDown className="mr-2 h-5 w-5" />
                   {t("mediamaterial.hero.buttons.zip")}
                 </a>
@@ -128,9 +131,9 @@ export default function Mediamaterial() {
             <MediaCard
               title={t("mediamaterial.cards.logos.title")}
               description={t("mediamaterial.cards.logos.desc")}
-              preview="/src/assets/LogoPepe.png"
+              preview={LogoPepe}
               downloads={[
-                { label: t("mediamaterial.cards.logos.zip"), href: "src/assets/Logos/PepeLogos.zip" },
+                { label: t("mediamaterial.cards.logos.zip"), href: PepeLogosZip },
                 { label: t("mediamaterial.cards.logos.brandguide"), href: "/brandguide", external: true },
               ]}
             />
@@ -139,7 +142,7 @@ export default function Mediamaterial() {
             <MediaCard
               title={t("mediamaterial.cards.header.title")}
               description={t("mediamaterial.cards.header.desc")}
-              preview="/src/assets/PEPE.webp"
+              preview={PepeWebp}
               downloads={[
                 { label: t("mediamaterial.cards.header.h169"), href: "/images/Brandguide/Header Pepe 16:9.jpg" },
                 { label: t("mediamaterial.cards.header.h54"), href: "/images/Brandguide/Header Pepe 5:4.jpg" },

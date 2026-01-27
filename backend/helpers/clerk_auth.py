@@ -16,9 +16,25 @@ try:
 except ImportError:
     SSL_CONTEXT = ssl.create_default_context()
 
-# Clerk JWKS URL - derived from publishable key
-# pk_test_bmV4dC1xdWFpbC00OS5jbGVyay5hY2NvdW50cy5kZXYk decodes to next-quail-49.clerk.accounts.dev
-CLERK_JWKS_URL = "https://next-quail-49.clerk.accounts.dev/.well-known/jwks.json"
+# Clerk JWKS URL - derived from environment or fallback
+# Default is for the test instance provided in the code
+_DEFAULT_JWKS_URL = "https://next-quail-49.clerk.accounts.dev/.well-known/jwks.json"
+
+def get_clerk_jwks_url():
+    """Get the JWKS URL from environment or fallback."""
+    url = os.getenv("CLERK_JWKS_URL")
+    if url:
+        return url
+    
+    # Try to derive from CLERK_PUBLISHABLE_KEY if available
+    pub_key = os.getenv("CLERK_PUBLISHABLE_KEY")
+    if pub_key and pub_key.startswith("pk_"):
+        # This is a bit simplified, but common for Clerk
+        # format: pk_test_... or pk_live_...
+        # The domain is often embedded in the key but not easily extractable without more logic
+        pass
+        
+    return _DEFAULT_JWKS_URL
 
 # Cache the JWKS client
 _jwks_client = None
@@ -27,8 +43,9 @@ def get_jwks_client():
     """Get or create cached JWKS client."""
     global _jwks_client
     if _jwks_client is None:
-        # Use custom SSL context with certifi certificates
-        _jwks_client = PyJWKClient(CLERK_JWKS_URL, ssl_context=SSL_CONTEXT)
+        url = get_clerk_jwks_url()
+        current_app.logger.info(f"Initializing Clerk JWKS client with URL: {url}")
+        _jwks_client = PyJWKClient(url, ssl_context=SSL_CONTEXT)
     return _jwks_client
 
 

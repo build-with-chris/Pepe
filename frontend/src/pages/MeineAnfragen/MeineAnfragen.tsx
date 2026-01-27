@@ -8,6 +8,8 @@ import { DashboardCard } from '@/components/DashboardCard';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
+import { ProfileStatusBanner } from '@/components/ProfileStatusBanner';
+
 function getReceivedAtTs(record: any): number {
   const v =
     record?.request_created_at ??
@@ -47,15 +49,9 @@ interface Anfrage {
 };
 
 const MeineAnfragen: React.FC = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { t } = useTranslation();
-  if (!token) {
-    return (
-      <div className="p-6 max-w-4xl mx-auto text-red-600">
-        {t('auth.missingToken', { defaultValue: 'Kein Auth-Token gefunden. Bitte neu einloggen oder Seite neu laden.' })}
-      </div>
-    );
-  }
+  
   const [anfragen, setAnfragen] = useState<Anfrage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +77,14 @@ const MeineAnfragen: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
+      if (!token || !user) return;
+      
+      // If artist is not approved, we can't fetch requests
+      if (user.approval_status !== 'approved') {
+        setLoading(false);
+        return;
+      }
+
       console.log('Lade Anfragen, Token:', token);
       setLoading(true);
       setError(null);
@@ -215,27 +219,43 @@ const MeineAnfragen: React.FC = () => {
           </div>
         )}
 
+        {/* Not Approved State */}
+        {!loading && user?.approval_status !== 'approved' && (
+          <div className="space-y-6">
+            <ProfileStatusBanner status={user?.approval_status || 'unsubmitted'} />
+            <DashboardCard className="text-center py-12">
+              <p className="text-gray-400">
+                {user?.approval_status === 'pending' 
+                  ? 'Sobald dein Profil freigeschaltet wurde, siehst du hier neue Buchungsanfragen.'
+                  : 'Bitte vervollständige dein Profil und reiche es zur Prüfung ein, um Anfragen zu erhalten.'}
+              </p>
+            </DashboardCard>
+          </div>
+        )}
+
         {/* Empty State */}
-        {!loading && filtered.length === 0 && (
+        {!loading && user?.approval_status === 'approved' && filtered.length === 0 && (
           <DashboardCard className="text-center py-12">
             <p className="text-gray-400">{t('requests.empty', { defaultValue: 'Keine Anfragen in dieser Ansicht.' })}</p>
           </DashboardCard>
         )}
 
         {/* Requests List */}
-        <List variant="stack" ariaLabel={t('requests.title', { defaultValue: 'Meine Anfragen' })}>
-          {filtered.map(anfrage => (
-            <RequestCard
-              key={anfrage.id}
-              request={anfrage}
-              activeTab={activeTab}
-              offerInput={offerInputs[anfrage.id as any] ?? String(anfrage.recommended_price_min)}
-              onOfferChange={handleOfferChange}
-              onSendOffer={sendOffer}
-              submitting={submitting === anfrage.id}
-            />
-          ))}
-        </List>
+        {user?.approval_status === 'approved' && filtered.length > 0 && (
+          <List variant="stack" ariaLabel={t('requests.title', { defaultValue: 'Meine Anfragen' })}>
+            {filtered.map(anfrage => (
+              <RequestCard
+                key={anfrage.id}
+                request={anfrage}
+                activeTab={activeTab}
+                offerInput={offerInputs[anfrage.id as any] ?? String(anfrage.recommended_price_min)}
+                onOfferChange={handleOfferChange}
+                onSendOffer={sendOffer}
+                submitting={submitting === anfrage.id}
+              />
+            ))}
+          </List>
+        )}
       </div>
     </DashboardLayout>
   );

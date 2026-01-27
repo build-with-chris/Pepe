@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StepContent } from './BookingWizardSteps'
+import { DotLottieReact } from '@lottiefiles/dotlottie-react'
+import { CheckCircle2, ArrowRight, Home, Calendar } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 interface BookingData {
   // Step 1: Event Type
@@ -117,6 +120,7 @@ export default function BookingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
+  const [submittedResult, setSubmittedResult] = useState<any>(null)
   const wizardRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState<BookingData>({
     eventType: '',
@@ -362,6 +366,8 @@ export default function BookingWizard() {
           })
           
           if (response.ok) {
+            const result = await response.json()
+            setSubmittedResult(result)
             success = true
             break
           } else {
@@ -415,8 +421,7 @@ export default function BookingWizard() {
           termsAccepted: false,
           marketingConsent: false
         })
-        setCurrentStep(1)
-        alert('Vielen Dank für Ihre detaillierte Anfrage! Wir melden uns innerhalb von 24 Stunden bei Ihnen.')
+        // setCurrentStep(1) - Don't reset step, we'll show success screen instead
       } else {
         // Fallback: Store locally and show error with request ID
         const generatedRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
@@ -490,6 +495,49 @@ export default function BookingWizard() {
     return choices
   }
 
+
+  if (submittedResult) {
+    return (
+      <div className="booking-success-container py-12 px-4 max-w-2xl mx-auto text-center">
+        <div className="success-animation mb-8 flex justify-center">
+          <DotLottieReact
+            src="https://lottie.host/6334277f-37f7-4892-a202-a5ae73be94d6/0.json"
+            autoplay
+            loop={false}
+            style={{ width: '300px', height: '300px' }}
+          />
+        </div>
+        
+        <h2 className="display-3 mb-4 text-pepe-gold">Vielen Dank!</h2>
+        <p className="lead mb-8">
+          Deine Buchungsanfrage wurde erfolgreich übermittelt. Wir prüfen die Details und melden uns innerhalb von 24 Stunden bei dir.
+        </p>
+
+        {submittedResult.price_min && submittedResult.price_max && (
+          <div className="bg-pepe-ink/50 backdrop-blur-sm border border-pepe-gold/30 rounded-3xl p-8 mb-12 shadow-glow-sm">
+            <p className="text-sm uppercase tracking-widest text-pepe-t64 mb-2">Geschätzter Preisrahmen</p>
+            <div className="text-4xl md:text-5xl font-bold text-white mb-4">
+              {submittedResult.price_min} – {submittedResult.price_max} €
+            </div>
+            <p className="text-sm text-pepe-t48 italic">
+              * Inkl. aller Nebenkosten (Fahrtkosten, Technik, Agency Fee). Finales Angebot folgt nach Rücksprache.
+            </p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link to="/" className="btn btn-secondary btn-lg w-full flex items-center justify-center gap-2">
+            <Home className="w-5 h-5" />
+            Zurück zur Startseite
+          </Link>
+          <Link to="/shows" className="btn btn-primary btn-lg w-full flex items-center justify-center gap-2">
+            Weitere Shows entdecken
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div ref={wizardRef} className="booking-wizard">

@@ -731,18 +731,28 @@ export default function Home() {
       {/* PepeShows - More than Artist Agency */}
       <section className="section bg-pepe-ink">
         <div className="stage-container">
-          <div className="text-center mb-16">
-            <h2 className="display-2 mb-8">
-              {t('home.cta.heading')}
-            </h2>
-            <p className="lead max-w-4xl mx-auto">
-              {t('home.cta.description')}
-            </p>
-          </div>
-          <div className="text-center">
-            <Link to="/team" className="btn btn-secondary btn-lg">
-              {t('home.cta.button')}
-            </Link>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center lg:text-left order-2 lg:order-1">
+              <h2 className="display-3 mb-6">
+                {t('home.cta.heading')}
+              </h2>
+              <p className="lead text-pepe-t80 mb-8 max-w-xl mx-auto lg:mx-0">
+                {t('home.cta.description')}
+              </p>
+              <Link to="/team" className="btn btn-secondary btn-lg">
+                {t('home.cta.button')}
+              </Link>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/5 group">
+                <img 
+                  src="/images/Brandguide/Header Pepe 16:9.jpg" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  alt="Pepe Shows Vision" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -81,9 +81,14 @@ def _admin_gate_by_db():
     if not claims:
         return error_response("unauthorized", "Invalid or expired token", 401)
 
-    # 2) Load user and check DB flag
+    # 2) Load user and check DB flag or JWT role
     uid = claims.get('sub')  # Clerk user ID
     app.logger.info(f"ADMIN_GATE: path={path} uid={uid}")
+    
+    # Trust the JWT role claim if present (more immediate than DB sync)
+    clerk_role = (claims.get('public_metadata', {}) or {}).get('role')
+    is_clerk_admin = clerk_role in ('shows-admin', 'admin')
+    
     artist = None
 
     # Resolve via Clerk user ID stored on Artist.supabase_user_id
@@ -93,11 +98,22 @@ def _admin_gate_by_db():
             artist = Artist.query.filter(func.lower(Artist.supabase_user_id) == uid.lower()).first()
             if artist is not None:
                 app.logger.info(f"ADMIN_GATE: resolved by clerk_user_id -> artist_id={artist.id} email={getattr(artist,'email',None)} is_admin={getattr(artist,'is_admin',None)}")
-        except Exception:
+                
+                # Auto-sync admin status if Clerk says so
+                if is_clerk_admin and not artist.is_admin:
+                    artist.is_admin = True
+                    db.session.commit()
+                    app.logger.info(f"ADMIN_GATE: promoted artist {artist.id} to admin based on Clerk metadata")
+        except Exception as e:
+            app.logger.error(f"ADMIN_GATE: DB lookup/sync failed: {e}")
             artist = None
 
+    if is_clerk_admin:
+        app.logger.info(f"ADMIN_GATE: ALLOWED by Clerk role={clerk_role} uid={uid}")
+        return None
+
     if not artist or not getattr(artist, "is_admin", False):
-        app.logger.warning(f"ADMIN_GATE: FORBIDDEN uid={uid} artist_found={bool(artist)} is_admin={getattr(artist,'is_admin',None)}")
+        app.logger.warning(f"ADMIN_GATE: FORBIDDEN uid={uid} artist_found={bool(artist)} is_admin={getattr(artist,'is_admin',None)} role={clerk_role}")
         return error_response("forbidden", "Admins only", 403)
 
     # Admin OK -> continue request

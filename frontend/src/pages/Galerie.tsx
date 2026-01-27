@@ -3,6 +3,7 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import DotCloudImage from '../components/ui/DotCloudImage'
+import ImageCarousel from '../components/ImageCarousel'
 
 
 // Artist interface for discipline creation
@@ -383,58 +384,81 @@ export default function Galerie() {
       {/* Excellence Section with Discipline Stack Accordion */}
       <section className="section">
         <div className="stage-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
-            <div>
-              <h2 className="h2 mb-6">
-                {t('gallery23.headingDesktop') || 'We don\'t believe in average – with us it\'s excellence.'}
-              </h2>
-              <p className="body-lg mb-6">
-                {t('artists.quote') || 'Weltklasse-Künstler mit internationaler Erfahrung.'}
-              </p>
-              <p className="body text-pepe-t64 mb-0">
-                {t('gallery23.subtitle') || 'Wählen Sie eine Disziplin, um Referenzen, Einsätze und passende Künstler zu sehen.'}
-              </p>
+          <div className="mb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-12">
+              <div>
+                <h2 className="h2 mb-6">
+                  {t('gallery23.headingDesktop') || 'We don\'t believe in average – with us it\'s excellence.'}
+                </h2>
+                <p className="body-lg mb-6">
+                  {t('artists.quote') || 'Weltklasse-Künstler mit internationaler Erfahrung.'}
+                </p>
+                <p className="body text-pepe-t64 mb-0">
+                  {t('gallery23.subtitle') || 'Wählen Sie eine Disziplin, um Referenzen, Einsätze und passende Künstler zu sehen.'}
+                </p>
+              </div>
+              <div 
+                className="discipline-card-stack"
+                onMouseEnter={handleStackMouseEnter}
+                onMouseLeave={handleStackMouseLeave}
+              >
+                {disciplines.map((discipline, index) => (
+                  <div 
+                    key={discipline.id} 
+                    className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
+                    style={{ '--index': index } as React.CSSProperties}
+                    onMouseEnter={() => handleDisciplineClick(index)}
+                  >
+                    {/* Text-only display for closed cards */}
+                    <div className="discipline-text-only">
+                      {discipline.name}
+                    </div>
+                    
+                    {/* Image only - no DotIcon overlay */}
+                    <div className="discipline-image-container">
+                      <img
+                        src={discipline.image}
+                        alt={discipline.name}
+                        className="discipline-image"
+                      />
+                    </div>
+                    
+                    {/* Simplified Overlay content for active card */}
+                    <div className="discipline-overlay">
+                      <h3 className="text-2xl font-bold text-white mb-0">{discipline.name}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div 
-              className="discipline-card-stack"
-              onMouseEnter={handleStackMouseEnter}
-              onMouseLeave={handleStackMouseLeave}
-            >
-              {disciplines.map((discipline, index) => (
-                <div 
-                  key={discipline.id} 
-                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
-                  style={{ '--index': index } as React.CSSProperties}
-                  onMouseEnter={() => handleDisciplineClick(index)}
-                >
-                  {/* Text-only display for closed cards */}
-                  <div className="discipline-text-only">
-                    {discipline.name}
-                  </div>
-                  
-                  {/* Image only - no DotIcon overlay */}
-                  <div className="discipline-image-container">
-                    <img
-                      src={discipline.image}
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
-                  </div>
-                  
-                  {/* Enhanced Overlay content for active card */}
-                  <div className="discipline-overlay">
-                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
-                    <p className="discipline-description text-white/90 mb-6">
-                      {discipline.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+
+            {/* Description below the stack */}
+            <div className="bg-pepe-ink/50 backdrop-blur-sm border border-pepe-line/30 rounded-3xl p-8 transition-all duration-500 min-h-[120px] flex flex-col justify-center">
+              <h3 className="h3 text-pepe-gold mb-3">
+                {disciplines[expandedDiscipline]?.name}
+              </h3>
+              <p className="body-lg text-pepe-t80 mb-0">
+                {disciplines[expandedDiscipline]?.description}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
+
+      {/* Featured Highlights Slider - The "Old Component" */}
+      <section className="section bg-pepe-dark/30 py-20 overflow-hidden">
+        <div className="stage-container">
+          <div className="section-header text-center mb-12">
+            <h2 className="h1 mb-4">Highlights</h2>
+            <p className="body-lg text-pepe-t64">Momentaufnahmen unserer spektakulärsten Shows</p>
+          </div>
+          <ImageCarousel 
+            images={staticGalleryImages.slice(0, 6).map(img => ({ src: img.src, alt: img.alt }))} 
+            className="mx-auto"
+          />
+        </div>
+      </section>
 
       {/* Video Section - "Vorhang auf für unsere Artisten" */}
       <section className="section bg-gradient-dark">

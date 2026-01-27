@@ -164,8 +164,17 @@ export default function Profile() {
     e.preventDefault();
     setError(null);
 
-    if (!name || !street || !postalCode || !city || !country || !phoneNumber || disciplines.length === 0) {
-      setError(t('profileSetup.errors.fillRequired'));
+    const missingFields = [];
+    if (!name) missingFields.push(t('profileSetup.fields.name', 'Name'));
+    if (!street) missingFields.push(t('profileSetup.fields.street', 'Straße'));
+    if (!postalCode) missingFields.push(t('profileSetup.fields.postalCode', 'PLZ'));
+    if (!city) missingFields.push(t('profileSetup.fields.city', 'Stadt'));
+    if (!country) missingFields.push(t('profileSetup.fields.country', 'Land'));
+    if (!phoneNumber) missingFields.push(t('profileSetup.fields.phoneNumber', 'Telefonnummer'));
+    if (disciplines.length === 0) missingFields.push(t('profileSetup.fields.disciplines', 'Disziplinen'));
+
+    if (missingFields.length > 0) {
+      setError(`${t('profileSetup.errors.fillRequired')}: ${missingFields.join(', ')}`);
       return;
     }
     if (priceMin > priceMax) {

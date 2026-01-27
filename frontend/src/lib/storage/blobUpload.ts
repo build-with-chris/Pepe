@@ -102,6 +102,14 @@ export async function uploadProfileImage(
     const pathname = getStoragePath(artistId, 'profile');
 
     setDebug?.(`Uploading to Vercel Blob: ${pathname}`);
+    
+    // Check if token is available (either in env or passed)
+    if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN) {
+      const errorMsg = 'Vercel Blob token is missing. Please set BLOB_READ_WRITE_TOKEN in your environment.';
+      setDebug?.(errorMsg);
+      throw new Error(errorMsg);
+    }
+
     const { url } = await put(pathname, webpBlob, {
       access: 'public',
       contentType: 'image/webp',

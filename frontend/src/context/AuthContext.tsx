@@ -7,6 +7,8 @@ interface UserPayload {
   email?: string;
   role?: string;
   is_admin?: boolean;
+  approval_status?: 'approved' | 'pending' | 'rejected' | 'unsubmitted';
+  backend_id?: number | string;
   [key: string]: any;
 }
 
@@ -63,9 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 },
               });
 
-              await fetch(`${API}/api/artists/me`, {
+              const meRes = await fetch(`${API}/api/artists/me`, {
                 headers: { Authorization: `Bearer ${clerkToken}` },
               });
+              
+              if (meRes.ok) {
+                const meData = await meRes.json();
+                userPayload.is_admin = meData.is_admin === true || isAdminFromClerk;
+                userPayload.backend_id = meData.id;
+                userPayload.approval_status = meData.approval_status;
+              }
             } catch (e) {
               console.warn('[Auth] Backend sync error:', e);
             }

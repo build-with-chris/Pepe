@@ -90,7 +90,7 @@ export default function Team() {
               <h1 className="display-1 display-gradient mb-6">
                 {t('team.hero.title')}
               </h1>
-              <p className="text-xl md:text-4xl lg:text-5xl xl:text-6xl text-pepe-gold/90 max-w-3xl mx-auto font-semibold leading-relaxed">
+              <p className="text-lg md:text-2xl lg:text-3xl xl:text-4xl text-pepe-gold/90 max-w-4xl mx-auto font-medium leading-relaxed">
                 Eine Community aus Weltklasse-Künstlern,<br />
                 die gemeinsam Außergewöhnliches erschafft.
               </p>
@@ -152,11 +152,11 @@ export default function Team() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-8 mb-8">
               {/* Community Image */}
-              <div className="card overflow-hidden">
+              <div className="card overflow-hidden border-none shadow-2xl">
                 <img
-                  src="/images/About1/About1.2.webp"
-                  alt="Gemeinsames Training im PepeDome"
-                  className="w-full h-full object-cover aspect-[4/3]"
+                  src="/images/Team_pic.png"
+                  alt="Das Pepe Shows Team"
+                  className="w-full h-full object-cover aspect-[16/9]"
                 />
               </div>
 
@@ -200,11 +200,11 @@ export default function Team() {
             <div className="card hover:border-pepe-gold/50 transition-all overflow-hidden flex flex-col">
               <div className="card-body p-0 flex flex-col">
                 {/* Michael Image */}
-                <div className="w-full aspect-square max-h-[300px] overflow-hidden flex-shrink-0">
+                <div className="w-full aspect-square max-h-[300px] overflow-hidden flex-shrink-0 bg-[#161616]">
                   <img
                     src="/images/Michi.webp"
                     alt="Michael Heiduk"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top scale-[1.1]"
                   />
                 </div>
                 {/* Text unter dem Bild */}

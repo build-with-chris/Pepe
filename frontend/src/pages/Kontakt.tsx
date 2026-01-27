@@ -60,7 +60,7 @@ export default function Kontakt() {
                 <div className="body-sm">{t('kontakt.methods.space.address')}</div>
               </div>
               <a
-                href="https://maps.google.com/?q=Ostpark+München+81735"
+                href="https://maps.google.com/?q=PepeDome+im+Ostpark+München"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary btn-lg"
