@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
 import LogoPepe from "../assets/LogoPepe.png";
 import PepeWebp from "../assets/PEPE.webp";
-import PepeLogosZip from "../assets/Logos/PepeLogos.zip";
+
+const PepeLogosZip = "/media/PepeLogos.zip";
 
 // Pepe Mediamaterial – Seite für Veranstalter
 // Merged version: New design system + Original content from main branch
