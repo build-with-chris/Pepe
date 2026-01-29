@@ -38,7 +38,9 @@
       "Bash(npm install:*)",
       "Bash(npm run test:run:*)",
       "Bash(python -m pytest tests/test_crud_operations.py -v --tb=short --ignore-glob='*pagination*' -k 'not pagination')",
-      "Bash(python -m pytest:*)"
+      "Bash(python -m pytest:*)",
+      "Bash(source:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
