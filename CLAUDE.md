@@ -27,4 +27,4 @@
 - This is a full-stack booking application for an artist agency
 - Backend uses Flask with SQLAlchemy
 - Frontend uses React with TypeScript and Vite
-- Deployment ready with Cloudflare Pages/Workers
+- Frontend: deploy z. B. **Vercel** (`frontend/`, `vercel.json`); vgl. `docs/FRONTEND_VERCEL_STATT_CLOUDFLARE.md` wenn du von Cloudflare umziehst

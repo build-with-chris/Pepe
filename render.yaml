@@ -8,12 +8,14 @@ services:
     runtime: python
     region: frankfurt
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    # pip aktualisieren hilft bei Wheels (Pillow, psycopg) und Resolver-Fehlern
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     healthCheckPath: /healthz
     envVars:
+      # Volle Version nötig (Render-Doku); 3.11.0 fehlt oft auf den Build-Images
       - key: PYTHON_VERSION
-        value: "3.11.0"
+        value: "3.11.11"
       - key: FLASK_ENV
         value: production
       - key: DATABASE_URL
