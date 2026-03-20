@@ -4,6 +4,7 @@ import { StepContent } from './BookingWizardSteps'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import { CheckCircle2, ArrowRight, Home, Calendar } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { getApiBaseUrl } from '@/lib/apiBase'
 
 interface BookingData {
   // Step 1: Event Type
@@ -344,44 +345,40 @@ export default function BookingWizard() {
     setRequestId(null)
     
     try {
-      // Try multiple endpoints for reliability
-      const endpoints = [
-        `${import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'}/api/requests/requests`,
-        '/api/requests/requests', // Local fallback
-        'https://api.pepe-shows.com/requests/requests' // Alternative endpoint
-      ]
-      
-      let success = false
-      let lastError: any = null
-      
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify(transformToBackendPayload(formData)),
-          })
-          
-          if (response.ok) {
-            const result = await response.json()
-            setSubmittedResult(result)
-            success = true
-            break
-          } else {
-            const errorData = await response.text()
-            console.warn(`Endpoint ${endpoint} failed:`, response.status, errorData)
-            lastError = new Error(`${endpoint}: ${response.status}`)
-          }
-        } catch (endpointError) {
-          console.warn(`Endpoint ${endpoint} error:`, endpointError)
-          lastError = endpointError
-          continue
-        }
+      const baseUrl = getApiBaseUrl()
+      if (!baseUrl) {
+        setServerError('Backend-URL fehlt: VITE_API_URL in frontend/.env setzen.')
+        setIsSubmitting(false)
+        return
       }
-      
+      const endpoint = `${baseUrl}/api/requests/requests`
+      let success = false
+      let lastError: unknown = null
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(transformToBackendPayload(formData)),
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          setSubmittedResult(result)
+          success = true
+        } else {
+          const errorData = await response.text()
+          console.warn(`Booking submit failed:`, response.status, errorData)
+          lastError = new Error(`${endpoint}: ${response.status}`)
+        }
+      } catch (endpointError) {
+        console.warn('Booking submit error:', endpointError)
+        lastError = endpointError
+      }
+
       if (success) {
         // Store locally as backup
         localStorage.setItem('last-booking-request', JSON.stringify({

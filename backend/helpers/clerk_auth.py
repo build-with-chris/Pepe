@@ -1,6 +1,8 @@
 # helpers/clerk_auth.py
 """Clerk JWT verification helper for Flask backend."""
 
+from __future__ import annotations
+
 import os
 import ssl
 import jwt

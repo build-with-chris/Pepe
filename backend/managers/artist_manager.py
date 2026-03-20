@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from models import db, Artist
 from models import Discipline, Availability, Artist
 from datetime import date

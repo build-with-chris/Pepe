@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 from typing import Deque, Tuple, Dict, Any
 from collections import deque

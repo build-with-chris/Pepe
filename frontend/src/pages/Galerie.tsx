@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import DotCloudImage from '../components/ui/DotCloudImage'
 import ImageCarousel from '../components/ImageCarousel'
+import { getApiBaseUrl } from '@/lib/apiBase'
 
 
 // Artist interface for discipline creation
@@ -261,7 +262,8 @@ export default function Galerie() {
 
     const fetchArtistsAndImages = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        const baseUrl = getApiBaseUrl()
+        if (!baseUrl) return
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
           headers: {

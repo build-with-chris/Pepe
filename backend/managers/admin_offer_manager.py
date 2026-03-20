@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from models import db, AdminOffer, Artist
 from datetime import datetime, timezone
 import logging

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 def calculate_price(base_min, base_max,

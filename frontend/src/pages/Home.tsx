@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import DotCloudImage from '../components/ui/DotCloudImage'
+import { getApiBaseUrl } from '@/lib/apiBase'
 import FloatingDisciplines from '../components/FloatingDisciplines'
 import heroImage from '../assets/PepeHero.webp'
 
@@ -234,7 +235,8 @@ export default function Home() {
 
     const fetchArtists = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        const baseUrl = getApiBaseUrl()
+        if (!baseUrl) return
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
           headers: {
@@ -262,7 +264,8 @@ export default function Home() {
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return ''
     if (imageUrl.startsWith('http')) return imageUrl
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+    const baseUrl = getApiBaseUrl()
+    if (!baseUrl) return ''
     return `${baseUrl}${imageUrl}`
   }
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getApiBaseUrl } from '@/lib/apiBase';
 
 interface Artist {
   id: number;
@@ -24,7 +25,8 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return '';
     if (imageUrl.startsWith('http')) return imageUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com';
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) return '';
     return `${baseUrl}${imageUrl}`;
   };
 

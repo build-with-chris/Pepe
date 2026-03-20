@@ -8,7 +8,7 @@ Hier entsteht ein schicker, moderner **Buchungswizard**, der die Kommunikation m
 ## 🔗 API-Anbindung
 
 Alle Daten holt sich diese App von unserer eigenen API:  
-👉 [Pepe Backend API Docs](https://pepe-backend-4nid.onrender.com/apidocs/#/)
+Swagger: `/api-docs/` auf deiner eigenen Backend-URL (lokal z. B. `http://127.0.0.1:5000/api-docs/`).
 
 Diese Schnittstelle wurde eigens programmiert und liefert alles, was der Wizard zum Leben braucht: Verfügbarkeiten, Anfragen, Buchungen & Co.
 

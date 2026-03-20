@@ -1,3 +1,15 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# Backend-Root immer auf sys.path, wenn Flask nicht aus backend/ gestartet wird
+# (sonst: ModuleNotFoundError: config → kein „flask db“-Befehl)
+_backend_dir = Path(__file__).resolve().parent
+_backend_dir_str = str(_backend_dir)
+if _backend_dir_str not in sys.path:
+    sys.path.insert(0, _backend_dir_str)
+
 from flask import Flask, jsonify, request
 from config import Config
 from models import db, Artist
@@ -26,15 +38,15 @@ from urllib.parse import urlparse
 # --- Flask app & config ---
 app = Flask(__name__)
 app.config.from_object(Config)
-# Ensure robust DB connections (survive restarts/plan changes)
-app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {
-    'pool_pre_ping': True,     # validates connections before using them
-    'pool_recycle': 1800,      # recycle connections every 30 minutes
+# Robuste DB-Verbindungen + optional connect_args aus Config (z. B. Supabase SSL)
+_engine_defaults = {
+    'pool_pre_ping': True,
+    'pool_recycle': 1800,
     'pool_size': 5,
     'max_overflow': 5,
-    # If your provider requires SSL (e.g. Supabase/managed PG), uncomment:
-    # 'connect_args': {'sslmode': 'require'},
-})
+}
+_cfg_engine = dict(getattr(Config, 'SQLALCHEMY_ENGINE_OPTIONS', None) or {})
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {**_engine_defaults, **_cfg_engine}
 # Hilfsfunktion: Passwort in der DB-URL maskieren für Logs
 def mask_db_uri(uri: str) -> str:
     import re
@@ -126,12 +138,18 @@ allowed_patterns = [o.strip() for o in origins_env.split(",") if o.strip()]
 # Fallback, falls ENV leer ist
 if not allowed_patterns:
     allowed_patterns = [
-        "http://localhost:*",  # Allow all localhost ports for dev
+        "http://localhost:*",  # alle localhost-Ports (Vite 5173/5174 …)
+        "http://127.0.0.1:*",
         "https://pepeshows.de",
         "https://*.vercel.app",  # allow Vercel preview domains via wildcard
     ]
 
 def _pattern_to_regex_fragment(p: str) -> str:
+    # Explizit: localhost / 127.0.0.1 mit beliebigem Port (robuster als nur re.escape)
+    if p in ("http://localhost:*", "https://localhost:*"):
+        return r"https?://localhost(?::\d+)?"
+    if p in ("http://127.0.0.1:*", "https://127.0.0.1:*"):
+        return r"https?://127\.0\.0\.1(?::\d+)?"
     # Exact origin (no wildcard): anchor exact match
     if "*" not in p:
         return re.escape(p)
