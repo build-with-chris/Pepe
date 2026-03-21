@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import ssl
 import jwt
@@ -23,19 +24,31 @@ except ImportError:
 _DEFAULT_JWKS_URL = "https://next-quail-49.clerk.accounts.dev/.well-known/jwks.json"
 
 def get_clerk_jwks_url():
-    """Get the JWKS URL from environment or fallback."""
+    """Get the JWKS URL from environment or fallback.
+
+    Clerk publishable keys encode the instance domain:
+      pk_test_<base64(domain)>  or  pk_live_<base64(domain)>
+    e.g. pk_test_bmV4dC1xdWFpbC00OS5jbGVyay5hY2NvdW50cy5kZXYk
+    decodes to "next-quail-49.clerk.accounts.dev$"
+    """
     url = os.getenv("CLERK_JWKS_URL")
     if url:
         return url
-    
-    # Try to derive from CLERK_PUBLISHABLE_KEY if available
+
     pub_key = os.getenv("CLERK_PUBLISHABLE_KEY")
     if pub_key and pub_key.startswith("pk_"):
-        # This is a bit simplified, but common for Clerk
-        # format: pk_test_... or pk_live_...
-        # The domain is often embedded in the key but not easily extractable without more logic
-        pass
-        
+        # Extract the base64-encoded domain after "pk_test_" or "pk_live_"
+        parts = pub_key.split("_", 2)  # ["pk", "test"/"live", "<base64>"]
+        if len(parts) == 3:
+            try:
+                # Clerk uses base64 with '$' as a terminator
+                decoded = base64.b64decode(parts[2] + "==").decode("utf-8")
+                domain = decoded.rstrip("$")
+                if domain:
+                    return f"https://{domain}/.well-known/jwks.json"
+            except Exception:
+                pass
+
     return _DEFAULT_JWKS_URL
 
 # Cache the JWKS client
