@@ -141,6 +141,7 @@ if not allowed_patterns:
         "http://localhost:*",  # alle localhost-Ports (Vite 5173/5174 …)
         "http://127.0.0.1:*",
         "https://pepeshows.de",
+        "https://www.pepeshows.de",
         "https://*.vercel.app",  # allow Vercel preview domains via wildcard
     ]
 
