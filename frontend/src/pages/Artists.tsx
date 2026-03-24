@@ -107,7 +107,7 @@ export default function KuenstlerVerwaltung() {
       try {
         const results = await Promise.all(
           statuses.map(async (s) => {
-            const res = await fetch(`${baseUrl}/admin/artists?status=${s}`, {
+            const res = await fetch(`${baseUrl}/api/admin/artists?status=${s}`, {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             if (!res.ok) throw new Error(`HTTP ${res.status} on /admin/artists?status=${s}`);
@@ -163,7 +163,7 @@ export default function KuenstlerVerwaltung() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${baseUrl}/admin/dashboard`, {
+    fetch(`${baseUrl}/api/admin/dashboard`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
@@ -223,7 +223,7 @@ export default function KuenstlerVerwaltung() {
     setActionError(null);
     setActionLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/admin/artists/${selected.id}/approve`, {
+      const res = await fetch(`${baseUrl}/api/admin/artists/${selected.id}/approve`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -254,7 +254,7 @@ export default function KuenstlerVerwaltung() {
     setActionError(null);
     setDeletingId(artist.id);
     try {
-      const res = await fetch(`${baseUrl}/admin/artists/${artist.id}`, {
+      const res = await fetch(`${baseUrl}/api/admin/artists/${artist.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
