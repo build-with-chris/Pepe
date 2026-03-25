@@ -246,6 +246,39 @@ export default function KuenstlerVerwaltung() {
     }
   };
 
+  const rejectSelected = async () => {
+    if (!selected) return;
+    const reason = window.prompt('Grund für die Ablehnung (optional):');
+    if (reason === null) return; // cancelled
+    setActionError(null);
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/admin/artists/${selected.id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ reason: reason.trim() || undefined }),
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(`HTTP ${res.status}: ${t}`);
+      }
+      const data = await res.json().catch(() => null);
+      const newStatus = (data?.status as string) || 'rejected';
+
+      setSelected({ ...selected, approval_status: newStatus, rejection_reason: reason.trim() || null });
+      setArtists(prev =>
+        prev.map(a => (a.id === selected.id ? { ...a, approval_status: newStatus, rejection_reason: reason.trim() || null } : a))
+      );
+    } catch (e: any) {
+      setActionError(e.message || 'Reject failed');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const deleteArtist = async (artist: Artist, e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!token) return;
@@ -443,6 +476,16 @@ export default function KuenstlerVerwaltung() {
                     size="sm"
                   >
                     {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Approve'}
+                  </Button>
+                )}
+                {selected.approval_status !== 'rejected' && (
+                  <Button
+                    onClick={rejectSelected}
+                    disabled={actionLoading}
+                    className="bg-red-600 hover:bg-red-500 text-white"
+                    size="sm"
+                  >
+                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reject'}
                   </Button>
                 )}
                 <Button variant="ghost" size="icon" onClick={closeDetails} className="text-gray-400 hover:text-white">
