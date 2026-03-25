@@ -20,6 +20,7 @@ from routes.admin_routes import admin_bp
 from flasgger import Swagger
 from flask_cors import CORS
 from routes.request_routes import booking_bp
+from routes.upload_routes import upload_bp
 from flask_migrate import Migrate
 from helpers.clerk_auth import verify_clerk_token
 
@@ -65,6 +66,7 @@ migrate = Migrate(app, db)
 app.register_blueprint(auth_bp,  url_prefix='/auth')
 app.register_blueprint(api_bp,   url_prefix='/api')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
+app.register_blueprint(upload_bp, url_prefix='/api/upload')
 app.register_blueprint(booking_bp)
 
 jwt = JWTManager(app)

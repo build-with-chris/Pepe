@@ -196,22 +196,24 @@ export default function Profile() {
 
       let effectiveId = backendArtistId || "new-id";
 
-      // Upload profile image to Vercel Blob
+      // Upload profile image via backend
       let imageUrl = await uploadProfileImage(
         profileImageFile,
         effectiveId,
         setProfileImageUrl,
         setBackendDebug,
-        profileImageUrl
+        profileImageUrl,
+        token || undefined
       );
 
-      // Upload gallery images to Vercel Blob
+      // Upload gallery images via backend
       let mergedGalleryUrls = await uploadGalleryImages(
         galleryFiles,
         effectiveId,
         galleryUrls,
         setGalleryUrls,
-        setBackendDebug
+        setBackendDebug,
+        token || undefined
       );
 
       const nextStatus = approvalStatus === 'approved' ? 'approved' : 'pending';
