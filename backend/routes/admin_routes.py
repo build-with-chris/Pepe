@@ -5,7 +5,7 @@ from managers.booking_requests_manager import BookingRequestManager
 from managers.admin_offer_manager import AdminOfferManager
 from managers.availability_manager import AvailabilityManager
 from managers.artist_manager import ArtistManager
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from helpers.clerk_auth import verify_clerk_token
 from models import Artist
 from models import db
 import os
@@ -56,7 +56,6 @@ except Exception:
 # Admin: Invoices – Liste & Patch (Status ändern)
 # -------------------------------------------------------------
 @admin_bp.route('/invoices', methods=['GET'])
-@jwt_required()
 @swag_from(SWAG('admin_invoices_get.yml'), validation=False)
 def admin_list_invoices():
     """Listet alle Rechnungen mit Artist-Infos (nur Admins)."""
@@ -88,7 +87,6 @@ def admin_list_invoices():
 
 
 @admin_bp.route('/invoices/<int:invoice_id>', methods=['PATCH'])
-@jwt_required()
 @swag_from(SWAG('admin_invoices_patch.yml'), validation=False)
 def admin_patch_invoice(invoice_id: int):
     """Aktualisiert Felder einer Rechnung (nur Admins)."""
@@ -124,7 +122,6 @@ def admin_patch_invoice(invoice_id: int):
 
 
 @admin_bp.route('/invoices/<int:invoice_id>/url', methods=['GET'])
-@jwt_required()
 @swag_from(SWAG('admin_invoices_url_get.yml'), validation=False)
 def admin_invoice_signed_url(invoice_id: int):
     """Erzeugt eine kurzlebige signierte URL (30 Min) für eine private Invoice-Datei im Supabase Storage.
@@ -232,7 +229,6 @@ def admin_invoice_signed_url(invoice_id: int):
 
 # Admin rights
 @admin_bp.route('/requests/all', methods=['GET'])
-@jwt_required()
 @swag_from(SWAG('requests_all_get.yml'))
 def list_all_requests():
     """Gibt alle Buchungsanfragen zurück (Admin-View)."""
@@ -264,7 +260,6 @@ def list_all_requests():
 
 # AdminOffer CRUD
 @admin_bp.route('/requests/<int:req_id>/admin_offers', methods=['GET'])
-@jwt_required()
 @swag_from(SWAG('admin_requests_admin_offers_get.yml'))
 def list_admin_offers(req_id):
     """Gibt alle Admin-Angebote für eine bestimmte Buchungsanfrage zurück."""
@@ -280,7 +275,6 @@ def list_admin_offers(req_id):
 
 
 @admin_bp.route('/admin_offers/<int:offer_id>', methods=['GET'])
-@jwt_required()
 def get_admin_offer(offer_id):
     """Return a single admin offer by its ID (admin only)."""
     offer = offer_mgr.get_admin_offer(offer_id)
@@ -289,7 +283,6 @@ def get_admin_offer(offer_id):
     return jsonify(offer_mgr.serialize(offer)), 200
 
 @admin_bp.route('/requests/<int:req_id>/admin_offers', methods=['POST'])
-@jwt_required()
 @swag_from(SWAG('admin_requests_admin_offers_post.yml'))
 def create_admin_offer(req_id):
     """Erstellt ein neues Admin-Angebot für eine Buchungsanfrage."""
@@ -307,7 +300,6 @@ def create_admin_offer(req_id):
     return jsonify({'id': offer.id}), 201
 
 @admin_bp.route('/admin_offers/<int:offer_id>', methods=['PUT'])
-@jwt_required()
 @swag_from(SWAG('admin_admin_offers_put.yml'))
 def update_admin_offer(offer_id):
     """Update an existing admin offer (admin only)."""
@@ -324,7 +316,6 @@ def update_admin_offer(offer_id):
     })
 
 @admin_bp.route('/admin_offers/<int:offer_id>', methods=['DELETE'])
-@jwt_required()
 @swag_from(SWAG('admin_admin_offers_delete.yml'))
 def delete_admin_offer(offer_id):
     """Delete an admin offer by ID (admin only)."""
@@ -337,7 +328,6 @@ def delete_admin_offer(offer_id):
 # Admin: Artist-Freigaben (Listen, Approve, Reject)
 # -------------------------------------------------------------
 @admin_bp.route('/artists', methods=['GET'])
-@jwt_required()
 @swag_from(SWAG('admin_artists_get.yml'))
 def list_artists_by_status():
     """List artists filtered by approval status (admin only)."""
@@ -386,13 +376,15 @@ def list_artists_by_status():
 
 
 @admin_bp.route('/artists/<int:artist_id>/approve', methods=['POST'])
-@jwt_required()
 @swag_from(SWAG('admin_artists_id_approve_post.yml'))
 def approve_artist(artist_id):
     """Approve an artist (set approval_status=approved)."""
     logger.debug(f"[ADMIN] approve_artist called; artist_id={artist_id}")
     try:
-        admin_id = get_jwt_identity()
+        auth_header = request.headers.get('Authorization', '')
+        token = auth_header[7:] if auth_header.startswith('Bearer ') else ''
+        claims = verify_clerk_token(token) or {}
+        admin_id = claims.get('sub')
         logger.debug(f"[ADMIN] approve_artist admin_id={admin_id}")
 
         artist = offer_mgr.approve_artist(artist_id=artist_id, admin_id=admin_id)
@@ -413,7 +405,6 @@ def approve_artist(artist_id):
 
 
 @admin_bp.route('/artists/<int:artist_id>/reject', methods=['POST'])
-@jwt_required()
 @swag_from(SWAG('admin_artists_id_reject_post.yml'))
 def reject_artist(artist_id):
     """Reject an artist (set approval_status=rejected with optional reason)."""
@@ -421,7 +412,10 @@ def reject_artist(artist_id):
     try:
         body = request.get_json(silent=True) or {}
         reason = (body.get('reason') or body.get('comment') or '').strip()
-        admin_id = get_jwt_identity()
+        auth_header = request.headers.get('Authorization', '')
+        token = auth_header[7:] if auth_header.startswith('Bearer ') else ''
+        claims = verify_clerk_token(token) or {}
+        admin_id = claims.get('sub')
         logger.debug(f"[ADMIN] reject_artist admin_id={admin_id} reason={reason!r}")
 
         artist = offer_mgr.reject_artist(artist_id=artist_id, admin_id=admin_id, reason=reason)
@@ -445,7 +439,6 @@ def reject_artist(artist_id):
 # -------------------------------------------------------------
 # New: Delete artist by ID (admin only)
 @admin_bp.route('/artists/<int:artist_id>', methods=['DELETE'])
-@jwt_required()
 @swag_from({
     'tags': ['Admin'],
     'summary': 'Delete an artist by ID (admin only)',
@@ -508,7 +501,6 @@ def delete_artist(artist_id: int):
 # Per-Artist-Status einer Anfrage (Admin) 08.08.25
 # -------------------------------------------------------------
 @admin_bp.route('/requests/<int:req_id>/artist_status', methods=['GET'])
-@jwt_required()
 @swag_from(SWAG('admin_artist_status_get.yml'))
 def admin_get_artist_statuses(req_id):
     """Return the status of all artists for a request (admin only)."""
@@ -517,7 +509,6 @@ def admin_get_artist_statuses(req_id):
     return jsonify(statuses), 200
 
 @admin_bp.route('/requests/<int:req_id>/artist_status/<int:artist_id>', methods=['PUT'])
-@jwt_required()
 @swag_from(SWAG('admin_artist_status_put.yml'))
 def admin_set_artist_status(req_id, artist_id):
     """Set the status for one artist in a request (admin only)."""
@@ -532,7 +523,6 @@ def admin_set_artist_status(req_id, artist_id):
     return jsonify({'artist_id': artist_id, 'status': new_status, 'comment': comment}), 200
 
 @admin_bp.route('/requests/<int:req_id>/artist_status', methods=['PUT'])
-@jwt_required()
 @swag_from(SWAG('admin_artist_status_bulk_put.yml'))
 def admin_set_artists_status_bulk(req_id):
     """Set the status for all or selected artists in a request (admin only)."""
@@ -549,7 +539,6 @@ def admin_set_artists_status_bulk(req_id):
     return jsonify({'updated': updated, 'status': new_status, 'comment': comment}), 200
 
 @admin_bp.route('/dashboard')
-@jwt_required()
 @swag_from(SWAG('dashboard_get.yml'))
 def dashboard():
     """Return dashboard data with availabilities and requests (admin only)."""
@@ -577,7 +566,6 @@ def dashboard():
 # ===== ADMIN GAGE MANAGEMENT ENDPOINTS =====
 
 @admin_bp.route('/artists/<int:artist_id>/gage-override', methods=['PUT'])
-@jwt_required()
 def set_artist_gage_override(artist_id):
     """Set admin override for artist gage."""
     try:
@@ -609,7 +597,6 @@ def set_artist_gage_override(artist_id):
 
 
 @admin_bp.route('/artists/<int:artist_id>/gage-calculation', methods=['GET'])
-@jwt_required()
 def get_artist_gage_calculation(artist_id):
     """Get detailed gage calculation breakdown for any artist (admin only)."""
     try:
@@ -625,7 +612,6 @@ def get_artist_gage_calculation(artist_id):
 
 
 @admin_bp.route('/gage/recalculate-all', methods=['POST'])
-@jwt_required()
 def recalculate_all_gages():
     """Recalculate gages for all artists (admin only)."""
     try:
