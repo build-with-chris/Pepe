@@ -1,9 +1,7 @@
-import { put, del } from "@vercel/blob";
-
 /**
- * Vercel Blob Storage Upload Service
+ * Image Upload Service - uploads via backend API
  *
- * Folder Structure:
+ * Folder Structure (handled by backend):
  * - artists/{artistId}/profile.webp     - Profile image (1 per artist)
  * - artists/{artistId}/hero.webp        - Hero/banner image (1 per artist)
  * - artists/{artistId}/gallery/{ts}.webp - Gallery images (multiple)
@@ -12,30 +10,7 @@ import { put, del } from "@vercel/blob";
 
 export type UploadType = 'profile' | 'hero' | 'gallery' | 'invoice';
 
-interface UploadResult {
-  url: string;
-  pathname: string;
-}
-
-/**
- * Generate the storage path based on upload type
- */
-function getStoragePath(artistId: string, type: UploadType, filename?: string): string {
-  const timestamp = Date.now();
-
-  switch (type) {
-    case 'profile':
-      return `artists/${artistId}/profile.webp`;
-    case 'hero':
-      return `artists/${artistId}/hero.webp`;
-    case 'gallery':
-      return `artists/${artistId}/gallery/${timestamp}.webp`;
-    case 'invoice':
-      return `invoices/${artistId}/${filename || `invoice_${timestamp}.pdf`}`;
-    default:
-      return `misc/${artistId}/${timestamp}`;
-  }
-}
+const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * Convert image to WebP format using canvas
@@ -49,7 +24,6 @@ async function convertToWebP(file: File, maxWidth = 1200, maxHeight = 1200, qual
     img.onload = () => {
       let { width, height } = img;
 
-      // Resize if needed while maintaining aspect ratio
       if (width > maxWidth || height > maxHeight) {
         const ratio = Math.min(maxWidth / width, maxHeight / height);
         width = Math.round(width * ratio);
@@ -83,14 +57,55 @@ async function convertToWebP(file: File, maxWidth = 1200, maxHeight = 1200, qual
 }
 
 /**
- * Upload a profile image to Vercel Blob
+ * Upload file to backend which proxies to Vercel Blob
+ */
+async function uploadToBackend(
+  blob: Blob,
+  artistId: string,
+  type: UploadType,
+  token: string,
+  filename?: string
+): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', blob, filename || `${type}.webp`);
+  formData.append('type', type);
+  formData.append('artist_id', artistId);
+
+  const res = await fetch(`${API_URL}/api/upload/image`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Upload failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  return data.url;
+}
+
+/**
+ * Get the auth token from the current session
+ */
+function getAuthToken(): string {
+  // Will be passed from calling code
+  return '';
+}
+
+/**
+ * Upload a profile image via backend
  */
 export async function uploadProfileImage(
   file: File | null,
   artistId: string,
   setImageUrl: (url: string | null) => void,
   setDebug?: (message: string) => void,
-  existingUrl: string | null = null
+  existingUrl: string | null = null,
+  authToken?: string
 ): Promise<string | null> {
   if (!file) {
     return existingUrl;
@@ -99,22 +114,9 @@ export async function uploadProfileImage(
   try {
     setDebug?.('Converting profile image to WebP...');
     const webpBlob = await convertToWebP(file, 800, 800, 0.9);
-    const pathname = getStoragePath(artistId, 'profile');
 
-    setDebug?.(`Uploading to Vercel Blob: ${pathname}`);
-    
-    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
-    if (!blobToken) {
-      const errorMsg = 'Vercel Blob token is missing. Please set VITE_BLOB_READ_WRITE_TOKEN in your environment.';
-      setDebug?.(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    const { url } = await put(pathname, webpBlob, {
-      access: 'public',
-      contentType: 'image/webp',
-      token: blobToken,
-    });
+    setDebug?.(`Uploading profile image...`);
+    const url = await uploadToBackend(webpBlob, artistId, 'profile', authToken || '');
 
     setImageUrl(url);
     setDebug?.(`Profile image uploaded: ${url}`);
@@ -127,14 +129,15 @@ export async function uploadProfileImage(
 }
 
 /**
- * Upload a hero/banner image to Vercel Blob
+ * Upload a hero/banner image via backend
  */
 export async function uploadHeroImage(
   file: File | null,
   artistId: string,
   setImageUrl: (url: string | null) => void,
   setDebug?: (message: string) => void,
-  existingUrl: string | null = null
+  existingUrl: string | null = null,
+  authToken?: string
 ): Promise<string | null> {
   if (!file) {
     return existingUrl;
@@ -143,15 +146,9 @@ export async function uploadHeroImage(
   try {
     setDebug?.('Converting hero image to WebP...');
     const webpBlob = await convertToWebP(file, 1920, 1080, 0.85);
-    const pathname = getStoragePath(artistId, 'hero');
 
-    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
-    setDebug?.(`Uploading hero to Vercel Blob: ${pathname}`);
-    const { url } = await put(pathname, webpBlob, {
-      access: 'public',
-      contentType: 'image/webp',
-      token: blobToken,
-    });
+    setDebug?.(`Uploading hero image...`);
+    const url = await uploadToBackend(webpBlob, artistId, 'hero', authToken || '');
 
     setImageUrl(url);
     setDebug?.(`Hero image uploaded: ${url}`);
@@ -164,14 +161,15 @@ export async function uploadHeroImage(
 }
 
 /**
- * Upload multiple gallery images to Vercel Blob
+ * Upload multiple gallery images via backend
  */
 export async function uploadGalleryImages(
   files: File[],
   artistId: string,
   existingUrls: string[],
   setGalleryUrls: (urls: string[]) => void,
-  setDebug?: (message: string) => void
+  setDebug?: (message: string) => void,
+  authToken?: string
 ): Promise<string[]> {
   if (!files || files.length === 0) {
     return existingUrls;
@@ -180,19 +178,9 @@ export async function uploadGalleryImages(
   try {
     setDebug?.(`Uploading ${files.length} gallery images...`);
 
-    const uploadPromises = files.map(async (file, index) => {
+    const uploadPromises = files.map(async (file) => {
       const webpBlob = await convertToWebP(file, 1200, 1200, 0.85);
-      // Add index to ensure unique timestamps
-      const pathname = `artists/${artistId}/gallery/${Date.now()}_${index}.webp`;
-
-      const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
-      const { url } = await put(pathname, webpBlob, {
-        access: 'public',
-        contentType: 'image/webp',
-        token: blobToken,
-      });
-
-      return url;
+      return uploadToBackend(webpBlob, artistId, 'gallery', authToken || '');
     });
 
     const newUrls = await Promise.all(uploadPromises);
@@ -208,23 +196,17 @@ export async function uploadGalleryImages(
 }
 
 /**
- * Upload an invoice document to Vercel Blob
+ * Upload an invoice document via backend
  */
 export async function uploadInvoice(
   file: File,
   artistId: string,
-  setDebug?: (message: string) => void
+  setDebug?: (message: string) => void,
+  authToken?: string
 ): Promise<string | null> {
   try {
-    const pathname = getStoragePath(artistId, 'invoice', file.name);
-
-    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
-    setDebug?.(`Uploading invoice: ${pathname}`);
-    const { url } = await put(pathname, file, {
-      access: 'public',
-      contentType: file.type || 'application/pdf',
-      token: blobToken,
-    });
+    setDebug?.(`Uploading invoice: ${file.name}`);
+    const url = await uploadToBackend(file, artistId, 'invoice', authToken || '', file.name);
 
     setDebug?.(`Invoice uploaded: ${url}`);
     return url;
@@ -236,12 +218,19 @@ export async function uploadInvoice(
 }
 
 /**
- * Delete a file from Vercel Blob
+ * Delete a file via backend
  */
-export async function deleteFromBlob(url: string): Promise<boolean> {
+export async function deleteFromBlob(url: string, authToken?: string): Promise<boolean> {
   try {
-    await del(url);
-    return true;
+    const res = await fetch(`${API_URL}/api/upload/delete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+      body: JSON.stringify({ url }),
+    });
+    return res.ok;
   } catch (error) {
     console.error('Delete from blob failed:', error);
     return false;
@@ -254,9 +243,10 @@ export async function deleteFromBlob(url: string): Promise<boolean> {
 export async function deleteGalleryImage(
   urlToDelete: string,
   currentUrls: string[],
-  setGalleryUrls: (urls: string[]) => void
+  setGalleryUrls: (urls: string[]) => void,
+  authToken?: string
 ): Promise<string[]> {
-  const success = await deleteFromBlob(urlToDelete);
+  const success = await deleteFromBlob(urlToDelete, authToken);
   if (success) {
     const newUrls = currentUrls.filter(url => url !== urlToDelete);
     setGalleryUrls(newUrls);
