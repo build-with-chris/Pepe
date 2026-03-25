@@ -354,47 +354,61 @@ export default function KuenstlerVerwaltung() {
                 className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden text-left hover:border-[#D4A574]/30 hover:bg-white/[0.07] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50"
                 onClick={() => openDetails(artist)}
               >
-                <div className="relative w-full aspect-square bg-gray-800/50">
-                  {artist.profile_image_url ? (
-                    <img
-                      src={artist.profile_image_url}
-                      alt={artist.name}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                      <Users className="w-12 h-12" />
-                    </div>
-                  )}
-                  <div className="absolute top-3 left-3">{statusBadge(artist.approval_status)}</div>
-                  {token && (
-                    <button
-                      type="button"
-                      title="Artist löschen"
-                      onClick={(e) => deleteArtist(artist, e)}
-                      disabled={deletingId === artist.id}
-                      className="absolute top-3 right-3 rounded-lg bg-red-500/80 p-2 text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
-                    >
-                      {deletingId === artist.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                    </button>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h2 className="text-lg font-semibold text-white mb-1 line-clamp-1">{artist.name}</h2>
-                  {artist.disciplines && artist.disciplines.length > 0 && (
-                    <div className="mb-2 flex flex-wrap gap-1">
-                      {artist.disciplines.slice(0, 3).map((d, i) => (
-                        <span key={i} className="text-xs bg-[#D4A574]/20 text-[#D4A574] px-2 py-0.5 rounded-full">{d}</span>
-                      ))}
-                      {artist.disciplines.length > 3 && (
-                        <span className="text-xs text-gray-500">+{artist.disciplines.length - 3}</span>
+                <div className="flex items-start gap-4 p-4">
+                  {/* Profilbild - kompakt */}
+                  <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gray-800/50">
+                    {artist.profile_image_url ? (
+                      <img
+                        src={artist.profile_image_url}
+                        alt={artist.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        <Users className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {statusBadge(artist.approval_status)}
+                      {token && (
+                        <button
+                          type="button"
+                          title="Artist löschen"
+                          onClick={(e) => deleteArtist(artist, e)}
+                          disabled={deletingId === artist.id}
+                          className="ml-auto rounded-lg bg-red-500/80 p-1.5 text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+                        >
+                          {deletingId === artist.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
                       )}
                     </div>
-                  )}
-                  <p className="text-sm text-gray-400 line-clamp-2">
-                    {artist.bio?.trim() || 'Keine Bio hinterlegt.'}
-                  </p>
+                    <h2 className="text-base font-semibold text-white mb-1 line-clamp-1">{artist.name}</h2>
+                    {artist.email && !artist.email.includes('clerk.placeholder') && (
+                      <p className="text-xs text-gray-400 mb-1.5 truncate">{artist.email}</p>
+                    )}
+                    {artist.disciplines && artist.disciplines.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {artist.disciplines.slice(0, 2).map((d, i) => (
+                          <span key={i} className="text-xs bg-[#D4A574]/20 text-[#D4A574] px-2 py-0.5 rounded-full">{d}</span>
+                        ))}
+                        {artist.disciplines.length > 2 && (
+                          <span className="text-xs text-gray-500">+{artist.disciplines.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Bio */}
+                {artist.bio?.trim() && (
+                  <div className="px-4 pb-4 -mt-1">
+                    <p className="text-sm text-gray-400 line-clamp-2">{artist.bio.trim()}</p>
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -478,7 +492,7 @@ export default function KuenstlerVerwaltung() {
                       <dl className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <dt className="text-gray-500">E-Mail</dt>
-                          <dd className="text-white">{selected.email || '—'}</dd>
+                          <dd className="text-white">{selected.email && !selected.email.includes('clerk.placeholder') ? selected.email : '—'}</dd>
                         </div>
                         <div className="flex justify-between">
                           <dt className="text-gray-500">Telefon</dt>
