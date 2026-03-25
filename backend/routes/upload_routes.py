@@ -97,8 +97,8 @@ def upload_image():
         )
 
         if resp.status_code not in (200, 201):
-            logger.error(f'Vercel Blob upload failed: {resp.status_code} {resp.text[:300]}')
-            return error_response('upstream_error', f'Upload failed: {resp.status_code}', 502)
+            logger.error(f'Vercel Blob upload failed: status={resp.status_code} url={resp.url} headers={dict(resp.headers)} body={resp.text[:500]}')
+            return error_response('upstream_error', f'Upload failed: {resp.status_code} - {resp.text[:200]}', 502)
 
         result = resp.json()
         url = result.get('url', '')
