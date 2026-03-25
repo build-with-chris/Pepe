@@ -28,15 +28,15 @@ def _get_storage_path(artist_id: str, upload_type: str, filename: str | None = N
     ts = int(time.time() * 1000)
 
     if upload_type == 'profile':
-        return f'artists/{artist_id}/profile.webp'
+        return f'artists-{artist_id}-profile.webp'
     elif upload_type == 'hero':
-        return f'artists/{artist_id}/hero.webp'
+        return f'artists-{artist_id}-hero.webp'
     elif upload_type == 'gallery':
-        return f'artists/{artist_id}/gallery/{ts}.webp'
+        return f'artists-{artist_id}-gallery-{ts}.webp'
     elif upload_type == 'invoice':
-        return f'invoices/{artist_id}/{filename or f"invoice_{ts}.pdf"}'
+        return f'invoices-{artist_id}-{filename or f"invoice_{ts}.pdf"}'
     else:
-        return f'misc/{artist_id}/{ts}'
+        return f'misc-{artist_id}-{ts}'
 
 
 @upload_bp.route('/image', methods=['POST'])
