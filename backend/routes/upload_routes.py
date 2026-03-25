@@ -83,13 +83,14 @@ def upload_image():
         file_data = file.read()
         logger.info(f'Uploading to Vercel Blob: {pathname} ({len(file_data)} bytes)')
 
+        # Vercel Blob REST API: PUT with pathname in query param
         resp = http_requests.put(
-            f'https://blob.vercel-storage.com/{pathname}',
+            'https://blob.vercel-storage.com',
+            params={'pathname': pathname},
             headers={
                 'Authorization': f'Bearer {blob_token}',
                 'Content-Type': content_type,
                 'x-api-version': '7',
-                'x-content-type': content_type,
             },
             data=file_data,
             timeout=30,
