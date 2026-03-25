@@ -103,9 +103,9 @@ export async function uploadProfileImage(
 
     setDebug?.(`Uploading to Vercel Blob: ${pathname}`);
     
-    // Check if token is available (either in env or passed)
-    if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN) {
-      const errorMsg = 'Vercel Blob token is missing. Please set BLOB_READ_WRITE_TOKEN in your environment.';
+    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
+    if (!blobToken) {
+      const errorMsg = 'Vercel Blob token is missing. Please set VITE_BLOB_READ_WRITE_TOKEN in your environment.';
       setDebug?.(errorMsg);
       throw new Error(errorMsg);
     }
@@ -113,6 +113,7 @@ export async function uploadProfileImage(
     const { url } = await put(pathname, webpBlob, {
       access: 'public',
       contentType: 'image/webp',
+      token: blobToken,
     });
 
     setImageUrl(url);
@@ -144,10 +145,12 @@ export async function uploadHeroImage(
     const webpBlob = await convertToWebP(file, 1920, 1080, 0.85);
     const pathname = getStoragePath(artistId, 'hero');
 
+    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
     setDebug?.(`Uploading hero to Vercel Blob: ${pathname}`);
     const { url } = await put(pathname, webpBlob, {
       access: 'public',
       contentType: 'image/webp',
+      token: blobToken,
     });
 
     setImageUrl(url);
@@ -182,9 +185,11 @@ export async function uploadGalleryImages(
       // Add index to ensure unique timestamps
       const pathname = `artists/${artistId}/gallery/${Date.now()}_${index}.webp`;
 
+      const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
       const { url } = await put(pathname, webpBlob, {
         access: 'public',
         contentType: 'image/webp',
+        token: blobToken,
       });
 
       return url;
@@ -213,10 +218,12 @@ export async function uploadInvoice(
   try {
     const pathname = getStoragePath(artistId, 'invoice', file.name);
 
+    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
     setDebug?.(`Uploading invoice: ${pathname}`);
     const { url } = await put(pathname, file, {
       access: 'public',
       contentType: file.type || 'application/pdf',
+      token: blobToken,
     });
 
     setDebug?.(`Invoice uploaded: ${url}`);
