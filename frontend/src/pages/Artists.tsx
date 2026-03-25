@@ -595,6 +595,8 @@ export default function KuenstlerVerwaltung() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
           </div>
         </div>
       )}
