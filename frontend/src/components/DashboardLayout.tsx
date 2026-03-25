@@ -203,9 +203,14 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
                 appearance={{
                   elements: {
                     avatarBox: "w-9 h-9",
-                    userButtonPopoverCard: "bg-[#1A1A1A] border border-white/10",
-                    userButtonPopoverActionButton: "text-white hover:bg-white/10",
-                    userButtonPopoverActionButtonText: "text-white",
+                    userButtonPopoverCard: "bg-[#1A1A1A] border border-white/10 shadow-xl",
+                    userButtonPopoverActions: "!bg-transparent",
+                    userButtonPopoverActionButton: "!text-white hover:!bg-white/10",
+                    userButtonPopoverActionButtonText: "!text-white",
+                    userButtonPopoverActionButtonIcon: "!text-white",
+                    userButtonPopoverMain: "!bg-transparent",
+                    userPreviewMainIdentifier: "!text-white",
+                    userPreviewSecondaryIdentifier: "!text-gray-400",
                     userButtonPopoverFooter: "hidden",
                   }
                 }}

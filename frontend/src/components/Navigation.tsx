@@ -113,9 +113,14 @@ export default function Navigation({ className = '' }: NavigationProps) {
                   appearance={{
                     elements: {
                       avatarBox: "w-8 h-8",
-                      userButtonPopoverCard: "bg-[#1A1A1A] border border-[#333]",
-                      userButtonPopoverActionButton: "text-white hover:bg-white/10",
-                      userButtonPopoverActionButtonText: "text-white",
+                      userButtonPopoverCard: "bg-[#1A1A1A] border border-[#333] shadow-xl",
+                      userButtonPopoverActions: "!bg-transparent",
+                      userButtonPopoverActionButton: "!text-white hover:!bg-white/10",
+                      userButtonPopoverActionButtonText: "!text-white",
+                      userButtonPopoverActionButtonIcon: "!text-white",
+                      userButtonPopoverMain: "!bg-transparent",
+                      userPreviewMainIdentifier: "!text-white",
+                      userPreviewSecondaryIdentifier: "!text-gray-400",
                       userButtonPopoverFooter: "hidden",
                     }
                   }}
