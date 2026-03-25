@@ -409,6 +409,19 @@ def approve_artist(artist_id):
         return error_response('internal_error', 'Unexpected server error', 500)
 
 
+@admin_bp.route('/artists/<int:artist_id>/fill-availability', methods=['POST'])
+def fill_artist_availability(artist_id):
+    """Manually fill 365 days of availability for an approved artist."""
+    try:
+        from managers.availability_manager import AvailabilityManager
+        manager = AvailabilityManager()
+        result = manager.ensure_auto_availability_for_artist(artist_id, days_ahead=365)
+        return jsonify({'status': 'ok', 'result': result}), 200
+    except Exception as e:
+        logger.exception(f"[ADMIN] fill-availability failed for artist_id={artist_id}: {e}")
+        return error_response('internal_error', str(e), 500)
+
+
 @admin_bp.route('/artists/<int:artist_id>/reject', methods=['POST'])
 @swag_from(SWAG('admin_artists_id_reject_post.yml'))
 def reject_artist(artist_id):

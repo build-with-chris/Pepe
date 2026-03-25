@@ -328,5 +328,27 @@ def healthz():
 # Migration endpoint removed after successful migration
 
 
+# --- Cron endpoint for daily availability update ---
+@app.route("/api/cron/auto-availability", methods=["POST"])
+def cron_auto_availability():
+    """
+    Daily cron: add day+365 availability for all approved artists.
+    Protected by CRON_SECRET header to prevent unauthorized access.
+    """
+    cron_secret = os.getenv("CRON_SECRET")
+    if cron_secret:
+        provided = request.headers.get("X-Cron-Secret") or request.args.get("secret")
+        if provided != cron_secret:
+            return error_response("forbidden", "Invalid cron secret", 403)
+
+    try:
+        from cron_jobs.auto_availability import run_daily_availability
+        result = run_daily_availability()
+        return jsonify({"status": "ok", "result": result}), 200
+    except Exception as e:
+        app.logger.exception("Cron auto-availability failed: %s", e)
+        return error_response("internal_error", str(e), 500)
+
+
 if __name__=="__main__":
     app.run(debug=True)

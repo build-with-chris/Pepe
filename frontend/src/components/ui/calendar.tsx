@@ -183,8 +183,8 @@ function CalendarDayButton({
       aria-pressed={!!modifiers.selected}
       className={cn(
         "flex aspect-square size-auto w-full min-w-(--cell-size) items-center justify-center text-xs font-black bg-transparent text-white rounded-lg overflow-hidden transition-colors focus-visible:outline-none focus-visible:ring-0",
-        (modifiers as any).available && "bg-green-500/40 ring-1 ring-green-500/25 text-foreground text-white font-black",
-        (modifiers as any).blocked && "bg-red-500/25 ring-1 ring-red-500/20 text-foreground/90 text-white font-black",
+        (modifiers as any).available && "bg-green-600/70 ring-2 ring-green-400/50 text-white font-black",
+        (modifiers as any).blocked && "bg-red-600/50 ring-2 ring-red-400/40 text-white font-black",
         (modifiers.selected && !modifiers.range_middle) && "bg-white text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
         (modifiers.range_start || modifiers.range_end) && "bg-white text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
         modifiers.range_middle && "bg-accent text-accent-foreground",

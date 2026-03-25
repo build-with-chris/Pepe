@@ -77,9 +77,13 @@ class AdminOfferManager:
             logger.warning("approve_artist: artist not found (id=%r)", artist_id)
             return None
 
-        # idempotent: already approved
+        # idempotent: already approved – but still ensure availability is filled
         if getattr(artist, "approval_status", None) == "approved":
-            logger.info("approve_artist: already approved (id=%s)", artist_id)
+            logger.info("approve_artist: already approved (id=%s), ensuring availability", artist_id)
+            try:
+                AvailabilityManager().ensure_auto_availability_for_artist(artist.id, days_ahead=365)
+            except Exception as e:
+                logger.exception("Auto-availability fill failed for already-approved artist_id=%s: %s", artist.id, e)
             return artist
 
         try:
