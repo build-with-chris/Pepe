@@ -558,10 +558,21 @@ def dashboard():
                 'client_email': r.client_email,
                 'event_date': r.event_date.isoformat(),
                 'event_time': r.event_time.isoformat() if r.event_time else None,
+                'event_type': getattr(r, 'event_type', None),
+                'event_address': getattr(r, 'event_address', None),
+                'show_discipline': getattr(r, 'show_discipline', None),
+                'duration_minutes': getattr(r, 'duration_minutes', None),
                 'team_size': r.team_size,
-                'status': r.status,
+                'number_of_guests': getattr(r, 'number_of_guests', None),
+                'is_indoor': getattr(r, 'is_indoor', None),
+                'special_requests': getattr(r, 'special_requests', None),
+                'needs_light': getattr(r, 'needs_light', None),
+                'needs_sound': getattr(r, 'needs_sound', None),
+                'status': r.status or 'offen',
                 'created_at': r.created_at.isoformat() if getattr(r, 'created_at', None) else None,
-                'price_offered': r.price_offered
+                'price_min': getattr(r, 'price_min', None),
+                'price_max': getattr(r, 'price_max', None),
+                'price_offered': r.price_offered,
             }
             for r in offers
         ]
