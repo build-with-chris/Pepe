@@ -359,14 +359,19 @@ def list_artists_by_status():
                 'id': a.id,
                 'name': getattr(a, 'name', None),
                 'email': getattr(a, 'email', None),
+                'phone_number': getattr(a, 'phone_number', None),
+                'address': getattr(a, 'address', None),
+                'instagram': getattr(a, 'instagram', None),
+                'bio': getattr(a, 'bio', None),
+                'profile_image_url': filter_blob_url(getattr(a, 'profile_image_url', None)),
+                'gallery_urls': getattr(a, 'gallery_urls', []),
+                'disciplines': [d.name for d in getattr(a, 'disciplines', [])] if getattr(a, 'disciplines', None) else [],
+                'price_min': getattr(a, 'price_min', None),
+                'price_max': getattr(a, 'price_max', None),
                 'approval_status': getattr(a, 'approval_status', None),
                 'rejection_reason': getattr(a, 'rejection_reason', None),
                 'approved_at': a.approved_at.isoformat() if getattr(a, 'approved_at', None) else None,
                 'approved_by': getattr(a, 'approved_by', None),
-                'profile_image_url': filter_blob_url(getattr(a, 'profile_image_url', None)),
-                'gallery_urls': getattr(a, 'gallery_urls', []),
-                'disciplines': [d.name for d in getattr(a, 'disciplines', [])] if getattr(a, 'disciplines', None) else [],
-                'bio': getattr(a, 'bio', None),
             }
 
         return jsonify([_serialize(a) for a in artists]), 200
