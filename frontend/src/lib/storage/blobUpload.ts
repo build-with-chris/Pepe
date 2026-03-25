@@ -1,7 +1,7 @@
 /**
- * Image Upload Service - uploads via backend API
+ * Image Upload Service - uploads via Vercel Serverless Function
  *
- * Folder Structure (handled by backend):
+ * Folder Structure:
  * - artists/{artistId}/profile.webp     - Profile image (1 per artist)
  * - artists/{artistId}/hero.webp        - Hero/banner image (1 per artist)
  * - artists/{artistId}/gallery/{ts}.webp - Gallery images (multiple)
@@ -9,8 +9,6 @@
  */
 
 export type UploadType = 'profile' | 'hero' | 'gallery' | 'invoice';
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * Convert image to WebP format using canvas
@@ -57,26 +55,39 @@ async function convertToWebP(file: File, maxWidth = 1200, maxHeight = 1200, qual
 }
 
 /**
- * Upload file to backend which proxies to Vercel Blob
+ * Get storage path based on upload type
  */
-async function uploadToBackend(
-  blob: Blob,
-  artistId: string,
-  type: UploadType,
-  token: string,
-  filename?: string
-): Promise<string> {
-  const formData = new FormData();
-  formData.append('file', blob, filename || `${type}.webp`);
-  formData.append('type', type);
-  formData.append('artist_id', artistId);
+function getStoragePath(artistId: string, type: UploadType, filename?: string): string {
+  const timestamp = Date.now();
 
-  const res = await fetch(`${API_URL}/api/upload/image`, {
+  switch (type) {
+    case 'profile':
+      return `artists/${artistId}/profile.webp`;
+    case 'hero':
+      return `artists/${artistId}/hero.webp`;
+    case 'gallery':
+      return `artists/${artistId}/gallery/${timestamp}.webp`;
+    case 'invoice':
+      return `invoices/${artistId}/${filename || `invoice_${timestamp}.pdf`}`;
+    default:
+      return `misc/${artistId}/${timestamp}`;
+  }
+}
+
+/**
+ * Upload file via Vercel Serverless Function at /api/upload
+ */
+async function uploadViaServerless(
+  blob: Blob,
+  pathname: string,
+  contentType: string = 'image/webp'
+): Promise<string> {
+  const res = await fetch(`/api/upload?pathname=${encodeURIComponent(pathname)}`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`,
+      'Content-Type': contentType,
     },
-    body: formData,
+    body: blob,
   });
 
   if (!res.ok) {
@@ -89,15 +100,7 @@ async function uploadToBackend(
 }
 
 /**
- * Get the auth token from the current session
- */
-function getAuthToken(): string {
-  // Will be passed from calling code
-  return '';
-}
-
-/**
- * Upload a profile image via backend
+ * Upload a profile image
  */
 export async function uploadProfileImage(
   file: File | null,
@@ -105,7 +108,7 @@ export async function uploadProfileImage(
   setImageUrl: (url: string | null) => void,
   setDebug?: (message: string) => void,
   existingUrl: string | null = null,
-  authToken?: string
+  _authToken?: string
 ): Promise<string | null> {
   if (!file) {
     return existingUrl;
@@ -114,9 +117,10 @@ export async function uploadProfileImage(
   try {
     setDebug?.('Converting profile image to WebP...');
     const webpBlob = await convertToWebP(file, 800, 800, 0.9);
+    const pathname = getStoragePath(artistId, 'profile');
 
     setDebug?.(`Uploading profile image...`);
-    const url = await uploadToBackend(webpBlob, artistId, 'profile', authToken || '');
+    const url = await uploadViaServerless(webpBlob, pathname);
 
     setImageUrl(url);
     setDebug?.(`Profile image uploaded: ${url}`);
@@ -129,7 +133,7 @@ export async function uploadProfileImage(
 }
 
 /**
- * Upload a hero/banner image via backend
+ * Upload a hero/banner image
  */
 export async function uploadHeroImage(
   file: File | null,
@@ -137,7 +141,7 @@ export async function uploadHeroImage(
   setImageUrl: (url: string | null) => void,
   setDebug?: (message: string) => void,
   existingUrl: string | null = null,
-  authToken?: string
+  _authToken?: string
 ): Promise<string | null> {
   if (!file) {
     return existingUrl;
@@ -146,9 +150,10 @@ export async function uploadHeroImage(
   try {
     setDebug?.('Converting hero image to WebP...');
     const webpBlob = await convertToWebP(file, 1920, 1080, 0.85);
+    const pathname = getStoragePath(artistId, 'hero');
 
     setDebug?.(`Uploading hero image...`);
-    const url = await uploadToBackend(webpBlob, artistId, 'hero', authToken || '');
+    const url = await uploadViaServerless(webpBlob, pathname);
 
     setImageUrl(url);
     setDebug?.(`Hero image uploaded: ${url}`);
@@ -161,7 +166,7 @@ export async function uploadHeroImage(
 }
 
 /**
- * Upload multiple gallery images via backend
+ * Upload multiple gallery images
  */
 export async function uploadGalleryImages(
   files: File[],
@@ -169,7 +174,7 @@ export async function uploadGalleryImages(
   existingUrls: string[],
   setGalleryUrls: (urls: string[]) => void,
   setDebug?: (message: string) => void,
-  authToken?: string
+  _authToken?: string
 ): Promise<string[]> {
   if (!files || files.length === 0) {
     return existingUrls;
@@ -178,9 +183,10 @@ export async function uploadGalleryImages(
   try {
     setDebug?.(`Uploading ${files.length} gallery images...`);
 
-    const uploadPromises = files.map(async (file) => {
+    const uploadPromises = files.map(async (file, index) => {
       const webpBlob = await convertToWebP(file, 1200, 1200, 0.85);
-      return uploadToBackend(webpBlob, artistId, 'gallery', authToken || '');
+      const pathname = `artists/${artistId}/gallery/${Date.now()}_${index}.webp`;
+      return uploadViaServerless(webpBlob, pathname);
     });
 
     const newUrls = await Promise.all(uploadPromises);
@@ -196,17 +202,18 @@ export async function uploadGalleryImages(
 }
 
 /**
- * Upload an invoice document via backend
+ * Upload an invoice document
  */
 export async function uploadInvoice(
   file: File,
   artistId: string,
   setDebug?: (message: string) => void,
-  authToken?: string
+  _authToken?: string
 ): Promise<string | null> {
   try {
+    const pathname = getStoragePath(artistId, 'invoice', file.name);
     setDebug?.(`Uploading invoice: ${file.name}`);
-    const url = await uploadToBackend(file, artistId, 'invoice', authToken || '', file.name);
+    const url = await uploadViaServerless(file, pathname, file.type || 'application/pdf');
 
     setDebug?.(`Invoice uploaded: ${url}`);
     return url;
@@ -218,10 +225,11 @@ export async function uploadInvoice(
 }
 
 /**
- * Delete a file via backend
+ * Delete a file (via backend)
  */
 export async function deleteFromBlob(url: string, authToken?: string): Promise<boolean> {
   try {
+    const API_URL = import.meta.env.VITE_API_URL;
     const res = await fetch(`${API_URL}/api/upload/delete`, {
       method: 'POST',
       headers: {
