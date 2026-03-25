@@ -496,67 +496,56 @@ export default function KuenstlerVerwaltung() {
 
             {/* Content */}
             <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 sm:p-6">
-                {/* Left Column - Image */}
-                <div className="space-y-4">
-                  <div className="aspect-square bg-gray-800 rounded-xl overflow-hidden">
-                    {selected.profile_image_url ? (
-                      <img src={selected.profile_image_url} alt={selected.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        <Users className="w-16 h-16" />
-                      </div>
-                    )}
-                  </div>
-                  {selected.gallery_urls && selected.gallery_urls.length > 0 && (
-                    <div>
-                      <div className="text-sm text-gray-400 mb-2">Galerie</div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {selected.gallery_urls.slice(0, 6).map((u, i) => (
-                          <img key={i} src={u} className="w-full aspect-square object-cover rounded-lg" alt="" />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Column - Details */}
-                <div className="md:col-span-2 space-y-6">
-                  {/* Bio */}
-                  <div>
-                    <div className="text-sm text-gray-400 mb-2">Bio</div>
-                    <p className="text-gray-200 whitespace-pre-line">{selected.bio || '—'}</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {/* Contact */}
-                    <div className="space-y-3">
-                      <div className="text-sm text-gray-400">Kontaktdaten</div>
-                      <dl className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <dt className="text-gray-500">E-Mail</dt>
-                          <dd className="text-white">{selected.email && !selected.email.includes('clerk.placeholder') ? selected.email : '—'}</dd>
+              <div className="p-6 sm:p-8 space-y-8">
+                {/* Top: Image + Contact side by side */}
+                <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+                  {/* Profile Image - compact */}
+                  <div className="flex-shrink-0">
+                    <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gray-800 rounded-xl overflow-hidden">
+                      {selected.profile_image_url ? (
+                        <img src={selected.profile_image_url} alt={selected.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <Users className="w-12 h-12" />
                         </div>
-                        <div className="flex justify-between">
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contact & Status */}
+                  <div className="flex-1 space-y-5">
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium text-gray-400">Kontaktdaten</div>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-gray-500">E-Mail</dt>
+                          <dd className="text-white text-right">{selected.email && !selected.email.includes('clerk.placeholder') ? selected.email : '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Telefon</dt>
                           <dd className="text-white">{selected.phone_number || '—'}</dd>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Adresse</dt>
                           <dd className="text-white text-right">{selected.address || '—'}</dd>
                         </div>
+                        {selected.instagram && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-gray-500">Instagram</dt>
+                            <dd className="text-white">{selected.instagram}</dd>
+                          </div>
+                        )}
                       </dl>
                     </div>
 
-                    {/* Status & Pricing */}
                     <div className="space-y-3">
-                      <div className="text-sm text-gray-400">Status & Preise</div>
-                      <dl className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                      <div className="text-sm font-medium text-gray-400">Status & Preise</div>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Status</dt>
                           <dd>{statusBadge(selected.approval_status)}</dd>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Preisrahmen</dt>
                           <dd className="text-white">
                             {selected.price_min != null || selected.price_max != null
@@ -565,7 +554,7 @@ export default function KuenstlerVerwaltung() {
                           </dd>
                         </div>
                         {selected.approved_at && (
-                          <div className="flex justify-between">
+                          <div className="flex justify-between gap-4">
                             <dt className="text-gray-500">Approved</dt>
                             <dd className="text-white">{new Date(selected.approved_at).toLocaleDateString('de-DE')}</dd>
                           </div>
@@ -573,21 +562,39 @@ export default function KuenstlerVerwaltung() {
                       </dl>
                     </div>
                   </div>
+                </div>
 
-                  {/* Disciplines */}
+                {/* Bio */}
+                {selected.bio?.trim() && (
                   <div>
-                    <div className="text-sm text-gray-400 mb-2">Disziplinen</div>
-                    <div className="flex flex-wrap gap-2">
-                      {(selected.disciplines || []).length ? (
-                        selected.disciplines!.map((d, i) => (
-                          <span key={i} className="text-sm bg-[#D4A574]/20 text-[#D4A574] px-3 py-1 rounded-full">{d}</span>
-                        ))
-                      ) : <span className="text-gray-500">—</span>}
-                    </div>
+                    <div className="text-sm font-medium text-gray-400 mb-3">Bio</div>
+                    <p className="text-gray-200 whitespace-pre-line leading-relaxed">{selected.bio}</p>
+                  </div>
+                )}
+
+                {/* Disciplines */}
+                <div>
+                  <div className="text-sm font-medium text-gray-400 mb-3">Disziplinen</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(selected.disciplines || []).length ? (
+                      selected.disciplines!.map((d, i) => (
+                        <span key={i} className="text-sm bg-[#D4A574]/20 text-[#D4A574] px-3 py-1.5 rounded-full">{d}</span>
+                      ))
+                    ) : <span className="text-gray-500">—</span>}
                   </div>
                 </div>
-              </div>
-            </div>
+
+                {/* Gallery */}
+                {selected.gallery_urls && selected.gallery_urls.length > 0 && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-400 mb-3">Galerie</div>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {selected.gallery_urls.slice(0, 12).map((u, i) => (
+                        <img key={i} src={u} className="w-full aspect-square object-cover rounded-lg" alt="" />
+                      ))}
+                    </div>
+                  </div>
+                )}
           </div>
         </div>
       )}
