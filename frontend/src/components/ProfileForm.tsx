@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { User, MapPin, Music, Euro, FileText, ImageIcon, Images, Upload, X, Award } from "lucide-react";
+import { User, MapPin, Music, Euro, FileText, ImageIcon, Images, Upload, X } from "lucide-react";
 
 interface ProfileFormProps {
   profile: {
@@ -118,11 +118,6 @@ export function ProfileForm({
     const newUrls = profile.galleryUrls.filter((_, i) => i !== index);
     setProfile({ galleryUrls: newUrls });
   };
-
-  const formatMoney = (v?: number | null) =>
-    typeof v === "number" && !Number.isNaN(v)
-      ? new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
-      : '—';
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -310,33 +305,33 @@ export function ProfileForm({
 
       {/* Gage Criteria Card - Full Width */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-[#D4A574]/10">
               <Euro className="w-5 h-5 text-[#D4A574]" />
             </div>
             <div>
-              <CardTitle>Gage-Berechnung</CardTitle>
+              <CardTitle>Erfahrung & Qualifikation</CardTitle>
               <CardDescription>
-                Deine Gage wird anhand der folgenden Faktoren berechnet (max. 1.400€)
+                Diese Angaben helfen uns, dein Profil einzuordnen und passende Buchungen zu vermitteln.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-5">
-          {/* Row 1: Experience + Employment */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="pt-6">
+          {/* Top row: 3 columns on desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Stage Experience */}
             <div className="space-y-2">
               <Label htmlFor="stageExperience">
                 Bühnenerfahrung <span className="text-[#D4A574]">*</span>
-                <span className="text-xs text-white/50 ml-2">(30%)</span>
               </Label>
               <select
                 id="stageExperience"
                 value={profile.stageExperience}
                 onChange={(e) => setProfile({ stageExperience: e.target.value })}
                 disabled={locked}
-                className="w-full rounded-md border border-white/20 bg-transparent px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50"
+                className="w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50 transition-colors hover:border-white/30"
               >
                 {stageExperienceOptions.map(o => (
                   <option key={o.value} value={o.value} className="bg-[#1A1A1A]">{o.label}</option>
@@ -347,17 +342,17 @@ export function ProfileForm({
               )}
             </div>
 
+            {/* Employment Type */}
             <div className="space-y-2">
               <Label htmlFor="employmentType">
                 Beschäftigungsart <span className="text-[#D4A574]">*</span>
-                <span className="text-xs text-white/50 ml-2">(25%)</span>
               </Label>
               <select
                 id="employmentType"
                 value={profile.employmentType}
                 onChange={(e) => setProfile({ employmentType: e.target.value })}
                 disabled={locked}
-                className="w-full rounded-md border border-white/20 bg-transparent px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50"
+                className="w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50 transition-colors hover:border-white/30"
               >
                 {employmentTypeOptions.map(o => (
                   <option key={o.value} value={o.value} className="bg-[#1A1A1A]">{o.label}</option>
@@ -367,58 +362,18 @@ export function ProfileForm({
                 <p className="text-red-400 text-sm">{fieldErrors.employmentType}</p>
               )}
             </div>
-          </div>
 
-          {/* Row 2: Education + Awards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>
-                Zirkusausbildung
-                <span className="text-xs text-white/50 ml-2">(15%)</span>
-              </Label>
-              <label
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200",
-                  profile.circusEducation
-                    ? "bg-[#D4A574]/20 border-2 border-[#D4A574]"
-                    : "bg-white/5 border border-white/10 hover:border-[#D4A574]/50",
-                  locked && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={profile.circusEducation}
-                  onChange={(e) => !locked && setProfile({ circusEducation: e.target.checked })}
-                  disabled={locked}
-                  className="sr-only"
-                />
-                <div className={cn(
-                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
-                  profile.circusEducation
-                    ? "bg-[#D4A574] border-[#D4A574]"
-                    : "border-white/30"
-                )}>
-                  {profile.circusEducation && (
-                    <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                <span className="text-sm text-white">Ausbildung an staatl. Zirkusschule</span>
-              </label>
-            </div>
-
+            {/* Awards */}
             <div className="space-y-2">
               <Label htmlFor="awardsLevel">
                 Auszeichnungen / International
-                <span className="text-xs text-white/50 ml-2">(15%)</span>
               </Label>
               <select
                 id="awardsLevel"
                 value={profile.awardsLevel}
                 onChange={(e) => setProfile({ awardsLevel: e.target.value })}
                 disabled={locked}
-                className="w-full rounded-md border border-white/20 bg-transparent px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50"
+                className="w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50 transition-colors hover:border-white/30"
               >
                 {awardsOptions.map(o => (
                   <option key={o.value} value={o.value} className="bg-[#1A1A1A]">{o.label}</option>
@@ -427,19 +382,22 @@ export function ProfileForm({
             </div>
           </div>
 
-          {/* Row 3: Pepe Years + Exclusivity */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Divider */}
+          <div className="my-6 border-t border-white/5" />
+
+          {/* Bottom row: Pepe Years dropdown + two toggle cards side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {/* Pepe Years */}
             <div className="space-y-2">
               <Label htmlFor="pepeYears">
                 Jahre bei Pepe
-                <span className="text-xs text-white/50 ml-2">(10%)</span>
               </Label>
               <select
                 id="pepeYears"
                 value={profile.pepeYears}
                 onChange={(e) => setProfile({ pepeYears: parseInt(e.target.value) || 0 })}
                 disabled={locked}
-                className="w-full rounded-md border border-white/20 bg-transparent px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50"
+                className="w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50 disabled:opacity-50 transition-colors hover:border-white/30"
               >
                 {pepeYearsOptions.map(o => (
                   <option key={o.value} value={o.value} className="bg-[#1A1A1A]">{o.label}</option>
@@ -447,59 +405,70 @@ export function ProfileForm({
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label>
-                Exklusiv für Pepe
-                <span className="text-xs text-white/50 ml-2">(5%)</span>
-              </Label>
-              <label
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200",
-                  profile.pepeExclusivity
-                    ? "bg-[#D4A574]/20 border-2 border-[#D4A574]"
-                    : "bg-white/5 border border-white/10 hover:border-[#D4A574]/50",
-                  locked && "opacity-50 cursor-not-allowed"
+            {/* Circus Education Toggle */}
+            <label
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 self-end",
+                profile.circusEducation
+                  ? "bg-[#D4A574]/15 border-2 border-[#D4A574]/60"
+                  : "bg-white/[0.03] border border-white/10 hover:border-[#D4A574]/30 hover:bg-white/[0.05]",
+                locked && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <input
+                type="checkbox"
+                checked={profile.circusEducation}
+                onChange={(e) => !locked && setProfile({ circusEducation: e.target.checked })}
+                disabled={locked}
+                className="sr-only"
+              />
+              <div className={cn(
+                "w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors",
+                profile.circusEducation
+                  ? "bg-[#D4A574] border-[#D4A574]"
+                  : "border-white/30"
+              )}>
+                {profile.circusEducation && (
+                  <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                 )}
-              >
-                <input
-                  type="checkbox"
-                  checked={profile.pepeExclusivity}
-                  onChange={(e) => !locked && setProfile({ pepeExclusivity: e.target.checked })}
-                  disabled={locked}
-                  className="sr-only"
-                />
-                <div className={cn(
-                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
-                  profile.pepeExclusivity
-                    ? "bg-[#D4A574] border-[#D4A574]"
-                    : "border-white/30"
-                )}>
-                  {profile.pepeExclusivity && (
-                    <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                <span className="text-sm text-white">Ich arbeite exklusiv für Pepe Shows</span>
-              </label>
-            </div>
-          </div>
+              </div>
+              <span className="text-sm text-white">Zirkusausbildung</span>
+            </label>
 
-          {/* Calculated Gage Display */}
-          {(profile.calculatedGage || profile.priceMin || profile.priceMax) && (
-            <div className="mt-4 rounded-xl border border-[#D4A574]/30 bg-[#D4A574]/5 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-[#D4A574]" />
-                <span className="text-sm font-medium text-[#D4A574]">Deine berechnete Gage</span>
+            {/* Exclusivity Toggle */}
+            <label
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 self-end",
+                profile.pepeExclusivity
+                  ? "bg-[#D4A574]/15 border-2 border-[#D4A574]/60"
+                  : "bg-white/[0.03] border border-white/10 hover:border-[#D4A574]/30 hover:bg-white/[0.05]",
+                locked && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <input
+                type="checkbox"
+                checked={profile.pepeExclusivity}
+                onChange={(e) => !locked && setProfile({ pepeExclusivity: e.target.checked })}
+                disabled={locked}
+                className="sr-only"
+              />
+              <div className={cn(
+                "w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors",
+                profile.pepeExclusivity
+                  ? "bg-[#D4A574] border-[#D4A574]"
+                  : "border-white/30"
+              )}>
+                {profile.pepeExclusivity && (
+                  <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
               </div>
-              <div className="text-2xl font-bold text-white">
-                {formatMoney(profile.priceMin)} – {formatMoney(profile.priceMax)}
-              </div>
-              <p className="text-xs text-white/50 mt-1">
-                Basierend auf deinen Angaben. Die endgültige Gage wird pro Event individuell berechnet.
-              </p>
-            </div>
-          )}
+              <span className="text-sm text-white">Exklusiv bei Pepe</span>
+            </label>
+          </div>
         </CardContent>
       </Card>
 
