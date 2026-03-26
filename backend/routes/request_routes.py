@@ -134,6 +134,51 @@ def request_brief_json(r: BookingRequest) -> dict:
 booking_bp = Blueprint('booking', __name__, url_prefix='/api/requests')
 
 
+@booking_bp.route('/debug/matching', methods=['GET'])
+def debug_matching():
+    """Temporary diagnostic endpoint to check artist matching prerequisites."""
+    from models import Artist, Discipline, Availability
+    from datetime import date as _date
+
+    test_date = request.args.get('date', '2026-06-15')
+    test_disc = request.args.get('discipline', 'Zauberer')
+
+    try:
+        event_date = _date.fromisoformat(test_date)
+    except Exception:
+        return jsonify({"error": f"Invalid date: {test_date}"}), 400
+
+    # 1) All approved artists
+    approved = Artist.query.filter_by(approval_status='approved').all()
+    approved_info = []
+    for a in approved:
+        discs = [d.name for d in a.disciplines]
+        avail_count = Availability.query.filter_by(artist_id=a.id).count()
+        has_date = Availability.query.filter_by(artist_id=a.id, date=event_date).first() is not None
+        approved_info.append({
+            "id": a.id,
+            "name": a.name,
+            "disciplines": discs,
+            "total_availability_days": avail_count,
+            "has_availability_for_date": has_date,
+        })
+
+    # 2) Matching result
+    matched = artist_mgr.get_artists_by_discipline([test_disc], test_date)
+
+    return jsonify({
+        "test_date": test_date,
+        "test_discipline": test_disc,
+        "approved_artists": approved_info,
+        "matched_artists": [{"id": a.id, "name": a.name} for a in (matched or [])],
+        "diagnosis": (
+            "No approved artists" if not approved else
+            "Artists exist but none have matching discipline+availability" if not matched else
+            f"{len(matched)} artist(s) matched"
+        )
+    })
+
+
 @booking_bp.route('/requests', methods=['GET'])
 @clerk_auth_required
 @swag_from('../resources/swagger/requests_get.yml')
