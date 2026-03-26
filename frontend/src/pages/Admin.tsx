@@ -364,129 +364,64 @@ export default function Admin() {
           </div>
         )}
 
-        {/* Requests Table/Cards */}
+        {/* Requests List */}
         {!loading && !error && (
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">ID</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Kunde</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Event</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Eingegangen</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Status</th>
-                    <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Aktionen</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {filteredAndSortedOffers.map((offer: any) => (
-                    <tr
-                      key={offer.id}
-                      className="hover:bg-white/5 cursor-pointer transition-colors"
-                      onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
-                    >
-                      <td className="px-6 py-4">
-                        <span className="text-white font-mono">#{offer.id}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="text-white font-medium">{offer.client_name}</p>
-                          <p className="text-gray-500 text-sm">{offer.client_email}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">{offer.event_date} {offer.event_time}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-400">{formatDate(getReceivedAt(offer))}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {offer.status && (
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
-                            {getStatusLabel(offer.status)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
-                            <DropdownMenuItem
-                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleAcceptRequest(offer.id); }}
-                              className="text-emerald-400 focus:text-emerald-300 focus:bg-white/5"
-                            >
-                              <Check className="mr-2 h-4 w-4" />
-                              Annehmen
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDeleteRequest(offer.id); }}
-                              className="text-red-400 focus:text-red-300 focus:bg-white/5"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Löschen
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden divide-y divide-white/10">
+            {/* Unified card layout - works on all screen sizes */}
+            <div className="divide-y divide-white/10">
               {filteredAndSortedOffers.map((offer: any) => (
                 <div
                   key={offer.id}
-                  className="p-4 hover:bg-white/5 cursor-pointer transition-colors"
+                  className="p-4 lg:px-6 lg:py-5 hover:bg-white/5 cursor-pointer transition-colors"
                   onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <span className="text-white font-mono text-sm">#{offer.id}</span>
-                      {offer.status && (
-                        <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
-                          {getStatusLabel(offer.status)}
-                        </span>
-                      )}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap mb-2">
+                        <span className="text-white font-mono text-sm">#{offer.id}</span>
+                        {offer.status && (
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
+                            {getStatusLabel(offer.status)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-white font-medium">{offer.client_name}</p>
+                      <p className="text-gray-500 text-sm">{offer.client_email}</p>
+                      <div className="mt-2 flex items-center gap-4 text-sm text-gray-400 flex-wrap">
+                        <span>{offer.event_date} {offer.event_time || ''}</span>
+                        {offer.show_discipline && (
+                          <>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="hidden sm:inline">{offer.show_discipline}</span>
+                          </>
+                        )}
+                        <span>•</span>
+                        <span>Eingegangen: {formatDate(getReceivedAt(offer))}</span>
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 text-gray-400 hover:text-white hover:bg-white/10">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
                         <DropdownMenuItem
                           onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleAcceptRequest(offer.id); }}
-                          className="text-emerald-400"
+                          className="text-emerald-400 focus:text-emerald-300 focus:bg-white/5"
                         >
                           <Check className="mr-2 h-4 w-4" />
                           Annehmen
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDeleteRequest(offer.id); }}
-                          className="text-red-400"
+                          className="text-red-400 focus:text-red-300 focus:bg-white/5"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Löschen
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </div>
-                  <p className="text-white font-medium">{offer.client_name}</p>
-                  <p className="text-gray-500 text-sm">{offer.client_email}</p>
-                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-400">
-                    <span>{offer.event_date}</span>
-                    <span>•</span>
-                    <span>{formatDate(getReceivedAt(offer))}</span>
                   </div>
                 </div>
               ))}
