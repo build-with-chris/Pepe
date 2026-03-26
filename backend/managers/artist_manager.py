@@ -153,11 +153,15 @@ class ArtistManager:
             disciplines = [disciplines]
 
         # Normalisierung der Disziplinnamen
+        # Frontend may send hyphenated slugs (e.g. 'chinese-pole') while DB uses
+        # canonical names with spaces (e.g. 'Chinese Pole'). Normalize both sides
+        # by replacing hyphens with spaces for comparison.
         normalized = []
         for name in disciplines:
             name = name.strip()
+            name_cmp = name.lower().replace('-', ' ')
             for allowed in self.discipline_mgr.get_allowed_disciplines():
-                if allowed.lower() == name.lower():
+                if allowed.lower().replace('-', ' ') == name_cmp:
                     normalized.append(allowed)
                     break
 

@@ -49,7 +49,7 @@ interface Anfrage {
 };
 
 const MeineAnfragen: React.FC = () => {
-  const { token, user } = useAuth();
+  const { token, user, getFreshToken } = useAuth();
   const { t } = useTranslation();
   
   const [anfragen, setAnfragen] = useState<Anfrage[]>([]);
@@ -63,7 +63,9 @@ const MeineAnfragen: React.FC = () => {
 
   const apiFetch = async (path: string, options: RequestInit = {}) => {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    // Always use a fresh token to avoid 401 from expired Clerk JWT
+    const freshToken = await getFreshToken() || token;
+    if (freshToken) headers['Authorization'] = `Bearer ${freshToken}`;
     const res = await fetch(`${API_BASE}${path}`, {
       headers: { ...headers, ...(options.headers as any) },
       ...options,
