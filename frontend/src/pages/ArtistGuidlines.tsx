@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 const API_BASE = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || '';
 
 export default function ArtistGuidlines() {
-  const { token } = useAuth();
+  const { token, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [checked, setChecked] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
@@ -16,7 +16,7 @@ export default function ArtistGuidlines() {
     setSubmitting(true);
     setError(null);
     try {
-      const url = `${API_BASE}/api/artists/me/accept_guidelines`; console.log('POST', url);
+      const url = `${API_BASE}/api/artists/me/accept_guidelines`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -29,6 +29,8 @@ export default function ArtistGuidlines() {
         const t = await res.text();
         throw new Error(t || `HTTP ${res.status}`);
       }
+      // Refresh user data so guidelines_accepted=true is reflected in context
+      await refreshUser();
       try { window.dispatchEvent(new Event('artist:guidelines-accepted')); } catch {}
       navigate('/profile');
     } catch (e: any) {

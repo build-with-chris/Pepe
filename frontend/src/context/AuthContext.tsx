@@ -8,6 +8,7 @@ interface UserPayload {
   role?: string;
   is_admin?: boolean;
   approval_status?: 'approved' | 'pending' | 'rejected' | 'unsubmitted';
+  guidelines_accepted?: boolean;
   backend_id?: number | string;
   [key: string]: any;
 }
@@ -20,6 +21,8 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   /** Always returns a fresh token (auto-refreshed by Clerk) */
   getFreshToken: () => Promise<string | null>;
+  /** Re-sync user data from backend (e.g. after guidelines acceptance) */
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -160,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 userPayload.is_admin = meData.is_admin === true || isAdminFromClerk;
                 userPayload.backend_id = meData.id;
                 userPayload.approval_status = meData.approval_status;
+                userPayload.guidelines_accepted = Boolean(meData.guidelines_accepted);
               }
             } catch (e) {
               console.warn('[Auth] Backend sync error:', e);
@@ -183,6 +187,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     syncAuth();
   }, [isLoaded, isSignedIn, clerkUser, getToken]);
 
+  // Refresh user data from backend (e.g. after guidelines acceptance)
+  const refreshUser = useCallback(async () => {
+    if (!isSignedIn) return;
+    try {
+      const freshToken = await getToken();
+      if (!freshToken) return;
+      const API = import.meta.env.VITE_API_URL;
+      const meRes = await fetch(`${API}/api/artists/me`, {
+        headers: { Authorization: `Bearer ${freshToken}` },
+      });
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        setUser(prev => prev ? {
+          ...prev,
+          guidelines_accepted: Boolean(meData.guidelines_accepted),
+          approval_status: meData.approval_status,
+          backend_id: meData.id,
+        } : prev);
+      }
+    } catch (e) {
+      console.warn('[Auth] refreshUser error:', e);
+    }
+  }, [isSignedIn, getToken]);
+
   const signOut = async () => {
     await clerkSignOut();
     setToken(null);
@@ -197,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSignedIn: Boolean(isSignedIn),
       signOut,
       getFreshToken,
+      refreshUser,
     }}>
       {children}
     </AuthContext.Provider>

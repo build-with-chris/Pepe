@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -10,6 +10,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ requiredRole, children }: ProtectedRouteProps) {
   const { user, isLoaded, isSignedIn } = useAuth();
+  const location = useLocation();
 
   // Show loader while Clerk is loading
   if (!isLoaded) {
@@ -31,6 +32,20 @@ export function ProtectedRoute({ requiredRole, children }: ProtectedRouteProps) 
     if (!isAdmin) {
       return <Navigate to="/profile" replace />;
     }
+  }
+
+  // For non-admin artist routes: require guidelines acceptance before accessing any page
+  // Skip this check for the guidelines page itself and admin routes
+  if (
+    requiredRole !== "admin" &&
+    !user?.is_admin &&
+    user?.guidelines_accepted === false &&
+    location.pathname !== "/richtlinien" &&
+    location.pathname !== "/kuenstler-richtlinien" &&
+    location.pathname !== "/onboarding" &&
+    location.pathname !== "/artist-guidelines"
+  ) {
+    return <Navigate to="/kuenstler-richtlinien" replace />;
   }
 
   // Return children if provided, otherwise use Outlet for nested routes
