@@ -167,8 +167,8 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
       {/* Main Content - offset by sidebar width on large screens */}
       <div className="main-content-area">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 h-16 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/5">
-          <div className="flex items-center justify-between h-full px-6 lg:px-8">
+        <header className="sticky top-0 z-30 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/5">
+          <div className="flex items-center justify-between h-16 px-6 lg:px-8">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -177,7 +177,7 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
                 <Menu className="w-6 h-6" />
               </button>
               {title && (
-                <h1 className="text-lg font-medium text-gray-200">{title}</h1>
+                <span className="text-lg font-medium text-gray-200">{title}</span>
               )}
             </div>
 
