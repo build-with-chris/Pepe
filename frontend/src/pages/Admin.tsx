@@ -96,7 +96,7 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string>('receivedDesc');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('offen');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   async function handleAcceptRequest(id: number) {
     if (!token) return;
