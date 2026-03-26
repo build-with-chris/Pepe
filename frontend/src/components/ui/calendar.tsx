@@ -165,11 +165,22 @@ function CalendarDayButton({
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
 
+  const isAvailable = (modifiers as any).available;
+  const isBlocked = (modifiers as any).blocked;
+
+  // Use inline styles for availability colors to override .btn-secondary background
+  const availabilityStyle: React.CSSProperties = {};
+  if (isAvailable && !modifiers.selected && !modifiers.range_start && !modifiers.range_end) {
+    availabilityStyle.background = 'rgba(22, 163, 74, 0.75)'; // green-600 at 75%
+    availabilityStyle.boxShadow = '0 0 0 2px rgba(74, 222, 128, 0.5)'; // green-400 ring
+  } else if (isBlocked && !modifiers.selected && !modifiers.range_start && !modifiers.range_end) {
+    availabilityStyle.background = 'rgba(220, 38, 38, 0.55)'; // red-600 at 55%
+    availabilityStyle.boxShadow = '0 0 0 2px rgba(248, 113, 113, 0.4)'; // red-400 ring
+  }
+
   return (
-    <Button
+    <button
       ref={ref}
-      variant="outline"
-      size="icon"
       data-day={day.date.toLocaleDateString()}
       data-selected-single={
         modifiers.selected &&
@@ -181,16 +192,15 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       aria-pressed={!!modifiers.selected}
+      style={availabilityStyle}
       className={cn(
-        "flex aspect-square size-auto w-full min-w-(--cell-size) items-center justify-center text-xs font-black bg-transparent text-white rounded-lg overflow-hidden transition-colors focus-visible:outline-none focus-visible:ring-0",
-        (modifiers as any).available && "bg-green-600/70 ring-2 ring-green-400/50 text-white font-black",
-        (modifiers as any).blocked && "bg-red-600/50 ring-2 ring-red-400/40 text-white font-black",
-        (modifiers.selected && !modifiers.range_middle) && "bg-white text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
-        (modifiers.range_start || modifiers.range_end) && "bg-white text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
+        "flex aspect-square size-auto w-full min-w-[var(--cell-size)] items-center justify-center text-xs font-black bg-transparent text-white rounded-lg overflow-hidden transition-colors focus-visible:outline-none focus-visible:ring-0 border border-white/10",
+        (modifiers.selected && !modifiers.range_middle) && "!bg-white !text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
+        (modifiers.range_start || modifiers.range_end) && "!bg-white !text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
         modifiers.range_middle && "bg-accent text-accent-foreground",
         modifiers.today && !modifiers.selected && "ring-1 ring-primary",
         modifiers.outside && "text-foreground/60",
-        !modifiers.selected && !modifiers.range_middle && !modifiers.range_start && !modifiers.range_end && "hover:bg-blue-500 hover:text-white",
+        !modifiers.selected && !modifiers.range_middle && !modifiers.range_start && !modifiers.range_end && !isAvailable && !isBlocked && "hover:bg-blue-500 hover:text-white",
         modifiers.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
         className
       )}
