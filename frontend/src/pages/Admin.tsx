@@ -96,7 +96,7 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string>('receivedDesc');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('offen');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   async function handleAcceptRequest(id: number) {
     if (!token) return;
@@ -495,7 +495,19 @@ export default function Admin() {
             {/* Empty State */}
             {filteredAndSortedOffers.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-400">Keine Anfragen gefunden.</p>
+                <p className="text-gray-400">
+                  {dashboardData?.offers?.length > 0
+                    ? `Keine Anfragen mit Filter "${statusFilter}" gefunden. ${dashboardData.offers.length} Anfrage(n) insgesamt vorhanden.`
+                    : 'Noch keine Anfragen eingegangen.'}
+                </p>
+                {dashboardData?.offers?.length > 0 && statusFilter !== 'all' && (
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className="mt-3 text-[#D4A574] hover:text-[#D4A574]/80 text-sm underline"
+                  >
+                    Alle Anfragen anzeigen
+                  </button>
+                )}
               </div>
             )}
           </div>
