@@ -156,7 +156,8 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
-  ...props
+  style: _dayPickerStyle,
+  ...rest
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -168,18 +169,20 @@ function CalendarDayButton({
   const isAvailable = (modifiers as any).available;
   const isBlocked = (modifiers as any).blocked;
 
-  // Use inline styles for availability colors to override .btn-secondary background
-  const availabilityStyle: React.CSSProperties = {};
+  // Merge DayPicker's style with our availability colors
+  // DayPicker passes style: undefined which would override our styles if spread after
+  const mergedStyle: React.CSSProperties = { ..._dayPickerStyle };
   if (isAvailable && !modifiers.selected && !modifiers.range_start && !modifiers.range_end) {
-    availabilityStyle.background = 'rgba(22, 163, 74, 0.75)'; // green-600 at 75%
-    availabilityStyle.boxShadow = '0 0 0 2px rgba(74, 222, 128, 0.5)'; // green-400 ring
+    mergedStyle.background = 'rgba(22, 163, 74, 0.75)'; // green-600 at 75%
+    mergedStyle.boxShadow = '0 0 0 2px rgba(74, 222, 128, 0.5)'; // green-400 ring
   } else if (isBlocked && !modifiers.selected && !modifiers.range_start && !modifiers.range_end) {
-    availabilityStyle.background = 'rgba(220, 38, 38, 0.55)'; // red-600 at 55%
-    availabilityStyle.boxShadow = '0 0 0 2px rgba(248, 113, 113, 0.4)'; // red-400 ring
+    mergedStyle.background = 'rgba(220, 38, 38, 0.55)'; // red-600 at 55%
+    mergedStyle.boxShadow = '0 0 0 2px rgba(248, 113, 113, 0.4)'; // red-400 ring
   }
 
   return (
     <button
+      {...rest}
       ref={ref}
       data-day={day.date.toLocaleDateString()}
       data-selected-single={
@@ -192,7 +195,7 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       aria-pressed={!!modifiers.selected}
-      style={availabilityStyle}
+      style={mergedStyle}
       className={cn(
         "flex aspect-square size-auto w-full min-w-[var(--cell-size)] items-center justify-center text-xs font-black bg-transparent text-white rounded-lg overflow-hidden transition-colors focus-visible:outline-none focus-visible:ring-0 border border-white/10",
         (modifiers.selected && !modifiers.range_middle) && "!bg-white !text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
@@ -204,7 +207,6 @@ function CalendarDayButton({
         modifiers.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
         className
       )}
-      {...props}
     />
   )
 }
