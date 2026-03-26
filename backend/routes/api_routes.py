@@ -232,6 +232,14 @@ def get_my_artist():
         'disciplines': [d.name for d in artist.disciplines],
         'price_min': getattr(artist, 'price_min', None),
         'price_max': getattr(artist, 'price_max', None),
+        'calculated_gage': getattr(artist, 'calculated_gage', None),
+        'admin_gage_override': getattr(artist, 'admin_gage_override', None),
+        'stage_experience': getattr(artist, 'stage_experience', None),
+        'employment_type': getattr(artist, 'employment_type', None),
+        'circus_education': getattr(artist, 'circus_education', False),
+        'awards_level': getattr(artist, 'awards_level', None),
+        'pepe_years': getattr(artist, 'pepe_years', 0),
+        'pepe_exclusivity': getattr(artist, 'pepe_exclusivity', False),
         'profile_image_url': filter_blob_url(getattr(artist, 'profile_image_url', None)),
         'bio': getattr(artist, 'bio', None),
         'instagram': getattr(artist, 'instagram', None),
@@ -313,8 +321,6 @@ def update_my_profile():
     name = payload.get('name')
     address = payload.get('address')
     phone_number = payload.get('phone_number')
-    price_min = payload.get('price_min')
-    price_max = payload.get('price_max')
     disciplines = payload.get('disciplines')  # erwartet Liste[str]
 
     img_url = payload.get('profile_image_url')
@@ -323,11 +329,19 @@ def update_my_profile():
     gallery_urls = payload.get('gallery_urls')
     req_status = payload.get('approval_status')
 
+    # Gage criteria fields (new)
+    gage_fields = {}
+    for gf in ('stage_experience', 'employment_type', 'circus_education',
+               'awards_level', 'pepe_years', 'pepe_exclusivity'):
+        if gf in payload:
+            gage_fields[gf] = payload[gf]
+
     updatable_keys = [
-        name, address, phone_number, price_min, price_max, disciplines,
+        name, address, phone_number, disciplines,
         img_url, bio, instagram, gallery_urls, req_status
     ]
-    if all(v is None for v in updatable_keys):
+    has_gage = bool(gage_fields)
+    if all(v is None for v in updatable_keys) and not has_gage:
         return error_response('validation_error', 'Nothing to update', 400)
 
     # Validierungen
@@ -349,17 +363,19 @@ def update_my_profile():
             return error_response('validation_error', 'Blob-URLs are not allowed. Please upload the image properly.', 400)
 
     try:
+        from services.gage_calculator import GageCalculator
+
         # Primitive Felder
         if name is not None:
             artist.name = str(name).strip() or artist.name
         if address is not None:
+            old_address = artist.address
             artist.address = str(address).strip() or None
+            # Re-geocode if address changed
+            if artist.address and artist.address != old_address:
+                artist_mgr._geocode_and_set(artist)
         if phone_number is not None:
             artist.phone_number = str(phone_number).strip() or None
-        if price_min is not None:
-            artist.price_min = price_min
-        if price_max is not None:
-            artist.price_max = price_max
 
         # Social / Media
         if img_url is not None:
@@ -384,6 +400,33 @@ def update_my_profile():
                 return disc
             artist.disciplines = [get_or_create_discipline(str(d).strip()) for d in disciplines if str(d).strip()]
 
+        # Gage criteria fields
+        if gage_fields:
+            if 'stage_experience' in gage_fields:
+                artist.stage_experience = gage_fields['stage_experience']
+            if 'employment_type' in gage_fields:
+                artist.employment_type = gage_fields['employment_type']
+            if 'circus_education' in gage_fields:
+                artist.circus_education = bool(gage_fields['circus_education'])
+            if 'awards_level' in gage_fields:
+                artist.awards_level = gage_fields['awards_level']
+            if 'pepe_years' in gage_fields:
+                try:
+                    artist.pepe_years = int(gage_fields['pepe_years'])
+                except (TypeError, ValueError):
+                    artist.pepe_years = 0
+            if 'pepe_exclusivity' in gage_fields:
+                artist.pepe_exclusivity = bool(gage_fields['pepe_exclusivity'])
+
+        # Always recalculate gage when gage criteria change (or on any profile save)
+        if gage_fields or not artist.calculated_gage:
+            calculated_gage = GageCalculator.calculate_gage(artist)
+            artist.calculated_gage = calculated_gage
+            if not artist.admin_gage_override:
+                price_min, price_max = GageCalculator.get_price_range(artist)
+                artist.price_min = price_min
+                artist.price_max = price_max
+
         # Optional: Einreichen zur Prüfung – nur 'pending' ist vom Artist aus erlaubt
         if req_status is not None:
             req_status = str(req_status).strip().lower()
@@ -395,7 +438,7 @@ def update_my_profile():
 
         db.session.commit()
 
-        # Antwort mit allen wichtigen Feldern
+        # Antwort mit allen wichtigen Feldern inkl. Gage
         return jsonify({
             'id': artist.id,
             'name': artist.name,
@@ -405,6 +448,14 @@ def update_my_profile():
             'disciplines': [d.name for d in artist.disciplines],
             'price_min': getattr(artist, 'price_min', None),
             'price_max': getattr(artist, 'price_max', None),
+            'calculated_gage': getattr(artist, 'calculated_gage', None),
+            'admin_gage_override': getattr(artist, 'admin_gage_override', None),
+            'stage_experience': getattr(artist, 'stage_experience', None),
+            'employment_type': getattr(artist, 'employment_type', None),
+            'circus_education': getattr(artist, 'circus_education', False),
+            'awards_level': getattr(artist, 'awards_level', None),
+            'pepe_years': getattr(artist, 'pepe_years', 0),
+            'pepe_exclusivity': getattr(artist, 'pepe_exclusivity', False),
             'profile_image_url': filter_blob_url(getattr(artist, 'profile_image_url', None)),
             'bio': getattr(artist, 'bio', None),
             'instagram': getattr(artist, 'instagram', None),
@@ -1027,7 +1078,7 @@ def update_my_gage_criteria():
 
         # Validate field values
         if 'stage_experience' in criteria:
-            valid_exp = ['0-2', '3-5', '6-10', '10+']
+            valid_exp = ['0-3', '3-7', '7-10', '10+', '0-2', '3-5', '6-10']
             if criteria['stage_experience'] not in valid_exp:
                 return error_response('bad_request', f'Invalid stage_experience. Must be one of: {valid_exp}', 400)
 

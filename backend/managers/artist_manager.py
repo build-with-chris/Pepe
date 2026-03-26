@@ -51,11 +51,11 @@ class ArtistManager:
                 return
             lat = float(data[0].get('lat'))
             lon = float(data[0].get('lon'))
-            # set on model if columns exist
-            if hasattr(artist, 'latitude'):
-                artist.latitude = lat
-            if hasattr(artist, 'longitude'):
-                artist.longitude = lon
+            # set on model (columns are 'lat' and 'lon')
+            if hasattr(artist, 'lat'):
+                artist.lat = lat
+            if hasattr(artist, 'lon'):
+                artist.lon = lon
         except Exception:
             logger.exception('Geocoding exception for address: %s', getattr(artist, 'address', None))
 
@@ -277,12 +277,11 @@ class ArtistManager:
             calculated_gage = GageCalculator.calculate_gage(artist)
             artist.calculated_gage = calculated_gage
 
-            # Update price_min/max to calculated value (unless admin override exists)
+            # Update price_min/max based on calculated gage
             if not artist.admin_gage_override:
-                # ±20% spread as requested
-                spread = int(calculated_gage * 0.2)
-                artist.price_min = calculated_gage - spread
-                artist.price_max = calculated_gage + spread
+                price_min, price_max = GageCalculator.get_price_range(artist)
+                artist.price_min = price_min
+                artist.price_max = price_max
 
             self.db.session.commit()
             return artist
@@ -331,9 +330,9 @@ class ArtistManager:
                     artist.calculated_gage = new_gage
                     # Only update price range if no admin override
                     if not artist.admin_gage_override:
-                        spread = int(new_gage * 0.2)
-                        artist.price_min = new_gage - spread
-                        artist.price_max = new_gage + spread
+                        price_min, price_max = GageCalculator.get_price_range(artist)
+                        artist.price_min = price_min
+                        artist.price_max = price_max
                     updated_count += 1
 
                 results.append({
@@ -376,16 +375,15 @@ class ArtistManager:
 
             # Update price range to override value
             if override_gage:
-                spread = int(override_gage * 0.2)
-                artist.price_min = override_gage - spread
-                artist.price_max = override_gage + spread
+                artist.price_min = int(override_gage * 0.80)
+                artist.price_max = override_gage
             else:
                 # Recalculate based on criteria
                 calculated_gage = GageCalculator.calculate_gage(artist)
                 artist.calculated_gage = calculated_gage
-                spread = int(calculated_gage * 0.2)
-                artist.price_min = calculated_gage - spread
-                artist.price_max = calculated_gage + spread
+                price_min, price_max = GageCalculator.get_price_range(artist)
+                artist.price_min = price_min
+                artist.price_max = price_max
 
             self.db.session.commit()
             return artist
