@@ -153,16 +153,18 @@ class ArtistManager:
             disciplines = [disciplines]
 
         # Normalisierung der Disziplinnamen
-        # Frontend may send hyphenated slugs (e.g. 'chinese-pole') while DB uses
-        # canonical names with spaces (e.g. 'Chinese Pole'). Normalize both sides
-        # by replacing hyphens with spaces for comparison.
-        normalized = []
+        # Frontend sends hyphenated slugs (e.g. 'cyr-wheel'), ALLOWED_DISCIPLINES
+        # uses 'Cyr-Wheel', but DB may store 'Cyr Wheel'. We normalize ALL sides
+        # by lowercasing and replacing hyphens with spaces.
+        normalized_cmp = set()  # normalized comparison forms (lowercase, spaces)
+        normalized_exact = []   # exact ALLOWED_DISCIPLINES names for IN query
         for name in disciplines:
             name = name.strip()
             name_cmp = name.lower().replace('-', ' ')
+            normalized_cmp.add(name_cmp)
             for allowed in self.discipline_mgr.get_allowed_disciplines():
                 if allowed.lower().replace('-', ' ') == name_cmp:
-                    normalized.append(allowed)
+                    normalized_exact.append(allowed)
                     break
 
         # Datum konvertieren
@@ -170,12 +172,18 @@ class ArtistManager:
             event_date = date.fromisoformat(event_date)
 
         # Query: join disciplines und availabilities
+        # Use SQL-level normalization to handle DB inconsistencies
+        # (e.g. DB has "Cyr Wheel" but ALLOWED_DISCIPLINES has "Cyr-Wheel")
+        from sqlalchemy import func
+        disc_norm = func.replace(func.lower(Discipline.name), '-', ' ')
+        normalized_cmp_list = list(normalized_cmp)
+
         return (
             Artist.query
             .join(Artist.disciplines)
             .join(Artist.availabilities)
             .filter(
-                Discipline.name.in_(normalized),
+                disc_norm.in_(normalized_cmp_list),
                 Availability.date == event_date
             )
             .all()
