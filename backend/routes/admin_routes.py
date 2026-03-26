@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from helpers.http_responses import error_response
 from flasgger import swag_from
 from managers.booking_requests_manager import BookingRequestManager
@@ -6,7 +6,7 @@ from managers.admin_offer_manager import AdminOfferManager
 from managers.availability_manager import AvailabilityManager
 from managers.artist_manager import ArtistManager
 from helpers.clerk_auth import verify_clerk_token
-from models import Artist
+from models import Artist, BookingRequest
 from models import db
 import os
 import logging
@@ -18,6 +18,138 @@ logger = logging.getLogger(__name__)
 
 HERE = os.path.dirname(__file__)
 SWAG = lambda name: os.path.join(HERE, '..', 'resources', 'swagger', name)
+
+
+# ---------------------------------------------------------------------------
+# Email notification helpers for admin actions
+# ---------------------------------------------------------------------------
+def _send_artist_email(artist, subject: str, html: str):
+    """Send an email to an artist, importing send_email from request_routes."""
+    try:
+        from routes.request_routes import send_email
+        email = getattr(artist, 'email', None)
+        if not email:
+            logger.warning(f"Cannot send email to artist {artist.id} — no email on record")
+            return False
+        return send_email(email, subject, html)
+    except Exception as e:
+        logger.exception(f"Failed to send email to artist {getattr(artist, 'id', '?')}: {e}")
+        return False
+
+
+def _build_status_change_email(artist, req, new_status: str, comment: str = None) -> str:
+    """Build HTML email notifying artist of a status change on their booking request."""
+    app_url = current_app.config.get('APP_URL', 'https://pepeshows.de')
+    artist_name = getattr(artist, 'name', 'Künstler:in')
+    date_str = req.event_date.strftime('%d.%m.%Y') if hasattr(req.event_date, 'strftime') else str(req.event_date)
+    city = (req.event_address.split(',')[-1].strip() if req.event_address else '')
+
+    status_labels = {
+        'angefragt': 'Neue Anfrage',
+        'angeboten': 'Angebot abgegeben',
+        'akzeptiert': 'Akzeptiert',
+        'abgelehnt': 'Abgelehnt',
+        'storniert': 'Storniert',
+    }
+    status_colors = {
+        'akzeptiert': '#22c55e',
+        'abgelehnt': '#ef4444',
+        'storniert': '#ef4444',
+        'angeboten': '#f59e0b',
+        'angefragt': '#3b82f6',
+    }
+    label = status_labels.get(new_status, new_status)
+    color = status_colors.get(new_status, '#D4A574')
+
+    comment_block = ''
+    if comment:
+        comment_block = f'''
+        <div style="margin-top:16px;padding:12px 16px;background:#f8f4ef;border-left:4px solid {color};border-radius:4px;">
+          <p style="margin:0;font-size:14px;color:#666;">Kommentar vom Admin:</p>
+          <p style="margin:4px 0 0;font-size:15px;color:#333;">{comment}</p>
+        </div>'''
+
+    return f'''
+    <html>
+    <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f0eb;">
+      <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5ddd3;">
+        <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d);padding:28px 32px;text-align:center;">
+          <h1 style="margin:0;color:#D4A574;font-size:20px;">Pepe Shows</h1>
+          <p style="margin:8px 0 0;color:#aaa;font-size:13px;">Statusaktualisierung</p>
+        </div>
+        <div style="padding:28px 32px;">
+          <p style="font-size:16px;color:#333;">Hallo {artist_name},</p>
+          <p style="font-size:15px;color:#555;line-height:1.6;">
+            der Status deiner Buchungsanfrage <strong>#{req.id}</strong> wurde aktualisiert:
+          </p>
+          <div style="text-align:center;margin:20px 0;">
+            <span style="display:inline-block;padding:8px 24px;background:{color};color:#fff;border-radius:20px;font-weight:600;font-size:15px;">
+              {label}
+            </span>
+          </div>
+          <div style="background:#faf8f5;border-radius:8px;padding:16px 20px;margin:16px 0;">
+            <p style="margin:0 0 8px;font-size:13px;color:#888;">Event-Details</p>
+            <p style="margin:0;font-size:15px;color:#333;"><strong>{date_str}</strong> — {city}</p>
+            <p style="margin:4px 0 0;font-size:14px;color:#666;">{getattr(req, "show_discipline", "—")}</p>
+          </div>
+          {comment_block}
+          <div style="text-align:center;margin:28px 0 16px;">
+            <a href="{app_url}/meine-anfragen" style="display:inline-block;padding:12px 32px;background:#D4A574;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">
+              Anfrage ansehen
+            </a>
+          </div>
+        </div>
+        <div style="padding:16px 32px;background:#faf8f5;text-align:center;border-top:1px solid #e5ddd3;">
+          <p style="margin:0;font-size:12px;color:#999;">Pepe Shows Artist Agency</p>
+        </div>
+      </div>
+    </body>
+    </html>'''
+
+
+def _build_approval_email(artist, approved: bool, reason: str = None) -> str:
+    """Build HTML email notifying artist of approval/rejection."""
+    app_url = current_app.config.get('APP_URL', 'https://pepeshows.de')
+    artist_name = getattr(artist, 'name', 'Künstler:in')
+
+    if approved:
+        title = 'Willkommen bei Pepe Shows!'
+        message = 'Dein Profil wurde geprüft und <strong>freigeschaltet</strong>. Du kannst ab sofort Buchungsanfragen erhalten und dein Profil verwalten.'
+        color = '#22c55e'
+        cta_text = 'Zum Künstlerportal'
+        cta_url = f'{app_url}/profil'
+    else:
+        title = 'Profil-Update'
+        message = 'Dein Profil konnte leider noch nicht freigeschaltet werden.'
+        if reason:
+            message += f'<br><br><strong>Begründung:</strong> {reason}'
+        color = '#ef4444'
+        cta_text = 'Profil bearbeiten'
+        cta_url = f'{app_url}/profil'
+
+    return f'''
+    <html>
+    <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f0eb;">
+      <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5ddd3;">
+        <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d);padding:28px 32px;text-align:center;">
+          <h1 style="margin:0;color:#D4A574;font-size:20px;">Pepe Shows</h1>
+        </div>
+        <div style="padding:28px 32px;">
+          <p style="font-size:16px;color:#333;">Hallo {artist_name},</p>
+          <h2 style="color:{color};font-size:22px;margin:16px 0;">{title}</h2>
+          <p style="font-size:15px;color:#555;line-height:1.6;">{message}</p>
+          <div style="text-align:center;margin:28px 0 16px;">
+            <a href="{cta_url}" style="display:inline-block;padding:12px 32px;background:#D4A574;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">
+              {cta_text}
+            </a>
+          </div>
+        </div>
+        <div style="padding:16px 32px;background:#faf8f5;text-align:center;border-top:1px solid #e5ddd3;">
+          <p style="margin:0;font-size:12px;color:#999;">Pepe Shows Artist Agency</p>
+        </div>
+      </div>
+    </body>
+    </html>'''
 
 
 def filter_blob_url(url):
@@ -398,6 +530,14 @@ def approve_artist(artist_id):
             return error_response('not_found', 'Resource not found', 404)
 
         logger.info(f"[ADMIN] artist approved: artist_id={artist.id} by admin_id={admin_id}")
+
+        # Send approval notification email
+        try:
+            html = _build_approval_email(artist, approved=True)
+            _send_artist_email(artist, "Dein Profil wurde freigeschaltet! 🎉", html)
+        except Exception as e:
+            logger.warning(f"[ADMIN] approval email failed for artist {artist.id}: {e}")
+
         return jsonify({
             'id': artist.id,
             'status': artist.approval_status,
@@ -442,6 +582,14 @@ def reject_artist(artist_id):
             return error_response('not_found', 'Resource not found', 404)
 
         logger.info(f"[ADMIN] artist rejected: artist_id={artist.id} by admin_id={admin_id} reason={reason!r}")
+
+        # Send rejection notification email
+        try:
+            html = _build_approval_email(artist, approved=False, reason=reason)
+            _send_artist_email(artist, "Profil-Update von Pepe Shows", html)
+        except Exception as e:
+            logger.warning(f"[ADMIN] rejection email failed for artist {artist.id}: {e}")
+
         return jsonify({
             'id': artist.id,
             'status': artist.approval_status,
@@ -538,6 +686,24 @@ def admin_set_artist_status(req_id, artist_id):
     ok = request_mgr.set_artist_status(req_id, artist_id, new_status, comment)
     if not ok:
         return error_response('validation_error', 'Invalid request/artist/status', 400)
+
+    # Send email notification to the affected artist
+    try:
+        artist = db.session.get(Artist, artist_id)
+        req_obj = db.session.get(BookingRequest, req_id)
+        if artist and req_obj:
+            status_subjects = {
+                'akzeptiert': 'Deine Buchung wurde bestätigt! ✅',
+                'abgelehnt': 'Update zu deiner Buchungsanfrage',
+                'storniert': 'Buchungsanfrage storniert',
+                'angeboten': 'Neues Angebot für deine Buchungsanfrage',
+            }
+            subject = status_subjects.get(new_status, f'Statusupdate: Anfrage #{req_id}')
+            html = _build_status_change_email(artist, req_obj, new_status, comment)
+            _send_artist_email(artist, subject, html)
+    except Exception as e:
+        logger.warning(f"[ADMIN] status change email failed for artist {artist_id}, request {req_id}: {e}")
+
     return jsonify({'artist_id': artist_id, 'status': new_status, 'comment': comment}), 200
 
 @admin_bp.route('/requests/<int:req_id>/artist_status', methods=['PUT'])
@@ -554,6 +720,29 @@ def admin_set_artists_status_bulk(req_id):
         updated = request_mgr.set_artists_status(req_id, artist_ids, new_status, comment)
     else:
         updated = request_mgr.set_all_artists_status(req_id, new_status, comment)
+
+    # Send email notifications to all affected artists
+    try:
+        req_obj = db.session.get(BookingRequest, req_id)
+        if req_obj:
+            # Get the artists linked to this request
+            affected = req_obj.artists if not artist_ids else Artist.query.filter(Artist.id.in_(artist_ids)).all()
+            status_subjects = {
+                'akzeptiert': 'Deine Buchung wurde bestätigt! ✅',
+                'abgelehnt': 'Update zu deiner Buchungsanfrage',
+                'storniert': 'Buchungsanfrage storniert',
+                'angeboten': 'Neues Angebot für deine Buchungsanfrage',
+            }
+            subject = status_subjects.get(new_status, f'Statusupdate: Anfrage #{req_id}')
+            for artist in affected:
+                try:
+                    html = _build_status_change_email(artist, req_obj, new_status, comment)
+                    _send_artist_email(artist, subject, html)
+                except Exception as e:
+                    logger.warning(f"[ADMIN] bulk status email failed for artist {artist.id}: {e}")
+    except Exception as e:
+        logger.warning(f"[ADMIN] bulk status email failed for request {req_id}: {e}")
+
     return jsonify({'updated': updated, 'status': new_status, 'comment': comment}), 200
 
 @admin_bp.route('/dashboard')
