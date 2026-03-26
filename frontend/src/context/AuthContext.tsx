@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
 import type { ReactNode } from 'react';
 
@@ -18,22 +18,108 @@ interface AuthContextValue {
   isLoaded: boolean;
   isSignedIn: boolean;
   signOut: () => Promise<void>;
+  /** Always returns a fresh token (auto-refreshed by Clerk) */
+  getFreshToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+// Token refresh interval: 50 seconds (Clerk tokens expire after ~60s)
+const TOKEN_REFRESH_INTERVAL_MS = 50_000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { isLoaded, isSignedIn, getToken, signOut: clerkSignOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserPayload | null>(null);
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isSyncingRef = useRef(false);
 
+  // Fresh token getter – always calls Clerk's getToken() for a non-expired token
+  const getFreshToken = useCallback(async (): Promise<string | null> => {
+    if (!isSignedIn) return null;
+    try {
+      const freshToken = await getToken();
+      if (freshToken && freshToken !== token) {
+        setToken(freshToken);
+      }
+      return freshToken;
+    } catch (e) {
+      console.error('[Auth] getFreshToken error:', e);
+      return token; // fallback to cached
+    }
+  }, [isSignedIn, getToken, token]);
+
+  // Background token refresh
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Refresh token periodically
+    refreshTimerRef.current = setInterval(async () => {
+      try {
+        const freshToken = await getToken();
+        if (freshToken) {
+          setToken(freshToken);
+        }
+      } catch (e) {
+        console.warn('[Auth] Token refresh failed:', e);
+      }
+    }, TOKEN_REFRESH_INTERVAL_MS);
+
+    return () => {
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+    };
+  }, [isLoaded, isSignedIn, getToken]);
+
+  // Also refresh token on window focus (user switches tabs/pages)
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+
+    const handleFocus = async () => {
+      try {
+        const freshToken = await getToken();
+        if (freshToken) {
+          setToken(freshToken);
+        }
+      } catch (e) {
+        console.warn('[Auth] Focus token refresh failed:', e);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    // Also handle visibility change (for mobile)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        handleFocus();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [isLoaded, isSignedIn, getToken]);
+
+  // Initial sync and backend user resolution
   useEffect(() => {
     if (!isLoaded) return;
 
     const syncAuth = async () => {
-      if (isSignedIn && clerkUser) {
-        try {
+      if (isSyncingRef.current) return;
+      isSyncingRef.current = true;
+
+      try {
+        if (isSignedIn && clerkUser) {
           const clerkToken = await getToken();
           setToken(clerkToken);
 
@@ -44,8 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const userPayload: UserPayload = {
             sub: clerkUser.id,
             email: clerkUser.primaryEmailAddress?.emailAddress,
-            role: clerkRole || 'artist', // Default role is artist
-            is_admin: isAdminFromClerk, // Admin status from Clerk metadata
+            role: clerkRole || 'artist',
+            is_admin: isAdminFromClerk,
             user_metadata: {
               full_name: clerkUser.fullName || undefined,
               name: clerkUser.firstName || undefined,
@@ -68,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const meRes = await fetch(`${API}/api/artists/me`, {
                 headers: { Authorization: `Bearer ${clerkToken}` },
               });
-              
+
               if (meRes.ok) {
                 const meData = await meRes.json();
                 userPayload.is_admin = meData.is_admin === true || isAdminFromClerk;
@@ -81,14 +167,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           setUser(userPayload);
-        } catch (e) {
-          console.error('[Auth] Token error:', e);
+        } else {
           setToken(null);
           setUser(null);
         }
-      } else {
+      } catch (e) {
+        console.error('[Auth] Token error:', e);
         setToken(null);
         setUser(null);
+      } finally {
+        isSyncingRef.current = false;
       }
     };
 
@@ -107,7 +195,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token,
       isLoaded,
       isSignedIn: Boolean(isSignedIn),
-      signOut
+      signOut,
+      getFreshToken,
     }}>
       {children}
     </AuthContext.Provider>
