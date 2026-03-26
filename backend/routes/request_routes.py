@@ -53,7 +53,7 @@ def _idempotency_store(key: str, payload: dict) -> None:
     _idempotency_cache[key] = (time.time(), payload)
 from datetime import datetime
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from helpers.clerk_auth import clerk_auth_required, get_clerk_user_id
 from services.calculate_price import calculate_price
 from flask import current_app
 from models import db, Artist, BookingRequest
@@ -135,16 +135,21 @@ booking_bp = Blueprint('booking', __name__, url_prefix='/api/requests')
 
 
 @booking_bp.route('/requests', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/requests_get.yml')
 def list_requests():
     """Return booking requests that match the logged-in artist."""
-    user_id = get_jwt_identity()
-    result = request_mgr.get_requests_for_artist_with_recommendation(user_id)
+    clerk_uid = get_clerk_user_id()
+    # Resolve Clerk user ID to internal artist ID
+    artist = Artist.query.filter_by(supabase_user_id=clerk_uid).first()
+    if not artist:
+        current_app.logger.warning(f"list_requests: no artist for clerk_uid={clerk_uid}")
+        return jsonify([])
+    result = request_mgr.get_requests_for_artist_with_recommendation(artist.id)
     return jsonify(result)
 
 @booking_bp.route('/requests/list', methods=['GET'])
-@jwt_required()
+@clerk_auth_required
 def list_requests_admin():
     """Admin list of booking requests.
     
@@ -432,14 +437,14 @@ def create_request():
 
 
 @booking_bp.route('/requests/<int:req_id>/offer', methods=['PUT'])
-@jwt_required()
+@clerk_auth_required
 @swag_from('../resources/swagger/requests_offer_put.yml')
 def set_offer(req_id):
     """Allow a logged-in artist to submit an offer for a request."""
-    # Ermittle internen Artist anhand der Supabase JWT Identity
-    supabase_id = get_jwt_identity()
-    current_app.logger.debug(">>> Supabase ID aus Token: %s", supabase_id)
-    user = Artist.query.filter_by(supabase_user_id=supabase_id).first()
+    # Ermittle internen Artist anhand der Clerk JWT Identity
+    clerk_uid = get_clerk_user_id()
+    current_app.logger.debug(">>> Clerk UID aus Token: %s", clerk_uid)
+    user = Artist.query.filter_by(supabase_user_id=clerk_uid).first()
     if not user:
         return error_response("forbidden", "Artist not found or not allowed", 403)
     user_id = user.id
@@ -450,9 +455,14 @@ def set_offer(req_id):
         return error_response("forbidden", "Not allowed to offer on this request", 403)
 
     data = request.json
-    artist_gage = data.get('artist_gage')
+    # Accept both field names from frontend (price_offered) and legacy (artist_gage)
+    artist_gage = data.get('artist_gage') or data.get('price_offered')
     if artist_gage is None:
-        return error_response("validation_error", "artist_gage is required", 400)
+        return error_response("validation_error", "artist_gage or price_offered is required", 400)
+    try:
+        artist_gage = int(artist_gage)
+    except (TypeError, ValueError):
+        return error_response("validation_error", "artist_gage must be a number", 400)
 
     # Neue Basis berechnen: Preis des aktuellen Artists ersetzen
     base_min = sum(
@@ -506,7 +516,7 @@ def set_offer(req_id):
         return jsonify({'status': req.status}), 200
 
 @booking_bp.route('/requests/<int:req_id>/accept', methods=['PUT'])
-@jwt_required()
+@clerk_auth_required
 def accept_request(req_id: int):
     """Set a booking request status to 'accepted'."""
     try:
@@ -519,7 +529,7 @@ def accept_request(req_id: int):
         return error_response("internal_error", f"accept_request failed: {str(e)}", 500)
 
 @booking_bp.route('/requests/<int:req_id>', methods=['DELETE'])
-@jwt_required()
+@clerk_auth_required
 def delete_request(req_id: int):
     """Delete a booking request by ID."""
     try:
