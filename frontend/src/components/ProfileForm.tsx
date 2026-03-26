@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { User, MapPin, Music, Euro, FileText, ImageIcon, Images, Upload, X } from "lucide-react";
+import { ImageCropModal } from "./ImageCropModal";
 
 interface ProfileFormProps {
   profile: {
@@ -82,6 +83,8 @@ export function ProfileForm({
   fieldErrors
 }: ProfileFormProps) {
   const { t } = useTranslation();
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const profileInputRef = useRef<HTMLInputElement>(null);
 
   // Verwaltung der Blob-URLs für Galerie-Dateien
   const galleryBlobUrls = useMemo(() => {
@@ -97,9 +100,43 @@ export function ProfileForm({
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    // Check if image is square — if not, open crop modal
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const tolerance = 0.02; // 2% tolerance
+      const ratio = img.width / img.height;
+      if (Math.abs(ratio - 1) <= tolerance) {
+        // Already square (within tolerance) — accept directly
+        setProfile({ profileImageFile: file });
+      } else {
+        // Not square — open crop modal
+        setCropFile(file);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      // Fall back to accepting the file directly
       setProfile({ profileImageFile: file });
-    }
+    };
+    img.src = url;
+
+    // Reset the input so the same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    setCropFile(null);
+    setProfile({ profileImageFile: croppedFile });
+  };
+
+  const handleCropNewImage = () => {
+    setCropFile(null);
+    // Trigger file picker again
+    profileInputRef.current?.click();
   };
 
   const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -532,9 +569,10 @@ export function ProfileForm({
               locked && "opacity-50 cursor-not-allowed"
             )}>
               <Upload className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm text-gray-400">Bild auswählen oder hierher ziehen</span>
-              <span className="text-xs text-gray-500 mt-1">PNG, JPG bis 5MB</span>
+              <span className="text-sm text-gray-400">Quadratisches Bild auswählen</span>
+              <span className="text-xs text-gray-500 mt-1">PNG, JPG – wird automatisch optimiert</span>
               <input
+                ref={profileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
@@ -542,6 +580,16 @@ export function ProfileForm({
                 className="hidden"
               />
             </label>
+
+            {/* Crop Modal */}
+            {cropFile && (
+              <ImageCropModal
+                file={cropFile}
+                onCropped={handleCropComplete}
+                onCancel={() => setCropFile(null)}
+                onNewImage={handleCropNewImage}
+              />
+            )}
           </CardContent>
         </Card>
 

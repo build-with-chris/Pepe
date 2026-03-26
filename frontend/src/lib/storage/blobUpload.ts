@@ -10,16 +10,26 @@
 
 export type UploadType = 'profile' | 'hero' | 'gallery' | 'invoice';
 
+/** Maximum file size in bytes (0.5 MB) */
+const MAX_FILE_SIZE = 500 * 1024;
+
 /**
- * Convert image to WebP format using canvas
+ * Convert image to WebP format using canvas.
+ * Iteratively reduces quality to stay under MAX_FILE_SIZE.
  */
-async function convertToWebP(file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.85): Promise<Blob> {
+async function convertToWebP(
+  file: File,
+  maxWidth = 1200,
+  maxHeight = 1200,
+  quality = 0.85,
+  onProgress?: (step: string) => void
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
-    img.onload = () => {
+    img.onload = async () => {
       let { width, height } = img;
 
       if (width > maxWidth || height > maxHeight) {
@@ -31,25 +41,60 @@ async function convertToWebP(file: File, maxWidth = 1200, maxHeight = 1200, qual
       canvas.width = width;
       canvas.height = height;
 
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error('Failed to convert to WebP'));
-            }
-          },
-          'image/webp',
-          quality
-        );
-      } else {
+      if (!ctx) {
         reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Try converting at the requested quality first
+      let currentQuality = quality;
+      let blob: Blob | null = null;
+
+      for (let attempt = 0; attempt < 6; attempt++) {
+        onProgress?.(
+          attempt === 0
+            ? 'Bild wird optimiert…'
+            : `Qualität wird angepasst… (${Math.round(currentQuality * 100)}%)`
+        );
+
+        blob = await new Promise<Blob | null>((res) => {
+          canvas.toBlob((b) => res(b), 'image/webp', currentQuality);
+        });
+
+        if (blob && blob.size <= MAX_FILE_SIZE) {
+          break;
+        }
+
+        // Reduce quality for next attempt
+        currentQuality = Math.max(0.3, currentQuality - 0.1);
+
+        // If quality is already low, also reduce dimensions
+        if (attempt >= 3 && blob && blob.size > MAX_FILE_SIZE) {
+          const scale = 0.8;
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+        }
+      }
+
+      // Clean up the object URL
+      URL.revokeObjectURL(img.src);
+
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject(new Error('Failed to convert to WebP'));
       }
     };
 
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image'));
+    };
     img.src = URL.createObjectURL(file);
   });
 }
@@ -108,24 +153,29 @@ export async function uploadProfileImage(
   setImageUrl: (url: string | null) => void,
   setDebug?: (message: string) => void,
   existingUrl: string | null = null,
-  _authToken?: string
+  _authToken?: string,
+  onProgress?: (step: string) => void
 ): Promise<string | null> {
   if (!file) {
     return existingUrl;
   }
 
   try {
+    onProgress?.('Bild wird optimiert…');
     setDebug?.('Converting profile image to WebP...');
-    const webpBlob = await convertToWebP(file, 800, 800, 0.9);
+    const webpBlob = await convertToWebP(file, 800, 800, 0.9, onProgress);
     const pathname = getStoragePath(artistId, 'profile');
 
-    setDebug?.(`Uploading profile image...`);
+    onProgress?.('Bild wird hochgeladen…');
+    setDebug?.(`Uploading profile image (${(webpBlob.size / 1024).toFixed(0)} KB)...`);
     const url = await uploadViaServerless(webpBlob, pathname);
 
     setImageUrl(url);
+    onProgress?.('Fertig!');
     setDebug?.(`Profile image uploaded: ${url}`);
     return url;
   } catch (error: any) {
+    onProgress?.('');
     setDebug?.(`Profile image upload failed: ${error.message}`);
     console.error('Profile upload error:', error);
     return existingUrl;
@@ -174,7 +224,8 @@ export async function uploadGalleryImages(
   existingUrls: string[],
   setGalleryUrls: (urls: string[]) => void,
   setDebug?: (message: string) => void,
-  _authToken?: string
+  _authToken?: string,
+  onProgress?: (step: string) => void
 ): Promise<string[]> {
   if (!files || files.length === 0) {
     return existingUrls;
@@ -184,7 +235,9 @@ export async function uploadGalleryImages(
     setDebug?.(`Uploading ${files.length} gallery images...`);
 
     const uploadPromises = files.map(async (file, index) => {
-      const webpBlob = await convertToWebP(file, 1200, 1200, 0.85);
+      onProgress?.(`Galeriebild ${index + 1}/${files.length} wird optimiert…`);
+      const webpBlob = await convertToWebP(file, 1200, 1200, 0.85, onProgress);
+      onProgress?.(`Galeriebild ${index + 1}/${files.length} wird hochgeladen…`);
       const pathname = `artists/${artistId}/gallery/${Date.now()}_${index}.webp`;
       return uploadViaServerless(webpBlob, pathname);
     });
@@ -192,9 +245,11 @@ export async function uploadGalleryImages(
     const newUrls = await Promise.all(uploadPromises);
     const allUrls = [...existingUrls, ...newUrls];
     setGalleryUrls(allUrls);
+    onProgress?.('Fertig!');
     setDebug?.(`Gallery upload complete: ${newUrls.length} images added`);
     return allUrls;
   } catch (error: any) {
+    onProgress?.('');
     setDebug?.(`Gallery upload failed: ${error.message}`);
     console.error('Gallery upload error:', error);
     return existingUrls;

@@ -49,6 +49,7 @@ export default function Profile() {
   const [approvalStatus, setApprovalStatus] = useState<'approved' | 'pending' | 'rejected' | 'unsubmitted'>('unsubmitted');
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [uploadProgress, setUploadProgress] = useState<string>('');
 
   const unlockBtnRef = useRef<HTMLButtonElement | null>(null);
   const profileImageBlobUrlRef = useRef<string | null>(null);
@@ -215,7 +216,8 @@ export default function Profile() {
         setProfileImageUrl,
         setBackendDebug,
         profileImageUrl,
-        token || undefined
+        token || undefined,
+        setUploadProgress
       );
 
       // Upload gallery images via backend
@@ -225,8 +227,10 @@ export default function Profile() {
         galleryUrls,
         setGalleryUrls,
         setBackendDebug,
-        token || undefined
+        token || undefined,
+        setUploadProgress
       );
+      setUploadProgress('Profil wird gespeichert…');
 
       const nextStatus = approvalStatus === 'approved' ? 'approved' : 'pending';
 
@@ -308,6 +312,7 @@ export default function Profile() {
         setRejectionReason(saved.rejection_reason ?? null);
       }
 
+      setUploadProgress('');
       setSuccess(true);
       setFieldErrors({});
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -359,6 +364,7 @@ export default function Profile() {
         setBackendDebug(prev => `Sync error: ${err?.message || err}${prev ? "\n" + prev : ""}`);
       } finally {
       setLoading(false);
+      setUploadProgress('');
     }
   };
 
@@ -543,6 +549,25 @@ export default function Profile() {
           }}
           supportEmail="info@pepeshows.de"
         />
+
+        {/* Upload Progress Overlay */}
+        {loading && uploadProgress && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-8 text-white max-w-sm w-full text-center shadow-2xl mx-4">
+              <div className="w-12 h-12 rounded-full bg-[#D4A574]/10 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[#D4A574] animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Wird verarbeitet</h3>
+              <p className="text-gray-400 text-sm">{uploadProgress}</p>
+              <div className="mt-4 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#D4A574] rounded-full animate-pulse" style={{ width: '60%' }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Profile Form - now uses Card components internally */}
         <div className="relative">
