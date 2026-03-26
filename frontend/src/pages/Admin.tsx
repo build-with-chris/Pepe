@@ -89,7 +89,7 @@ function StatCard({ title, value, icon: Icon, trend, trendUp }: StatCardProps) {
 }
 
 export default function Admin() {
-  const { token } = useAuth();
+  const { token, getFreshToken } = useAuth();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -152,23 +152,27 @@ export default function Admin() {
 
   useEffect(() => {
     if (!token) return;
-    setLoading(true);
-    fetch(api('/api/admin/dashboard'), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => {
+    const loadDashboard = async () => {
+      setLoading(true);
+      try {
+        // Always use a fresh token to avoid 401 from admin gate
+        const freshToken = await getFreshToken() || token;
+        const res = await fetch(api('/api/admin/dashboard'), {
+          headers: { Authorization: `Bearer ${freshToken}` },
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        return res.json();
-      })
-      .then(data => {
+        const data = await res.json();
         const { availabilities, artistAvailability, slots, ...filtered } = data;
+        console.log('[Admin] Dashboard loaded, offers:', data.offers?.length, 'raw:', data.offers);
         setDashboardData(filtered);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err: any) {
+        console.error('[Admin] Dashboard load failed:', err);
         setError(err.message);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    loadDashboard();
   }, [token]);
 
   const filteredAndSortedOffers = useMemo(() => {

@@ -259,10 +259,13 @@ def create_request():
             if len(artist_objs) != len(target_ids):
                 return error_response("not_found", "One or more target artists not found", 404)
         else:
+            current_app.logger.info(f"[BOOKING] Matching artists for disciplines={disciplines}, event_date={event_date}")
             artist_objs = artist_mgr.get_artists_by_discipline(disciplines, event_date) or []
+            current_app.logger.info(f"[BOOKING] Matched {len(artist_objs)} artists before approval filter: {[a.id for a in artist_objs]}")
 
         # Filter only approved artists
         artist_objs = [a for a in artist_objs if str(getattr(a, 'approval_status', '')).lower() == 'approved']
+        current_app.logger.info(f"[BOOKING] After approval filter: {len(artist_objs)} artists: {[(a.id, a.name) for a in artist_objs]}")
         if target_ids is not None and not artist_objs:
             return error_response("forbidden", "No approved target artists available", 403)
         # Für die UI: kompaktes Matched-Payload (max. MAX_MATCHED_ARTISTS Artists)
