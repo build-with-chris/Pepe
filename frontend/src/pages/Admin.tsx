@@ -233,7 +233,7 @@ export default function Admin() {
 
     return {
       total: offers.length,
-      pending: offers.filter((o: any) => !o.status || o.status === 'offen' || o.status === 'pending').length,
+      pending: offers.filter((o: any) => !o.status || o.status === 'offen' || o.status === 'pending' || o.status === 'angefragt' || o.status === 'angeboten').length,
       accepted: offers.filter((o: any) => o.status === 'akzeptiert').length,
       thisMonth: offers.filter((o: any) => {
         const d = getReceivedAt(o);
