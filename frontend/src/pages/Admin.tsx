@@ -96,7 +96,7 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string>('receivedDesc');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('offen');
 
   async function handleAcceptRequest(id: number) {
     if (!token) return;
@@ -187,7 +187,13 @@ export default function Admin() {
     }
 
     // Filter by status
-    if (statusFilter !== 'all') {
+    if (statusFilter === 'offen') {
+      // "Offen" = all active/pending statuses
+      list = list.filter((o: any) => {
+        const st = (o.status || '').toLowerCase();
+        return !st || st === 'offen' || st === 'angefragt' || st === 'angeboten' || st === 'pending';
+      });
+    } else if (statusFilter !== 'all') {
       list = list.filter((o: any) => o.status === statusFilter);
     }
 
@@ -246,10 +252,25 @@ export default function Admin() {
     const styles: Record<string, string> = {
       'akzeptiert': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
       'abgelehnt': 'bg-red-500/20 text-red-300 border-red-500/30',
+      'storniert': 'bg-red-500/20 text-red-300 border-red-500/30',
       'offen': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
       'pending': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+      'angefragt': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+      'angeboten': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
     };
     return styles[status] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'angefragt': 'Neu',
+      'angeboten': 'Angebot liegt vor',
+      'akzeptiert': 'Akzeptiert',
+      'abgelehnt': 'Abgelehnt',
+      'storniert': 'Storniert',
+      'offen': 'Offen',
+    };
+    return labels[status] || status;
   };
 
   return (
@@ -301,9 +322,11 @@ export default function Admin() {
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-white/10">
                 <SelectItem value="all">Alle Status</SelectItem>
-                <SelectItem value="offen">Offen</SelectItem>
+                <SelectItem value="offen">Offen / Neu</SelectItem>
+                <SelectItem value="angeboten">Angebot liegt vor</SelectItem>
                 <SelectItem value="akzeptiert">Akzeptiert</SelectItem>
                 <SelectItem value="abgelehnt">Abgelehnt</SelectItem>
+                <SelectItem value="storniert">Storniert</SelectItem>
               </SelectContent>
             </Select>
 
@@ -378,7 +401,7 @@ export default function Admin() {
                       <td className="px-6 py-4">
                         {offer.status && (
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
-                            {offer.status}
+                            {getStatusLabel(offer.status)}
                           </span>
                         )}
                       </td>
@@ -426,7 +449,7 @@ export default function Admin() {
                       <span className="text-white font-mono text-sm">#{offer.id}</span>
                       {offer.status && (
                         <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
-                          {offer.status}
+                          {getStatusLabel(offer.status)}
                         </span>
                       )}
                     </div>
