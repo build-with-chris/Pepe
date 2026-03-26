@@ -136,10 +136,26 @@ const PriceSummary: React.FC<{ request: Anfrage }> = ({ request }) => {
   const min = formatMoney(request.recommended_price_min);
   const max = formatMoney(request.recommended_price_max);
   const offered = request.artist_gage;
+
+  // Detect if recommended price is below the typical base gage range
+  // (event factors like Private Feier can reduce the recommendation)
+  const isBelowBase = typeof request.recommended_price_min === 'number'
+    && typeof request.recommended_price_max === 'number'
+    && request.recommended_price_min < (request.recommended_price_max * 0.7);
+
   return (
     <div className="mt-3 rounded-md border border-white/20 p-3">
-      <div className="text-sm text-white/70">{t('requests.price.estimated', { defaultValue: 'Voraussichtlicher Preis' })}</div>
+      <div className="text-sm text-white/70">
+        {t('requests.price.recommended', { defaultValue: 'Empfohlene Gage' })}
+      </div>
       <div className="text-lg text-white font-medium">{min} – {max}</div>
+      {isBelowBase && (
+        <div className="mt-1 text-xs text-amber-300/80">
+          {t('requests.price.belowBaseHint', {
+            defaultValue: 'Reduziert aufgrund Event-Art & Faktoren – du kannst ein höheres Angebot machen'
+          })}
+        </div>
+      )}
       {typeof offered === 'number' && (
         <div className="mt-2 text-sm text-green-300">
           {t('requests.price.offered', { defaultValue: 'Gesendet' })}: {formatMoney(offered)}
