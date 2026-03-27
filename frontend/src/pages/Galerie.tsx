@@ -109,9 +109,6 @@ export default function Galerie() {
     { id: 20, src: '/images/gallery/performance6.jpg', alt: 'Show Atmosphere', category: 'PepeShows Impressions', aspectRatio: 3/4, source: 'static' as const }
   ]
 
-  const filteredImages = selectedCategory 
-    ? allImages.filter(img => img.category === selectedCategory)
-    : allImages
 
   // Helper functions from Home page for discipline accordion content
   const getDisciplineSpecialties = (disciplineId: string): string => {
