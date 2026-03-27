@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import DotCloudImage from '../components/ui/DotCloudImage'
 import { getApiBaseUrl } from '@/lib/apiBase'
 import FloatingDisciplines from '../components/FloatingDisciplines'
 import heroImage from '../assets/PepeHero.webp'
+
+const InteractivePepeParticles = lazy(() => import('../components/InteractivePepeParticles'))
 
 interface Artist {
   id: number
@@ -27,6 +29,15 @@ export default function Home() {
   const [responsibilityWorldClicked, setResponsibilityWorldClicked] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const apply = () => setIsDesktop(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   // Available icons for random shuffling
   const availableIcons = ['cyrwheel', 'magician', 'breakdance', 'handstand', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole', 'hulahoop', 'flooracrobatics', 'moderation']
@@ -300,29 +311,27 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero - 100vh */}
-      <section style={{
-        position: 'relative',
-        height: '100vh',
-        overflow: 'visible'
-      }}>
-        {/* Background image - will be made sticky below */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 0
+      {/* Desktop Hero - Interactive Particles */}
+      {isDesktop ? (
+        <section style={{
+          position: 'relative',
+          height: '100vh',
+          overflow: 'hidden',
+          background: '#000'
         }}>
+          {/* Background image */}
           <img
             src={heroImage}
             alt="Pepe Shows Hero"
             style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center'
+              objectPosition: 'center',
+              zIndex: 0
             }}
           />
           <div style={{
@@ -331,152 +340,203 @@ export default function Home() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.4)'
+            background: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 1
           }} />
-        </div>
 
-        <div style={{
-          position: 'absolute',
-          top: '66.67%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 'clamp(1rem, 2.5vh, 2rem)',
-          textAlign: 'center',
-          maxWidth: '1200px',
-          width: '90%',
-          padding: '0 1rem'
-        }}>
-          <h1 className="hero-title-elegant display-gradient" style={{
-            fontSize: 'clamp(1.5rem, 6vw, 4rem)',
-            margin: 0,
-            lineHeight: 1.1,
-            maxWidth: '100%',
-            wordWrap: 'break-word'
-          }}>
-            {t('home.hero.title')}
-          </h1>
-
-          <p className="body-lg" style={{
-            color: 'var(--pepe-gold)',
-            margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
-            fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
-            fontWeight: 500,
-            letterSpacing: '0.02em'
-          }}>
-            {t('home.hero.claim')}
-          </p>
+          {/* Particles overlay */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+            <Suspense fallback={null}>
+              <InteractivePepeParticles />
+            </Suspense>
+          </div>
 
           <div style={{
+            position: 'absolute',
+            bottom: '10vh',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
             display: 'flex',
-            gap: 'clamp(0.5rem, 2vw, 1rem)',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 'clamp(1rem, 2.5vh, 2rem)',
+            textAlign: 'center',
+            maxWidth: '1200px',
+            width: '90%',
+            padding: '0 1rem'
           }}>
-            <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
-              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
-              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+            <h1 className="hero-title-elegant display-gradient" style={{
+              fontSize: 'clamp(1.5rem, 6vw, 4rem)',
+              margin: 0,
+              lineHeight: 1.1,
+              maxWidth: '100%',
+              wordWrap: 'break-word'
             }}>
-              {t('home.hero.primaryCta')}
-            </Link>
-            <Link to="/shows" className="btn btn-secondary btn-lg" style={{
-              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
-              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+              {t('home.hero.title')}
+            </h1>
+
+            <p className="body-lg" style={{
+              color: 'var(--pepe-gold)',
+              margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
+              fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+              fontWeight: 500,
+              letterSpacing: '0.02em'
             }}>
-              {t('home.hero.secondaryCta')}
-            </Link>
-          </div>
-        </div>
+              {t('home.hero.claim')}
+            </p>
 
-        <div style={{
-          position: 'absolute',
-          bottom: '5vh',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 20
-        }}>
-          <div className="scroll-indicator">
-            <div className="scroll-dot"></div>
+            <div style={{
+              display: 'flex',
+              gap: 'clamp(0.5rem, 2vw, 1rem)',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+            }}>
+              <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
+                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+              }}>
+                {t('home.hero.primaryCta')}
+              </Link>
+              <Link to="/shows" className="btn btn-secondary btn-lg" style={{
+                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+              }}>
+                {t('home.hero.secondaryCta')}
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Fixed background image - sticky until end of scroll section (200vh total) */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '200vh', // Covers hero (100vh) + scroll section (100vh)
-        zIndex: 0,
-        pointerEvents: 'none'
-      }}>
-        <div style={{
-          position: 'sticky',
-          top: 0,
-          width: '100%',
+        </section>
+      ) : (
+        /* Mobile Hero - Static image with DotCloud logo */
+        <section style={{
+          position: 'relative',
           height: '100vh',
-          overflow: 'hidden'
+          overflow: 'visible'
         }}>
-          <img
-            src={heroImage}
-            alt="Pepe Shows Background"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center'
-            }}
-          />
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)'
-          }} />
-        </div>
-      </div>
+            width: '100%',
+            height: '100%',
+            zIndex: 0
+          }}>
+            <img
+              src={heroImage}
+              alt="Pepe Shows Hero"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.4)'
+            }} />
+          </div>
 
-      {/* Fixed Logo - visible from hero through scroll section */}
-      <div className="hero-logo-doticon" style={{
-        position: 'fixed',
-        top: typeof window !== 'undefined' && window.innerWidth < 768 ? '35%' : '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 50,
-        pointerEvents: 'none',
-        transition: 'opacity 0.3s ease, visibility 0.3s ease'
-      }}>
-        <DotCloudImage
-          disciplineId="logo"
-          size={typeof window !== 'undefined' && window.innerWidth < 768
-            ? Math.min(82, window.innerWidth * 0.32)
-            : 250}
-          color="var(--pepe-gold)"
-          aspectRatio={3}
-          density={0.5}
-          sampleGap={1}
-          minDotSize={1.4}
-          maxDotSize={2.5}
-          reverseScroll={true}
-          dynamicDensity={true}
-        />
-      </div>
+          {/* Fixed Logo for mobile */}
+          <div className="hero-logo-doticon" style={{
+            position: 'fixed',
+            top: '35%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 50,
+            pointerEvents: 'none',
+            transition: 'opacity 0.3s ease, visibility 0.3s ease'
+          }}>
+            <DotCloudImage
+              disciplineId="logo"
+              size={Math.min(82, typeof window !== 'undefined' ? window.innerWidth * 0.32 : 82)}
+              color="var(--pepe-gold)"
+              aspectRatio={3}
+              density={0.5}
+              sampleGap={1}
+              minDotSize={1.4}
+              maxDotSize={2.5}
+              reverseScroll={true}
+              dynamicDensity={true}
+            />
+          </div>
 
-      {/* Scroll spacer + black focus section - 100vh - ends sticky background */}
-      <div style={{
-        position: 'relative',
-        height: '100vh',
-        background: 'linear-gradient(to bottom, transparent 0%, #000000 40%, #000000 60%, transparent 100%)',
-        zIndex: 1
-      }}>
-      </div>
+          <div style={{
+            position: 'absolute',
+            top: '66.67%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 'clamp(1rem, 2.5vh, 2rem)',
+            textAlign: 'center',
+            maxWidth: '1200px',
+            width: '90%',
+            padding: '0 1rem'
+          }}>
+            <h1 className="hero-title-elegant display-gradient" style={{
+              fontSize: 'clamp(1.5rem, 6vw, 4rem)',
+              margin: 0,
+              lineHeight: 1.1,
+              maxWidth: '100%',
+              wordWrap: 'break-word'
+            }}>
+              {t('home.hero.title')}
+            </h1>
+
+            <p className="body-lg" style={{
+              color: 'var(--pepe-gold)',
+              margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
+              fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+              fontWeight: 500,
+              letterSpacing: '0.02em'
+            }}>
+              {t('home.hero.claim')}
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: 'clamp(0.5rem, 2vw, 1rem)',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+            }}>
+              <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
+                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+              }}>
+                {t('home.hero.primaryCta')}
+              </Link>
+              <Link to="/shows" className="btn btn-secondary btn-lg" style={{
+                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+              }}>
+                {t('home.hero.secondaryCta')}
+              </Link>
+            </div>
+          </div>
+
+          <div style={{
+            position: 'absolute',
+            bottom: '5vh',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 20
+          }}>
+            <div className="scroll-indicator">
+              <div className="scroll-dot"></div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Bento Grid Section */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>

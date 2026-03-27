@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import DotCloudImage from '../components/ui/DotCloudImage'
 import ImageCarousel from '../components/ImageCarousel'
+import { Gallery25 } from '../components/gallery25'
 import { getApiBaseUrl } from '@/lib/apiBase'
 
 
@@ -20,7 +21,6 @@ interface Artist {
 
 export default function Galerie() {
   const { t } = useTranslation()
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const [autoAnimPosition, setAutoAnimPosition] = useState(0)
 
@@ -549,141 +549,8 @@ export default function Galerie() {
         </div>
       )}
 
-      {/* Dynamic Image Grid */}
-      <section className="section bg-pepe-ink">
-        <div className="stage-container">
-          <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">{t('nav.gallery') || 'Gallery'}</h2>
-            <p className="body-lg max-w-3xl mx-auto">
-              {t('gallery.subtitle') || 'Discover our artists in action'}
-            </p>
-          </div>
-
-          {/* Category Filter - Enhanced Styling */}
-          <div className="text-center mb-12">
-            <div className="inline-flex flex-wrap gap-2 justify-center p-2 bg-pepe-dark/50 backdrop-blur-sm rounded-2xl border border-pepe-line/30">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`gallery-filter-btn ${
-                  !selectedCategory ? 'active' : ''
-                }`}
-              >
-                {t('artists.filters.all')}
-              </button>
-              {Array.from(new Set(allImages.map(img => img.category)))
-                .sort((a, b) => {
-                  // "Start" comes first, then alphabetically
-                  if (a === 'Start') return -1
-                  if (b === 'Start') return 1
-                  return a.localeCompare(b)
-                })
-                .map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`gallery-filter-btn ${
-                      selectedCategory === category ? 'active' : ''
-                    } ${
-                      category === 'PepeShows Impressions' ? 'pepe-impressions' : ''
-                    }`}
-                  >
-                    {category === 'PepeShows Impressions' ? 'Impressions' : category}
-                  </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Masonry Layout - Flexible Column Fill */}
-          <div className="gallery-masonry-container">
-            <div className="gallery-column">
-              {filteredImages
-                .filter((_, index) => index % 3 === 0)
-                .map((image) => (
-                  <div 
-                    key={image.id} 
-                    className="gallery-masonry-item group cursor-pointer"
-                  >
-                    <div className="gallery-image-wrapper">
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="gallery-masonry-image"
-                        style={{ aspectRatio: image.aspectRatio }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTYxNjE2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbGVyaWUgQmlsZDwvdGV4dD48L3N2Zz4='
-                        }}
-                      />
-                      <div className="gallery-image-overlay">
-                        <div className="gallery-image-content">
-                          <div className="gallery-image-category">{image.category}</div>
-                          <div className="gallery-image-title">{image.alt}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-            
-            <div className="gallery-column">
-              {filteredImages
-                .filter((_, index) => index % 3 === 1)
-                .map((image) => (
-                  <div 
-                    key={image.id} 
-                    className="gallery-masonry-item group cursor-pointer"
-                  >
-                    <div className="gallery-image-wrapper">
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="gallery-masonry-image"
-                        style={{ aspectRatio: image.aspectRatio }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTYxNjE2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbGVyaWUgQmlsZDwvdGV4dD48L3N2Zz4='
-                        }}
-                      />
-                      <div className="gallery-image-overlay">
-                        <div className="gallery-image-content">
-                          <div className="gallery-image-category">{image.category}</div>
-                          <div className="gallery-image-title">{image.alt}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-            
-            <div className="gallery-column">
-              {filteredImages
-                .filter((_, index) => index % 3 === 2)
-                .map((image) => (
-                  <div 
-                    key={image.id} 
-                    className="gallery-masonry-item group cursor-pointer"
-                  >
-                    <div className="gallery-image-wrapper">
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="gallery-masonry-image"
-                        style={{ aspectRatio: image.aspectRatio }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTYxNjE2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbGVyaWUgQmlsZDwvdGV4dD48L3N2Zz4='
-                        }}
-                      />
-                      <div className="gallery-image-overlay">
-                        <div className="gallery-image-content">
-                          <div className="gallery-image-category">{image.category}</div>
-                          <div className="gallery-image-title">{image.alt}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Gallery25 - Masonry Photo Grid */}
+      <Gallery25 />
 
       {/* Call to Action */}
       <section className="section-large text-center bg-gradient-dark">

@@ -3357,6 +3357,15 @@
   .lg\\:grid-cols-3 {
     grid-template-columns: repeat(3, 1fr);
   }
+  .lg\\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 640px) {
+  .sm\\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ===== Utility Classes ===== */
