@@ -1,4 +1,17 @@
-import React, { useState, useEffect } from 'react';
+"use client";
+
+import Autoplay from "embla-carousel-autoplay";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useCallback, useMemo } from "react";
+
+import {
+  Carousel,
+  type CarouselApi,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface CarouselImage {
   src: string;
@@ -11,113 +24,115 @@ interface ImageCarouselProps {
 }
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [translateX, setTranslateX] = useState(0);
+  const [api, setApi] = React.useState<CarouselApi>();
+  const [current, setCurrent] = React.useState(0);
 
-  // Auto-advance carousel
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 3000); // Change every 3 seconds
+  React.useEffect(() => {
+    if (!api) return;
 
-    return () => clearInterval(interval);
-  }, [images.length]);
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
 
-  // Update transform based on current index
-  useEffect(() => {
-    const itemWidth = 346.5; // Based on the original transform values
-    setTranslateX(-currentIndex * itemWidth);
-  }, [currentIndex]);
+  const isMobile = useIsMobile();
 
-  const getSlideTransform = (index: number) => {
-    const diff = index - currentIndex;
-    
-    // Center slide (current)
-    if (diff === 0) {
-      return "md:rotate-0 md:z-10 md:relative";
-    }
-    // Left slide
-    else if (diff === -1 || (currentIndex === 0 && index === images.length - 1)) {
-      return "md:-rotate-45 md:translate-x-40 md:scale-75 md:relative";
-    }
-    // Right slide
-    else if (diff === 1 || (currentIndex === images.length - 1 && index === 0)) {
-      return "md:rotate-45 md:-translate-x-40 md:scale-75 md:relative";
-    }
-    // Other slides
-    else {
-      return "undefined";
-    }
-  };
+  const getRotation = useCallback(
+    (index: number) => {
+      if (index === current)
+        return "md:-rotate-45 md:translate-x-40 md:scale-75 md:relative";
+      if (index === current + 1) return "md:rotate-0 md:z-10 md:relative";
+      if (index === current + 2)
+        return "md:rotate-45 md:-translate-x-40 md:scale-75 md:relative";
+    },
+    [current],
+  );
+
+  const scrollbarBars = useMemo(
+    () =>
+      [...Array(40)].map((_, item) => (
+        <motion.div
+          key={item}
+          initial={{
+            opacity: 0.2,
+            filter: "blur(1px)",
+          }}
+          animate={{
+            opacity: item % 5 === 0 ? 1 : 0.2,
+            filter: "blur(0px)",
+          }}
+          transition={{
+            duration: 0.2,
+            delay: item % 5 === 0 ? (item / 5) * 0.05 : 0,
+            ease: "easeOut",
+          }}
+          className={cn(
+            "w-[1px] bg-white",
+            item % 5 === 0 ? "h-[15px]" : "h-[10px]",
+          )}
+        />
+      )),
+    [],
+  );
 
   return (
-    <div 
-      className={`max-w-5xl block relative z-0 mt-4 ${className}`}
-      role="region" 
-      aria-roledescription="carousel"
-      data-slot="carousel"
+    <Carousel
+      className={cn("max-w-5xl", className)}
+      plugins={[
+        Autoplay({
+          delay: 1000,
+          stopOnInteraction: true,
+        }),
+      ]}
+      setApi={setApi}
     >
-      <div className="overflow-hidden h-full" data-slot="carousel-content">
-        <div 
-          className="flex h-full -ml-4 transition-transform duration-700 ease-in-out"
-          style={{ transform: `translate3d(${translateX}px, 0px, 0px)` }}
-        >
-          {images.map((image, index) => (
+      <CarouselContent>
+        {Array.from({
+          length: isMobile ? images.length : images.length + 2,
+        }).map((_, index) => (
+          <CarouselItem key={index} className="my-10 md:basis-1/3">
             <div
-              key={index}
-              role="group"
-              aria-roledescription="slide"
-              data-slot="carousel-item"
-              className="min-w-0 shrink-0 grow-0 basis-full h-full pl-4 my-10 md:basis-1/3"
+              className={`h-105 w-full transition-transform duration-500 ease-in-out ${getRotation(index)}`}
             >
-              <div className={`w-full aspect-[4/5] md:aspect-[3/4] overflow-hidden rounded-lg transition-transform duration-500 ease-in-out ${getSlideTransform(index)}`}>
-                <img 
-                  className="h-full w-full object-cover" 
-                  alt={image.alt} 
-                  src={image.src}
-                  loading="lazy"
-                />
-              </div>
+              <img
+                src={
+                  index === images.length
+                    ? images[0].src
+                    : index === images.length + 1
+                      ? images[1].src
+                      : index === images.length + 2
+                        ? images[2].src
+                        : images[index].src
+                }
+                className="h-full w-full object-cover rounded-lg"
+                alt={
+                  index >= images.length
+                    ? images[index - images.length]?.alt ?? ""
+                    : images[index]?.alt ?? ""
+                }
+                loading="lazy"
+              />
             </div>
-          ))}
-          {/* Duplicate first few images for seamless loop */}
-          {images.slice(0, 3).map((image, index) => (
-            <div
-              key={`duplicate-${index}`}
-              role="group"
-              aria-roledescription="slide"
-              data-slot="carousel-item"
-              className="min-w-0 shrink-0 grow-0 basis-full h-full pl-4 my-10 md:basis-1/3"
-            >
-              <div className="w-full aspect-[4/5] md:aspect-[3/4] overflow-hidden rounded-lg transition-transform duration-500 ease-in-out undefined">
-                <img 
-                  className="h-full w-full object-cover" 
-                  alt={image.alt} 
-                  src={image.src}
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Navigation dots */}
+          </CarouselItem>
+        ))}
+      </CarouselContent>
       <div className="absolute right-0 bottom-0 flex w-full translate-y-full flex-col items-center justify-center gap-2">
-        <div className="flex gap-2 mt-4">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+        <div className="flex gap-2">{scrollbarBars}</div>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.p
+            key={current}
+            className="w-full text-lg font-medium text-white text-center"
+            initial={{ opacity: 0, y: 20, scale: 0.9, filter: "blur(5px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -20, scale: 0.9, filter: "blur(5px)" }}
+            transition={{ duration: 0.5 }}
+          >
+            {images[current]?.alt}
+          </motion.p>
+        </AnimatePresence>
+        <div className="flex gap-2">{scrollbarBars}</div>
       </div>
-    </div>
+    </Carousel>
   );
 };
 
