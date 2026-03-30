@@ -472,15 +472,6 @@ export default function Galerie() {
               </div>
             </div>
 
-            {/* Description below the stack */}
-            <div className="bg-pepe-ink/50 backdrop-blur-sm border border-pepe-line/30 rounded-3xl p-8 transition-all duration-500 min-h-[120px] flex flex-col justify-center">
-              <h3 className="h3 text-pepe-gold mb-3">
-                {disciplines[expandedDiscipline]?.name}
-              </h3>
-              <p className="body-lg text-pepe-t80 mb-0">
-                {disciplines[expandedDiscipline]?.description}
-              </p>
-            </div>
           </div>
         </div>
       </section>
