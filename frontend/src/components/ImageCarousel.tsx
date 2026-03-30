@@ -39,13 +39,18 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
 
   const getRotation = useCallback(
     (index: number) => {
-      if (index === current)
+      const total = images.length;
+      // Calculate relative position with wrapping for loop mode
+      const diff = ((index - current) % total + total) % total;
+
+      if (diff === 0)
         return "md:-rotate-45 md:translate-x-40 md:scale-75 md:relative";
-      if (index === current + 1) return "md:rotate-0 md:z-10 md:relative";
-      if (index === current + 2)
+      if (diff === 1) return "md:rotate-0 md:z-10 md:relative";
+      if (diff === 2)
         return "md:rotate-45 md:-translate-x-40 md:scale-75 md:relative";
+      return "";
     },
-    [current],
+    [current, images.length],
   );
 
   const scrollbarBars = useMemo(
@@ -78,38 +83,29 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
   return (
     <Carousel
       className={cn("max-w-5xl", className)}
+      opts={{
+        loop: true,
+        slidesToScroll: 1,
+        align: "center",
+      }}
       plugins={[
         Autoplay({
-          delay: 1000,
+          delay: 2000,
           stopOnInteraction: true,
         }),
       ]}
       setApi={setApi}
     >
       <CarouselContent>
-        {Array.from({
-          length: isMobile ? images.length : images.length + 2,
-        }).map((_, index) => (
+        {images.map((image, index) => (
           <CarouselItem key={index} className="my-10 md:basis-1/3">
             <div
               className={`h-105 w-full transition-transform duration-500 ease-in-out ${getRotation(index)}`}
             >
               <img
-                src={
-                  index === images.length
-                    ? images[0].src
-                    : index === images.length + 1
-                      ? images[1].src
-                      : index === images.length + 2
-                        ? images[2].src
-                        : images[index].src
-                }
+                src={image.src}
                 className="h-full w-full object-cover rounded-lg"
-                alt={
-                  index >= images.length
-                    ? images[index - images.length]?.alt ?? ""
-                    : images[index]?.alt ?? ""
-                }
+                alt={image.alt}
                 loading="lazy"
               />
             </div>
