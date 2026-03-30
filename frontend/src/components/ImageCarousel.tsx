@@ -37,20 +37,16 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
 
   const isMobile = useIsMobile();
 
+  // Exactly matches hero228: current = left (-45°), current+1 = center (0°, featured), current+2 = right (45°)
   const getRotation = useCallback(
     (index: number) => {
-      const total = images.length;
-      // Calculate relative position with wrapping for loop mode
-      const diff = ((index - current) % total + total) % total;
-
-      if (diff === 0)
-        return "md:-rotate-45 md:translate-x-40 md:scale-75 md:relative";
-      if (diff === 1) return "md:rotate-0 md:z-10 md:relative";
-      if (diff === 2)
-        return "md:rotate-45 md:-translate-x-40 md:scale-75 md:relative";
-      return "";
+      if (index === current)
+        return "md:-rotate-45 md:translate-x-40 md:scale-75 md:z-0 md:relative";
+      if (index === current + 1) return "md:rotate-0 md:z-20 md:relative";
+      if (index === current + 2)
+        return "md:rotate-45 md:-translate-x-40 md:scale-75 md:z-0 md:relative";
     },
-    [current, images.length],
+    [current],
   );
 
   const scrollbarBars = useMemo(
@@ -59,7 +55,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
         <motion.div
           key={item}
           initial={{
-            opacity: 0.2,
+            opacity: item % 5 === 0 ? 0.2 : 0.2,
             filter: "blur(1px)",
           }}
           animate={{
@@ -83,11 +79,6 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
   return (
     <Carousel
       className={cn("max-w-5xl", className)}
-      opts={{
-        loop: true,
-        slidesToScroll: 1,
-        align: "center",
-      }}
       plugins={[
         Autoplay({
           delay: 2000,
@@ -97,15 +88,25 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
       setApi={setApi}
     >
       <CarouselContent>
-        {images.map((image, index) => (
+        {Array.from({
+          length: isMobile ? images.length : images.length + 2,
+        }).map((_, index) => (
           <CarouselItem key={index} className="my-10 md:basis-1/3">
             <div
               className={`h-105 w-full transition-transform duration-500 ease-in-out ${getRotation(index)}`}
             >
               <img
-                src={image.src}
+                src={
+                  index >= images.length
+                    ? images[index - images.length].src
+                    : images[index].src
+                }
                 className="h-full w-full object-cover rounded-lg"
-                alt={image.alt}
+                alt={
+                  index >= images.length
+                    ? images[index - images.length]?.alt ?? ""
+                    : images[index]?.alt ?? ""
+                }
                 loading="lazy"
               />
             </div>
@@ -123,7 +124,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
             exit={{ opacity: 0, y: -20, scale: 0.9, filter: "blur(5px)" }}
             transition={{ duration: 0.5 }}
           >
-            {images[current]?.alt}
+            {images[current % images.length]?.alt}
           </motion.p>
         </AnimatePresence>
         <div className="flex gap-2">{scrollbarBars}</div>
