@@ -194,13 +194,14 @@ export default function Galerie() {
           'cyr-wheel': 'Cyr-Wheel',
           'cyr wheel': 'Cyr-Wheel',
           'hula hoop': 'Hula_Hoop',
+          'akrobatik': 'Bodenakrobatik',
           'bodenakrobatik': 'Bodenakrobatik',
           'breakdance': 'Breakdance',
           'handstand': 'Handstand',
           'jonglage': 'Jonglage',
           'luftakrobatik': 'Luftakrobatik',
           'moderation': 'Moderation',
-          'pantomime': 'Pantomime',
+          'pantomime': 'Pantomime/Entertainment',
           'partnerakrobatik': 'Partnerakrobatik',
           'zauberer': 'Zauberer',
           'zauberei': 'Zauberer'
@@ -260,7 +261,18 @@ export default function Galerie() {
     const fetchArtistsAndImages = async () => {
       try {
         const baseUrl = getApiBaseUrl()
-        if (!baseUrl) return
+        if (!baseUrl) {
+          // No backend configured - use fallback disciplines
+          setDisciplines([
+            { id: 'zauberer', name: t('booking.disciplines.options.zauberer.label') || 'Zauberei', image: '/images/disciplines/Zauberer.webp', description: 'Magische Momente und Illusionen für jedes Publikum.', artistCount: 0 },
+            { id: 'luftakrobatik', name: t('booking.disciplines.options.luftakrobatik.label') || 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Schwebende Eleganz und atemberaubende Höhenakrobatik.', artistCount: 0 },
+            { id: 'handstand', name: t('artists.disciplines.handstand') || 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft, Balance und Präzision in perfekter Harmonie.', artistCount: 0 },
+            { id: 'cyrwheel', name: t('artists.disciplines.cyrwheel') || 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Dynamische Drehungen im Cyr Wheel.', artistCount: 0 },
+            { id: 'jonglage', name: t('artists.disciplines.jonglage') || 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Kunstvolle Jonglage mit Bällen, Keulen und LED.', artistCount: 0 },
+            { id: 'breakdance', name: t('artists.disciplines.breakdance') || 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Explosive Moves und mitreißende Energie.', artistCount: 0 },
+          ])
+          return
+        }
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
           headers: {
@@ -296,6 +308,27 @@ export default function Galerie() {
               name: t('artists.disciplines.handstand') || 'Handstand',
               image: '/images/disciplines/Handstand.webp',
               description: 'Kraft, Balance und Präzision in perfekter Harmonie.',
+              artistCount: 0
+            },
+            {
+              id: 'cyrwheel',
+              name: t('artists.disciplines.cyrwheel') || 'Cyr Wheel',
+              image: '/images/disciplines/Cyr-Wheel.webp',
+              description: 'Dynamische Drehungen im Cyr Wheel.',
+              artistCount: 0
+            },
+            {
+              id: 'jonglage',
+              name: t('artists.disciplines.jonglage') || 'Jonglage',
+              image: '/images/disciplines/Jonglage.webp',
+              description: 'Kunstvolle Jonglage mit Bällen, Keulen und LED.',
+              artistCount: 0
+            },
+            {
+              id: 'breakdance',
+              name: t('artists.disciplines.breakdance') || 'Breakdance',
+              image: '/images/disciplines/Breakdance.webp',
+              description: 'Explosive Moves und mitreißende Energie.',
               artistCount: 0
             }
           ])
@@ -338,8 +371,16 @@ export default function Galerie() {
           setAllImages(staticGalleryImages)
         }
       } catch (error) {
-        // Silently fail - page works with static images
+        // Silently fail - page works with static images and fallback disciplines
         console.warn('Gallery API unavailable:', error)
+        setDisciplines([
+          { id: 'zauberer', name: t('booking.disciplines.options.zauberer.label') || 'Zauberei', image: '/images/disciplines/Zauberer.webp', description: 'Magische Momente und Illusionen für jedes Publikum.', artistCount: 0 },
+          { id: 'luftakrobatik', name: t('booking.disciplines.options.luftakrobatik.label') || 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Schwebende Eleganz und atemberaubende Höhenakrobatik.', artistCount: 0 },
+          { id: 'handstand', name: t('artists.disciplines.handstand') || 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft, Balance und Präzision in perfekter Harmonie.', artistCount: 0 },
+          { id: 'cyrwheel', name: t('artists.disciplines.cyrwheel') || 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Dynamische Drehungen im Cyr Wheel.', artistCount: 0 },
+          { id: 'jonglage', name: t('artists.disciplines.jonglage') || 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Kunstvolle Jonglage mit Bällen, Keulen und LED.', artistCount: 0 },
+          { id: 'breakdance', name: t('artists.disciplines.breakdance') || 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Explosive Moves und mitreißende Energie.', artistCount: 0 },
+        ])
       }
     }
 
