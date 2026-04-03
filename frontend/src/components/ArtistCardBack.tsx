@@ -103,6 +103,7 @@ const ArtistCardBack: React.FC<ArtistCardBackProps> = ({ artist, onFlip }) => {
             target="_blank"
             rel="noopener noreferrer"
             className="absolute bottom-3 right-3 text-pink-400 hover:text-pink-300"
+            aria-label={`${artist.name} auf Instagram`}
             onClick={(e) => e.stopPropagation()}
           >
             <svg
@@ -126,12 +127,13 @@ const ArtistCardBack: React.FC<ArtistCardBackProps> = ({ artist, onFlip }) => {
         >
           <img
             src={enlarged}
-            alt="Enlarged"
+            alt={`${artist.name} – Bild vergrößert`}
             className="max-w-[90%] max-h-[90%] object-contain rounded shadow-lg"
             onClick={(e) => e.stopPropagation()}
           />
           <button
             className="absolute right-5 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/30 hover:bg-white/40 text-white border border-white/50 shadow-md backdrop-blur-sm w-12 h-12 flex items-center justify-center"
+            aria-label="Nächstes Bild"
             onClick={(e) => {
               e.stopPropagation();
               if (images.length > 0 && enlargedIndex !== null) {

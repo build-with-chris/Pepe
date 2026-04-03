@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import SEO, { pageSEO } from '@/components/SEO'
 
 export default function Kontakt() {
   const { t } = useTranslation()
 
   return (
     <main>
+      <SEO {...pageSEO.kontakt} />
       {/* Hero Section */}
       <section className="section-hero-compact bg-gradient-dark">
         <div className="stage-container">

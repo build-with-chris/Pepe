@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import BookingWizard from '../components/BookingWizard'
+import SEO, { pageSEO } from '@/components/SEO'
 
 export default function Anfragen() {
   const { t } = useTranslation()
   return (
     <main>
+      <SEO {...pageSEO.anfragen} />
       {/* Hero Section */}
       <section className="section-compact">
         <div className="stage-container">

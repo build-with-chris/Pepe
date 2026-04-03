@@ -86,6 +86,9 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
         }),
       ]}
       setApi={setApi}
+      opts={{ loop: true }}
+      aria-label="Bildergalerie"
+      aria-roledescription="Karussell"
     >
       <CarouselContent>
         {Array.from({

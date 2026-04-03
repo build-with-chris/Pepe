@@ -566,7 +566,7 @@ export function ProfileForm({
                   <div key={`url-${index}`} className="relative group aspect-square">
                     <img
                       src={url}
-                      alt={`Gallery ${index + 1}`}
+                      alt={`Galeriebild ${index + 1}`}
                       className="w-full h-full object-cover rounded-xl border border-white/10"
                     />
                     {!locked && (
@@ -574,6 +574,7 @@ export function ProfileForm({
                         type="button"
                         onClick={() => removeGalleryUrl(index)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`Galeriebild ${index + 1} entfernen`}
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -584,7 +585,7 @@ export function ProfileForm({
                   <div key={`file-${index}`} className="relative group aspect-square">
                     <img
                       src={galleryBlobUrls[index]}
-                      alt={`New ${index + 1}`}
+                      alt={`Neues Galeriebild ${index + 1}`}
                       className="w-full h-full object-cover rounded-xl border border-[#D4A574]/30"
                     />
                     {!locked && (
@@ -592,6 +593,7 @@ export function ProfileForm({
                         type="button"
                         onClick={() => removeGalleryFile(index)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`Neues Galeriebild ${index + 1} entfernen`}
                       >
                         <X className="w-4 h-4" />
                       </button>

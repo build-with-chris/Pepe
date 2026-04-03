@@ -590,7 +590,7 @@ export default function KuenstlerVerwaltung() {
                     <div className="text-sm font-medium text-gray-400 mb-3">Galerie</div>
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                       {selected.gallery_urls.slice(0, 12).map((u, i) => (
-                        <img key={i} src={u} className="w-full aspect-square object-cover rounded-lg" alt="" />
+                        <img key={i} src={u} className="w-full aspect-square object-cover rounded-lg" alt={`${selected.name} – Galeriebild ${i + 1}`} loading="lazy" />
                       ))}
                     </div>
                   </div>

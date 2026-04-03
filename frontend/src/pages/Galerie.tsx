@@ -6,6 +6,7 @@ import DotCloudImage from '../components/ui/DotCloudImage'
 import ImageCarousel from '../components/ImageCarousel'
 import { Gallery25 } from '../components/gallery25'
 import { getApiBaseUrl } from '@/lib/apiBase'
+import SEO, { pageSEO } from '@/components/SEO'
 
 
 // Artist interface for discipline creation
@@ -406,6 +407,7 @@ export default function Galerie() {
 
   return (
     <main>
+      <SEO {...pageSEO.galerie} />
       {/* Smaller Hero Section */}
       <section className="section bg-gradient-dark">
         <div className="stage-container">
@@ -526,7 +528,7 @@ export default function Galerie() {
                   </div>
                   
                   {/* Play Button Overlay */}
-                  <div className="video-play-overlay">
+                  <div className="video-play-overlay" role="button" aria-label="Showreel-Video abspielen">
                     <div className="video-play-button">
                       <svg className="video-play-icon" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import SEO, { pageSEO } from '@/components/SEO';
 
 interface Artist {
   id: number;
@@ -54,6 +55,7 @@ export default function Agentur() {
 
   return (
     <main>
+      <SEO {...pageSEO.agentur} />
       {/* Hero Section with Artist Network */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">

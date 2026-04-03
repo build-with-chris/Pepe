@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BadgeCheck, Star, Building2, Mail, Phone, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEO, { pageSEO } from '@/components/SEO';
 
 /**
  * Pressemappe – PepeShows
@@ -62,6 +63,7 @@ export default function Pressemappe() {
   const { t } = useTranslation();
   return (
     <main>
+      <SEO {...pageSEO.pressemappe} />
       {/* Hero Section - New Design */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">

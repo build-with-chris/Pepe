@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
 import { useState, useEffect } from 'react'
+import SEO, { pageSEO } from '@/components/SEO'
 import {
   Carousel,
   CarouselContent,
@@ -11,13 +12,13 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 // Künstler-Bilder für den Slider
 const artistImages = [
-  { src: '/images/kuenstlerpage/slide1.webp', srcLg: '/images/kuenstlerpage/slide1-lg.webp', alt: 'Künstler 1' },
-  { src: '/images/kuenstlerpage/slide2.webp', srcLg: '/images/kuenstlerpage/slide2-lg.webp', alt: 'Künstler 2' },
-  { src: '/images/kuenstlerpage/slide3.webp', srcLg: '/images/kuenstlerpage/slide3-lg.webp', alt: 'Künstler 3' },
-  { src: '/images/kuenstlerpage/slide4.webp', srcLg: undefined, alt: 'Künstler 4' },
-  { src: '/images/kuenstlerpage/slide5.webp', srcLg: undefined, alt: 'Künstler 5' },
-  { src: '/images/kuenstlerpage/slide6.webp', srcLg: undefined, alt: 'Künstler 6' },
-  { src: '/images/kuenstlerpage/slide7.webp', srcLg: undefined, alt: 'Künstler 7' },
+  { src: '/images/kuenstlerpage/slide1.webp', srcLg: '/images/kuenstlerpage/slide1-lg.webp', alt: 'Artistin bei einer Bühnenperformance' },
+  { src: '/images/kuenstlerpage/slide2.webp', srcLg: '/images/kuenstlerpage/slide2-lg.webp', alt: 'Akrobat in einer dynamischen Pose' },
+  { src: '/images/kuenstlerpage/slide3.webp', srcLg: '/images/kuenstlerpage/slide3-lg.webp', alt: 'Performer bei einer Live-Show' },
+  { src: '/images/kuenstlerpage/slide4.webp', srcLg: undefined, alt: 'Künstler bei einer Veranstaltung' },
+  { src: '/images/kuenstlerpage/slide5.webp', srcLg: undefined, alt: 'Artistik-Darbietung auf der Bühne' },
+  { src: '/images/kuenstlerpage/slide6.webp', srcLg: undefined, alt: 'Performer im Scheinwerferlicht' },
+  { src: '/images/kuenstlerpage/slide7.webp', srcLg: undefined, alt: 'Künstler bei einer Gala-Show' },
 ]
 
 export default function Team() {
@@ -49,6 +50,7 @@ export default function Team() {
 
   return (
     <main>
+      <SEO {...pageSEO.team} />
       {/* Hero Section - Streamlined mit Slider */}
       <section className="section-hero bg-gradient-dark relative overflow-hidden" style={{ minHeight: '50vh', height: '50vh' }}>
         {/* Künstler Slider - Füllt die gesamte Hero-Section */}
@@ -111,7 +113,7 @@ export default function Team() {
                       ? 'bg-pepe-gold w-6'
                       : 'bg-pepe-gold/40 hover:bg-pepe-gold/60'
                   }`}
-                  aria-label={`Go to slide ${index + 1}`}
+                  aria-label={`Zu Bild ${index + 1} wechseln`}
                 />
               ))}
             </div>

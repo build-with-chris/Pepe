@@ -1,6 +1,9 @@
+import SEO, { pageSEO } from '@/components/SEO'
+
 export default function Datenschutz() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center py-20 px-6">
+      <SEO {...pageSEO.datenschutz} />
       <div className="max-w-3xl space-y-6">
         <h1 className="text-3xl font-bold text-center mb-8">Datenschutzerklärung</h1>
 

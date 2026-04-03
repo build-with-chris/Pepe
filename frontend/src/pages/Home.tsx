@@ -5,6 +5,7 @@ import DotCloudImage from '../components/ui/DotCloudImage'
 import { getApiBaseUrl } from '@/lib/apiBase'
 import FloatingDisciplines from '../components/FloatingDisciplines'
 import heroImage from '../assets/PepeHero.webp'
+import SEO, { pageSEO } from '@/components/SEO'
 
 const InteractivePepeParticles = lazy(() => import('../components/InteractivePepeParticles'))
 
@@ -311,6 +312,7 @@ export default function Home() {
 
   return (
     <main>
+      <SEO {...pageSEO.home} />
       {/* Desktop Hero - Interactive Particles */}
       {isDesktop ? (
         <section style={{
@@ -322,7 +324,10 @@ export default function Home() {
           {/* Background image */}
           <img
             src={heroImage}
-            alt="Pepe Shows Hero"
+            alt="Pepe Shows – Artistik und Bühnenkunst bei einer Live-Veranstaltung"
+            width={1920}
+            height={1080}
+            fetchPriority="high"
             style={{
               position: 'absolute',
               top: 0,
@@ -412,7 +417,7 @@ export default function Home() {
         /* Mobile Hero - Static image with DotCloud logo */
         <section style={{
           position: 'relative',
-          height: '100vh',
+          height: '100svh',
           overflow: 'visible'
         }}>
           <div style={{
@@ -425,7 +430,9 @@ export default function Home() {
           }}>
             <img
               src={heroImage}
-              alt="Pepe Shows Hero"
+              alt="Pepe Shows – Artistik und Bühnenkunst bei einer Live-Veranstaltung"
+              width={1200}
+              height={800}
               style={{
                 width: '100%',
                 height: '100%',
@@ -439,14 +446,14 @@ export default function Home() {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.4)'
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.7) 100%)'
             }} />
           </div>
 
-          {/* Fixed Logo for mobile */}
+          {/* Fixed Logo for mobile - smaller and higher */}
           <div className="hero-logo-doticon" style={{
             position: 'fixed',
-            top: '35%',
+            top: '25%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             zIndex: 50,
@@ -455,7 +462,7 @@ export default function Home() {
           }}>
             <DotCloudImage
               disciplineId="logo"
-              size={Math.min(82, typeof window !== 'undefined' ? window.innerWidth * 0.32 : 82)}
+              size={Math.min(70, typeof window !== 'undefined' ? window.innerWidth * 0.26 : 70)}
               color="var(--pepe-gold)"
               aspectRatio={3}
               density={0.5}
@@ -467,23 +474,24 @@ export default function Home() {
             />
           </div>
 
+          {/* Content positioned lower with more space */}
           <div style={{
             position: 'absolute',
-            top: '66.67%',
+            bottom: 'clamp(10vh, 15vh, 18vh)',
             left: '50%',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translateX(-50%)',
             zIndex: 10,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 'clamp(1rem, 2.5vh, 2rem)',
+            gap: 'clamp(0.75rem, 2vh, 1.5rem)',
             textAlign: 'center',
             maxWidth: '1200px',
             width: '90%',
             padding: '0 1rem'
           }}>
             <h1 className="hero-title-elegant display-gradient" style={{
-              fontSize: 'clamp(1.5rem, 6vw, 4rem)',
+              fontSize: 'clamp(1.75rem, 7vw, 4rem)',
               margin: 0,
               lineHeight: 1.1,
               maxWidth: '100%',
@@ -494,8 +502,8 @@ export default function Home() {
 
             <p className="body-lg" style={{
               color: 'var(--pepe-gold)',
-              margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
-              fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+              margin: '0',
+              fontSize: 'clamp(0.9rem, 2.5vw, 1.125rem)',
               fontWeight: 500,
               letterSpacing: '0.02em'
             }}>
@@ -507,17 +515,17 @@ export default function Home() {
               gap: 'clamp(0.5rem, 2vw, 1rem)',
               flexWrap: 'wrap',
               justifyContent: 'center',
-              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+              marginTop: 'clamp(0.25rem, 1vh, 0.5rem)'
             }}>
               <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
-                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
-                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+                fontSize: 'clamp(0.9rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 5vw, 2.5rem)'
               }}>
                 {t('home.hero.primaryCta')}
               </Link>
               <Link to="/shows" className="btn btn-secondary btn-lg" style={{
-                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
-                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+                fontSize: 'clamp(0.9rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 5vw, 2.5rem)'
               }}>
                 {t('home.hero.secondaryCta')}
               </Link>
@@ -526,7 +534,7 @@ export default function Home() {
 
           <div style={{
             position: 'absolute',
-            bottom: '5vh',
+            bottom: '3vh',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 20
@@ -547,7 +555,7 @@ export default function Home() {
               <div className="bento-card-bg">
                 <img 
                   src="/images/Bento1/CircusTent.png" 
-                  alt="Circuszelt mit Luftartistin"
+                  alt="Circuszelt mit Luftartistin bei einer Pepe Shows Veranstaltung"
                   className="bento-main-image"
                 />
                 <div className="bento-spotlight-left"></div>
@@ -586,7 +594,7 @@ export default function Home() {
               <div className="bento-card-bg">
                 <img 
                   src="/images/Bento1/Burn.webp" 
-                  alt="Innovative show concepts"
+                  alt="Feuershow – innovative Showkonzepte von Pepe Shows"
                   className="bento-bg-image"
                 />
                 <div className="bento-image-overlay"></div>
@@ -604,17 +612,17 @@ export default function Home() {
               <div className="bento-card-bg">
                 <img 
                   src="/images/Bento1/Slider1.webp" 
-                  alt="Show impression"
+                  alt="Showimpression – Akrobatik auf der Bühne"
                   className="bento-bg-image active"
                 />
-                <img 
-                  src="/images/Bento1/Slider2.webp" 
-                  alt="Show impression"
+                <img
+                  src="/images/Bento1/Slider2.webp"
+                  alt="Showimpression – Artistik bei einer Veranstaltung"
                   className="bento-bg-image"
                 />
-                <img 
-                  src="/images/Bento1/Slider3.webp" 
-                  alt="Show impression"
+                <img
+                  src="/images/Bento1/Slider3.webp"
+                  alt="Showimpression – Künstler in Aktion"
                   className="bento-bg-image"
                 />
                 <div className="bento-image-overlay"></div>
@@ -808,7 +816,7 @@ export default function Home() {
                 <img 
                   src="/images/Brandguide/Header Pepe 16:9.jpg" 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                  alt="Pepe Shows Vision" 
+                  alt="Pepe Shows – mehr als eine Künstleragentur"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               </div>

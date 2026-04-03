@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
 import LogoPepe from "../assets/LogoPepe.png";
 import PepeWebp from "../assets/PEPE.webp";
+import SEO, { pageSEO } from '@/components/SEO';
 
 const PepeLogosZip = "/media/PepeLogos.zip";
 
@@ -17,6 +18,7 @@ export default function Mediamaterial() {
 
   return (
     <main>
+      <SEO {...pageSEO.mediamaterial} />
       {/* Hero Section - New Design with Original Content */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">

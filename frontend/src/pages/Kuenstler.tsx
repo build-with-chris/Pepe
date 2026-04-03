@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import ArtistCardFinal from '@/components/ArtistCardFinal'
 import type { Artist } from '@/types/artist'
 import { getApiBaseUrl } from '@/lib/apiBase'
+import SEO, { pageSEO } from '@/components/SEO'
 
 export default function Kuenstler() {
   const [artists, setArtists] = useState<Artist[]>([])
@@ -121,6 +122,7 @@ export default function Kuenstler() {
 
   return (
     <main>
+      <SEO {...pageSEO.kuenstler} />
       {/* Hero Section with Layered Animated Background */}
       <section className="artist-hero-layered">
         {/* Layer 1: Black Background */}
@@ -135,7 +137,7 @@ export default function Kuenstler() {
             >
               <img
                 src={resolveBackdropImageUrl(imageUrl)}
-                alt={`Artist ${index + 1}`}
+                alt="Künstler-Hintergrundbild"
                 className="slideshow-img"
               />
             </div>

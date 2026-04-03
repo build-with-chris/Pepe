@@ -38,7 +38,7 @@ const ArtistCardSide: React.FC<ArtistCardSideProps> = ({ artist, onFlip, enableZ
           <>
             <img
               src={currentImage}
-              alt={`${artist.name} - Photo ${currentImageIndex + 1}`}
+              alt={`${artist.name} – Foto ${currentImageIndex + 1}`}
               className="w-full h-full object-cover cursor-pointer"
               loading="lazy"
               onClick={(e) => {
@@ -59,7 +59,7 @@ const ArtistCardSide: React.FC<ArtistCardSideProps> = ({ artist, onFlip, enableZ
                     prevImage();
                   }}
                   className="absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/50 hover:bg-black/70 text-white w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-                  aria-label="Previous image"
+                  aria-label="Vorheriges Bild"
                 >
                   ‹
                 </button>
@@ -70,7 +70,7 @@ const ArtistCardSide: React.FC<ArtistCardSideProps> = ({ artist, onFlip, enableZ
                     nextImage();
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/50 hover:bg-black/70 text-white w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-                  aria-label="Next image"
+                  aria-label="Nächstes Bild"
                 >
                   ›
                 </button>
@@ -165,7 +165,7 @@ const ArtistCardSide: React.FC<ArtistCardSideProps> = ({ artist, onFlip, enableZ
         >
           <img
             src={enlarged}
-            alt={`${artist.name} - Enlarged photo ${enlargedImageIndex + 1}`}
+            alt={`${artist.name} – Foto ${enlargedImageIndex + 1} vergrößert`}
             className="max-w-[90%] max-h-[90%] object-contain rounded shadow-lg"
             onClick={(e) => e.stopPropagation()}
           />
@@ -175,6 +175,7 @@ const ArtistCardSide: React.FC<ArtistCardSideProps> = ({ artist, onFlip, enableZ
             <>
               <button
                 className="absolute left-5 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/30 hover:bg-white/40 text-white border border-white/50 shadow-md backdrop-blur-sm w-12 h-12 flex items-center justify-center"
+                aria-label="Vorheriges Bild"
                 onClick={(e) => {
                   e.stopPropagation();
                   const newIndex = (enlargedImageIndex - 1 + allImages.length) % allImages.length;
@@ -185,6 +186,7 @@ const ArtistCardSide: React.FC<ArtistCardSideProps> = ({ artist, onFlip, enableZ
               </button>
               <button
                 className="absolute right-5 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/30 hover:bg-white/40 text-white border border-white/50 shadow-md backdrop-blur-sm w-12 h-12 flex items-center justify-center"
+                aria-label="Nächstes Bild"
                 onClick={(e) => {
                   e.stopPropagation();
                   const newIndex = (enlargedImageIndex + 1) % allImages.length;
@@ -199,6 +201,7 @@ const ArtistCardSide: React.FC<ArtistCardSideProps> = ({ artist, onFlip, enableZ
           {/* Close button */}
           <button
             className="absolute top-5 right-5 z-50 rounded-full bg-white/30 hover:bg-white/40 text-white border border-white/50 shadow-md backdrop-blur-sm w-10 h-10 flex items-center justify-center"
+            aria-label="Bild schließen"
             onClick={(e) => {
               e.stopPropagation();
               setEnlargedImageIndex(null);

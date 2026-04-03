@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import SEO from '@/components/SEO';
 import {
   MoreVertical,
   Check,
@@ -279,6 +280,7 @@ export default function Admin() {
 
   return (
     <DashboardLayout title="Admin Dashboard">
+      <SEO title="Admin Dashboard" noindex />
       <div className="space-y-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

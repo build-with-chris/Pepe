@@ -204,7 +204,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
                 <div className="flex-1 relative overflow-hidden">
                   <img 
                     src={resolveImageUrl(currentGalleryImage)}
-                    alt={`${artist.name} Galerie ${currentImageIndex + 1}`}
+                    alt={`${artist.name} – Galeriebild ${currentImageIndex + 1}`}
                     className="w-full h-full object-cover cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -284,7 +284,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
             e.stopPropagation();
             handleSideChange('front');
           }}
-          aria-label="Show front"
+          aria-label="Vorderseite anzeigen"
         />
         <button
           className={`w-3 h-3 rounded-full transition-all ${
@@ -294,7 +294,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
             e.stopPropagation();
             handleSideChange('back');
           }}
-          aria-label="Show details"
+          aria-label="Details anzeigen"
         />
         <button
           className={`w-3 h-3 rounded-full transition-all ${
@@ -304,7 +304,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
             e.stopPropagation();
             handleSideChange('photos');
           }}
-          aria-label="Show photos"
+          aria-label="Fotos anzeigen"
         />
       </div>
 
