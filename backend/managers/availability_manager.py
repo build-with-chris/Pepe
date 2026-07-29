@@ -81,6 +81,43 @@ class AvailabilityManager:
             logger.exception('Fehler beim Hinzufügen der Availability für artist_id=%s date=%s', artist_id, date_obj)
             raise
 
+    def add_availabilities_bulk(self, artist_id, dates) -> int:
+        """Legt viele Verfügbarkeitstage auf einmal an. Gibt die Anzahl neuer Tage zurück.
+
+        `add_availability` macht pro Tag ein SELECT, ein INSERT und ein COMMIT.
+        Bei der Standard-Verfügbarkeit von 365 Tagen sind das über tausend
+        Roundtrips für einen einzigen Registrierungsvorgang. Hier stattdessen:
+        ein SELECT für den Bestand, ein INSERT für den Rest, kein Commit —
+        das übernimmt der Aufrufer im selben Vorgang wie den Artist.
+        """
+        wanted = []
+        for d in dates:
+            if isinstance(d, str):
+                try:
+                    d = _date.fromisoformat(d)
+                except ValueError:
+                    logger.warning('Ungültiges Datumsformat in add_availabilities_bulk: %s', d)
+                    continue
+            wanted.append(d)
+
+        if not wanted:
+            return 0
+
+        existing = {
+            row[0] for row in self.db.session.query(Availability.date)
+            .filter(Availability.artist_id == artist_id,
+                    Availability.date.in_(wanted))
+            .all()
+        }
+        missing = [d for d in dict.fromkeys(wanted) if d not in existing]
+        if not missing:
+            return 0
+
+        self.db.session.bulk_save_objects(
+            [Availability(artist_id=artist_id, date=d) for d in missing]
+        )
+        return len(missing)
+
     def remove_availability(self, availability_id):
         """Entfernt einen Verfügbarkeitstag anhand seiner ID. Gibt das gelöschte Slot-Objekt zurück oder None."""
         try:

@@ -68,6 +68,128 @@ export function ChoiceCard({ image, label, description, value, selected, onSelec
   )
 }
 
+export type BookingResultStatus = 'range' | 'individual_offer' | 'unavailable' | 'error'
+
+export interface BookingResult {
+  status: BookingResultStatus
+  requestId: number | null
+  priceMin: number | null
+  priceMax: number | null
+  /** Maschinenlesbarer Grund vom Server, z.B. 'group' | 'duration' | 'no_artists' */
+  reason: string | null
+  numArtists: number
+  /** Nur bei status === 'error' */
+  errorMessage?: string
+}
+
+const euro = new Intl.NumberFormat('de-DE', {
+  style: 'currency',
+  currency: 'EUR',
+  maximumFractionDigits: 0
+})
+
+const INDIVIDUAL_OFFER_HINTS: Record<string, string> = {
+  group: 'Für Gruppen ab drei Künstlern stellen wir die Besetzung individuell zusammen. Deshalb gibt es hier keinen automatischen Richtpreis.',
+  duration: 'Shows über 45 Minuten planen wir individuell, weil sich Programm und Besetzung deutlich unterscheiden.'
+}
+
+const UNAVAILABLE_HINTS: Record<string, string> = {
+  no_artists: 'Für Ihre Auswahl ist an diesem Termin gerade kein Künstler frei. Wir prüfen Ihre Anfrage persönlich und melden uns mit Alternativen.',
+  not_enough_artists: 'Für ein Duo ist an diesem Termin aktuell nur ein Künstler verfügbar. Wir prüfen Ihre Anfrage persönlich.',
+  calculation_failed: 'Der Richtpreis konnte nicht automatisch ermittelt werden. Wir rechnen Ihre Anfrage von Hand durch.'
+}
+
+/**
+ * Ergebnisschritt nach dem Absenden: Preisspanne, Sonderfälle oder Fehler.
+ * Ersetzt das frühere `alert()` (SPEC-3, Kriterien 1, 6, 7).
+ */
+export function ResultStep({ result, onRestart }: { result: BookingResult; onRestart: () => void }) {
+  const hasRange =
+    result.status === 'range' && result.priceMin !== null && result.priceMax !== null
+
+  return (
+    <div className="wizard-step booking-result" role="status" aria-live="polite">
+      {result.status === 'error' ? (
+        <>
+          <h3 className="wizard-step-title">Ihre Anfrage konnte nicht übermittelt werden</h3>
+          <p className="wizard-step-subtitle">{result.errorMessage}</p>
+        </>
+      ) : (
+        <>
+          <h3 className="wizard-step-title">Vielen Dank für Ihre Anfrage!</h3>
+          <p className="wizard-step-subtitle">
+            Wir haben Ihre Anfrage erhalten und melden uns innerhalb von 24 Stunden bei Ihnen.
+          </p>
+        </>
+      )}
+
+      {hasRange && (
+        <div className="booking-result-price">
+          <span className="booking-result-price-label">Unverbindlicher Richtpreis</span>
+          <span className="booking-result-price-range">
+            {euro.format(result.priceMin as number)} – {euro.format(result.priceMax as number)}
+          </span>
+          <p className="booking-result-price-note">
+            Inklusive Vermittlung und Anfahrt. Der endgültige Preis steht fest, sobald der
+            Künstler Ihre Anfrage bestätigt hat.
+          </p>
+        </div>
+      )}
+
+      {result.status === 'individual_offer' && (
+        <div className="booking-result-note">
+          <strong>Individuelles Angebot</strong>
+          <p>
+            {(result.reason && INDIVIDUAL_OFFER_HINTS[result.reason]) ||
+              'Ihre Anfrage kalkulieren wir individuell.'}{' '}
+            Sie erhalten Ihr persönliches Angebot per E-Mail.
+          </p>
+        </div>
+      )}
+
+      {result.status === 'unavailable' && (
+        <div className="booking-result-note">
+          <strong>Kein automatischer Richtpreis</strong>
+          <p>
+            {(result.reason && UNAVAILABLE_HINTS[result.reason]) ||
+              'Wir prüfen Ihre Anfrage persönlich und melden uns mit einem Angebot.'}
+          </p>
+        </div>
+      )}
+
+      {result.status !== 'error' && result.numArtists > 0 && (
+        <p className="booking-result-artists">
+          {result.numArtists === 1
+            ? 'Ein passender Künstler wurde benachrichtigt.'
+            : `${result.numArtists} passende Künstler wurden benachrichtigt.`}
+        </p>
+      )}
+
+      {result.requestId !== null && (
+        <p className="booking-result-id">
+          Ihre Anfrage-Nummer: <strong>{result.requestId}</strong>
+        </p>
+      )}
+
+      <div className="booking-result-actions mt-6">
+        {result.status === 'error' && (
+          <>
+            <a href="mailto:info@pepeshows.de" className="btn btn-secondary mr-3">
+              E-Mail senden
+            </a>
+            <a href="tel:+4915904891419" className="btn btn-secondary mr-3">
+              Anrufen
+            </a>
+          </>
+        )}
+        <button type="button" onClick={onRestart} className="btn btn-primary">
+          {result.status === 'error' ? 'Erneut versuchen' : 'Neue Anfrage stellen'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 interface StepContentProps {
   step: number
   formData: any

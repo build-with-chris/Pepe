@@ -5,12 +5,10 @@ from managers.discipline_manager import DisciplineManager
 from datetime import date, timedelta
 from managers.availability_manager import AvailabilityManager
 from services.gage_calculator import GageCalculator
+from services.geo import geocode_address
 from sqlalchemy.exc import IntegrityError
 import logging
 logger = logging.getLogger(__name__)
-import os
-import requests
-from urllib.parse import urlencode
 
 
 class ArtistManager:
@@ -24,36 +22,24 @@ class ArtistManager:
         # Manager für Verfügbarkeiten
         self.availability_mgr = AvailabilityManager()
 
-    def _geocode_and_set(self, artist):
-        """If artist.address is set, try to geocode and store latitude/longitude.
-        Uses OpenStreetMap Nominatim. Fails silently (logs warning) to avoid blocking flows.
+    def geocode_and_set(self, artist):
+        """If artist.address is set, geocode it and store the coordinates on lat/lon.
+
+        Die Spalten heißen `lat`/`lon` (siehe models.Artist) — frühere Versionen
+        schrieben auf `latitude`/`longitude` und damit ins Leere.
+        Fehlschläge werden nur geloggt, damit ein Nominatim-Ausfall kein
+        Profil-Update blockiert.
         """
         try:
             address = (getattr(artist, 'address', None) or '').strip()
             if not address:
                 return
-            base = 'https://nominatim.openstreetmap.org/search'
-            params = {
-                'q': address,
-                'format': 'json',
-                'limit': 1
-            }
-            ua = os.getenv('GEOCODING_USER_AGENT', 'PepeBooking/1.0 (contact: admin@pepebooking.local)')
-            resp = requests.get(f"{base}?{urlencode(params)}", headers={'User-Agent': ua}, timeout=6)
-            if resp.status_code != 200:
-                logger.warning('Geocoding failed: HTTP %s', resp.status_code)
-                return
-            data = resp.json() or []
-            if not data:
+            coords = geocode_address(address)
+            if not coords:
                 logger.warning('Geocoding: no result for %s', address)
                 return
-            lat = float(data[0].get('lat'))
-            lon = float(data[0].get('lon'))
-            # set on model if columns exist
-            if hasattr(artist, 'latitude'):
-                artist.latitude = lat
-            if hasattr(artist, 'longitude'):
-                artist.longitude = lon
+            artist.lat, artist.lon = coords
+            logger.info('Geocoded artist address %r -> lat=%s lon=%s', address, artist.lat, artist.lon)
         except Exception:
             logger.exception('Geocoding exception for address: %s', getattr(artist, 'address', None))
 
@@ -115,15 +101,16 @@ class ArtistManager:
                 artist.disciplines.append(disc)
 
             # Try to geocode the address and set lat/lon
-            self._geocode_and_set(artist)
+            self.geocode_and_set(artist)
 
             self.db.session.add(artist)
             self.db.session.flush()
-            # Standard-Verfügbarkeit: 365 Tage ab heute über AvailabilityManager anlegen
+            # Standard-Verfügbarkeit: 365 Tage ab heute — in einem Rutsch statt
+            # als 365 einzelne Transaktionen.
             today = date.today()
-            for i in range(365):
-                day = today + timedelta(days=i)
-                self.availability_mgr.add_availability(artist.id, day)
+            self.availability_mgr.add_availabilities_bulk(
+                artist.id, [today + timedelta(days=i) for i in range(365)]
+            )
             self.db.session.commit()
             return artist
         except IntegrityError as e:
@@ -199,7 +186,7 @@ class ArtistManager:
                     setattr(artist, k, v)
             # If address changed, recompute coordinates
             if 'address' in fields and (fields['address'] or '') != (address_before or ''):
-                self._geocode_and_set(artist)
+                self.geocode_and_set(artist)
             self.db.session.commit()
             return artist
         except Exception:

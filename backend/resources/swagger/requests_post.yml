@@ -34,7 +34,7 @@ requestBody:
           needs_light: { type: boolean }
           needs_sound: { type: boolean }
           newsletter_opt_in: { type: boolean }
-          distance_km: { type: number }
+          distance_km: { type: number, description: 'Ignoriert – die Entfernung wird serverseitig aus Event-Adresse und Artist-Koordinaten berechnet.' }
           special_requests: { type: string }
 responses:
   201:
@@ -50,8 +50,20 @@ responses:
           type: object
           properties:
             request_id: { type: integer }
-            price_min: { type: number, nullable: true }
-            price_max: { type: number, nullable: true }
+            price_min: { type: number, nullable: true, description: 'Untergrenze inkl. Agenturgebühr; null außer bei price_status = range.' }
+            price_max: { type: number, nullable: true, description: 'Obergrenze inkl. Agenturgebühr; überschreitet nie Artist-Maximalgage plus Agenturgebühr.' }
+            price_status:
+              type: string
+              enum: [range, individual_offer, unavailable]
+              description: >
+                range = price_min/price_max sind gesetzt.
+                individual_offer = bewusst kein automatischer Preis (Gruppe ab 3 Personen oder Show über 45 Minuten).
+                unavailable = Preis konnte nicht ermittelt werden.
+            price_reason:
+              type: string
+              nullable: true
+              enum: [group, duration, no_artists, not_enough_artists, calculation_failed]
+            currency: { type: string, example: 'EUR' }
             num_available_artists: { type: integer }
             matched_artists:
               type: array

@@ -26,3 +26,12 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Flask instance folder (lokale SQLite-DB)
+backend/instance/
+
+# Python
+__pycache__/
+*.py[cod]
+backend/.venv/
+.pytest_cache/

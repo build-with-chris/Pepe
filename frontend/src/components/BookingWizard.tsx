@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StepContent } from './BookingWizardSteps'
+import { StepContent, ResultStep, type BookingResult } from './BookingWizardSteps'
 
 interface BookingData {
   // Step 1: Event Type
@@ -91,7 +91,8 @@ function transformToBackendPayload(newData: BookingData) {
     client_email: newData.email,
     client_name: `${newData.firstName} ${newData.lastName}`.trim(),
     disciplines: newData.performanceStyle,
-    distance_km: 0, // Could be calculated from address in future
+    // distance_km wird bewusst nicht mitgeschickt — der Server berechnet die
+    // Entfernung aus Event-Adresse und Künstler-Koordinaten.
     duration_minutes: durationMap[newData.duration] || parsedCustomDuration(),
     event_address: eventAddress,
     event_date: newData.eventDate,
@@ -111,52 +112,59 @@ function transformToBackendPayload(newData: BookingData) {
   }
 }
 
+const EMPTY_FORM_DATA: BookingData = {
+  eventType: '',
+  teamSize: '',
+  performanceStyle: [],
+  venueType: '',
+  eventAddress: '',
+  street: '',
+  postalCode: '',
+  city: '',
+  locationDetails: '',
+  needsLight: false,
+  needsSound: false,
+  needsStageFloor: false,
+  needsRigging: false,
+  eventDate: '',
+  eventTime: '',
+  duration: '',
+  customDuration: '',
+  guestCount: '',
+  budget: '',
+  planningStatus: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  company: '',
+  message: '',
+  termsAccepted: false,
+  marketingConsent: false
+}
+
+const API_BASE = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+
+const SUBMIT_ERROR_TEXT =
+  'Wir haben gerade technische Probleme. Ihre Angaben sind lokal gespeichert. ' +
+  'Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt.'
+
 export default function BookingWizard() {
   const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [serverError, setServerError] = useState<string | null>(null)
-  const [requestId, setRequestId] = useState<string | null>(null)
+  const [result, setResult] = useState<BookingResult | null>(null)
   const wizardRef = useRef<HTMLDivElement>(null)
-  const [formData, setFormData] = useState<BookingData>({
-    eventType: '',
-    teamSize: '',
-    performanceStyle: [],
-    venueType: '',
-    eventAddress: '',
-    street: '',
-    postalCode: '',
-    city: '',
-    locationDetails: '',
-    needsLight: false,
-    needsSound: false,
-    needsStageFloor: false,
-    needsRigging: false,
-    eventDate: '',
-    eventTime: '',
-    duration: '',
-    customDuration: '',
-    guestCount: '',
-    budget: '',
-    planningStatus: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    company: '',
-    message: '',
-    termsAccepted: false,
-    marketingConsent: false
-  })
+  const [formData, setFormData] = useState<BookingData>(EMPTY_FORM_DATA)
 
   const totalSteps = 7
 
-  // Scroll to top of wizard on step change
+  // Scroll to top of wizard on step change and when the result appears
   useEffect(() => {
     if (wizardRef.current) {
       wizardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [currentStep])
+  }, [currentStep, result])
 
   const eventTypes = [
     { 
@@ -333,115 +341,67 @@ export default function BookingWizard() {
     }
   }
 
+  const failWith = (error: unknown) => {
+    console.error('Booking request failed:', error)
+    localStorage.setItem('pending-booking-request', JSON.stringify({
+      ...formData,
+      timestamp: new Date().toISOString(),
+      status: 'error'
+    }))
+    setResult({
+      status: 'error',
+      requestId: null,
+      priceMin: null,
+      priceMax: null,
+      reason: null,
+      numArtists: 0,
+      errorMessage: SUBMIT_ERROR_TEXT
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setServerError(null)
-    setRequestId(null)
-    
+
     try {
-      // Try multiple endpoints for reliability
-      const endpoints = [
-        `${import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'}/api/requests/requests`,
-        '/api/requests/requests', // Local fallback
-        'https://api.pepe-shows.com/requests/requests' // Alternative endpoint
-      ]
-      
-      let success = false
-      let lastError: any = null
-      
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify(transformToBackendPayload(formData)),
-          })
-          
-          if (response.ok) {
-            success = true
-            break
-          } else {
-            const errorData = await response.text()
-            console.warn(`Endpoint ${endpoint} failed:`, response.status, errorData)
-            lastError = new Error(`${endpoint}: ${response.status}`)
-          }
-        } catch (endpointError) {
-          console.warn(`Endpoint ${endpoint} error:`, endpointError)
-          lastError = endpointError
-          continue
-        }
+      const response = await fetch(`${API_BASE}/api/requests/requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(transformToBackendPayload(formData)),
+      })
+
+      if (!response.ok) {
+        failWith(new Error(`${response.status} ${await response.text()}`))
+        return
       }
-      
-      if (success) {
-        // Store locally as backup
-        localStorage.setItem('last-booking-request', JSON.stringify({
-          ...formData,
-          timestamp: new Date().toISOString(),
-          status: 'submitted'
-        }))
-        
-        // Reset form to initial state
-        setFormData({
-          eventType: '',
-          teamSize: '',
-          performanceStyle: [],
-          venueType: '',
-          eventAddress: '',
-          street: '',
-          postalCode: '',
-          city: '',
-          locationDetails: '',
-          needsLight: false,
-          needsSound: false,
-          needsStageFloor: false,
-          needsRigging: false,
-          eventDate: '',
-          eventTime: '',
-          duration: '',
-          customDuration: '',
-          guestCount: '',
-          budget: '',
-          planningStatus: '',
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          company: '',
-          message: '',
-          termsAccepted: false,
-          marketingConsent: false
-        })
-        setCurrentStep(1)
-        alert('Vielen Dank für Ihre detaillierte Anfrage! Wir melden uns innerhalb von 24 Stunden bei Ihnen.')
-      } else {
-        // Fallback: Store locally and show error with request ID
-        const generatedRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-        localStorage.setItem('pending-booking-request', JSON.stringify({
-          id: generatedRequestId,
-          ...formData,
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }))
-        
-        setRequestId(generatedRequestId)
-        setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepeshows.de oder telefonisch.')
-        console.error('All endpoints failed. Last error:', lastError)
-      }
-    } catch (error) {
-      console.error('Critical error submitting form:', error)
-      const fallbackRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-      localStorage.setItem('pending-booking-request', JSON.stringify({
-        id: fallbackRequestId,
+
+      const data = await response.json()
+
+      // Store locally as backup
+      localStorage.setItem('last-booking-request', JSON.stringify({
         ...formData,
+        requestId: data.request_id ?? null,
         timestamp: new Date().toISOString(),
-        status: 'error'
+        status: 'submitted'
       }))
-      setRequestId(fallbackRequestId)
-      setServerError('Ihre Anfrage wurde lokal gespeichert. Wir haben technische Probleme mit unserem Server. Bitte kontaktieren Sie uns direkt unter info@pepeshows.de oder telefonisch.')
+
+      setResult({
+        // Ältere Backends kennen price_status noch nicht — dann aus den Preisen ableiten.
+        status: data.price_status ?? (data.price_min != null ? 'range' : 'unavailable'),
+        requestId: data.request_id ?? null,
+        priceMin: data.price_min ?? null,
+        priceMax: data.price_max ?? null,
+        reason: data.price_reason ?? null,
+        numArtists: data.num_available_artists ?? 0
+      })
+
+      setFormData(EMPTY_FORM_DATA)
+      setCurrentStep(1)
+    } catch (error) {
+      failWith(error)
     } finally {
       setIsSubmitting(false)
     }
@@ -491,6 +451,14 @@ export default function BookingWizard() {
   }
 
 
+  if (result) {
+    return (
+      <div ref={wizardRef} className="booking-wizard">
+        <ResultStep result={result} onRestart={() => setResult(null)} />
+      </div>
+    )
+  }
+
   return (
     <div ref={wizardRef} className="booking-wizard">
       {/* Stepper */}
@@ -514,30 +482,6 @@ export default function BookingWizard() {
               {index < getCompletedChoices().length - 1 && <span className="breadcrumb-separator"> → </span>}
             </span>
           ))}
-        </div>
-      )}
-
-      {/* Error Message Display */}
-      {serverError && requestId && (
-        <div className="server-error-message mb-8">
-          <div className="error-content">
-            <div className="error-icon">⚠️</div>
-            <div className="error-details">
-              <h4 className="error-title">Technische Probleme</h4>
-              <p className="error-text">{serverError}</p>
-              <div className="error-request-id">
-                <strong>Ihre Anfrage-ID: {requestId}</strong>
-              </div>
-              <div className="error-actions mt-4">
-                <a href="mailto:info@pepeshows.de" className="btn btn-secondary btn-sm mr-3">
-                  E-Mail senden
-                </a>
-                <a href="tel:+4915904891419" className="btn btn-secondary btn-sm">
-                  Anrufen
-                </a>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 

@@ -7,9 +7,17 @@ from managers.availability_manager import AvailabilityManager
 from managers.booking_requests_manager import BookingRequestManager
 from models import Availability, Discipline, db
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 import logging
 from helpers.http_responses import error_response
-from helpers.clerk_auth import clerk_auth_required, get_clerk_user_id, get_clerk_claims
+from helpers.clerk_auth import (
+    clerk_auth_required,
+    get_clerk_claims,
+    get_clerk_email,
+    get_clerk_name,
+    get_clerk_user_id,
+    get_current_artist,
+)
 
 from datetime import datetime
 import os
@@ -81,72 +89,145 @@ def process_image_for_upload(image_file, max_width=1200, max_height=1200, qualit
         raise ValueError(f'Bildverarbeitung fehlgeschlagen: {str(e)}')
 
 
+class ArtistOnboardingError(Exception):
+    """Raised when no artist row can be resolved or created for the current user."""
+
+    def __init__(self, code: str, message: str, status: int):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.status = status
+
+
+def ensure_artist_for_current_user(create_if_missing: bool = True):
+    """Der einzige Onboarding-Pfad: Clerk-User -> Artist-Datensatz.
+
+    Reihenfolge:
+      1) Lookup per Clerk-UID (gespeichert in artists.supabase_user_id)
+      2) Verknüpfung eines vorhandenen Datensatzes mit derselben E-Mail
+      3) Minimal-Artist anlegen (approval_status='unsubmitted')
+
+    Ohne E-Mail im Token wird *kein* Datensatz angelegt — es gibt keine
+    Platzhalter-Adressen mehr. Fehlt die E-Mail, ist das JWT-Template in Clerk
+    nicht (korrekt) konfiguriert.
+
+    Raises:
+        ArtistOnboardingError: wenn kein Datensatz ermittelt/angelegt werden kann.
+    """
+    from models import Artist  # local import to avoid circulars at module import time
+
+    user_id = get_clerk_user_id()
+
+    # 1) Direkt über die Clerk-UID
+    artist = get_current_artist()
+    if artist:
+        return artist
+
+    email = get_clerk_email()
+    name = get_clerk_name()
+
+    if not email:
+        logger.error(
+            "ensure_artist: no e-mail claim for uid=%s (claim keys=%s) — "
+            "check the Clerk JWT template",
+            user_id, sorted((get_clerk_claims() or {}).keys()),
+        )
+        raise ArtistOnboardingError(
+            'invalid_token',
+            'Token contains no e-mail claim. Clerk JWT template is missing or misconfigured.',
+            400,
+        )
+
+    email_norm = email.lower()
+
+    # 2) Vorhandenen Datensatz mit derselben E-Mail übernehmen
+    existing = Artist.query.filter(func.lower(Artist.email) == email_norm).first()
+    if existing:
+        linked_uid = getattr(existing, 'supabase_user_id', None)
+        if not linked_uid:
+            existing.supabase_user_id = user_id
+            db.session.commit()
+            g.current_artist = existing
+            return existing
+        if linked_uid.lower() != (user_id or '').lower():
+            logger.warning(
+                "ensure_artist: e-mail %s is already linked to a different Clerk user (%s != %s)",
+                email_norm, linked_uid, user_id,
+            )
+            raise ArtistOnboardingError(
+                'conflict', 'E-mail already linked to another account', 409
+            )
+        g.current_artist = existing
+        return existing
+
+    if not create_if_missing:
+        return None
+
+    # 3) Minimal-Artist anlegen
+    try:
+        new_artist = Artist(
+            name=name or email_norm.split('@')[0],
+            email=email_norm,
+            supabase_user_id=user_id,
+            approval_status='unsubmitted',
+        )
+        db.session.add(new_artist)
+        db.session.commit()
+        logger.info("ensure_artist: created artist id=%s for uid=%s", new_artist.id, user_id)
+        g.current_artist = new_artist
+        return new_artist
+    except IntegrityError:
+        # Parallele Requests (z. B. doppelter Login-Sync): Der andere Request war
+        # schneller — dessen Datensatz zurückgeben statt einen zweiten anzulegen.
+        db.session.rollback()
+        artist = (Artist.query
+                  .filter((func.lower(Artist.email) == email_norm)
+                          | (Artist.supabase_user_id == user_id))
+                  .first())
+        if artist:
+            g.current_artist = artist
+            return artist
+        logger.exception("ensure_artist: create raced and no row found for uid=%s", user_id)
+        raise ArtistOnboardingError(
+            'internal_error', 'Unable to ensure artist for current user', 500
+        )
+
+
 def get_current_user():
     """Gibt ein Tupel (user_id, artist) des aktuell authentifizierten Clerk-Users zurück.
-    Reihenfolge:
-      1) Lookup per clerk_user_id (stored in supabase_user_id or clerk_user_id column)
-      2) Fallback per E-Mail aus Clerk-Claims und ggf. UID verknüpfen
-      3) Falls noch nichts gefunden, aber eine E-Mail vorhanden ist: Minimal-Artist automatisch anlegen (status='unsubmitted')
+
+    Dünner Wrapper um `ensure_artist_for_current_user` für Handler, die bei
+    fehlendem Artist selbst mit 403 antworten.
     """
     user_id = get_clerk_user_id()
-    artist = None
-
-    # 1) Direkt über UID versuchen (Clerk user_id stored in supabase_user_id or clerk_user_id)
     try:
-        artist = artist_mgr.get_artist_by_supabase_user_id(user_id)
-        if not artist:
-            # Try clerk_user_id column if exists
-            artist = artist_mgr.get_artist_by_clerk_user_id(user_id) if hasattr(artist_mgr, 'get_artist_by_clerk_user_id') else None
-    except Exception:
-        artist = None
+        return user_id, ensure_artist_for_current_user()
+    except ArtistOnboardingError as e:
+        logger.warning("get_current_user: %s (uid=%s)", e.message, user_id)
+        return user_id, None
 
-    # 2) Fallback per E-Mail (und UID verknüpfen)
-    if not artist:
-        try:
-            claims = get_clerk_claims() or {}
-            # DEBUG: Log all JWT claims to see what Clerk sends
-            logger.info(f"DEBUG Clerk JWT claims: {list(claims.keys())}")
-            logger.info(f"DEBUG Clerk JWT full: {claims}")
 
-            # Clerk stores email differently - check various paths
-            # Fix: use explicit parentheses to ensure correct evaluation order
-            email = (
-                claims.get("email")
-                or claims.get("primary_email_address")
-                or (claims.get("email_addresses", [{}])[0].get("email_address") if claims.get("email_addresses") else None)
-            )
-            logger.info(f"DEBUG Extracted email: {email}")
-
-            name = claims.get("name") or claims.get("first_name", "") + " " + claims.get("last_name", "")
-            name = name.strip() if name else None
-
-            if email:
-                fallback = artist_mgr.get_artist_by_email(email)
-                if fallback:
-                    if not getattr(fallback, "supabase_user_id", None):
-                        fallback.supabase_user_id = user_id
-                        db.session.commit()
-                    artist = fallback
-                else:
-                    # 3) Minimal-Artist automatisch anlegen (erstes Login)
-                    from models import Artist
-                    try:
-                        new_artist = Artist(
-                            name=name or (email.split("@")[0] if isinstance(email, str) else None),
-                            email=email,
-                            supabase_user_id=user_id,  # Store Clerk user_id here
-                            approval_status="unsubmitted",
-                        )
-                        db.session.add(new_artist)
-                        db.session.commit()
-                        artist = new_artist
-                    except Exception:
-                        db.session.rollback()
-        except Exception:
-            # Keine Claims/E-Mail verfügbar
-            pass
-
-    return user_id, artist
+def artist_me_payload(artist) -> dict:
+    """Serialize the own artist profile — shared by /artists/me and /artists/me/ensure."""
+    return {
+        'id': artist.id,
+        'name': artist.name,
+        'email': artist.email,
+        'address': getattr(artist, 'address', None),
+        'phone_number': artist.phone_number,
+        'disciplines': [d.name for d in artist.disciplines],
+        'price_min': getattr(artist, 'price_min', None),
+        'price_max': getattr(artist, 'price_max', None),
+        'profile_image_url': getattr(artist, 'profile_image_url', None),
+        'bio': getattr(artist, 'bio', None),
+        'instagram': getattr(artist, 'instagram', None),
+        'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
+        'is_admin': bool(getattr(artist, 'is_admin', False)),
+        'approval_status': getattr(artist, 'approval_status', None),
+        'rejection_reason': getattr(artist, 'rejection_reason', None),
+        'approved': (getattr(artist, 'approval_status', '') or '').lower() == 'approved',
+        'guidelines_accepted': bool(getattr(artist, 'guidelines_accepted', False)),
+    }
 
 
 # Artists
@@ -174,17 +255,21 @@ def create_artist():
     """Create a new artist with the provided data."""
     try:
         current_user_id = get_clerk_user_id()
-        data = request.json or {}
+        data = request.get_json(silent=True) or {}
         disciplines = data.get('disciplines')
         if not disciplines:
             return error_response('validation_error', 'Disciplines must be provided', 400)
+        # Fehlende Pflichtfelder als 400 melden statt als KeyError in einem 500er
+        for field in ('name', 'email'):
+            if not (data.get(field) or '').strip():
+                return error_response('validation_error', f'missing field: {field}', 400)
         if artist_mgr.get_artist_by_email(data.get('email', '')):
             return error_response('conflict', 'Email already exists', 409)
 
         artist = artist_mgr.create_artist(
             name=data['name'],
             email=data['email'],
-            password=data['password'],
+            password=data.get('password'),
             disciplines=disciplines,
             phone_number=data.get('phone_number'),
             address=data.get('address'),
@@ -213,25 +298,7 @@ def get_my_artist():
     user_id, artist = get_current_user()
     if not artist:
         return error_response('forbidden', 'Current user not linked to an artist', 403)
-    return jsonify({
-        'id': artist.id,
-        'name': artist.name,
-        'email': artist.email,
-        'address': getattr(artist, 'address', None),
-        'phone_number': artist.phone_number,
-        'disciplines': [d.name for d in artist.disciplines],
-        'price_min': getattr(artist, 'price_min', None),
-        'price_max': getattr(artist, 'price_max', None),
-        'profile_image_url': getattr(artist, 'profile_image_url', None),
-        'bio': getattr(artist, 'bio', None),
-        'instagram': getattr(artist, 'instagram', None),
-        'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
-        'is_admin': bool(getattr(artist, 'is_admin', False)),
-        'approval_status': getattr(artist, 'approval_status', None),
-        'rejection_reason': getattr(artist, 'rejection_reason', None),
-        'approved': (getattr(artist, 'approval_status', '') or '').lower() == 'approved',
-        'guidelines_accepted': bool(getattr(artist, 'guidelines_accepted', False) or getattr(artist, 'guidelinesAccepted', False)),
-    }), 200
+    return jsonify(artist_me_payload(artist)), 200
 
 
 # New endpoint: Accept artist guidelines
@@ -335,6 +402,7 @@ def update_my_profile():
         # Primitive Felder
         if name is not None:
             artist.name = str(name).strip() or artist.name
+        address_before = getattr(artist, 'address', None)
         if address is not None:
             artist.address = str(address).strip() or None
         if phone_number is not None:
@@ -374,6 +442,13 @@ def update_my_profile():
                 if hasattr(artist, 'rejection_reason'):
                     artist.rejection_reason = None
 
+        # Adresse geändert (oder noch ohne Koordinaten)? -> lat/lon nachziehen,
+        # sonst bleibt distance_km bei jeder Anfrage 0.
+        if (artist.address or '') != (address_before or '') or (
+            artist.address and (artist.lat is None or artist.lon is None)
+        ):
+            artist_mgr.geocode_and_set(artist)
+
         db.session.commit()
 
         # Antwort mit allen wichtigen Feldern
@@ -404,123 +479,38 @@ def update_my_profile():
 @clerk_auth_required
 @swag_from('../resources/swagger/artists_me_ensure_post.yml', validation=False)
 def ensure_my_artist():
-    """Ensure an artist row exists and is linked to the current Supabase user."""
-    user_id = get_clerk_user_id()
-
-    # 1) Direct lookup by UID
+    """Ensure exactly one artist row exists and is linked to the current Clerk user."""
     try:
-        artist = artist_mgr.get_artist_by_supabase_user_id(user_id)
-    except Exception:
-        artist = None
-    if artist:
-        return jsonify({
-            'id': artist.id,
-            'name': artist.name,
-            'email': artist.email,
-            'address': getattr(artist, 'address', None),
-            'phone_number': artist.phone_number,
-            'disciplines': [d.name for d in artist.disciplines],
-            'price_min': getattr(artist, 'price_min', None),
-            'price_max': getattr(artist, 'price_max', None),
-            'profile_image_url': getattr(artist, 'profile_image_url', None),
-            'bio': getattr(artist, 'bio', None),
-            'instagram': getattr(artist, 'instagram', None),
-            'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
-            'is_admin': bool(getattr(artist, 'is_admin', False)),
-            'approval_status': getattr(artist, 'approval_status', None),
-            'rejection_reason': getattr(artist, 'rejection_reason', None),
-            'approved': (getattr(artist, 'approval_status', '') or '').lower() == 'approved',
-            'guidelines_accepted': bool(getattr(artist, 'guidelines_accepted', False) or getattr(artist, 'guidelinesAccepted', False)),
-        }), 200
+        artist = ensure_artist_for_current_user()
+    except ArtistOnboardingError as e:
+        return error_response(e.code, e.message, e.status)
 
-    # 2) Fallback: claim orphan by email (case-insensitive)
-    claims = get_clerk_claims()
-    raw_email = (claims.get('email') or claims.get('user_metadata', {}).get('email') or '').strip()
-    raw_name = (claims.get('name') or claims.get('user_metadata', {}).get('name') or None)
+    return jsonify(artist_me_payload(artist)), 200
 
-    email_norm = raw_email.lower() if isinstance(raw_email, str) else None
-
-    from models import Artist  # local import to avoid circulars at module import time
-
-    if email_norm:
-        try:
-            orphan = (Artist.query
-                      .filter(func.lower(Artist.email) == email_norm)
-                      .filter(Artist.supabase_user_id.is_(None))
-                      .first())
-            if orphan:
-                orphan.supabase_user_id = user_id
-                db.session.commit()
-                artist = orphan
-        except Exception:
-            db.session.rollback()
-            artist = None
-
-    # 3) If still not found: try exact email match with UID missing, otherwise create a new minimal artist
-    if not artist and email_norm:
-        try:
-            existing = (Artist.query
-                        .filter(func.lower(Artist.email) == email_norm)
-                        .first())
-            if existing and not getattr(existing, 'supabase_user_id', None):
-                existing.supabase_user_id = user_id
-                db.session.commit()
-                artist = existing
-        except Exception:
-            db.session.rollback()
-            artist = None
-
-    if not artist:
-        # Create minimal linked artist - name and email required by model
-        try:
-            name_value = raw_name or (raw_email.split('@')[0] if isinstance(raw_email, str) and '@' in raw_email else None) or 'Neuer Künstler'
-            email_value = email_norm or raw_email or f'{user_id}@clerk.placeholder'
-
-            logger.info(f'ensure_my_artist: Creating new artist for uid={user_id}, name={name_value}, email={email_value}')
-
-            new_artist = Artist(
-                name=name_value,
-                email=email_value,
-                supabase_user_id=user_id,
-                approval_status='unsubmitted',
-            )
-            db.session.add(new_artist)
-            db.session.commit()
-            artist = new_artist
-        except Exception as e:
-            logger.exception(f'ensure_my_artist: Failed to create artist for uid={user_id}: {e}')
-            db.session.rollback()
-            return error_response('internal_error', f'Unable to ensure artist for current user: {str(e)}', 500)
-
-    # Return unified payload
-    return jsonify({
-        'id': artist.id,
-        'name': artist.name,
-        'email': artist.email,
-        'address': getattr(artist, 'address', None),
-        'phone_number': artist.phone_number,
-        'disciplines': [d.name for d in artist.disciplines],
-        'price_min': getattr(artist, 'price_min', None),
-        'price_max': getattr(artist, 'price_max', None),
-        'profile_image_url': getattr(artist, 'profile_image_url', None),
-        'bio': getattr(artist, 'bio', None),
-        'instagram': getattr(artist, 'instagram', None),
-        'gallery_urls': getattr(artist, 'gallery_urls', []) or [],
-        'is_admin': bool(getattr(artist, 'is_admin', False)),
-        'approval_status': getattr(artist, 'approval_status', None),
-        'rejection_reason': getattr(artist, 'rejection_reason', None),
-        'approved': (getattr(artist, 'approval_status', '') or '').lower() == 'approved',
-        'guidelines_accepted': bool(getattr(artist, 'guidelines_accepted', False) or getattr(artist, 'guidelinesAccepted', False)),
-    }), 200
 
 @api_bp.route('/artists/email/<string:email>', methods=['GET'])
 @clerk_auth_required
 @swag_from('../resources/swagger/artists_email_get.yml')
 def get_artist_by_email(email):
+    """Look up an artist by e-mail. Only the own profile or an admin may do this.
+
+    Der frühere `artist.serialize()`-Aufruf existiert am Modell nicht — die Route
+    endete immer in einem 500er. Und sie stand jedem eingeloggten Nutzer offen,
+    hätte also fremde Profile preisgegeben.
+    """
+    _, current_artist = get_current_user()
+    if not current_artist:
+        return error_response('forbidden', 'Current user not linked to an artist', 403)
+
     artist = artist_mgr.get_artist_by_email(email)
     if not artist:
         return error_response('not_found', 'Artist not found', 404)
-    return jsonify(artist.serialize()), 200
+
+    is_self = artist.id == current_artist.id
+    if not (is_self or getattr(current_artist, 'is_admin', False)):
+        return error_response('forbidden', 'Forbidden', 403)
+
+    return jsonify(artist_me_payload(artist)), 200
 
 
 @api_bp.route('/artists/<int:artist_id>', methods=['GET'])
@@ -808,9 +798,10 @@ def remove_availability(slot_id):
 @swag_from('../resources/swagger/booking_requests_get.yml')
 def list_my_booking_requests():
     """Return booking requests relevant to the current artist (with recommendations)."""
-    user_id = get_clerk_user_id()
+    # Bewusst über get_current_user: der Lookup dort ist gegen Groß-/Kleinschreibung
+    # der Clerk-UID unempfindlich, ein direktes filter_by(supabase_user_id=…) nicht.
+    user_id, artist = get_current_user()
     logger.debug(f"list_my_booking_requests called with supabase_user_id={user_id}")
-    artist = artist_mgr.get_artist_by_supabase_user_id(user_id)
     if not artist:
         logger.warning(f"Current user {user_id} not linked to an artist")
         return error_response('forbidden', 'Current user not linked to an artist', 403)
@@ -1149,32 +1140,39 @@ def upload_artist_image():
             timestamp = int(datetime.utcnow().timestamp())
             file_path = f"{artist.id}/gallery/{timestamp}.webp"
 
-        # Upload zu Supabase
-        result = supabase.storage.from_(bucket).upload(
+        # Upload zu Supabase.
+        # storage3 liefert eine httpx-Response zurück und wirft bei HTTP-Fehlern
+        # selbst. Ein `result.error` gibt es dort nicht — der frühere Zugriff
+        # darauf löste einen AttributeError aus, weshalb *jeder* Upload mit
+        # "Image upload failed" endete, obwohl die Datei längst im Bucket lag.
+        # "upsert" muss ein String sein, der Header wird 1:1 weitergereicht.
+        supabase.storage.from_(bucket).upload(
             file_path,
             processed_image.read(),
             file_options={
                 "content-type": "image/webp",
-                "upsert": image_type == 'profile'  # Profilbilder überschreiben, Gallery nicht
+                "upsert": "true" if image_type == 'profile' else "false",
             }
         )
 
-        if result.error:
-            logger.error(f'Supabase upload error: {result.error}')
-            return error_response('internal_error', 'Image upload failed', 500)
-
         # Public URL generieren
-        public_url_result = supabase.storage.from_(bucket).get_public_url(file_path)
-        public_url = public_url_result
+        public_url = supabase.storage.from_(bucket).get_public_url(file_path)
 
-        # Bei Profilbild: URL in der Datenbank aktualisieren
-        if image_type == 'profile':
-            try:
+        # URL in der Datenbank festhalten — sonst ist das Bild zwar hochgeladen,
+        # taucht im Profil aber nie auf.
+        try:
+            if image_type == 'profile':
                 artist.profile_image_url = public_url
-                db.session.commit()
-            except Exception as e:
-                logger.exception('Failed to update profile image URL in database')
-                # Nicht kritisch - Bild ist trotzdem hochgeladen
+            else:
+                gallery = list(getattr(artist, 'gallery_urls', None) or [])
+                if public_url not in gallery:
+                    gallery.append(public_url)
+                artist.gallery_urls = gallery[:9]
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            logger.exception('Failed to persist image URL in database')
+            # Nicht kritisch - Bild ist trotzdem hochgeladen
 
         return jsonify({
             'success': True,

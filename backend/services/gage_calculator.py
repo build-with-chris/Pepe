@@ -57,7 +57,7 @@ class GageCalculator:
             artist: Artist model instance
 
         Returns:
-            int: Berechnete Gage in Cent
+            int: Berechnete Gage in **Euro** (nicht Cent — der Docstring war falsch)
         """
         # Check if admin override exists
         if artist.admin_gage_override:

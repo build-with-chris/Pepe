@@ -16,9 +16,16 @@ try:
 except ImportError:
     SSL_CONTEXT = ssl.create_default_context()
 
-# Clerk JWKS URL - derived from publishable key
-# pk_test_bmV4dC1xdWFpbC00OS5jbGVyay5hY2NvdW50cy5kZXYk decodes to next-quail-49.clerk.accounts.dev
-CLERK_JWKS_URL = "https://next-quail-49.clerk.accounts.dev/.well-known/jwks.json"
+# Clerk JWKS URL comes from the environment so switching between the Clerk
+# development and production instance never requires a code change.
+# Example: https://clerk.pepeshows.de/.well-known/jwks.json
+CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "").strip()
+
+# Optionaler Aussteller-Check. Ist CLERK_ISSUER gesetzt, muss der `iss`-Claim
+# exakt passen. Ohne diese Prüfung zählt allein die Signatur — beim Umschalten
+# zwischen Dev- und Production-Instanz fällt ein vergessener JWKS-Wechsel sonst
+# nicht auf. Leer gelassen bleibt das Verhalten wie bisher.
+CLERK_ISSUER = os.getenv("CLERK_ISSUER", "").strip()
 
 # Cache the JWKS client
 _jwks_client = None
@@ -26,6 +33,11 @@ _jwks_client = None
 def get_jwks_client():
     """Get or create cached JWKS client."""
     global _jwks_client
+    if not CLERK_JWKS_URL:
+        raise RuntimeError(
+            "CLERK_JWKS_URL is not configured. Set it to the JWKS endpoint of the "
+            "Clerk instance, e.g. https://clerk.pepeshows.de/.well-known/jwks.json"
+        )
     if _jwks_client is None:
         # Use custom SSL context with certifi certificates
         _jwks_client = PyJWKClient(CLERK_JWKS_URL, ssl_context=SSL_CONTEXT)
@@ -49,6 +61,10 @@ def verify_clerk_token(token: str) -> dict | None:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
 
         # Decode and verify the token
+        decode_kwargs = {}
+        if CLERK_ISSUER:
+            decode_kwargs["issuer"] = CLERK_ISSUER
+
         claims = jwt.decode(
             token,
             signing_key.key,
@@ -56,8 +72,13 @@ def verify_clerk_token(token: str) -> dict | None:
             options={
                 "verify_exp": True,
                 "verify_aud": False,  # Clerk doesn't always set audience
-            }
+                "require": ["exp", "sub"],
+            },
+            **decode_kwargs,
         )
+        if not claims.get("sub"):
+            current_app.logger.warning("Clerk token without sub claim rejected")
+            return None
         return claims
     except jwt.ExpiredSignatureError:
         current_app.logger.warning("Clerk token expired")
@@ -88,6 +109,95 @@ def get_clerk_claims() -> dict | None:
     return getattr(g, 'clerk_claims', None)
 
 
+def authenticate_request() -> dict | None:
+    """Verify the Authorization header once per request and cache it on `g`.
+
+    Called by both the /api/admin before_request gate and `clerk_auth_required`,
+    so a request is never verified against the JWKS endpoint twice.
+
+    Returns:
+        The claims dict, or None if there is no valid bearer token.
+    """
+    if getattr(g, 'clerk_claims', None) is not None:
+        return g.clerk_claims
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return None
+
+    claims = verify_clerk_token(auth_header[7:])  # Remove 'Bearer ' prefix
+    if not claims:
+        return None
+
+    g.clerk_user_id = claims.get('sub')
+    g.clerk_claims = claims
+    return claims
+
+
+def get_clerk_email() -> str | None:
+    """Return the e-mail from the Clerk claims (requires the JWT template)."""
+    claims = get_clerk_claims() or {}
+    email = (
+        claims.get("email")
+        or claims.get("primary_email_address")
+        or claims.get("email_address")
+    )
+    if not email:
+        addresses = claims.get("email_addresses")
+        if isinstance(addresses, list) and addresses:
+            first = addresses[0]
+            email = first.get("email_address") if isinstance(first, dict) else first
+    if isinstance(email, str):
+        email = email.strip()
+    return email or None
+
+
+def get_clerk_name() -> str | None:
+    """Return the display name from the Clerk claims (requires the JWT template)."""
+    claims = get_clerk_claims() or {}
+    name = claims.get("name")
+    if not name:
+        parts = [claims.get("first_name") or "", claims.get("last_name") or ""]
+        name = " ".join(p for p in parts if p)
+    name = name.strip() if isinstance(name, str) else None
+    return name or None
+
+
+def get_current_artist():
+    """Resolve the Artist row belonging to the authenticated Clerk user.
+
+    Pure lookup — this never creates rows. Use `ensure_artist_for_current_user`
+    in api_routes for the onboarding path.
+
+    Returns:
+        Artist instance or None.
+    """
+    if 'current_artist' in g:
+        return g.current_artist
+
+    artist = None
+    uid = get_clerk_user_id()
+    if uid and isinstance(uid, str):
+        from sqlalchemy import func
+        from models import Artist
+        try:
+            artist = Artist.query.filter(
+                func.lower(Artist.supabase_user_id) == uid.lower()
+            ).first()
+        except Exception:
+            current_app.logger.exception("get_current_artist lookup failed for uid=%s", uid)
+            artist = None
+
+    g.current_artist = artist
+    return artist
+
+
+def get_current_artist_id() -> int | None:
+    """Return the internal integer Artist.id of the authenticated Clerk user."""
+    artist = get_current_artist()
+    return getattr(artist, 'id', None)
+
+
 def clerk_auth_required(fn):
     """Decorator to require Clerk authentication.
 
@@ -95,21 +205,22 @@ def clerk_auth_required(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        auth_header = request.headers.get('Authorization', '')
+        if authenticate_request() is None:
+            return error_response("unauthorized", "Invalid or missing token", 401)
+        return fn(*args, **kwargs)
+    return wrapper
 
-        if not auth_header.startswith('Bearer '):
-            return error_response("unauthorized", "Missing or invalid Authorization header", 401)
 
-        token = auth_header[7:]  # Remove 'Bearer ' prefix
-        claims = verify_clerk_token(token)
+def artist_required(fn):
+    """Require a valid Clerk token *and* a linked Artist row.
 
-        if not claims:
-            return error_response("unauthorized", "Invalid or expired token", 401)
-
-        # Store in Flask's g object for access in route handlers
-        g.clerk_user_id = claims.get('sub')
-        g.clerk_claims = claims
-
+    Sets g.current_artist so the handler can use the internal integer ID.
+    """
+    @wraps(fn)
+    @clerk_auth_required
+    def wrapper(*args, **kwargs):
+        if get_current_artist() is None:
+            return error_response("forbidden", "Current user not linked to an artist", 403)
         return fn(*args, **kwargs)
     return wrapper
 
@@ -122,21 +233,9 @@ def clerk_auth_optional(fn):
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        auth_header = request.headers.get('Authorization', '')
-
-        if auth_header.startswith('Bearer '):
-            token = auth_header[7:]
-            claims = verify_clerk_token(token)
-            if claims:
-                g.clerk_user_id = claims.get('sub')
-                g.clerk_claims = claims
-            else:
-                g.clerk_user_id = None
-                g.clerk_claims = None
-        else:
+        if authenticate_request() is None:
             g.clerk_user_id = None
             g.clerk_claims = None
-
         return fn(*args, **kwargs)
     return wrapper
 
@@ -182,10 +281,25 @@ def require_role(*allowed_roles):
 
 
 def is_admin() -> bool:
-    """Check if current user is shows-admin."""
-    return get_user_role() == "shows-admin"
+    """Check whether the authenticated user is an admin.
+
+    The `artists.is_admin` column is the single source of truth — the Clerk
+    role in public_metadata is informational only.
+    """
+    return bool(getattr(get_current_artist(), 'is_admin', False))
 
 
 def is_artist() -> bool:
     """Check if current user is shows-artist."""
     return get_user_role() == "shows-artist"
+
+
+def admin_required(fn):
+    """Require a valid Clerk token and artists.is_admin = true."""
+    @wraps(fn)
+    @clerk_auth_required
+    def wrapper(*args, **kwargs):
+        if not is_admin():
+            return error_response("forbidden", "Admins only", 403)
+        return fn(*args, **kwargs)
+    return wrapper

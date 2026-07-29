@@ -1,5 +1,104 @@
 import os
 
+# Ab dieser Showlänge bzw. Teamgröße gibt es keinen automatischen Preis mehr,
+# sondern ein individuelles Angebot (SPEC-3, Kriterien 3 und 6).
+MAX_AUTOMATIC_DURATION_MINUTES = 45
+MAX_AUTOMATIC_TEAM_SIZE = 2
+
+
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
+def team_size_to_people(team_size) -> int:
+    """Normalisiert 'solo'/'duo'/'gruppe'/Zahlen auf eine Personenzahl >= 1."""
+    if isinstance(team_size, (int, float)) and not isinstance(team_size, bool):
+        return max(1, int(team_size))
+    try:
+        ts = str(team_size).strip().lower()
+    except Exception:
+        return 1
+    named = {'solo': 1, 'duo': 2, 'trio': 3, 'quartet': 4, 'quartett': 4}
+    if ts in named:
+        return named[ts]
+    if ts in ('group', 'gruppe'):
+        return 3
+    try:
+        return max(1, int(ts))
+    except ValueError:
+        return 1
+
+
+def requires_individual_offer(duration_minutes=None, team_size=None) -> str | None:
+    """Prüft, ob eine Anfrage automatisch bepreisbar ist.
+
+    Rückgabe: 'duration' bei Überlänge, 'group' ab drei Personen, sonst None.
+    Die Faktor-Scores sind nur bis 45 Min und bis Duo geeicht; darüber hinaus
+    wäre jede Zahl geraten. Deshalb wird bewusst gar keine angezeigt.
+    """
+    if duration_minutes is not None:
+        try:
+            if int(duration_minutes) > MAX_AUTOMATIC_DURATION_MINUTES:
+                return 'duration'
+        except (TypeError, ValueError):
+            pass
+    if team_size is not None and team_size_to_people(team_size) > MAX_AUTOMATIC_TEAM_SIZE:
+        return 'group'
+    return None
+
+
+def surcharges(distance_km=0, needs_light=False, needs_sound=False,
+               event_address=None, people=1) -> float:
+    """Feste Durchlaufposten in Euro: Technik, Distanzzuschlag und Anfahrt.
+
+    Diese Posten sind keine Gage — auf sie wird keine Agenturgebühr erhoben.
+    """
+    tech_fee = 0
+    if needs_light:
+        tech_fee += 450
+    if needs_sound:
+        tech_fee += 450
+
+    try:
+        distance_km = float(distance_km or 0)
+    except (TypeError, ValueError):
+        distance_km = 0.0
+
+    surcharge = 0
+    city = None
+    if event_address:
+        raw_city = event_address.split(',')[-1].strip()
+        parts = raw_city.split()
+        city = parts[-1].lower() if parts else None
+    if distance_km >= 600:
+        surcharge += 300
+    elif distance_km >= 300:
+        surcharge += 200
+    if city in ['münchen', 'muenchen', 'munich']:
+        surcharge -= 100
+
+    travel_fee = distance_km * _env_float('RATE_PER_KM', 0.5) * max(1, int(people or 1))
+    return tech_fee + surcharge + travel_fee
+
+
+def client_price(artist_gage, fee_pct, **surcharge_kwargs) -> int:
+    """Kundenpreis für eine **feste** Gage: Gage + Agenturgebühr + Zuschläge.
+
+    Wird verwendet, sobald ein Artist eine konkrete Gage genannt hat. Die
+    Faktorlogik aus `calculate_price` läuft dann bewusst nicht mehr — sie ist
+    im Angebot des Artists bereits enthalten und würde doppelt wirken.
+    """
+    try:
+        fee_factor = 1 + float(fee_pct) / 100
+    except (TypeError, ValueError):
+        fee_factor = 1.0
+    total = float(artist_gage) * fee_factor + surcharges(**surcharge_kwargs)
+    return max(0, int(round(total)))
+
+
 def calculate_price(base_min, base_max,
                     distance_km, fee_pct, newsletter=False,
                     event_type='Private Feier', num_guests=0, show_discipline=False,
@@ -8,129 +107,96 @@ def calculate_price(base_min, base_max,
                     team_size='solo',
                     duration=0, event_address=None, team_count=None,
                     tight_spread_pct: float | None = None):
+    """Berechnet die Preisspanne (inkl. Agenturgebühr) für eine Buchungsanfrage.
+
+    Ablauf:
+
+    1. **Basis** ist ein Punktwert: die Mitte zwischen `min_floor` und `base_max`.
+       `min_floor` ist `base_min`, bei 'Private Feier' um `PRIVATE_MIN_FACTOR`
+       reduziert.
+    2. **Faktoren** (Event-Typ, Gästezahl, Dauer, Indoor/Outdoor, Wochenende)
+       werden zu einem Score 0–1 gemittelt und wirken als *Multiplikator*
+       `1 - span/2 + span * score` auf die Basis — nicht mehr als Interpolation
+       innerhalb der Artist-Spanne.
+    3. Die so ermittelte Gage wird auf `[min_floor, base_max]` **begrenzt**.
+       Damit übersteigt die Obergrenze nie das, was der Artist tatsächlich
+       bekäme (SPEC-3, Kern).
+    4. Ein einziger **±20 %-Spread** erzeugt die angezeigte Spanne; auch sie
+       bleibt innerhalb der Artist-Spanne.
+    5. Erst danach kommen Agenturgebühr (nur auf die Gage) und die festen
+       Durchlaufposten Technik, Distanzzuschlag und Anfahrt dazu.
+
+    `newsletter`, `show_discipline` und `tight_spread_pct` sind ohne Wirkung und
+    bleiben nur erhalten, damit bestehende Aufrufer unverändert funktionieren.
+
+    Rückgabe: `(min_total, max_total)` als ganze Euro.
     """
-    Berechnet den Preis durch Interpolation innerhalb einer Spanne [min_floor, base_max] unter Verwendung von Faktor-Scores:
+    PRIVATE_MIN_FACTOR = _env_float('PRIVATE_MIN_FACTOR', 0.6)
+    # Wirkungsbreite der Faktoren: Multiplikator läuft von 0,8 bis 1,2.
+    FACTOR_SPAN = _env_float('PRICE_FACTOR_SPAN', 0.4)
+    # Breite der angezeigten Spanne um den berechneten Punktpreis.
+    SPREAD_PCT = _env_float('PRICE_SPREAD_PCT', 0.20)
 
-    - min_floor ist base_min multipliziert mit einem Faktor für 'Private Feier' (default 0.6), sonst base_min.
-    - Faktoren (Event, Gäste, Dauer, Indoor/Outdoor, Wochenende) werden als Scores 0–1 bestimmt und gemittelt.
-    - Der Basispreis wird interpoliert: base_price = min_floor + score * (base_max - min_floor).
-    - Anschließend wird die Agenturgebühr multiplicativ angewandt und feste Zuschläge (Technik, Distanz, Reise) addiert.
-    - Rückgabe ist ein Tupel (int(total), int(total)) zur Kompatibilität mit bisherigen Aufrufen.
-    """
-    # Get PRIVATE_MIN_FACTOR from env or default 0.6
-    try:
-        PRIVATE_MIN_FACTOR = float(os.getenv('PRIVATE_MIN_FACTOR', '0.6'))
-    except Exception:
-        PRIVATE_MIN_FACTOR = 0.6
+    base_min = float(base_min)
+    base_max = float(base_max)
+    if base_max < base_min:
+        base_min, base_max = base_max, base_min
 
-    # Normalize artist base range
-    try:
-        base_min = float(base_min)
-        base_max = float(base_max)
-    except Exception:
-        base_min = float(base_min)
-        base_max = float(base_max)
+    # Untergrenze: Private Feiern dürfen unter die reguläre Mindestgage rutschen.
+    min_floor = base_min * PRIVATE_MIN_FACTOR if event_type == 'Private Feier' else base_min
+    min_floor = min(min_floor, base_max)
 
-    # Determine min_floor based on Private Feier special rule
-    if event_type == 'Private Feier':
-        min_floor = base_min * PRIVATE_MIN_FACTOR
-    else:
-        min_floor = base_min
+    # Personenzahl für die pro Kopf anfallende Anfahrt
+    people = team_size_to_people(team_count if team_count is not None else team_size)
 
-    # Clamp min_floor and base_max to valid range
-    if min_floor > base_max:
-        min_floor = base_max
-
-    # Derive effective team count (number of artists) for per-person costs
-    people = 1
-    if team_count is not None:
-        try:
-            people = max(1, int(team_count))
-        except Exception:
-            people = 1
-    else:
-        try:
-            if isinstance(team_size, (int, float)):
-                people = max(1, int(team_size))
-            else:
-                ts = str(team_size).strip().lower()
-                if ts in ('duo', '2'):
-                    people = 2
-                elif ts in ('trio', '3'):
-                    people = 3
-                elif ts in ('quartet', '4'):
-                    people = 4
-                else:
-                    people = 1
-        except Exception:
-            people = 1
-
-    # 3) Define scores for factors
-
-    # Event score
+    # --- Faktor-Scores (jeweils 0–1) ---------------------------------------
     event_scores = {
         'Private Feier': 0.0,
         'Firmenfeier': 1.0,
         'Teamevent': 0.7,
-        'Streetshow': 0.3
+        # 'Incentive' ist der Wert, den Formular und DB verwenden; fachlich das
+        # gleiche wie 'Teamevent'. Ohne diesen Eintrag fiel er auf 0.5 zurück.
+        'Incentive': 0.7,
+        'Streetshow': 0.3,
     }
     event_s = event_scores.get(event_type, 0.5)
 
-    # Guests score
-    if num_guests <= 200:
+    try:
+        guests = int(num_guests or 0)
+    except (TypeError, ValueError):
+        guests = 0
+    if guests <= 200:
         guests_s = 0.0
-    elif num_guests <= 500:
+    elif guests <= 500:
         guests_s = 0.5
     else:
         guests_s = 1.0
 
-    # Duration score: linear from 5 min (0) to 45 min (1), clamp duration to [5,45]
-    duration_clamped = max(5, min(45, duration))
-    duration_s = (duration_clamped - 5) / (45 - 5)
+    try:
+        duration_minutes = int(duration or 0)
+    except (TypeError, ValueError):
+        duration_minutes = 0
+    duration_clamped = max(5, min(MAX_AUTOMATIC_DURATION_MINUTES, duration_minutes))
+    duration_s = (duration_clamped - 5) / (MAX_AUTOMATIC_DURATION_MINUTES - 5)
 
-    # Indoor/Outdoor score
     outdoor_s = 0.0 if is_indoor else 1.0
-
-    # Weekend score
     weekend_s = 1.0 if is_weekend else 0.0
 
-    # Average score
     score = (event_s + guests_s + duration_s + outdoor_s + weekend_s) / 5.0
 
-    # Interpolate base price
-    base_price = min_floor + score * (base_max - min_floor)
+    # --- Gage: Punktwert mal Faktor, begrenzt auf die Artist-Spanne --------
+    basis = (min_floor + base_max) / 2.0
+    gage = basis * (1 - FACTOR_SPAN / 2 + FACTOR_SPAN * score)
 
-    # 7. Tech fees (fixed add-on)
-    tech_fee = 0
-    if needs_light: tech_fee += 450
-    if needs_sound: tech_fee += 450
+    def _clamp(value):
+        return min(max(value, min_floor), base_max)
 
-    # 9. Distance surcharges (fixed add-on)
-    surcharge = 0
-    city = None
-    if event_address:
-        raw_city = event_address.split(',')[-1].strip()
-        city = raw_city.split()[-1].lower()
-    if distance_km >= 600:
-        surcharge += 300
-    elif distance_km >= 300:
-        surcharge += 200
-    if city in ['münchen', 'muenchen', 'munich']:
-        surcharge -= 100
+    gage = _clamp(gage)
+    gage_min = _clamp(gage * (1 - SPREAD_PCT))
+    gage_max = _clamp(gage * (1 + SPREAD_PCT))
 
-    # 10. Travel fee (fixed add-on, per artist)
-    rate_per_km = float(os.getenv("RATE_PER_KM", 0.5))
-    travel_fee_single = distance_km * rate_per_km
-    travel_fee = travel_fee_single * max(1, people)
-
-    # 8. Agency fee
-    total = base_price * (1 + fee_pct/100)
-
-    # Add fixed fees
-    total += tech_fee + surcharge + travel_fee
-
-    # Final display range ±20%
-    spread_pct = 0.20
-    min_total = total * (1 - spread_pct)
-    max_total = total * (1 + spread_pct)
-    return int(min_total), int(max_total)
+    # --- Agenturgebühr auf die Gage, Zuschläge als Durchlaufposten ---------
+    extras = dict(distance_km=distance_km, needs_light=needs_light,
+                  needs_sound=needs_sound, event_address=event_address, people=people)
+    return (client_price(gage_min, fee_pct, **extras),
+            client_price(gage_max, fee_pct, **extras))

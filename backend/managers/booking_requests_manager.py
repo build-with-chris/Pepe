@@ -1,7 +1,11 @@
 from models import db, BookingRequest, booking_artists, Artist
-from services.calculate_price import calculate_price
+from services.calculate_price import (
+    calculate_price,
+    client_price,
+    team_size_to_people,
+)
 from flask import current_app
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Optional, List, Tuple
 from services.geo import geocode_address, haversine_km
 from sqlalchemy import func
@@ -94,6 +98,55 @@ class BookingRequestManager:
         items = q.limit(max(0, int(limit))).offset(max(0, int(offset))).all()
         return items, int(total)
 
+    def _compute_travel_distance(self, event_address, artists) -> Tuple[Optional[Tuple[float, float]], float]:
+        """Ermittelt (Event-Koordinate, mittlere Entfernung in km) für eine Anfrage.
+
+        Artist-Koordinaten kommen aus der DB (`lat`/`lon`), die beim Speichern der
+        Adresse gesetzt werden. Fehlen sie, wird die Adresse einmal nachgeocodiert
+        und das Ergebnis am Artist persistiert — jede Adresse kostet so höchstens
+        einen Nominatim-Aufruf statt einen pro Anfrage.
+
+        Rückgabe (None, 0.0), wenn die Event-Adresse nicht auflösbar ist.
+        """
+        try:
+            event_coord = geocode_address(event_address)
+        except Exception as e:
+            current_app.logger.warning(f"event geocoding failed: {e}")
+            return None, 0.0
+
+        if not event_coord:
+            current_app.logger.info("distance calculation skipped – event address not geocodable: %r", event_address)
+            return None, 0.0
+
+        distances = []
+        for a in artists:
+            lat = getattr(a, 'lat', None)
+            lon = getattr(a, 'lon', None)
+            if lat is None or lon is None:
+                addr = getattr(a, 'address', None)
+                if not addr:
+                    continue
+                try:
+                    coord = geocode_address(addr)
+                except Exception as e:
+                    current_app.logger.warning(f"artist geocoding failed: {e}")
+                    continue
+                if not coord:
+                    continue
+                lat, lon = coord
+                # Nachtragen, damit die nächste Anfrage ohne Netzaufruf auskommt
+                try:
+                    a.lat, a.lon = lat, lon
+                except Exception:
+                    pass
+            distances.append(haversine_km((float(lat), float(lon)), event_coord))
+
+        if not distances:
+            return event_coord, 0.0
+
+        # Heuristik: Mittelwert der Entfernungen aller zugeordneten Artists
+        return event_coord, round(sum(distances) / len(distances), 1)
+
     def create_request(
         self,
         client_name,
@@ -112,7 +165,7 @@ class BookingRequestManager:
         needs_sound,
         artists,
         event_time="18:00",
-        distance_km=0.0,
+        distance_km=None,  # ignoriert – die Distanz wird immer serverseitig berechnet
         newsletter_opt_in=False
     ):
         """Erstellt eine neue Buchungsanfrage und verknüpft sie mit Artists."""
@@ -137,25 +190,10 @@ class BookingRequestManager:
                     f"Invalid event_type: {event_type}. Allowed: {ALLOWED_EVENT_TYPES}"
                 )
 
-        # --- Distanzberechnung Event <-> Artists (Backend, zuverlässig) ---
-        travel_distance = 0.0
-        try:
-            event_coord = geocode_address(event_address)
-            distances = []
-            if event_coord:
-                for a in artists:
-                    a_addr = getattr(a, 'address', None)
-                    if not a_addr:
-                        continue
-                    a_coord = geocode_address(a_addr)
-                    if not a_coord:
-                        continue
-                    distances.append(haversine_km(a_coord, event_coord))
-            if distances:
-                # Heuristik: Mittelwert der Entfernungen aller zugeordneten Artists
-                travel_distance = round(sum(distances) / len(distances), 1)
-        except Exception as e:
-            current_app.logger.warning(f"distance calculation failed: {e}")
+        # --- Distanzberechnung Event <-> Artists (rein serverseitig) ---
+        # Ein vom Client mitgeschickter distance_km-Wert wird ignoriert; er ist
+        # preisrelevant und damit manipulierbar (SPEC-2, Kriterium 6).
+        event_coord, travel_distance = self._compute_travel_distance(event_address, artists)
 
         req = BookingRequest(
             client_name=client_name,
@@ -173,7 +211,9 @@ class BookingRequestManager:
             special_requests=special_requests,
             needs_light=needs_light,
             needs_sound=needs_sound,
-            distance_km=travel_distance if travel_distance else (distance_km or 0.0),
+            distance_km=travel_distance,
+            event_lat=event_coord[0] if event_coord else None,
+            event_lon=event_coord[1] if event_coord else None,
             newsletter_opt_in=newsletter_opt_in
         )
 
@@ -232,8 +272,83 @@ class BookingRequestManager:
             current_app.logger.debug("set_offer pivot insert performed for missing association")
         # Wichtig: Pivot-Update sofort festschreiben, damit nachfolgende Reads (z.B. Admin) die Gage sehen
         self.db.session.commit()
-        # (Der Rest der bisherigen Logik zur Preisberechnung/Status kann nach Bedarf wieder ergänzt werden)
-        return self.get_request(request_id)
+
+        req = self.get_request(request_id)
+        if req is not None:
+            self._persist_offer_price(req, artist_id, price_offered)
+        return req
+
+    # --- Preisberechnung für Angebote -------------------------------------
+
+    @staticmethod
+    def _fee_pct() -> float:
+        """Agenturgebühr in Prozent aus der App-Konfiguration."""
+        try:
+            return float(current_app.config.get("AGENCY_FEE_PERCENT", 20))
+        except (TypeError, ValueError):
+            return 20.0
+
+    def booked_team_gage(self, req, artist_id=None, offered_gage=None) -> Tuple[float, int]:
+        """Summiert genau so viele Gagen, wie die Anfrage Artists bucht.
+
+        Gematcht werden oft mehr Artists als gebucht (bis zu fünf). Für den Preis
+        zählt nur die gebuchte Teamgröße: bei Solo eine Gage, bei Duo zwei
+        (SPEC-3, Kriterium 4). Der gerade bietende Artist kommt zuerst, danach
+        die übrigen mit ihrer eigenen abgegebenen Gage — oder ersatzweise ihrer
+        Mindestgage aus dem Profil.
+
+        Rückgabe: (Summe der Gagen, Anzahl der tatsächlich summierten Gagen).
+        """
+        booked = team_size_to_people(getattr(req, 'team_size', 1))
+
+        gages: List[float] = []
+        if artist_id is not None and offered_gage is not None:
+            gages.append(float(offered_gage))
+
+        pivot = {row['artist_id']: row for row in self.get_artist_statuses(req.id)}
+        for a in req.artists:
+            if a.id == artist_id:
+                continue
+            gage = pivot.get(a.id, {}).get('requested_gage')
+            if gage is None:
+                gage = getattr(a, 'price_min', None)
+            if gage is None:
+                continue
+            gages.append(float(gage))
+
+        used = gages[:booked]
+        if len(used) < booked:
+            current_app.logger.warning(
+                "booked_team_gage: request %s bucht %s Artists, es liegen aber nur %s Gagen vor",
+                req.id, booked, len(used)
+            )
+        return sum(used), len(used)
+
+    def _persist_offer_price(self, req, artist_id, price_offered) -> None:
+        """Schreibt Netto-Gage und Kundenpreis an die Anfrage.
+
+        Ohne diesen Schritt blieb `price_offered` dauerhaft NULL, obwohl der
+        Artist längst geboten hatte (SPEC-3, Kriterium 5).
+        """
+        try:
+            total_gage, _ = self.booked_team_gage(req, artist_id, price_offered)
+            req.artist_gage = int(round(total_gage))
+            req.price_offered = client_price(
+                total_gage,
+                self._fee_pct(),
+                distance_km=getattr(req, 'distance_km', 0) or 0,
+                needs_light=req.needs_light,
+                needs_sound=req.needs_sound,
+                event_address=req.event_address,
+                people=team_size_to_people(getattr(req, 'team_size', 1)),
+            )
+            req.artist_offer_date = datetime.utcnow()
+            self.db.session.commit()
+        except Exception as e:
+            self.db.session.rollback()
+            current_app.logger.exception(
+                "Angebotspreis für Anfrage %s konnte nicht berechnet werden: %s", req.id, e
+            )
 
     def set_artist_status(self, request_id: int, artist_id: int, status: str, comment: Optional[str] = None) -> bool:
         """Setzt den Status für genau EINEN Artist innerhalb einer Anfrage."""
@@ -365,8 +480,13 @@ class BookingRequestManager:
         relevant = self.get_requests_for_artist(aid)
         current_app.logger.info(f"Relevant requests for artist {aid}: {[r.id for r in relevant]}")
 
+        fee_pct = self._fee_pct()
+
         result = []
         for r in relevant:
+            # Bewusst fee_pct=0: die Empfehlung ist die **Netto-Gage** des
+            # Artists. Der Kundenpreis inkl. Agenturgebühr steht separat
+            # darunter, damit beide Zahlen nicht mehr verwechselt werden können.
             rec_min, rec_max = calculate_price(
                 base_min=artist.price_min,
                 base_max=artist.price_max,
@@ -424,8 +544,12 @@ class BookingRequestManager:
                 'status': artist_status or r.status,
                 'artist_status': artist_status,
                 'artist_ids': [a.id for a in r.artists],
+                # Netto-Empfehlung für den Artist …
                 'recommended_price_min': rec_min,
                 'recommended_price_max': rec_max,
+                # … und was der Kunde dafür zahlen würde (inkl. Agenturgebühr)
+                'client_price_min': client_price(rec_min, fee_pct),
+                'client_price_max': client_price(rec_max, fee_pct),
                 # Neu: tatsächliches Angebot und Datum
                 'artist_gage': requested_gage,
                 'artist_comment': artist_comment,
@@ -454,9 +578,22 @@ class BookingRequestManager:
         ).fetchone()
         if not row:
             return None
-        # Response-Form an FE anpassen
+        artist_gage = row[0]
+        # Netto-Gage und Kundenpreis getrennt ausweisen: `price_offered` hieß
+        # bisher zwar so, enthielt aber die Netto-Gage ohne Agenturgebühr.
+        # Der Schlüssel bleibt für bestehende Clients erhalten.
         return {
-            'price_offered': row[0],
+            'price_offered': artist_gage,
+            'artist_gage': artist_gage,
+            # Anteil dieses Artists am Kundenpreis: seine Gage plus Agenturgebühr.
+            # Technik, Anfahrt und Distanzzuschlag hängen an der Anfrage, nicht am
+            # einzelnen Artist, und sind deshalb hier nicht enthalten.
+            'client_price': (
+                client_price(artist_gage, self._fee_pct())
+                if artist_gage is not None else None
+            ),
+            # Gesamtpreis der Anfrage (alle gebuchten Gagen inkl. Gebühr und Zuschlägen)
+            'request_price_offered': req.price_offered,
             'status': row[1],
             'comment': row[2]
         }

@@ -21,6 +21,20 @@ get:
               price_offered:
                 type: number
                 example: 1800
+                description: 'Netto-Gage dieses Artists (Altschlüssel, identisch mit artist_gage).'
+              artist_gage:
+                type: number
+                example: 1800
+                description: 'Netto-Gage dieses Artists, ohne Agenturgebühr.'
+              client_price:
+                type: number
+                example: 2160
+                description: 'Anteil dieses Artists am Kundenpreis: Gage plus Agenturgebühr.'
+              request_price_offered:
+                type: number
+                nullable: true
+                example: 2610
+                description: 'Gesamtpreis der Anfrage: alle gebuchten Gagen inkl. Gebühr, Technik und Anfahrt.'
               status:
                 type: string
                 example: offered
@@ -70,6 +84,20 @@ put:
               price_offered:
                 type: number
                 example: 1800
+                description: 'Netto-Gage dieses Artists (Altschlüssel, identisch mit artist_gage).'
+              artist_gage:
+                type: number
+                example: 1800
+                description: 'Netto-Gage dieses Artists, ohne Agenturgebühr.'
+              client_price:
+                type: number
+                example: 2160
+                description: 'Anteil dieses Artists am Kundenpreis: Gage plus Agenturgebühr.'
+              request_price_offered:
+                type: number
+                nullable: true
+                example: 2610
+                description: 'Gesamtpreis der Anfrage: alle gebuchten Gagen inkl. Gebühr, Technik und Anfahrt.'
               status:
                 type: string
                 example: offered

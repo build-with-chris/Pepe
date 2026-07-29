@@ -11,8 +11,12 @@ def normalize_db_url(raw: str) -> str:
     return raw
 
 class Config:
-    SECRET_KEY = os.getenv("SUPABASE_JWT_SECRET")
-    JWT_SECRET_KEY = os.getenv("SUPABASE_JWT_SECRET")
+    # Flask session/CSRF signing only — authentication runs entirely on Clerk
+    # (asymmetric RS256 via JWKS), so there is no shared JWT secret any more.
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-not-used-for-auth")
+
+    # Clerk: JWKS endpoint of the active instance (dev or production).
+    CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL")
 
     raw_db = os.getenv("DATABASE_URL", "")
     if raw_db:

@@ -7992,3 +7992,94 @@ textarea.input {
     height: 4px;
   }
 }
+
+/* ==========================================================================
+   Booking-Wizard: Ergebnisschritt (Preisspanne, Sonderfälle, Fehler)
+   ========================================================================== */
+
+.booking-result {
+  padding: var(--space-6) 0;
+}
+
+.booking-result-price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.04));
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-6);
+  margin: 0 auto var(--space-6);
+  max-width: 560px;
+}
+
+.booking-result-price-label {
+  font-size: var(--text-xs);
+  color: var(--pepe-gold);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.booking-result-price-range {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--pepe-t100);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.booking-result-price-note {
+  font-size: var(--text-sm);
+  color: var(--pepe-t64);
+  margin: 0;
+  max-width: 42ch;
+}
+
+.booking-result-note {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin: 0 auto var(--space-6);
+  max-width: 560px;
+}
+
+.booking-result-note strong {
+  display: block;
+  color: var(--pepe-gold);
+  margin-bottom: var(--space-2);
+}
+
+.booking-result-note p {
+  font-size: var(--text-sm);
+  color: var(--pepe-t64);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.booking-result-artists,
+.booking-result-id {
+  font-size: var(--text-sm);
+  color: var(--pepe-t64);
+  margin-bottom: var(--space-2);
+}
+
+.booking-result-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .booking-result-price {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .booking-result-price-range {
+    font-size: var(--text-2xl);
+    white-space: normal;
+  }
+}

@@ -76,6 +76,9 @@ export default function KuenstlerVerwaltung() {
   const [pendingFirst, setPendingFirst] = useState<boolean>(true);
   const [query, setQuery] = useState<string>('');
   const [selected, setSelected] = useState<Artist | null>(null);
+  const [rejectOpen, setRejectOpen] = useState<boolean>(false);
+  const [rejectReason, setRejectReason] = useState<string>('');
+  const [mailNotice, setMailNotice] = useState<string | null>(null);
 
   const baseUrl = import.meta.env.VITE_API_URL;
 
@@ -107,10 +110,10 @@ export default function KuenstlerVerwaltung() {
       try {
         const results = await Promise.all(
           statuses.map(async (s) => {
-            const res = await fetch(`${baseUrl}/admin/artists?status=${s}`, {
+            const res = await fetch(`${baseUrl}/api/admin/artists?status=${s}`, {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status} on /admin/artists?status=${s}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status} on /api/admin/artists?status=${s}`);
             const data = await res.json();
             return (data ?? []).map(mapArtist);
           })
@@ -163,7 +166,7 @@ export default function KuenstlerVerwaltung() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${baseUrl}/admin/dashboard`, {
+    fetch(`${baseUrl}/api/admin/dashboard`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
@@ -215,15 +218,47 @@ export default function KuenstlerVerwaltung() {
     return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[s] || map.approved}`}>{label}</span>;
   };
 
-  const openDetails = (artist: Artist) => setSelected(artist);
-  const closeDetails = () => setSelected(null);
+  const openDetails = (artist: Artist) => {
+    setSelected(artist);
+    setActionError(null);
+    setMailNotice(null);
+    setRejectOpen(false);
+    setRejectReason('');
+  };
+  const closeDetails = () => {
+    setSelected(null);
+    setRejectOpen(false);
+    setRejectReason('');
+    setMailNotice(null);
+  };
+
+  // Backend antwortet mit { id, status, rejection_reason, approved_at, email_sent }
+  const applyDecision = (data: any, fallbackStatus: string, patch: Partial<Artist> = {}) => {
+    if (!selected) return;
+    const newStatus = (data?.status as string) || fallbackStatus;
+    const updated: Artist = {
+      ...selected,
+      ...patch,
+      approval_status: newStatus,
+      rejection_reason: (data?.rejection_reason ?? patch.rejection_reason ?? null) as string | null,
+      approved_at: (data?.approved_at as string) ?? null,
+    };
+    setSelected(updated);
+    setArtists(prev => prev.map(a => (a.id === updated.id ? { ...a, ...updated } : a)));
+    setMailNotice(
+      data?.email_sent
+        ? 'E-Mail an den Artist wurde versendet.'
+        : 'Achtung: Es konnte keine E-Mail versendet werden (SMTP-Konfiguration oder Adresse prüfen).'
+    );
+  };
 
   const approveSelected = async () => {
     if (!selected) return;
     setActionError(null);
+    setMailNotice(null);
     setActionLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/admin/artists/${selected.id}/approve`, {
+      const res = await fetch(`${baseUrl}/api/admin/artists/${selected.id}/approve`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -232,15 +267,43 @@ export default function KuenstlerVerwaltung() {
         throw new Error(`HTTP ${res.status}: ${t}`);
       }
       const data = await res.json().catch(() => null);
-      const newStatus = (data?.approval_status as string) || 'approved';
-      const approvedAt = (data?.approved_at as string) || new Date().toISOString();
-
-      setSelected({ ...selected, approval_status: newStatus, approved_at: approvedAt });
-      setArtists(prev =>
-        prev.map(a => (a.id === selected.id ? { ...a, approval_status: newStatus, approved_at: approvedAt } : a))
-      );
+      applyDecision(data, 'approved', { rejection_reason: null });
     } catch (e: any) {
       setActionError(e.message || 'Approve failed');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const rejectSelected = async () => {
+    if (!selected) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      setActionError('Bitte eine Begründung angeben. Sie geht so an den Artist.');
+      return;
+    }
+    setActionError(null);
+    setMailNotice(null);
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${baseUrl}/api/admin/artists/${selected.id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ reason }),
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(`HTTP ${res.status}: ${t}`);
+      }
+      const data = await res.json().catch(() => null);
+      applyDecision(data, 'rejected', { rejection_reason: reason });
+      setRejectOpen(false);
+      setRejectReason('');
+    } catch (e: any) {
+      setActionError(e.message || 'Reject failed');
     } finally {
       setActionLoading(false);
     }
@@ -254,7 +317,7 @@ export default function KuenstlerVerwaltung() {
     setActionError(null);
     setDeletingId(artist.id);
     try {
-      const res = await fetch(`${baseUrl}/admin/artists/${artist.id}`, {
+      const res = await fetch(`${baseUrl}/api/admin/artists/${artist.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -428,7 +491,17 @@ export default function KuenstlerVerwaltung() {
                     className="bg-emerald-600 hover:bg-emerald-500 text-white"
                     size="sm"
                   >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Approve'}
+                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Freigeben'}
+                  </Button>
+                )}
+                {selected.approval_status !== 'rejected' && (
+                  <Button
+                    onClick={() => { setRejectOpen(true); setActionError(null); }}
+                    disabled={actionLoading}
+                    className="bg-red-600 hover:bg-red-500 text-white"
+                    size="sm"
+                  >
+                    Ablehnen
                   </Button>
                 )}
                 <Button variant="ghost" size="icon" onClick={closeDetails} className="text-gray-400 hover:text-white">
@@ -436,6 +509,53 @@ export default function KuenstlerVerwaltung() {
                 </Button>
               </div>
             </div>
+
+            {/* Ablehnungs-Dialog: Grund ist Pflicht, er geht per Mail an den Artist */}
+            {rejectOpen && (
+              <div className="border-b border-white/10 bg-red-500/5 p-4 sm:p-6 space-y-3">
+                <label htmlFor="reject-reason" className="block text-sm font-medium text-red-200">
+                  Grund der Ablehnung
+                </label>
+                <textarea
+                  id="reject-reason"
+                  autoFocus
+                  rows={3}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="z. B. Bitte bessere Fotos hochladen"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 p-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                />
+                <p className="text-xs text-gray-400">
+                  Der Text wird dem Artist per E-Mail geschickt und in seinem Profil angezeigt.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={rejectSelected}
+                    disabled={actionLoading || !rejectReason.trim()}
+                    className="bg-red-600 hover:bg-red-500 text-white disabled:opacity-50"
+                    size="sm"
+                  >
+                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Ablehnung senden'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setRejectOpen(false); setRejectReason(''); }}
+                    disabled={actionLoading}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {(actionError || mailNotice) && (
+              <div className="border-b border-white/10 px-4 sm:px-6 py-3 space-y-2">
+                {actionError && <p className="text-sm text-red-300">{actionError}</p>}
+                {mailNotice && <p className="text-sm text-gray-300">{mailNotice}</p>}
+              </div>
+            )}
 
             {/* Content */}
             <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
@@ -516,6 +636,13 @@ export default function KuenstlerVerwaltung() {
                       </dl>
                     </div>
                   </div>
+
+                  {selected.approval_status === 'rejected' && selected.rejection_reason && (
+                    <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+                      <div className="text-sm text-red-300 mb-1">Ablehnungsgrund</div>
+                      <p className="text-sm text-red-200 whitespace-pre-line">{selected.rejection_reason}</p>
+                    </div>
+                  )}
 
                   {/* Disciplines */}
                   <div>

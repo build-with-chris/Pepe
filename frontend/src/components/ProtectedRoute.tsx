@@ -9,15 +9,17 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ requiredRole, children }: ProtectedRouteProps) {
-  const { user, isLoaded, isSignedIn } = useAuth();
+  const { user, isLoaded, isSignedIn, profileLoaded } = useAuth();
+
+  const loader = (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--pepe-black)' }}>
+      <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
+    </div>
+  );
 
   // Show loader while Clerk is loading
   if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--pepe-black)' }}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
-      </div>
-    );
+    return loader;
   }
 
   // Redirect to login if not signed in
@@ -27,8 +29,12 @@ export function ProtectedRoute({ requiredRole, children }: ProtectedRouteProps) 
 
   // Check admin role if required
   if (requiredRole === "admin") {
-    const isAdmin = Boolean(user?.is_admin) || user?.role === "admin";
-    if (!isAdmin) {
+    // `is_admin` stammt aus der DB und steht erst nach dem Profil-Abruf fest.
+    // Vorher zu entscheiden hieße, jeden Admin einmal nach /profile zu werfen.
+    if (!profileLoaded) {
+      return loader;
+    }
+    if (!user?.is_admin) {
       return <Navigate to="/profile" replace />;
     }
   }

@@ -1,0 +1,11 @@
+# Zusaetzlich zu requirements.txt fuer Tests und lokale Entwicklung:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# Ohne diese Datei war pytest nirgends deklariert — die Testsuite liess sich
+# nach einem frischen Checkout nicht ausfuehren (Analyse E6 / F11).
+-r requirements.txt
+
+pytest==9.1.1
+# cryptography kommt bereits ueber PyJWT[crypto]; hier nur festgehalten, weil
+# tests/conftest.py die RSA-Schluesselerzeugung direkt daraus importiert.
+cryptography>=42.0

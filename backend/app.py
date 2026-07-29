@@ -1,15 +1,13 @@
 from flask import Flask, jsonify, request
 from config import Config
-from models import db, Artist
-from flask_jwt_extended import JWTManager
+from models import db
 from routes.api_routes       import api_bp
-from routes.auth_routes  import auth_bp
 from routes.admin_routes import admin_bp
 from flasgger import Swagger
 from flask_cors import CORS
 from routes.request_routes import booking_bp
 from flask_migrate import Migrate
-from helpers.clerk_auth import verify_clerk_token
+from helpers.clerk_auth import authenticate_request, get_current_artist
 
 from sqlalchemy import text
 
@@ -50,17 +48,18 @@ logging.getLogger().info(f"Using DB URI: {mask_db_uri(app.config.get('SQLALCHEMY
 db.init_app(app)
 migrate = Migrate(app, db)
 
-app.register_blueprint(auth_bp,  url_prefix='/auth')
 app.register_blueprint(api_bp,   url_prefix='/api')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(booking_bp)
 
-jwt = JWTManager(app)
-
 # --- Guard all /api/admin routes via DB flag (Option A) ---
 @app.before_request
 def _admin_gate_by_db():
-    """Require a valid Clerk token and artists.is_admin = true for any /api/admin/* route."""
+    """Require a valid Clerk token and artists.is_admin = true for any /api/admin/* route.
+
+    Verification result is cached on `g`, so the @clerk_auth_required decorators
+    on the individual admin routes reuse it instead of verifying a second time.
+    """
     path = request.path or ""
     # Only guard admin endpoints; Swagger and health checks are elsewhere
     if not path.startswith("/api/admin"):
@@ -70,36 +69,20 @@ def _admin_gate_by_db():
     if request.method == "OPTIONS":
         return None
 
-    # 1) Verify Clerk token present and valid
-    auth_header = request.headers.get('Authorization', '')
-    if not auth_header.startswith('Bearer '):
-        return error_response("unauthorized", "Missing or invalid token", 401)
-
-    token = auth_header[7:]  # Remove 'Bearer ' prefix
-    claims = verify_clerk_token(token)
-
+    # 1) Verify Clerk token present and valid (cached on g for the route handlers)
+    claims = authenticate_request()
     if not claims:
-        return error_response("unauthorized", "Invalid or expired token", 401)
+        return error_response("unauthorized", "Invalid or missing token", 401)
 
-    # 2) Load user and check DB flag
+    # 2) Load user and check DB flag (also cached on g as g.current_artist)
     uid = claims.get('sub')  # Clerk user ID
-    app.logger.info(f"ADMIN_GATE: path={path} uid={uid}")
-    artist = None
-
-    # Resolve via Clerk user ID stored on Artist.supabase_user_id
-    if uid and isinstance(uid, str):
-        from sqlalchemy import func
-        try:
-            artist = Artist.query.filter(func.lower(Artist.supabase_user_id) == uid.lower()).first()
-            if artist is not None:
-                app.logger.info(f"ADMIN_GATE: resolved by clerk_user_id -> artist_id={artist.id} email={getattr(artist,'email',None)} is_admin={getattr(artist,'is_admin',None)}")
-        except Exception:
-            artist = None
+    artist = get_current_artist()
 
     if not artist or not getattr(artist, "is_admin", False):
         app.logger.warning(f"ADMIN_GATE: FORBIDDEN uid={uid} artist_found={bool(artist)} is_admin={getattr(artist,'is_admin',None)}")
         return error_response("forbidden", "Admins only", 403)
 
+    app.logger.info(f"ADMIN_GATE: OK path={path} uid={uid} artist_id={artist.id}")
     # Admin OK -> continue request
     return None
 
@@ -219,62 +202,54 @@ app.config['SWAGGER'] = {
 # Serve Swagger UI at /api-docs (also generates /apispec_raw.json)
 swagger = Swagger(app, template=template, parse=False)
 
-# Debug route for DB config
-@app.get("/__debug/db")
-def debug_db():
-    return {
-        "uri": app.config.get("SQLALCHEMY_DATABASE_URI"),
-        "testing": app.config.get("TESTING", False)
-    }
+# --- Debug-Routen ------------------------------------------------------------
+# Beide geben Innenansichten preis: die eine die CORS-Konfiguration, die andere
+# den kompletten Token-Inhalt des Aufrufers. Sie sind zur Fehlersuche nützlich,
+# gehören aber nicht dauerhaft in eine öffentliche Produktionsumgebung.
+# Deshalb: nur registrieren, wenn ENABLE_DEBUG_ROUTES gesetzt ist. Ohne Flag
+# antwortet der Pfad mit 404, als gäbe es ihn nicht.
+DEBUG_ROUTES_ENABLED = os.getenv("ENABLE_DEBUG_ROUTES", "").strip().lower() in ("1", "true", "yes")
 
-# Debug route for CORS config
-@app.get("/__debug/cors")
-def debug_cors():
-    test_origin = request.args.get("origin")
-    is_allowed = None
-    if test_origin:
-        try:
-            is_allowed = bool(allowed_origins_regex.fullmatch(test_origin))
-        except Exception as e:
-            is_allowed = f"error: {e}"
-    return {
-        "allowed_patterns": allowed_patterns,
-        "regex": allowed_origins_regex.pattern,
-        "test_origin": test_origin,
-        "is_allowed": is_allowed,
-    }
+if DEBUG_ROUTES_ENABLED:
+    app.logger.warning("Debug-Routen unter /__debug/* sind aktiv (ENABLE_DEBUG_ROUTES)")
 
-@app.get("/__debug/whoami")
-def debug_whoami():
-    """Debug endpoint to verify Clerk token and user lookup."""
-    auth_header = request.headers.get('Authorization', '')
-    if not auth_header.startswith('Bearer '):
-        return error_response("unauthorized", "Missing or invalid token", 401)
-
-    token = auth_header[7:]
-    claims = verify_clerk_token(token)
-
-    if not claims:
-        return error_response("unauthorized", "Invalid or expired token", 401)
-
-    uid = claims.get('sub')
-    artist = None
-
-    if uid and isinstance(uid, str):
-        from sqlalchemy import func
-        artist = Artist.query.filter(func.lower(Artist.supabase_user_id) == uid.lower()).first()
-
-    return jsonify({
-        "uid": uid,
-        "artist_found": bool(artist),
-        "clerk_claims": {k: v for k, v in claims.items() if k not in ['iat', 'exp', 'nbf']},
-        "artist": {
-            "id": getattr(artist, 'id', None),
-            "email": getattr(artist, 'email', None),
-            "is_admin": getattr(artist, 'is_admin', None),
-            "supabase_user_id": getattr(artist, 'supabase_user_id', None),
+    @app.get("/__debug/cors")
+    def debug_cors():
+        test_origin = request.args.get("origin")
+        is_allowed = None
+        if test_origin:
+            try:
+                is_allowed = bool(allowed_origins_regex.fullmatch(test_origin))
+            except Exception as e:
+                is_allowed = f"error: {e}"
+        return {
+            "allowed_patterns": allowed_patterns,
+            "regex": allowed_origins_regex.pattern,
+            "test_origin": test_origin,
+            "is_allowed": is_allowed,
         }
-    }), 200
+
+    @app.get("/__debug/whoami")
+    def debug_whoami():
+        """Debug endpoint to verify Clerk token and user lookup."""
+        claims = authenticate_request()
+        if not claims:
+            return error_response("unauthorized", "Invalid or missing token", 401)
+
+        uid = claims.get('sub')
+        artist = get_current_artist()
+
+        return jsonify({
+            "uid": uid,
+            "artist_found": bool(artist),
+            "clerk_claims": {k: v for k, v in claims.items() if k not in ['iat', 'exp', 'nbf']},
+            "artist": {
+                "id": getattr(artist, 'id', None),
+                "email": getattr(artist, 'email', None),
+                "is_admin": getattr(artist, 'is_admin', None),
+                "supabase_user_id": getattr(artist, 'supabase_user_id', None),
+            }
+        }), 200
 
 # Health check endpoint that verifies DB connectivity
 @app.get("/healthz")

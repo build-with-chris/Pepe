@@ -1,8 +1,15 @@
 name = "pepeshows-de-production"
 main = "_worker.js"
 compatibility_date = "2025-11-07"
-workers_dev = true
 
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+
+# Bewusst kein [vars]-Block.
+#
+# Alle VITE_*-Variablen werden von Vite zur *Build*-Zeit in ./dist eingebacken —
+# als Worker-Runtime-Variablen hätten sie hier ohnehin keine Wirkung. Sie gehören
+# in die Build-Umgebung (lokal: frontend/.env, CI/Cloudflare: Build-Environment-
+# Variablen). Secrets (Clerk Secret Key, API-Keys) niemals hier ablegen; die
+# Datei ist eingecheckt. Vgl. frontend/.env.example.

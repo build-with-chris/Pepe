@@ -1,15 +1,21 @@
 import time
-from typing import Deque, Tuple, Dict, Any
-from collections import deque
+from typing import Deque, Tuple
+from collections import OrderedDict, deque
 
-# In-memory rate limit store: ip -> deque[timestamps]
+# Beide Speicher liegen im Prozess. Bei mehreren Gunicorn-Workern oder
+# Render-Instanzen gilt das Limit deshalb pro Worker, nicht global — bekannte
+# Einschränkung (Analyse D7). Ein geteilter Store (Redis) wäre die saubere
+# Lösung. Was hier zählt: beide Speicher sind nach oben begrenzt, damit ein
+# lang laufender Prozess nicht unbemerkt Speicher frisst.
 _RATE_LIMIT_WINDOW_SECONDS = 3600  # 1 hour
 _RATE_LIMIT_MAX_REQUESTS = 5       # 5 requests/hour per IP
-_rate_limit_hits: Dict[str, Deque[float]] = {}
+_RATE_LIMIT_MAX_TRACKED_IPS = 10_000
+_rate_limit_hits: "OrderedDict[str, Deque[float]]" = OrderedDict()
 
 # In-memory idempotency cache: key -> (created_ts, payload_dict)
 _IDEMPOTENCY_TTL_SECONDS = 3600
-_idempotency_cache: Dict[str, Tuple[float, dict]] = {}
+_IDEMPOTENCY_MAX_ENTRIES = 1_000
+_idempotency_cache: "OrderedDict[str, Tuple[float, dict]]" = OrderedDict()
 
 def _client_ip() -> str:
     """Best-effort client IP extraction (respects X-Forwarded-For)."""
@@ -18,9 +24,20 @@ def _client_ip() -> str:
         return xff.split(',')[0].strip()
     return request.remote_addr or 'unknown'
 
+def _prune_rate_limit(now: float) -> None:
+    """Entfernt IPs, deren Zeitfenster komplett abgelaufen ist.
+
+    Ohne dieses Aufräumen bleibt jede IP, die je eine Anfrage gestellt hat, für
+    die Lebensdauer des Prozesses im Dict stehen.
+    """
+    cutoff = now - _RATE_LIMIT_WINDOW_SECONDS
+    for ip in [ip for ip, dq in _rate_limit_hits.items() if not dq or dq[-1] < cutoff]:
+        _rate_limit_hits.pop(ip, None)
+
 def _rate_limit_allow(ip: str) -> bool:
     """Return True if request is allowed under the rate limit."""
     now = time.time()
+    _prune_rate_limit(now)
     dq = _rate_limit_hits.setdefault(ip, deque())
     # prune old entries
     cutoff = now - _RATE_LIMIT_WINDOW_SECONDS
@@ -29,6 +46,12 @@ def _rate_limit_allow(ip: str) -> bool:
     if len(dq) >= _RATE_LIMIT_MAX_REQUESTS:
         return False
     dq.append(now)
+    _rate_limit_hits.move_to_end(ip)
+    # Notbremse, falls sehr viele IPs innerhalb *eines* Fensters auflaufen:
+    # die am längsten unbenutzten Einträge zuerst verwerfen. Erst nach dem
+    # Einfügen kappen, sonst liegt die Obergrenze faktisch um eins höher.
+    while len(_rate_limit_hits) > _RATE_LIMIT_MAX_TRACKED_IPS:
+        _rate_limit_hits.popitem(last=False)
     return True
 
 def _idempotency_lookup(key: str):
@@ -48,23 +71,40 @@ def _idempotency_lookup(key: str):
 def _idempotency_store(key: str, payload: dict) -> None:
     if not key:
         return
-    _idempotency_cache[key] = (time.time(), payload)
-from datetime import datetime
+    now = time.time()
+    # Abgelaufene Einträge fallen sonst nur beim Nachschlagen heraus — ein Key,
+    # der nie wieder abgefragt wird, bliebe für immer liegen.
+    for stale in [k for k, (created, _) in _idempotency_cache.items()
+                  if now - created > _IDEMPOTENCY_TTL_SECONDS]:
+        _idempotency_cache.pop(stale, None)
+    _idempotency_cache[key] = (now, payload)
+    _idempotency_cache.move_to_end(key)
+    while len(_idempotency_cache) > _IDEMPOTENCY_MAX_ENTRIES:
+        _idempotency_cache.popitem(last=False)
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from services.calculate_price import calculate_price
+from helpers.clerk_auth import (
+    admin_required,
+    artist_required,
+    get_current_artist,
+    is_admin,
+)
+from services.calculate_price import calculate_price, requires_individual_offer
 from flask import current_app
 from models import db, Artist, BookingRequest
 from flasgger import swag_from
 
 from helpers.http_responses import error_response
+from helpers.emails import (
+    build_admin_new_request_email,
+    build_artist_new_request_email,
+    event_city,
+    format_event_date,
+    is_deliverable_address,
+    send_email,
+)
 
 from managers.booking_requests_manager import BookingRequestManager
 from managers.artist_manager import ArtistManager
-
-from email.message import EmailMessage
-import smtplib
-import ssl
 
 # Manager-Instanzen
 request_mgr = BookingRequestManager()
@@ -76,6 +116,11 @@ Booking module: Endpoints to create, list and manage booking requests.
 
 # --- 80/20 constants & helpers -------------------------------------------------
 MAX_MATCHED_ARTISTS = 5
+
+# Zustand der Preisauskunft in der API-Antwort (SPEC-3, Kriterien 1, 3, 6)
+PRICE_STATUS_RANGE = 'range'            # price_min/price_max sind gesetzt
+PRICE_STATUS_INDIVIDUAL = 'individual_offer'  # bewusst kein automatischer Preis
+PRICE_STATUS_UNAVAILABLE = 'unavailable'      # Preis konnte nicht ermittelt werden
 
 def _config_fee_pct():
     try:
@@ -133,16 +178,16 @@ booking_bp = Blueprint('booking', __name__, url_prefix='/api/requests')
 
 
 @booking_bp.route('/requests', methods=['GET'])
-@jwt_required()
+@artist_required
 @swag_from('../resources/swagger/requests_get.yml')
 def list_requests():
     """Return booking requests that match the logged-in artist."""
-    user_id = get_jwt_identity()
-    result = request_mgr.get_requests_for_artist_with_recommendation(user_id)
+    artist = get_current_artist()
+    result = request_mgr.get_requests_for_artist_with_recommendation(artist.id)
     return jsonify(result)
 
 @booking_bp.route('/requests/list', methods=['GET'])
-@jwt_required()
+@admin_required
 def list_requests_admin():
     """Admin list of booking requests.
     
@@ -285,75 +330,86 @@ def create_request():
             needs_light       = data.get('needs_light', False),
             needs_sound       = data.get('needs_sound', False),
             artists           = artist_objs,
-            distance_km       = data.get('distance_km', 0.0),
+            # distance_km kommt bewusst NICHT vom Client — der Manager berechnet
+            # sie aus Event-Adresse und Artist-Koordinaten (SPEC-2, Kriterium 6).
             newsletter_opt_in = data.get('newsletter_opt_in', False)
         )
 
         # Preisspanne berechnen basierend auf ausgewählten Artists und Parametern
         duo_min = duo_max = None
+        pmin = pmax = None
+        price_status = PRICE_STATUS_RANGE
+        price_reason = None
+
+        # Sonderfälle zuerst: ohne sie wäre jede Zahl geraten (SPEC-3, Kriterien 3 & 6)
+        individual_reason = requires_individual_offer(req.duration_minutes, team_size)
+
         if not req.artists:
+            price_status = PRICE_STATUS_UNAVAILABLE
+            price_reason = 'no_artists'
             req.price_min = None
             req.price_max = None
-            pmin = None
-            pmax = None
+        elif individual_reason:
+            price_status = PRICE_STATUS_INDIVIDUAL
+            price_reason = individual_reason
+            req.price_min = None
+            req.price_max = None
         else:
             fee_pct = _config_fee_pct()
-            event_city = data.get('event_address', '').split(',')[-1].strip().lower()
-            external_artists = [
-                a for a in artist_objs
-                if a.address and event_city not in a.address.lower()
-            ]
-            travel_distance = req.distance_km if external_artists else 0.0
+            # `req.distance_km` ist der geografisch berechnete Mittelwert
+            # Artist <-> Event. Die frühere Zusatzprüfung "wohnt der Artist in
+            # derselben Stadt?" verglich Adress-Strings und kippte schon bei
+            # einem angehängten "Deutschland" ins Gegenteil. Sie war zudem
+            # überflüssig: Wohnt der Artist am Ort, ist die Entfernung ohnehin
+            # nahe null.
+            travel_distance = req.distance_km or 0.0
 
-            # Basis definieren je Teamgröße
-            if team_size == 1:
-                # Solo: min/max aus den verfügbaren Artists (bisheriges Verhalten)
-                base_min = min(a.price_min for a in artist_objs)
-                base_max = max(a.price_max for a in artist_objs)
-            elif team_size == 2:
-                # Duo: nur wenn mindestens 2 Artists verfügbar sind
+            # Basis definieren je Teamgröße. Gruppen (3+) sind hier bereits
+            # ausgeschlossen, es bleiben Solo und Duo.
+            if team_size == 2:
+                # Duo: exakt die ersten zwei aus der gematchten Liste — nur wenn
+                # überhaupt zwei Artists verfügbar sind.
                 if len(artist_objs) >= 2:
-                    pair = artist_objs[:2]  # exakt die ersten zwei aus der gematchten Liste
+                    pair = artist_objs[:2]
                     duo_min = sum(getattr(a, 'price_min', 0) for a in pair)
                     duo_max = sum(getattr(a, 'price_max', 0) for a in pair)
-                    base_min = duo_min
-                    base_max = duo_max
+                    base_min, base_max = duo_min, duo_max
                 else:
                     base_min = base_max = None
             else:
-                # Gruppe (3+): keine Preisspanne
-                base_min = base_max = None
-
-            # Wenn wir für Duo bereits die Summe der beiden Artists gebildet haben,
-            # soll die Preisfunktion NICHT erneut pro Person mitteln/skalieren.
-            team_size_for_calc = 1 if (team_size == 2 and base_min is not None and duo_min is not None) else team_size
+                # Solo: min/max aus den verfügbaren Artists (bisheriges Verhalten)
+                base_min = min(a.price_min for a in artist_objs)
+                base_max = max(a.price_max for a in artist_objs)
 
             try:
                 if base_min is not None:
-                    args = {
-                        'base_min': base_min,
-                        'base_max': base_max,
-                        'distance_km': travel_distance,
-                        'fee_pct': fee_pct,
-                        'newsletter': req.newsletter_opt_in,
-                        'event_type': req.event_type,
-                        'num_guests': req.number_of_guests,
-                        'is_weekend': req.event_date.weekday() >= 5,
-                        'is_indoor': req.is_indoor,
-                        'needs_light': req.needs_light,
-                        'needs_sound': req.needs_sound,
-                        'show_discipline': req.show_discipline,
-                        'team_size': team_size_for_calc,
-                        'team_count': (2 if team_size == 2 else (team_size if team_size and int(team_size) >= 1 else 1)),
-                        'duration': req.duration_minutes,
-                        'event_address': req.event_address
-                    }
-                    pmin, pmax = calculate_price(**args)
+                    pmin, pmax = calculate_price(
+                        base_min        = base_min,
+                        base_max        = base_max,
+                        distance_km     = travel_distance,
+                        fee_pct         = fee_pct,
+                        newsletter      = req.newsletter_opt_in,
+                        event_type      = req.event_type,
+                        num_guests      = req.number_of_guests,
+                        is_weekend      = req.event_date.weekday() >= 5,
+                        is_indoor       = req.is_indoor,
+                        needs_light     = req.needs_light,
+                        needs_sound     = req.needs_sound,
+                        show_discipline = req.show_discipline,
+                        # Die Basis ist bei Duo bereits die Summe beider Gagen;
+                        # team_count steuert nur noch die Anfahrt pro Kopf.
+                        team_count      = team_size,
+                        duration        = req.duration_minutes,
+                        event_address   = req.event_address,
+                    )
                 else:
-                    pmin = pmax = None
+                    price_status = PRICE_STATUS_UNAVAILABLE
+                    price_reason = 'not_enough_artists'
             except Exception as e:
                 current_app.logger.exception("calculate_price failed: %s", e)
                 pmin = pmax = None
+                price_status = PRICE_STATUS_UNAVAILABLE
+                price_reason = 'calculation_failed'
 
             # In die DB schreiben
             req.price_min = pmin
@@ -362,14 +418,18 @@ def create_request():
 
         # --- Notify matched artists via email (first simple version) ---
         try:
-            date_str = req.event_date.strftime('%d.%m.%Y') if isinstance(req.event_date, datetime) else str(req.event_date)
-            city = (req.event_address.split(',')[-1].strip() if req.event_address else '')
+            date_str = format_event_date(req.event_date)
+            city = event_city(req.event_address)
             subject = f"Neue Booking-Anfrage – {date_str}{', ' + city if city else ''}"
 
             for artist in artist_objs:
-                # Skip if no email available
-                if not getattr(artist, 'email', None):
-                    current_app.logger.warning(f"Skipping email for artist {getattr(artist, 'id', '?')} – no email on record")
+                # Platzhalter-Adressen (…@clerk.placeholder) sind nicht zustellbar
+                # und würden den Versand nur mit Fehlern fluten.
+                if not is_deliverable_address(getattr(artist, 'email', None)):
+                    current_app.logger.warning(
+                        "Skipping email for artist %s – no deliverable address on record",
+                        getattr(artist, 'id', '?'),
+                    )
                     continue
 
                 html = build_artist_new_request_email(artist, req)
@@ -396,6 +456,11 @@ def create_request():
             'request_id': req.id,
             'price_min': pmin,
             'price_max': pmax,
+            # Damit das Frontend die drei Fälle unterscheiden kann, ohne auf
+            # null-Preise zu raten (SPEC-3, Kriterien 1, 6, 7).
+            'price_status': price_status,
+            'price_reason': price_reason,
+            'currency': 'EUR',
             'num_available_artists': len(artist_objs),
             'matched_artists': matched_payload,
         }
@@ -403,8 +468,8 @@ def create_request():
         if team_size == 2 and len(artist_objs) >= 2 and duo_min is not None and duo_max is not None:
             resp['duo_price_min'] = duo_min
             resp['duo_price_max'] = duo_max
-        # Gruppe: Flag setzen, keine Preise
-        if team_size and int(team_size) >= 3:
+        # Gruppe: Flag setzen, keine Preise (bleibt für bestehende Clients erhalten)
+        if price_reason == 'group':
             resp['group_pricing_pending'] = True
 
         location_value = f"/api/requests/requests/{req.id}"
@@ -430,16 +495,21 @@ def create_request():
 
 
 @booking_bp.route('/requests/<int:req_id>/offer', methods=['PUT'])
-@jwt_required()
+@artist_required
 @swag_from('../resources/swagger/requests_offer_put.yml')
 def set_offer(req_id):
-    """Allow a logged-in artist to submit an offer for a request."""
-    # Ermittle internen Artist anhand der Supabase JWT Identity
-    supabase_id = get_jwt_identity()
-    current_app.logger.debug(">>> Supabase ID aus Token: %s", supabase_id)
-    user = Artist.query.filter_by(supabase_user_id=supabase_id).first()
-    if not user:
-        return error_response("forbidden", "Artist not found or not allowed", 403)
+    """DEPRECATED: Angebot eines Artists speichern.
+
+    Das Frontend nutzt ausschließlich `PUT /api/requests/requests/<id>/offer`
+    aus `api_routes.py`. Dieser Endpunkt bleibt nur für Altclients bestehen und
+    delegiert an dieselbe Manager-Logik — er hatte zuvor eine eigene, fehlerhafte
+    Preisberechnung (Summe über *alle* gematchten Artists statt über die
+    gebuchte Teamgröße). Zusammenführen der beiden Endpunkte: SPEC-3, v2.
+    """
+    current_app.logger.warning(
+        "Deprecated endpoint PUT /api/requests/requests/%s/offer used", req_id
+    )
+    user = get_current_artist()
     user_id = user.id
 
     req = request_mgr.get_request(req_id)
@@ -447,67 +517,39 @@ def set_offer(req_id):
     if not req or (user_id not in [a.id for a in req.artists] and not user.is_admin):
         return error_response("forbidden", "Not allowed to offer on this request", 403)
 
-    data = request.json
+    data = request.json or {}
     artist_gage = data.get('artist_gage')
     if artist_gage is None:
         return error_response("validation_error", "artist_gage is required", 400)
 
-    # Neue Basis berechnen: Preis des aktuellen Artists ersetzen
-    base_min = sum(
-        artist_gage if a.id == user_id else getattr(a, 'price_min', 0)
-        for a in req.artists
-    )
-    base_max = sum(
-        artist_gage if a.id == user_id else getattr(a, 'price_max', 0)
-        for a in req.artists
-    )
-
-    fee_pct = _config_fee_pct()
-    pmin, pmax = calculate_price(
-        base_min       = base_min,
-        base_max       = base_max,
-        distance_km    = req.distance_km,
-        fee_pct        = fee_pct,
-        newsletter     = req.newsletter_opt_in,
-        event_type     = req.event_type,
-        num_guests     = req.number_of_guests,
-        is_weekend     = req.event_date.weekday() >= 5,
-        is_indoor      = req.is_indoor,
-        needs_light    = req.needs_light,
-        needs_sound    = req.needs_sound,
-        show_discipline = req.show_discipline,
-        team_size      = req.team_size,
-        duration       = req.duration_minutes,
-        event_address  = req.event_address
-    )
-
-    # Speichere das neue Angebot direkt am BookingRequest
-    booking = BookingRequest.query.get(req_id)
-    booking.artist_gage = artist_gage
-    booking.artist_offer_date = datetime.utcnow()
-    booking.status = 'angeboten'
-    db.session.commit()
-    req = booking
+    req = request_mgr.set_offer(req_id, user_id, artist_gage)
 
     # Push-Benachrichtigung an alle Artists senden
     for artist in req.artists:
         #aktuell noch dummy
-        send_push(artist, f'New offer: {pmax} EUR for request {req_id}')
+        send_push(artist, f'New offer: {req.price_offered} EUR for request {req_id}')
 
-    # Bei Solo-Booking sofort das eigene Angebot zurückgeben
-    if req.team_size == 1:
-        return jsonify({'status': req.status, 'price_offered': req.price_offered})
-    # Bei Duo+ erst Preis, wenn alle offeriert haben
-    elif req.price_offered is not None:
-        return jsonify({'status': req.status, 'price_offered': req.price_offered})
-    else:
-        return jsonify({'status': req.status}), 200
+    return jsonify({
+        'status': req.status,
+        'price_offered': req.price_offered,
+        'artist_gage': req.artist_gage,
+    })
 
 @booking_bp.route('/requests/<int:req_id>/accept', methods=['PUT'])
-@jwt_required()
+@artist_required
 def accept_request(req_id: int):
-    """Set a booking request status to 'accepted'."""
+    """Set a booking request status to 'accepted'.
+
+    Only an artist assigned to the request (or an admin) may accept it.
+    """
     try:
+        artist = get_current_artist()
+        req = request_mgr.get_request(req_id)
+        if not req:
+            return error_response("not_found", "Request not found", 404)
+        if artist.id not in [a.id for a in req.artists] and not is_admin():
+            return error_response("forbidden", "Not allowed to accept this request", 403)
+
         updated = request_mgr.change_status(req_id, 'akzeptiert')
         if not updated:
             return error_response("not_found", "Request not found or invalid status", 404)
@@ -517,7 +559,7 @@ def accept_request(req_id: int):
         return error_response("internal_error", f"accept_request failed: {str(e)}", 500)
 
 @booking_bp.route('/requests/<int:req_id>', methods=['DELETE'])
-@jwt_required()
+@admin_required
 def delete_request(req_id: int):
     """Delete a booking request by ID."""
     try:
@@ -532,236 +574,3 @@ def delete_request(req_id: int):
 def send_push(artist, message):
     """Log a push notification for an artist (placeholder)."""
     current_app.logger.info(f"PUSH to {artist.id}: {message}")
-
-
-def build_artist_new_request_email(artist, req):
-    """Build a beautifully styled HTML email for a new booking request."""
-    app_url = current_app.config.get('APP_URL', 'https://app.example.com')
-    date_str = req.event_date.strftime('%d.%m.%Y') if isinstance(req.event_date, datetime) else str(req.event_date)
-    city = (req.event_address.split(',')[-1].strip() if req.event_address else '')
-
-    # Show artist's recommended gage instead of customer price
-    artist_gage_range = None
-    try:
-        # Use artist's calculated gage range (price_min/max are the artist's gage ±20%)
-        if hasattr(artist, 'price_min') and hasattr(artist, 'price_max') and artist.price_min and artist.price_max:
-            artist_gage_range = f"{int(artist.price_min)}–{int(artist.price_max)} €"
-        elif hasattr(artist, 'calculated_gage') and artist.calculated_gage:
-            artist_gage_range = f"{int(artist.calculated_gage)} €"
-    except Exception:
-        artist_gage_range = None
-
-    # Fix disciplines formatting - handle both list and string cases
-    disciplines_str = '—'
-    try:
-        disciplines = getattr(req, 'show_discipline', None)
-        if disciplines:
-            if isinstance(disciplines, list):
-                disciplines_str = ', '.join(disciplines)
-            elif isinstance(disciplines, str):
-                # If it's a string, don't split it character by character
-                disciplines_str = disciplines
-    except Exception:
-        disciplines_str = '—'
-
-    artist_name = getattr(artist, 'name', 'Künstler:in')
-
-    # Map event types to icons
-    event_icons = {
-        'hochzeit': '💒',
-        'geburtstag': '🎂',
-        'firmenfeier': '🏢',
-        'festival': '🎪',
-        'theater': '🎭',
-        'gala': '✨',
-        'private feier': '🎉',
-        'corporate event': '🏢'
-    }
-    event_icon = event_icons.get((req.event_type or '').lower(), '🎪')
-
-    return f"""
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      </head>
-      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f8fafc;">
-        <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
-
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">
-              🎭 Neue Anfrage für dich!
-            </h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">
-              Hallo {artist_name} 👋
-            </p>
-          </div>
-
-          <!-- Content -->
-          <div style="padding: 30px 20px;">
-
-            <!-- Event Info Card -->
-            <div style="background: #f1f5f9; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-              <h3 style="margin: 0 0 15px 0; color: #334155; font-size: 18px; display: flex; align-items: center;">
-                {event_icon} Event-Details
-              </h3>
-              <div style="display: grid; gap: 8px;">
-                <div style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">📅</span>
-                  <strong style="color: #475569; min-width: 80px; margin-right: 8px;">Datum:</strong>
-                  <span style="color: #334155;">{date_str}</span>
-                </div>
-                <div style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">📍</span>
-                  <strong style="color: #475569; min-width: 80px; margin-right: 8px;">Ort:</strong>
-                  <span style="color: #334155;">{city or '—'}</span>
-                </div>
-                <div style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">{event_icon}</span>
-                  <strong style="color: #475569; min-width: 80px; margin-right: 8px;">Event:</strong>
-                  <span style="color: #334155;">{req.event_type or '—'}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Performance Details Card -->
-            <div style="background: #fef7cd; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
-              <h3 style="margin: 0 0 15px 0; color: #92400e; font-size: 18px; display: flex; align-items: center;">
-                🎪 Performance-Details
-              </h3>
-              <div style="display: grid; gap: 8px;">
-                <div style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">🎨</span>
-                  <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Disziplin:</strong>
-                  <span style="color: #451a03; background: white; padding: 2px 8px; border-radius: 4px; font-weight: 500;">{disciplines_str}</span>
-                </div>
-                <div style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">👥</span>
-                  <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Team:</strong>
-                  <span style="color: #451a03;">{req.team_size or '—'} {'Person' if req.team_size == 1 else 'Personen'}</span>
-                </div>
-                <div style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">⏱️</span>
-                  <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Dauer:</strong>
-                  <span style="color: #451a03;">{req.duration_minutes or '—'} Minuten</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Artist Gage Card -->
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: center;">
-              <h3 style="margin: 0 0 10px 0; color: white; font-size: 16px;">💰 Deine empfohlene Gage</h3>
-              <div style="color: white; font-size: 24px; font-weight: 700;">
-                {artist_gage_range or 'noch nicht berechnet'}
-              </div>
-              {f'<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Basierend auf deinen Kriterien</p>' if artist_gage_range else ''}
-            </div>
-
-            <!-- Call to Action -->
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="{app_url}/meine-anfragen"
-                 style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px;
-                        font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-                        transition: transform 0.2s;">
-                🚀 Anfrage ansehen & antworten
-              </a>
-            </div>
-
-          </div>
-
-          <!-- Footer -->
-          <div style="background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0; color: #64748b; font-size: 14px;">
-              Diese E-Mail wurde automatisch gesendet. Bitte nicht direkt antworten.
-            </p>
-          </div>
-
-        </div>
-      </body>
-    </html>
-    """
-
-
-def build_admin_new_request_email(req):
-    """Build a minimal HTML email for admin notification of new booking request."""
-    app_url = current_app.config.get('APP_URL', 'https://app.example.com')
-    date_str = req.event_date.strftime('%d.%m.%Y') if isinstance(req.event_date, datetime) else str(req.event_date)
-    city = (req.event_address.split(',')[-1].strip() if req.event_address else '')
-    price_range = None
-    try:
-        if req.price_min is not None and req.price_max is not None:
-            price_range = f"{int(req.price_min)}–{int(req.price_max)} €"
-    except Exception:
-        price_range = None
-
-    return f"""
-    <html>
-      <body style="font-family: Arial, Helvetica, sans-serif; line-height:1.5;">
-        <h2>🎭 Neue Buchungsanfrage eingegangen</h2>
-        <p>
-          <strong>Anfrage ID:</strong> #{req.id}<br/>
-          <strong>Datum:</strong> {date_str}<br/>
-          <strong>Ort:</strong> {city or '—'}<br/>
-          <strong>Event:</strong> {req.event_type or '—'}<br/>
-          <strong>Disziplin(en):</strong> {', '.join(req.show_discipline) if getattr(req, 'show_discipline', None) else '—'}<br/>
-          <strong>Teamgröße:</strong> {req.team_size or '—'}<br/>
-          <strong>Dauer:</strong> {req.duration_minutes or '—'} Minuten<br/>
-          <strong>Gäste:</strong> {req.number_of_guests or '—'}<br/>
-          <strong>Preisrahmen:</strong> {price_range or 'wird noch abgestimmt'}
-        </p>
-        <p>
-          <strong>Kundendaten:</strong><br/>
-          <strong>Name:</strong> {req.customer_name or '—'}<br/>
-          <strong>E-Mail:</strong> {req.customer_email or '—'}<br/>
-          <strong>Telefon:</strong> {req.customer_phone or '—'}
-        </p>
-        {f'<p><strong>Nachricht:</strong><br/>{req.message}</p>' if getattr(req, 'message', None) else ''}
-        <p>
-          <a href="{app_url}/admin/requests/{req.id}" style="background:#111;color:#fff;padding:10px 16px;text-decoration:none;border-radius:6px;">Anfrage verwalten</a>
-        </p>
-        <hr style="border:none;border-top:1px solid #e5e5e5;"/>
-        <small>Diese E-Mail wurde automatisch gesendet.</small>
-      </body>
-    </html>
-    """
-
-
-def send_email(to_email: str, subject: str, html: str) -> bool:
-    """Send an HTML email using SMTP settings from Flask config.
-    
-    Required config keys:
-      - SMTP_HOST
-      - SMTP_PORT (default 587)
-      - SMTP_USER
-      - SMTP_PASSWORD
-      - SMTP_FROM (defaults to SMTP_USER)
-    """
-    host = current_app.config.get('SMTP_HOST')
-    port = int(current_app.config.get('SMTP_PORT', 587))
-    user = current_app.config.get('SMTP_USER')
-    password = current_app.config.get('SMTP_PASSWORD')
-    from_addr = current_app.config.get('SMTP_FROM', user)
-
-    if not (host and user and password and to_email):
-        current_app.logger.warning("Email not sent — missing SMTP config or recipient")
-        return False
-
-    msg = EmailMessage()
-    msg['Subject'] = subject
-    msg['From'] = from_addr
-    msg['To'] = to_email
-    msg.set_content("Neue Anfrage – bitte im Browser öffnen.")
-    msg.add_alternative(html, subtype='html')
-
-    try:
-        with smtplib.SMTP(host, port) as server:
-            server.starttls(context=ssl.create_default_context())
-            server.login(user, password)
-            server.send_message(msg)
-        current_app.logger.info(f"Email sent to {to_email} (subject: {subject})")
-        return True
-    except Exception as e:
-        current_app.logger.exception(f"Failed to send email to {to_email}: {e}")
-        return False

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth, UserButton, useUser } from '@clerk/clerk-react'
+import { useAuth, UserButton } from '@clerk/clerk-react'
+import { useAuth as usePepeAuth } from '@/context/AuthContext'
 
 interface NavigationProps {
   className?: string
@@ -13,7 +14,8 @@ export default function Navigation({ className = '' }: NavigationProps) {
   const location = useLocation()
   const { t, i18n } = useTranslation()
   const { isSignedIn, isLoaded } = useAuth()
-  const { user } = useUser()
+  // Admin-Status kommt aus der DB (`artists.is_admin`), nicht aus Clerk-Metadaten
+  const { user } = usePepeAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,7 +103,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
                 >
                   {t('nav.profile', 'Profil')}
                 </Link>
-                {(user?.publicMetadata as any)?.role === 'shows-admin' && (
+                {user?.is_admin && (
                   <Link
                     to="/admin"
                     className="nav-link text-sm text-[#D4A574]"
@@ -193,7 +195,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
                     >
                       {t('nav.profile', 'Mein Profil')}
                     </Link>
-                    {(user?.publicMetadata as any)?.role === 'shows-admin' && (
+                    {user?.is_admin && (
                       <Link
                         to="/admin"
                         className="mobile-menu-link text-[#D4A574]"

@@ -54,7 +54,7 @@ export function DashboardLayout({ children, className = '', title }: DashboardLa
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Admin check from Clerk publicMetadata role
+  // Admin check aus der DB (artists.is_admin), geliefert von /api/artists/me
   const isAdmin = user?.is_admin === true;
   const isAdminRoute = location.pathname.startsWith('/admin');
 
