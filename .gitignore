@@ -15,6 +15,10 @@ dist-ssr
 # Environment variables
 .env
 
+# Database dumps (lokal, nicht ins Repo)
+*.dump
+pepe_backup.dump
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

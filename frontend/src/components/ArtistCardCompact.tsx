@@ -24,9 +24,9 @@ const ArtistCardCompact: React.FC<ArtistCardCompactProps> = ({ artist }) => {
     <div className="artist-card-compact">
       {/* Main Image Section - Always Visible */}
       <div className="artist-card-compact-image">
-        <img 
-          src={primaryImage} 
-          alt={artist.name}
+        <img
+          src={primaryImage}
+          alt={`Profilbild von ${artist.name}`}
           loading="lazy"
         />
         <div className="artist-card-compact-overlay">
@@ -71,7 +71,7 @@ const ArtistCardCompact: React.FC<ArtistCardCompactProps> = ({ artist }) => {
                   <img 
                     key={idx}
                     src={img} 
-                    alt={`${artist.name} ${idx + 1}`}
+                    alt={`${artist.name} – Galeriebild ${idx + 1}`}
                     className="artist-card-compact-thumb"
                     loading="lazy"
                   />
@@ -134,7 +134,7 @@ const ArtistCardCompact: React.FC<ArtistCardCompactProps> = ({ artist }) => {
         <button 
           className={`artist-card-compact-nav-btn ${currentView === 'info' ? 'active' : ''}`}
           onClick={() => setCurrentView('info')}
-          aria-label="Show info"
+          aria-label="Informationen anzeigen"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
@@ -143,7 +143,7 @@ const ArtistCardCompact: React.FC<ArtistCardCompactProps> = ({ artist }) => {
         <button 
           className={`artist-card-compact-nav-btn ${currentView === 'images' ? 'active' : ''}`}
           onClick={() => setCurrentView('images')}
-          aria-label="Show images"
+          aria-label="Bilder anzeigen"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
@@ -152,7 +152,7 @@ const ArtistCardCompact: React.FC<ArtistCardCompactProps> = ({ artist }) => {
         <button 
           className={`artist-card-compact-nav-btn ${currentView === 'contact' ? 'active' : ''}`}
           onClick={() => setCurrentView('contact')}
-          aria-label="Show contact"
+          aria-label="Kontakt anzeigen"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10h5v-2h-5c-4.34 0-8-3.66-8-8s3.66-8 8-8 8 3.66 8 8v1.43c0 .79-.71 1.57-1.5 1.57s-1.5-.78-1.5-1.57V12c0-2.76-2.24-5-5-5s-5 2.24-5 5 2.24 5 5 5c1.38 0 2.64-.56 3.54-1.47.65.89 1.77 1.47 2.96 1.47 1.97 0 3.5-1.6 3.5-3.57V12c0-5.52-4.48-10-10-10zm0 13c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>

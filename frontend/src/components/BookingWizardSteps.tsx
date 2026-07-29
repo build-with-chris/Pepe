@@ -1,6 +1,9 @@
 // import React from 'react' - not needed in modern React
 // DotCloudImage replaced with static PNGs for performance
 import DotCloudImage from './ui/DotCloudImage'
+import { DotLottieReact } from '@lottiefiles/dotlottie-react'
+import { ArrowRight, Home } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 interface ChoiceCardProps {
   image: string
@@ -116,6 +119,14 @@ export function ResultStep({ result, onRestart }: { result: BookingResult; onRes
         </>
       ) : (
         <>
+          <div className="success-animation mb-6 flex justify-center">
+            <DotLottieReact
+              src="https://lottie.host/6334277f-37f7-4892-a202-a5ae73be94d6/0.json"
+              autoplay
+              loop={false}
+              style={{ width: '260px', height: '260px' }}
+            />
+          </div>
           <h3 className="wizard-step-title">Vielen Dank für Ihre Anfrage!</h3>
           <p className="wizard-step-subtitle">
             Wir haben Ihre Anfrage erhalten und melden uns innerhalb von 24 Stunden bei Ihnen.
@@ -186,6 +197,19 @@ export function ResultStep({ result, onRestart }: { result: BookingResult; onRes
           {result.status === 'error' ? 'Erneut versuchen' : 'Neue Anfrage stellen'}
         </button>
       </div>
+
+      {result.status !== 'error' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+          <Link to="/" className="btn btn-secondary w-full flex items-center justify-center gap-2">
+            <Home className="w-5 h-5" />
+            Zurück zur Startseite
+          </Link>
+          <Link to="/shows" className="btn btn-secondary w-full flex items-center justify-center gap-2">
+            Weitere Shows entdecken
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

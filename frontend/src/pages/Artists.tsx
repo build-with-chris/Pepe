@@ -417,47 +417,61 @@ export default function KuenstlerVerwaltung() {
                 className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden text-left hover:border-[#D4A574]/30 hover:bg-white/[0.07] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50"
                 onClick={() => openDetails(artist)}
               >
-                <div className="relative w-full aspect-square bg-gray-800/50">
-                  {artist.profile_image_url ? (
-                    <img
-                      src={artist.profile_image_url}
-                      alt={artist.name}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                      <Users className="w-12 h-12" />
-                    </div>
-                  )}
-                  <div className="absolute top-3 left-3">{statusBadge(artist.approval_status)}</div>
-                  {token && (
-                    <button
-                      type="button"
-                      title="Artist löschen"
-                      onClick={(e) => deleteArtist(artist, e)}
-                      disabled={deletingId === artist.id}
-                      className="absolute top-3 right-3 rounded-lg bg-red-500/80 p-2 text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
-                    >
-                      {deletingId === artist.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                    </button>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h2 className="text-lg font-semibold text-white mb-1 line-clamp-1">{artist.name}</h2>
-                  {artist.disciplines && artist.disciplines.length > 0 && (
-                    <div className="mb-2 flex flex-wrap gap-1">
-                      {artist.disciplines.slice(0, 3).map((d, i) => (
-                        <span key={i} className="text-xs bg-[#D4A574]/20 text-[#D4A574] px-2 py-0.5 rounded-full">{d}</span>
-                      ))}
-                      {artist.disciplines.length > 3 && (
-                        <span className="text-xs text-gray-500">+{artist.disciplines.length - 3}</span>
+                <div className="flex items-start gap-4 p-4">
+                  {/* Profilbild - kompakt */}
+                  <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gray-800/50">
+                    {artist.profile_image_url ? (
+                      <img
+                        src={artist.profile_image_url}
+                        alt={artist.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        <Users className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {statusBadge(artist.approval_status)}
+                      {token && (
+                        <button
+                          type="button"
+                          title="Artist löschen"
+                          onClick={(e) => deleteArtist(artist, e)}
+                          disabled={deletingId === artist.id}
+                          className="ml-auto rounded-lg bg-red-500/80 p-1.5 text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+                        >
+                          {deletingId === artist.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
                       )}
                     </div>
-                  )}
-                  <p className="text-sm text-gray-400 line-clamp-2">
-                    {artist.bio?.trim() || 'Keine Bio hinterlegt.'}
-                  </p>
+                    <h2 className="text-base font-semibold text-white mb-1 line-clamp-1">{artist.name}</h2>
+                    {artist.email && !artist.email.includes('clerk.placeholder') && (
+                      <p className="text-xs text-gray-400 mb-1.5 truncate">{artist.email}</p>
+                    )}
+                    {artist.disciplines && artist.disciplines.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {artist.disciplines.slice(0, 2).map((d, i) => (
+                          <span key={i} className="text-xs bg-[#D4A574]/20 text-[#D4A574] px-2 py-0.5 rounded-full">{d}</span>
+                        ))}
+                        {artist.disciplines.length > 2 && (
+                          <span className="text-xs text-gray-500">+{artist.disciplines.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Bio */}
+                {artist.bio?.trim() && (
+                  <div className="px-4 pb-4 -mt-1">
+                    <p className="text-sm text-gray-400 line-clamp-2">{artist.bio.trim()}</p>
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -502,6 +516,16 @@ export default function KuenstlerVerwaltung() {
                     size="sm"
                   >
                     Ablehnen
+                  </Button>
+                )}
+                {selected.approval_status !== 'rejected' && (
+                  <Button
+                    onClick={rejectSelected}
+                    disabled={actionLoading}
+                    className="bg-red-600 hover:bg-red-500 text-white"
+                    size="sm"
+                  >
+                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reject'}
                   </Button>
                 )}
                 <Button variant="ghost" size="icon" onClick={closeDetails} className="text-gray-400 hover:text-white">
@@ -559,67 +583,56 @@ export default function KuenstlerVerwaltung() {
 
             {/* Content */}
             <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 sm:p-6">
-                {/* Left Column - Image */}
-                <div className="space-y-4">
-                  <div className="aspect-square bg-gray-800 rounded-xl overflow-hidden">
-                    {selected.profile_image_url ? (
-                      <img src={selected.profile_image_url} alt={selected.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        <Users className="w-16 h-16" />
-                      </div>
-                    )}
-                  </div>
-                  {selected.gallery_urls && selected.gallery_urls.length > 0 && (
-                    <div>
-                      <div className="text-sm text-gray-400 mb-2">Galerie</div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {selected.gallery_urls.slice(0, 6).map((u, i) => (
-                          <img key={i} src={u} className="w-full aspect-square object-cover rounded-lg" alt="" />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Column - Details */}
-                <div className="md:col-span-2 space-y-6">
-                  {/* Bio */}
-                  <div>
-                    <div className="text-sm text-gray-400 mb-2">Bio</div>
-                    <p className="text-gray-200 whitespace-pre-line">{selected.bio || '—'}</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {/* Contact */}
-                    <div className="space-y-3">
-                      <div className="text-sm text-gray-400">Kontaktdaten</div>
-                      <dl className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <dt className="text-gray-500">E-Mail</dt>
-                          <dd className="text-white">{selected.email || '—'}</dd>
+              <div className="p-6 sm:p-8 space-y-8">
+                {/* Top: Image + Contact side by side */}
+                <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+                  {/* Profile Image - compact */}
+                  <div className="flex-shrink-0">
+                    <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gray-800 rounded-xl overflow-hidden">
+                      {selected.profile_image_url ? (
+                        <img src={selected.profile_image_url} alt={selected.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <Users className="w-12 h-12" />
                         </div>
-                        <div className="flex justify-between">
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contact & Status */}
+                  <div className="flex-1 space-y-5">
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium text-gray-400">Kontaktdaten</div>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-gray-500">E-Mail</dt>
+                          <dd className="text-white text-right">{selected.email && !selected.email.includes('clerk.placeholder') ? selected.email : '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Telefon</dt>
                           <dd className="text-white">{selected.phone_number || '—'}</dd>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Adresse</dt>
                           <dd className="text-white text-right">{selected.address || '—'}</dd>
                         </div>
+                        {selected.instagram && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-gray-500">Instagram</dt>
+                            <dd className="text-white">{selected.instagram}</dd>
+                          </div>
+                        )}
                       </dl>
                     </div>
 
-                    {/* Status & Pricing */}
                     <div className="space-y-3">
-                      <div className="text-sm text-gray-400">Status & Preise</div>
-                      <dl className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                      <div className="text-sm font-medium text-gray-400">Status & Preise</div>
+                      <dl className="space-y-3 text-sm">
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Status</dt>
                           <dd>{statusBadge(selected.approval_status)}</dd>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-4">
                           <dt className="text-gray-500">Preisrahmen</dt>
                           <dd className="text-white">
                             {selected.price_min != null || selected.price_max != null
@@ -628,7 +641,7 @@ export default function KuenstlerVerwaltung() {
                           </dd>
                         </div>
                         {selected.approved_at && (
-                          <div className="flex justify-between">
+                          <div className="flex justify-between gap-4">
                             <dt className="text-gray-500">Approved</dt>
                             <dd className="text-white">{new Date(selected.approved_at).toLocaleDateString('de-DE')}</dd>
                           </div>
@@ -636,26 +649,46 @@ export default function KuenstlerVerwaltung() {
                       </dl>
                     </div>
                   </div>
+                </div>
 
-                  {selected.approval_status === 'rejected' && selected.rejection_reason && (
-                    <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
-                      <div className="text-sm text-red-300 mb-1">Ablehnungsgrund</div>
-                      <p className="text-sm text-red-200 whitespace-pre-line">{selected.rejection_reason}</p>
-                    </div>
-                  )}
+                {selected.approval_status === 'rejected' && selected.rejection_reason && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+                    <div className="text-sm text-red-300 mb-1">Ablehnungsgrund</div>
+                    <p className="text-sm text-red-200 whitespace-pre-line">{selected.rejection_reason}</p>
+                  </div>
+                )}
 
-                  {/* Disciplines */}
+                {/* Bio */}
+                {selected.bio?.trim() && (
                   <div>
-                    <div className="text-sm text-gray-400 mb-2">Disziplinen</div>
-                    <div className="flex flex-wrap gap-2">
-                      {(selected.disciplines || []).length ? (
-                        selected.disciplines!.map((d, i) => (
-                          <span key={i} className="text-sm bg-[#D4A574]/20 text-[#D4A574] px-3 py-1 rounded-full">{d}</span>
-                        ))
-                      ) : <span className="text-gray-500">—</span>}
-                    </div>
+                    <div className="text-sm font-medium text-gray-400 mb-3">Bio</div>
+                    <p className="text-gray-200 whitespace-pre-line leading-relaxed">{selected.bio}</p>
+                  </div>
+                )}
+
+                {/* Disciplines */}
+                <div>
+                  <div className="text-sm font-medium text-gray-400 mb-3">Disziplinen</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(selected.disciplines || []).length ? (
+                      selected.disciplines!.map((d, i) => (
+                        <span key={i} className="text-sm bg-[#D4A574]/20 text-[#D4A574] px-3 py-1.5 rounded-full">{d}</span>
+                      ))
+                    ) : <span className="text-gray-500">—</span>}
                   </div>
                 </div>
+
+                {/* Gallery */}
+                {selected.gallery_urls && selected.gallery_urls.length > 0 && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-400 mb-3">Galerie</div>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {selected.gallery_urls.slice(0, 12).map((u, i) => (
+                        <img key={i} src={u} className="w-full aspect-square object-cover rounded-lg" alt={`${selected.name} – Galeriebild ${i + 1}`} loading="lazy" />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

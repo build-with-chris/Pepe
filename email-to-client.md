@@ -32,7 +32,7 @@ https://pepe-clean.vercel.app
 https://pepe-clean-*.vercel.app
 ```
 
-Backend-Endpoint: `https://pepe-backend-4nid.onrender.com`
+Backend-Endpoint: *(eure produktive API-URL, in Vercel als `VITE_API_URL` gesetzt)*
 
 Von hier kann ich gerne beim Testen und Anpassen unterstützen.
 
@@ -60,4 +60,4 @@ Mit freundlichen Grüßen
 - Frontend: React + TypeScript + Vite
 - Hosting: Vercel
 - Übersetzung: i18next
-- Backend: https://pepe-backend-4nid.onrender.com
+- Backend: *(produktive URL aus `VITE_API_URL`)*

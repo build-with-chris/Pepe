@@ -1,6 +1,9 @@
+import SEO, { pageSEO } from '@/components/SEO'
+
 export default function Impressum() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center py-20 px-6">
+      <SEO {...pageSEO.impressum} />
       <div className="max-w-3xl space-y-6">
         <h1 className="text-3xl font-bold text-center mb-8">Impressum</h1>
         

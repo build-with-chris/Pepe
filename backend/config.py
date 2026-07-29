@@ -1,19 +1,48 @@
 import os
+from pathlib import Path
+from typing import Optional
 from dotenv import load_dotenv
 
-load_dotenv()
+# Immer backend/.env (nie .env.example) – unabhängig vom aktuellen Arbeitsverzeichnis
+_backend_root = Path(__file__).resolve().parent
+load_dotenv(_backend_root / ".env")
 
 def normalize_db_url(raw: str) -> str:
     if raw.startswith("postgres://"):
-        return raw.replace("postgres://", "postgresql+psycopg://", 1)
-    if raw.startswith("postgresql://") and not raw.startswith("postgresql+psycopg://"):
-        return raw.replace("postgresql://", "postgresql+psycopg://", 1)
+        raw = raw.replace("postgres://", "postgresql+psycopg://", 1)
+    elif raw.startswith("postgresql://") and not raw.startswith("postgresql+psycopg://"):
+        raw = raw.replace("postgresql://", "postgresql+psycopg://", 1)
+    # Supabase / die meisten managed Postgres-Anbieter brauchen TLS
+    lowered = raw.lower()
+    if any(h in lowered for h in ("supabase.co", "pooler.supabase.com")):
+        if "sslmode=" not in lowered and "ssl=" not in lowered:
+            sep = "&" if "?" in raw else "?"
+            raw = f"{raw}{sep}sslmode=require"
     return raw
+
+
+def psycopg_connection_uri(raw: Optional[str] = None) -> str:
+    """URI für psycopg/libpq (postgresql://…), nicht SQLAlchemy (postgresql+psycopg://)."""
+    s = (raw or os.getenv("DATABASE_URL", "")).strip()
+    if not s:
+        return ""
+    return normalize_db_url(s).replace("postgresql+psycopg://", "postgresql://", 1)
+
+
+# Klassen-Body: Comprehensions sehen keine frisch zugewiesenen Klassen-Locals → Modul-Ebene nutzen
+_db_url_lower = os.getenv("DATABASE_URL", "").lower()
+
 
 class Config:
     # Flask session/CSRF signing only — authentication runs entirely on Clerk
     # (asymmetric RS256 via JWKS), so there is no shared JWT secret any more.
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-not-used-for-auth")
+    # Der Fallback auf SUPABASE_JWT_SECRET ist mit dem Legacy-Login entfallen,
+    # die beiden Variablennamen bleiben aus Kompatibilität bestehen.
+    SECRET_KEY = (
+        os.getenv("FLASK_SECRET_KEY")
+        or os.getenv("SECRET_KEY")
+        or "dev-only-not-used-for-auth"
+    )
 
     # Clerk: JWKS endpoint of the active instance (dev or production).
     CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL")
@@ -24,6 +53,11 @@ class Config:
     else:
         SQLALCHEMY_DATABASE_URI = "sqlite:///pepe.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Optional: SQLAlchemy Engine-Optionen (wird in app.py mit Defaults gemerged)
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+    if any(h in _db_url_lower for h in ("supabase.co", "pooler.supabase.com")):
+        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"sslmode": "require"}
 
     AGENCY_FEE_PERCENT = int(os.getenv("AGENCY_FEE_PERCENT", "20"))
     RATE_PER_KM = 0.5

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from helpers.http_responses import error_response
 from flasgger import swag_from
 from managers.booking_requests_manager import BookingRequestManager
@@ -9,10 +9,13 @@ from helpers.clerk_auth import admin_required, clerk_auth_required, get_current_
 from helpers.emails import (
     build_artist_approved_email,
     build_artist_rejected_email,
+    event_city,
+    format_disciplines,
+    format_event_date,
     is_deliverable_address,
     send_email,
 )
-from models import Artist
+from models import Artist, BookingRequest
 from models import db
 import os
 import logging
@@ -24,6 +27,110 @@ logger = logging.getLogger(__name__)
 
 HERE = os.path.dirname(__file__)
 SWAG = lambda name: os.path.join(HERE, '..', 'resources', 'swagger', name)
+
+
+# ---------------------------------------------------------------------------
+# Email notification helpers for admin actions
+# ---------------------------------------------------------------------------
+def _send_artist_email(artist, subject: str, html: str):
+    """Mail an einen Artist. Wirft nie, gibt nur zurück, ob es geklappt hat.
+
+    `send_email` kommt aus `helpers.emails`; der frühere Import aus
+    `routes.request_routes` zeigte ins Leere, seit der Versand dorthin gezogen
+    ist, und haette bei jedem Statuswechsel einen ImportError ausgeloest.
+    """
+    email = getattr(artist, 'email', None)
+    if not is_deliverable_address(email):
+        logger.warning(
+            "Cannot send email to artist %s – no deliverable address on record",
+            getattr(artist, 'id', '?'),
+        )
+        return False
+    try:
+        return bool(send_email(email, subject, html))
+    except Exception as e:
+        logger.exception(f"Failed to send email to artist {getattr(artist, 'id', '?')}: {e}")
+        return False
+
+
+def _build_status_change_email(artist, req, new_status: str, comment: str = None) -> str:
+    """Build HTML email notifying artist of a status change on their booking request."""
+    app_url = current_app.config.get('APP_URL', 'https://pepeshows.de')
+    artist_name = getattr(artist, 'name', 'Künstler:in')
+    date_str = format_event_date(getattr(req, 'event_date', None))
+    city = event_city(getattr(req, 'event_address', None))
+
+    status_labels = {
+        'angefragt': 'Neue Anfrage',
+        'angeboten': 'Angebot abgegeben',
+        'akzeptiert': 'Akzeptiert',
+        'abgelehnt': 'Abgelehnt',
+        'storniert': 'Storniert',
+    }
+    status_colors = {
+        'akzeptiert': '#22c55e',
+        'abgelehnt': '#ef4444',
+        'storniert': '#ef4444',
+        'angeboten': '#f59e0b',
+        'angefragt': '#3b82f6',
+    }
+    label = status_labels.get(new_status, new_status)
+    color = status_colors.get(new_status, '#D4A574')
+
+    comment_block = ''
+    if comment:
+        comment_block = f'''
+        <div style="margin-top:16px;padding:12px 16px;background:#f8f4ef;border-left:4px solid {color};border-radius:4px;">
+          <p style="margin:0;font-size:14px;color:#666;">Kommentar vom Admin:</p>
+          <p style="margin:4px 0 0;font-size:15px;color:#333;">{comment}</p>
+        </div>'''
+
+    return f'''
+    <html>
+    <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f0eb;">
+      <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5ddd3;">
+        <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d);padding:28px 32px;text-align:center;">
+          <h1 style="margin:0;color:#D4A574;font-size:20px;">Pepe Shows</h1>
+          <p style="margin:8px 0 0;color:#aaa;font-size:13px;">Statusaktualisierung</p>
+        </div>
+        <div style="padding:28px 32px;">
+          <p style="font-size:16px;color:#333;">Hallo {artist_name},</p>
+          <p style="font-size:15px;color:#555;line-height:1.6;">
+            der Status deiner Buchungsanfrage <strong>#{req.id}</strong> wurde aktualisiert:
+          </p>
+          <div style="text-align:center;margin:20px 0;">
+            <span style="display:inline-block;padding:8px 24px;background:{color};color:#fff;border-radius:20px;font-weight:600;font-size:15px;">
+              {label}
+            </span>
+          </div>
+          <div style="background:#faf8f5;border-radius:8px;padding:16px 20px;margin:16px 0;">
+            <p style="margin:0 0 8px;font-size:13px;color:#888;">Event-Details</p>
+            <p style="margin:0;font-size:15px;color:#333;"><strong>{date_str}</strong>, {city}</p>
+            <p style="margin:4px 0 0;font-size:14px;color:#666;">{format_disciplines(getattr(req, "show_discipline", None))}</p>
+          </div>
+          {comment_block}
+          <div style="text-align:center;margin:28px 0 16px;">
+            <a href="{app_url}/meine-anfragen" style="display:inline-block;padding:12px 32px;background:#D4A574;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">
+              Anfrage ansehen
+            </a>
+          </div>
+        </div>
+        <div style="padding:16px 32px;background:#faf8f5;text-align:center;border-top:1px solid #e5ddd3;">
+          <p style="margin:0;font-size:12px;color:#999;">Pepe Shows Artist Agency</p>
+        </div>
+      </div>
+    </body>
+    </html>'''
+
+
+def filter_blob_url(url):
+    """Filtert Blob-URLs heraus - gibt None zurück, wenn es eine Blob-URL ist."""
+    if not url or not isinstance(url, str):
+        return url
+    if url.strip().startswith('blob:'):
+        logger.warning(f'Blob-URL detected and filtered: {url[:50]}...')
+        return None
+    return url
 
 """
 Admin-Modul: Enthält alle Endpunkte zum Verwalten von Buchungsanfragen,
@@ -392,14 +499,19 @@ def list_artists_by_status():
                 'id': a.id,
                 'name': getattr(a, 'name', None),
                 'email': getattr(a, 'email', None),
+                'phone_number': getattr(a, 'phone_number', None),
+                'address': getattr(a, 'address', None),
+                'instagram': getattr(a, 'instagram', None),
+                'bio': getattr(a, 'bio', None),
+                'profile_image_url': filter_blob_url(getattr(a, 'profile_image_url', None)),
+                'gallery_urls': getattr(a, 'gallery_urls', []),
+                'disciplines': [d.name for d in getattr(a, 'disciplines', [])] if getattr(a, 'disciplines', None) else [],
+                'price_min': getattr(a, 'price_min', None),
+                'price_max': getattr(a, 'price_max', None),
                 'approval_status': getattr(a, 'approval_status', None),
                 'rejection_reason': getattr(a, 'rejection_reason', None),
                 'approved_at': a.approved_at.isoformat() if getattr(a, 'approved_at', None) else None,
                 'approved_by': getattr(a, 'approved_by', None),
-                'profile_image_url': getattr(a, 'profile_image_url', None),
-                'gallery_urls': getattr(a, 'gallery_urls', []),
-                'disciplines': [d.name for d in getattr(a, 'disciplines', [])] if getattr(a, 'disciplines', None) else [],
-                'bio': getattr(a, 'bio', None),
             }
 
         return jsonify([_serialize(a) for a in artists]), 200
@@ -435,6 +547,19 @@ def approve_artist(artist_id):
     except Exception as e:
         logger.exception(f"[ADMIN] approve_artist failed for artist_id={artist_id}: {e}")
         return error_response('internal_error', 'Unexpected server error', 500)
+
+
+@admin_bp.route('/artists/<int:artist_id>/fill-availability', methods=['POST'])
+def fill_artist_availability(artist_id):
+    """Manually fill 365 days of availability for an approved artist."""
+    try:
+        from managers.availability_manager import AvailabilityManager
+        manager = AvailabilityManager()
+        result = manager.ensure_auto_availability_for_artist(artist_id, days_ahead=365)
+        return jsonify({'status': 'ok', 'result': result}), 200
+    except Exception as e:
+        logger.exception(f"[ADMIN] fill-availability failed for artist_id={artist_id}: {e}")
+        return error_response('internal_error', str(e), 500)
 
 
 @admin_bp.route('/artists/<int:artist_id>/reject', methods=['POST'])
@@ -556,6 +681,24 @@ def admin_set_artist_status(req_id, artist_id):
     ok = request_mgr.set_artist_status(req_id, artist_id, new_status, comment)
     if not ok:
         return error_response('validation_error', 'Invalid request/artist/status', 400)
+
+    # Send email notification to the affected artist
+    try:
+        artist = db.session.get(Artist, artist_id)
+        req_obj = db.session.get(BookingRequest, req_id)
+        if artist and req_obj:
+            status_subjects = {
+                'akzeptiert': 'Deine Buchung wurde bestätigt! ✅',
+                'abgelehnt': 'Update zu deiner Buchungsanfrage',
+                'storniert': 'Buchungsanfrage storniert',
+                'angeboten': 'Neues Angebot für deine Buchungsanfrage',
+            }
+            subject = status_subjects.get(new_status, f'Statusupdate: Anfrage #{req_id}')
+            html = _build_status_change_email(artist, req_obj, new_status, comment)
+            _send_artist_email(artist, subject, html)
+    except Exception as e:
+        logger.warning(f"[ADMIN] status change email failed for artist {artist_id}, request {req_id}: {e}")
+
     return jsonify({'artist_id': artist_id, 'status': new_status, 'comment': comment}), 200
 
 @admin_bp.route('/requests/<int:req_id>/artist_status', methods=['PUT'])
@@ -573,6 +716,29 @@ def admin_set_artists_status_bulk(req_id):
         updated = request_mgr.set_artists_status(req_id, artist_ids, new_status, comment)
     else:
         updated = request_mgr.set_all_artists_status(req_id, new_status, comment)
+
+    # Send email notifications to all affected artists
+    try:
+        req_obj = db.session.get(BookingRequest, req_id)
+        if req_obj:
+            # Get the artists linked to this request
+            affected = req_obj.artists if not artist_ids else Artist.query.filter(Artist.id.in_(artist_ids)).all()
+            status_subjects = {
+                'akzeptiert': 'Deine Buchung wurde bestätigt! ✅',
+                'abgelehnt': 'Update zu deiner Buchungsanfrage',
+                'storniert': 'Buchungsanfrage storniert',
+                'angeboten': 'Neues Angebot für deine Buchungsanfrage',
+            }
+            subject = status_subjects.get(new_status, f'Statusupdate: Anfrage #{req_id}')
+            for artist in affected:
+                try:
+                    html = _build_status_change_email(artist, req_obj, new_status, comment)
+                    _send_artist_email(artist, subject, html)
+                except Exception as e:
+                    logger.warning(f"[ADMIN] bulk status email failed for artist {artist.id}: {e}")
+    except Exception as e:
+        logger.warning(f"[ADMIN] bulk status email failed for request {req_id}: {e}")
+
     return jsonify({'updated': updated, 'status': new_status, 'comment': comment}), 200
 
 @admin_bp.route('/dashboard')
@@ -591,10 +757,21 @@ def dashboard():
                 'client_email': r.client_email,
                 'event_date': r.event_date.isoformat(),
                 'event_time': r.event_time.isoformat() if r.event_time else None,
+                'event_type': getattr(r, 'event_type', None),
+                'event_address': getattr(r, 'event_address', None),
+                'show_discipline': getattr(r, 'show_discipline', None),
+                'duration_minutes': getattr(r, 'duration_minutes', None),
                 'team_size': r.team_size,
-                'status': r.status,
+                'number_of_guests': getattr(r, 'number_of_guests', None),
+                'is_indoor': getattr(r, 'is_indoor', None),
+                'special_requests': getattr(r, 'special_requests', None),
+                'needs_light': getattr(r, 'needs_light', None),
+                'needs_sound': getattr(r, 'needs_sound', None),
+                'status': r.status or 'offen',
                 'created_at': r.created_at.isoformat() if getattr(r, 'created_at', None) else None,
-                'price_offered': r.price_offered
+                'price_min': getattr(r, 'price_min', None),
+                'price_max': getattr(r, 'price_max', None),
+                'price_offered': r.price_offered,
             }
             for r in offers
         ]

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 from typing import Deque, Tuple
 from collections import OrderedDict, deque
@@ -177,6 +179,57 @@ def request_brief_json(r: BookingRequest) -> dict:
 booking_bp = Blueprint('booking', __name__, url_prefix='/api/requests')
 
 
+@booking_bp.route('/debug/matching', methods=['GET'])
+@admin_required
+def debug_matching():
+    """Diagnostic endpoint to check artist matching prerequisites.
+
+    Gibt Namen, Disziplinen und Verfuegbarkeiten aller freigegebenen Artists aus.
+    Das ist zur Fehlersuche nuetzlich, aber nichts fuer die Oeffentlichkeit —
+    deshalb nur fuer Admins.
+    """
+    from models import Artist, Discipline, Availability
+    from datetime import date as _date
+
+    test_date = request.args.get('date', '2026-06-15')
+    test_disc = request.args.get('discipline', 'Zauberer')
+
+    try:
+        event_date = _date.fromisoformat(test_date)
+    except Exception:
+        return jsonify({"error": f"Invalid date: {test_date}"}), 400
+
+    # 1) All approved artists
+    approved = Artist.query.filter_by(approval_status='approved').all()
+    approved_info = []
+    for a in approved:
+        discs = [d.name for d in a.disciplines]
+        avail_count = Availability.query.filter_by(artist_id=a.id).count()
+        has_date = Availability.query.filter_by(artist_id=a.id, date=event_date).first() is not None
+        approved_info.append({
+            "id": a.id,
+            "name": a.name,
+            "disciplines": discs,
+            "total_availability_days": avail_count,
+            "has_availability_for_date": has_date,
+        })
+
+    # 2) Matching result
+    matched = artist_mgr.get_artists_by_discipline([test_disc], test_date)
+
+    return jsonify({
+        "test_date": test_date,
+        "test_discipline": test_disc,
+        "approved_artists": approved_info,
+        "matched_artists": [{"id": a.id, "name": a.name} for a in (matched or [])],
+        "diagnosis": (
+            "No approved artists" if not approved else
+            "Artists exist but none have matching discipline+availability" if not matched else
+            f"{len(matched)} artist(s) matched"
+        )
+    })
+
+
 @booking_bp.route('/requests', methods=['GET'])
 @artist_required
 @swag_from('../resources/swagger/requests_get.yml')
@@ -297,10 +350,13 @@ def create_request():
             if len(artist_objs) != len(target_ids):
                 return error_response("not_found", "One or more target artists not found", 404)
         else:
+            current_app.logger.info(f"[BOOKING] Matching artists for disciplines={disciplines}, event_date={event_date}")
             artist_objs = artist_mgr.get_artists_by_discipline(disciplines, event_date) or []
+            current_app.logger.info(f"[BOOKING] Matched {len(artist_objs)} artists before approval filter: {[a.id for a in artist_objs]}")
 
         # Filter only approved artists
         artist_objs = [a for a in artist_objs if str(getattr(a, 'approval_status', '')).lower() == 'approved']
+        current_app.logger.info(f"[BOOKING] After approval filter: {len(artist_objs)} artists: {[(a.id, a.name) for a in artist_objs]}")
         if target_ids is not None and not artist_objs:
             return error_response("forbidden", "No approved target artists available", 403)
         # Für die UI: kompaktes Matched-Payload (max. MAX_MATCHED_ARTISTS Artists)
@@ -518,9 +574,17 @@ def set_offer(req_id):
         return error_response("forbidden", "Not allowed to offer on this request", 403)
 
     data = request.json or {}
+    # Beide Feldnamen annehmen: `price_offered` schickt das aktuelle Frontend,
+    # `artist_gage` stammt von Altclients.
     artist_gage = data.get('artist_gage')
     if artist_gage is None:
-        return error_response("validation_error", "artist_gage is required", 400)
+        artist_gage = data.get('price_offered')
+    if artist_gage is None:
+        return error_response("validation_error", "artist_gage or price_offered is required", 400)
+    try:
+        artist_gage = int(artist_gage)
+    except (TypeError, ValueError):
+        return error_response("validation_error", "artist_gage must be a number", 400)
 
     req = request_mgr.set_offer(req_id, user_id, artist_gage)
 

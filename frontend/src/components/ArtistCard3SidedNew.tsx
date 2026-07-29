@@ -83,7 +83,7 @@ const ArtistCard3SidedNew: React.FC<ArtistCard3SidedProps> = ({ artist }) => {
                   <div key={idx} className="artist-card-3d-gallery-item">
                     <img 
                       src={img} 
-                      alt={`${artist.name} ${idx + 1}`}
+                      alt={`${artist.name} – Galeriebild ${idx + 1}`}
                       loading="lazy"
                     />
                   </div>
@@ -175,7 +175,7 @@ const ArtistCard3SidedNew: React.FC<ArtistCard3SidedProps> = ({ artist }) => {
             e.stopPropagation();
             setRotation(0);
           }}
-          aria-label="Show front"
+          aria-label="Vorderseite anzeigen"
         />
         <button 
           className={`artist-card-3d-dot ${rotation === 120 ? 'active' : ''}`}
@@ -183,7 +183,7 @@ const ArtistCard3SidedNew: React.FC<ArtistCard3SidedProps> = ({ artist }) => {
             e.stopPropagation();
             setRotation(120);
           }}
-          aria-label="Show gallery"
+          aria-label="Galerie anzeigen"
         />
         <button 
           className={`artist-card-3d-dot ${rotation === 240 ? 'active' : ''}`}
@@ -191,7 +191,7 @@ const ArtistCard3SidedNew: React.FC<ArtistCard3SidedProps> = ({ artist }) => {
             e.stopPropagation();
             setRotation(240);
           }}
-          aria-label="Show info"
+          aria-label="Informationen anzeigen"
         />
       </div>
     </div>

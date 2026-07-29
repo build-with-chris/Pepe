@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /profil
+Disallow: /profile
+Disallow: /profile-setup
+Disallow: /kalender
+Disallow: /calendar
+Disallow: /meine-gigs
+Disallow: /gigs
+Disallow: /meine-anfragen
+Disallow: /buchhaltung
+Disallow: /richtlinien
+Disallow: /login
+Disallow: /signup
+Disallow: /anmelden
+Disallow: /registrieren
+Disallow: /sso-callback
+Disallow: /demo/
+Disallow: /generate-pngs
+Disallow: /carousel
+
+Sitemap: https://www.pepeshows.com/sitemap.xml

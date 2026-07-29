@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StepContent, ResultStep, type BookingResult } from './BookingWizardSteps'
+import { getApiBaseUrl } from '@/lib/apiBase'
 
 interface BookingData {
   // Step 1: Event Type
@@ -142,8 +143,6 @@ const EMPTY_FORM_DATA: BookingData = {
   termsAccepted: false,
   marketingConsent: false
 }
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
 
 const SUBMIT_ERROR_TEXT =
   'Wir haben gerade technische Probleme. Ihre Angaben sind lokal gespeichert. ' +
@@ -364,7 +363,16 @@ export default function BookingWizard() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch(`${API_BASE}/api/requests/requests`, {
+      // Backend-URL kommt ausschliesslich aus der Umgebung. Ein hartkodierter
+      // Hoster als Fallback laesst eine falsch konfigurierte Umgebung
+      // unbemerkt gegen die falsche Instanz laufen.
+      const baseUrl = getApiBaseUrl()
+      if (!baseUrl) {
+        failWith(new Error('VITE_API_URL ist nicht gesetzt'))
+        return
+      }
+
+      const response = await fetch(`${baseUrl}/api/requests/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

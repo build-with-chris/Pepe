@@ -34,14 +34,14 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
 
   return (
     <>
-      <div className={`artist-card-final ${isEnlarged ? 'enlarged' : ''}`}>
+      <article className={`artist-card-final ${isEnlarged ? 'enlarged' : ''}`} aria-label={`Künstlerkarte: ${artist.name}`}>
         <div className="artist-card-final-inner">
           {/* Front Page - Compact Profile */}
           <div className={`artist-card-final-page ${currentPage === 'front' ? 'active' : ''}`}>
             <div className="artist-card-final-image">
-              <img 
-                src={primaryImage} 
-                alt={artist.name}
+              <img
+                src={primaryImage}
+                alt={`Profilbild von ${artist.name}`}
                 loading="lazy"
               />
               <div className="artist-card-final-overlay">
@@ -136,7 +136,7 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
                   <div className="carousel-main">
                     <img 
                       src={allImages[currentImageIndex]} 
-                      alt={`${artist.name} ${currentImageIndex + 1}`}
+                      alt={`${artist.name} – Galeriebild ${currentImageIndex + 1} von ${allImages.length}`}
                       loading="lazy"
                     />
                     
@@ -148,7 +148,7 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
                             e.stopPropagation();
                             prevImage();
                           }}
-                          aria-label="Previous image"
+                          aria-label="Vorheriges Bild"
                         >
                           ‹
                         </button>
@@ -158,7 +158,7 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
                             e.stopPropagation();
                             nextImage();
                           }}
-                          aria-label="Next image"
+                          aria-label="Nächstes Bild"
                         >
                           ›
                         </button>
@@ -176,7 +176,7 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
                         e.stopPropagation();
                         setIsEnlarged(true);
                       }}
-                      aria-label="Enlarge image"
+                      aria-label="Bild vergrößern"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.89L15 21h6v-6z"/>
@@ -198,7 +198,7 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
           <button 
             className={`nav-btn ${currentPage === 'front' ? 'active' : ''}`}
             onClick={() => setCurrentPage('front')}
-            aria-label="Show profile"
+            aria-label="Profil anzeigen"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -207,7 +207,7 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
           <button 
             className={`nav-btn ${currentPage === 'info' ? 'active' : ''}`}
             onClick={() => setCurrentPage('info')}
-            aria-label="Show info"
+            aria-label="Informationen anzeigen"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
@@ -216,14 +216,14 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
           <button 
             className={`nav-btn ${currentPage === 'gallery' ? 'active' : ''}`}
             onClick={() => setCurrentPage('gallery')}
-            aria-label="Show gallery"
+            aria-label="Galerie anzeigen"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
             </svg>
           </button>
         </div>
-      </div>
+      </article>
 
       {/* Enlarged Image Modal */}
       {isEnlarged && (
@@ -234,12 +234,12 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
           <div className="image-modal-content">
             <img 
               src={allImages[currentImageIndex]} 
-              alt={`${artist.name} enlarged`}
+              alt={`${artist.name} – Bild vergrößert`}
             />
             <button 
               className="image-modal-close"
               onClick={() => setIsEnlarged(false)}
-              aria-label="Close"
+              aria-label="Bild schließen"
             >
               ×
             </button>

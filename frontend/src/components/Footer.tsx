@@ -32,6 +32,7 @@ export default function Footer() {
                 href="https://www.instagram.com/pepe_arts/"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Pepe Arts auf Instagram folgen"
                 className="footer-social-link inline-flex"
                 style={{
                   gap: '0.5rem',

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import SEO, { pageSEO } from '@/components/SEO';
 
 /**
  * Technical Rider – Pepe Shows
@@ -98,6 +99,7 @@ export default function TechnicalRider() {
 
   return (
     <main>
+      <SEO {...pageSEO.technicalRider} />
       {/* Hero Section - New Design */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">

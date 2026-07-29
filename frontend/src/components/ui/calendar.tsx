@@ -156,7 +156,8 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
-  ...props
+  style: _dayPickerStyle,
+  ...rest
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -165,11 +166,24 @@ function CalendarDayButton({
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
 
+  const isAvailable = (modifiers as any).available;
+  const isBlocked = (modifiers as any).blocked;
+
+  // Merge DayPicker's style with our availability colors
+  // DayPicker passes style: undefined which would override our styles if spread after
+  const mergedStyle: React.CSSProperties = { ..._dayPickerStyle };
+  if (isAvailable && !modifiers.selected && !modifiers.range_start && !modifiers.range_end) {
+    mergedStyle.background = 'rgba(22, 163, 74, 0.75)'; // green-600 at 75%
+    mergedStyle.boxShadow = '0 0 0 2px rgba(74, 222, 128, 0.5)'; // green-400 ring
+  } else if (isBlocked && !modifiers.selected && !modifiers.range_start && !modifiers.range_end) {
+    mergedStyle.background = 'rgba(220, 38, 38, 0.55)'; // red-600 at 55%
+    mergedStyle.boxShadow = '0 0 0 2px rgba(248, 113, 113, 0.4)'; // red-400 ring
+  }
+
   return (
-    <Button
+    <button
+      {...rest}
       ref={ref}
-      variant="outline"
-      size="icon"
       data-day={day.date.toLocaleDateString()}
       data-selected-single={
         modifiers.selected &&
@@ -181,20 +195,18 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       aria-pressed={!!modifiers.selected}
+      style={mergedStyle}
       className={cn(
-        "flex aspect-square size-auto w-full min-w-(--cell-size) items-center justify-center text-xs font-black bg-transparent text-white rounded-lg overflow-hidden transition-colors focus-visible:outline-none focus-visible:ring-0",
-        (modifiers as any).available && "bg-green-500/40 ring-1 ring-green-500/25 text-foreground text-white font-black",
-        (modifiers as any).blocked && "bg-red-500/25 ring-1 ring-red-500/20 text-foreground/90 text-white font-black",
-        (modifiers.selected && !modifiers.range_middle) && "bg-white text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
-        (modifiers.range_start || modifiers.range_end) && "bg-white text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
+        "flex aspect-square size-auto w-full min-w-[var(--cell-size)] items-center justify-center text-xs font-black bg-transparent text-white rounded-lg overflow-hidden transition-colors focus-visible:outline-none focus-visible:ring-0 border border-white/10",
+        (modifiers.selected && !modifiers.range_middle) && "!bg-white !text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
+        (modifiers.range_start || modifiers.range_end) && "!bg-white !text-black hover:bg-white/90 focus:bg-white/90 rounded-lg overflow-hidden",
         modifiers.range_middle && "bg-accent text-accent-foreground",
         modifiers.today && !modifiers.selected && "ring-1 ring-primary",
         modifiers.outside && "text-foreground/60",
-        !modifiers.selected && !modifiers.range_middle && !modifiers.range_start && !modifiers.range_end && "hover:bg-blue-500 hover:text-white",
+        !modifiers.selected && !modifiers.range_middle && !modifiers.range_start && !modifiers.range_end && !isAvailable && !isBlocked && "hover:bg-blue-500 hover:text-white",
         modifiers.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
         className
       )}
-      {...props}
     />
   )
 }

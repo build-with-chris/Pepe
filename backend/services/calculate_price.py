@@ -1,4 +1,10 @@
+from __future__ import annotations
+
 import os
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # Ab dieser Showlänge bzw. Teamgröße gibt es keinen automatischen Preis mehr,
 # sondern ein individuelles Angebot (SPEC-3, Kriterien 3 und 6).
@@ -198,5 +204,15 @@ def calculate_price(base_min, base_max,
     # --- Agenturgebühr auf die Gage, Zuschläge als Durchlaufposten ---------
     extras = dict(distance_km=distance_km, needs_light=needs_light,
                   needs_sound=needs_sound, event_address=event_address, people=people)
-    return (client_price(gage_min, fee_pct, **extras),
-            client_price(gage_max, fee_pct, **extras))
+    result = (client_price(gage_min, fee_pct, **extras),
+              client_price(gage_max, fee_pct, **extras))
+
+    # Nachvollziehbar machen, wie eine angezeigte Spanne zustande kam. Ohne das
+    # bleibt bei einer Rueckfrage zum Preis nur Raten.
+    logger.debug(
+        "calculate_price: base=%s-%s, min_floor=%.0f, score=%.2f, gage=%.0f "
+        "(%.0f-%.0f), fee=%s%%, people=%s, distance=%s => %s-%s",
+        base_min, base_max, min_floor, score, gage, gage_min, gage_max,
+        fee_pct, people, distance_km, result[0], result[1],
+    )
+    return result

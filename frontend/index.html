@@ -1,25 +1,121 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO Meta Tags -->
+    <title>Pepe Shows - Artistenagentur &amp; Show-Booking aus München</title>
+    <meta name="description" content="Pepe Shows ist Ihre Artistenagentur aus München. Wir vermitteln erstklassige Akrobaten, Feuerkünstler, Jongleure und Zirkusartisten für Events, Messen und Galas. Jetzt Show buchen!" />
+    <meta name="keywords" content="Artistenagentur, Show buchen, Akrobatik, Feuershows, Zirkusartisten, München, Event-Entertainment, Gala-Shows, Messeunterhaltung, Künstlervermittlung" />
+    <meta name="author" content="Pepe Shows" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.pepeshows.com/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.pepeshows.com/" />
+    <meta property="og:title" content="Pepe Shows - Artistenagentur &amp; Show-Booking aus München" />
+    <meta property="og:description" content="Erstklassige Akrobaten, Feuerkünstler und Zirkusartisten für Ihr Event. Pepe Shows - Ihre Artistenagentur aus München." />
+    <meta property="og:image" content="https://www.pepeshows.com/images/og-image.jpg" />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:site_name" content="Pepe Shows" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pepe Shows - Artistenagentur &amp; Show-Booking aus München" />
+    <meta name="twitter:description" content="Erstklassige Akrobaten, Feuerkünstler und Zirkusartisten für Ihr Event. Pepe Shows aus München." />
+    <meta name="twitter:image" content="https://www.pepeshows.com/images/og-image.jpg" />
+
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="de" href="https://www.pepeshows.com/" />
+    <link rel="alternate" hreflang="en" href="https://www.pepeshows.com/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pepeshows.com/" />
+
     <!-- Favicon with dark/light theme support -->
     <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+    <link rel="apple-touch-icon" href="/favicon-light.svg" />
+
     <!-- Preconnect to Google Fonts for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    
+
     <!-- Load Google Fonts with optimized display=swap and only critical weights -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Defer Material Icons - not critical for initial render -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" media="print" onload="this.media='all'" />
-    
-    <title>Pepe Shows - Theater Performance Booking</title>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.pepeshows.com/#organization",
+          "name": "Pepe Shows",
+          "alternateName": "Pepe Shows Artistenagentur",
+          "url": "https://www.pepeshows.com",
+          "logo": "https://www.pepeshows.com/images/logo.png",
+          "description": "Artistenagentur aus München – wir vermitteln erstklassige Akrobaten, Feuerkünstler, Jongleure und Zirkusartisten für Events, Messen und Galas.",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Maria-Montessori-Str. 4",
+            "addressLocality": "München",
+            "postalCode": "81829",
+            "addressCountry": "DE"
+          },
+          "areaServed": [
+            { "@type": "Country", "name": "Deutschland" },
+            { "@type": "Country", "name": "Österreich" },
+            { "@type": "Country", "name": "Schweiz" }
+          ],
+          "knowsAbout": [
+            "Akrobatik", "Feuershows", "Jonglage", "Zirkuskunst",
+            "Event-Entertainment", "Gala-Shows", "Messeunterhaltung"
+          ],
+          "sameAs": [
+            "https://www.instagram.com/pepeshows",
+            "https://www.facebook.com/pepeshows"
+          ]
+        },
+        {
+          "@type": "LocalBusiness",
+          "@id": "https://www.pepeshows.com/#localbusiness",
+          "name": "Pepe Shows",
+          "image": "https://www.pepeshows.com/images/og-image.jpg",
+          "url": "https://www.pepeshows.com",
+          "priceRange": "$$",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Maria-Montessori-Str. 4",
+            "addressLocality": "München",
+            "postalCode": "81829",
+            "addressCountry": "DE"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 48.1128,
+            "longitude": 11.7067
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.pepeshows.com/#website",
+          "url": "https://www.pepeshows.com",
+          "name": "Pepe Shows",
+          "description": "Artistenagentur aus München – erstklassige Show-Acts für Events, Messen und Galas",
+          "publisher": { "@id": "https://www.pepeshows.com/#organization" },
+          "inLanguage": ["de-DE", "en-US"]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

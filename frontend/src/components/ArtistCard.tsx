@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getApiBaseUrl } from '@/lib/apiBase';
 
 interface Artist {
   id: number;
@@ -24,7 +25,8 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return '';
     if (imageUrl.startsWith('http')) return imageUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com';
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) return '';
     return `${baseUrl}${imageUrl}`;
   };
 
@@ -202,7 +204,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
                 <div className="flex-1 relative overflow-hidden">
                   <img 
                     src={resolveImageUrl(currentGalleryImage)}
-                    alt={`${artist.name} Galerie ${currentImageIndex + 1}`}
+                    alt={`${artist.name} – Galeriebild ${currentImageIndex + 1}`}
                     className="w-full h-full object-cover cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -282,7 +284,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
             e.stopPropagation();
             handleSideChange('front');
           }}
-          aria-label="Show front"
+          aria-label="Vorderseite anzeigen"
         />
         <button
           className={`w-3 h-3 rounded-full transition-all ${
@@ -292,7 +294,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
             e.stopPropagation();
             handleSideChange('back');
           }}
-          aria-label="Show details"
+          aria-label="Details anzeigen"
         />
         <button
           className={`w-3 h-3 rounded-full transition-all ${
@@ -302,7 +304,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
             e.stopPropagation();
             handleSideChange('photos');
           }}
-          aria-label="Show photos"
+          aria-label="Fotos anzeigen"
         />
       </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import logoIcon from '../assets/Logos/icon_pepe.svg'
+import SEO from '@/components/SEO'
 
 interface User {
   email: string
@@ -53,6 +54,7 @@ export default function Dashboard() {
 
   return (
     <main className="min-h-screen bg-pepe-dark">
+      <SEO title="Dashboard" noindex />
       {/* Header */}
       <div className="bg-pepe-ink border-b border-pepe-line">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

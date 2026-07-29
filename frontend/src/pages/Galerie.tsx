@@ -3,6 +3,10 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import DotCloudImage from '../components/ui/DotCloudImage'
+import ImageCarousel from '../components/ImageCarousel'
+import { Gallery25 } from '../components/gallery25'
+import { getApiBaseUrl } from '@/lib/apiBase'
+import SEO, { pageSEO } from '@/components/SEO'
 
 
 // Artist interface for discipline creation
@@ -18,7 +22,6 @@ interface Artist {
 
 export default function Galerie() {
   const { t } = useTranslation()
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const [autoAnimPosition, setAutoAnimPosition] = useState(0)
 
@@ -107,9 +110,6 @@ export default function Galerie() {
     { id: 20, src: '/images/gallery/performance6.jpg', alt: 'Show Atmosphere', category: 'PepeShows Impressions', aspectRatio: 3/4, source: 'static' as const }
   ]
 
-  const filteredImages = selectedCategory 
-    ? allImages.filter(img => img.category === selectedCategory)
-    : allImages
 
   // Helper functions from Home page for discipline accordion content
   const getDisciplineSpecialties = (disciplineId: string): string => {
@@ -195,13 +195,14 @@ export default function Galerie() {
           'cyr-wheel': 'Cyr-Wheel',
           'cyr wheel': 'Cyr-Wheel',
           'hula hoop': 'Hula_Hoop',
+          'akrobatik': 'Bodenakrobatik',
           'bodenakrobatik': 'Bodenakrobatik',
           'breakdance': 'Breakdance',
           'handstand': 'Handstand',
           'jonglage': 'Jonglage',
           'luftakrobatik': 'Luftakrobatik',
           'moderation': 'Moderation',
-          'pantomime': 'Pantomime',
+          'pantomime': 'Pantomime/Entertainment',
           'partnerakrobatik': 'Partnerakrobatik',
           'zauberer': 'Zauberer',
           'zauberei': 'Zauberer'
@@ -260,7 +261,19 @@ export default function Galerie() {
 
     const fetchArtistsAndImages = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        const baseUrl = getApiBaseUrl()
+        if (!baseUrl) {
+          // No backend configured - use fallback disciplines
+          setDisciplines([
+            { id: 'zauberer', name: t('booking.disciplines.options.zauberer.label') || 'Zauberei', image: '/images/disciplines/Zauberer.webp', description: 'Magische Momente und Illusionen für jedes Publikum.', artistCount: 0 },
+            { id: 'luftakrobatik', name: t('booking.disciplines.options.luftakrobatik.label') || 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Schwebende Eleganz und atemberaubende Höhenakrobatik.', artistCount: 0 },
+            { id: 'handstand', name: t('artists.disciplines.handstand') || 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft, Balance und Präzision in perfekter Harmonie.', artistCount: 0 },
+            { id: 'cyrwheel', name: t('artists.disciplines.cyrwheel') || 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Dynamische Drehungen im Cyr Wheel.', artistCount: 0 },
+            { id: 'jonglage', name: t('artists.disciplines.jonglage') || 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Kunstvolle Jonglage mit Bällen, Keulen und LED.', artistCount: 0 },
+            { id: 'breakdance', name: t('artists.disciplines.breakdance') || 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Explosive Moves und mitreißende Energie.', artistCount: 0 },
+          ])
+          return
+        }
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
           headers: {
@@ -296,6 +309,27 @@ export default function Galerie() {
               name: t('artists.disciplines.handstand') || 'Handstand',
               image: '/images/disciplines/Handstand.webp',
               description: 'Kraft, Balance und Präzision in perfekter Harmonie.',
+              artistCount: 0
+            },
+            {
+              id: 'cyrwheel',
+              name: t('artists.disciplines.cyrwheel') || 'Cyr Wheel',
+              image: '/images/disciplines/Cyr-Wheel.webp',
+              description: 'Dynamische Drehungen im Cyr Wheel.',
+              artistCount: 0
+            },
+            {
+              id: 'jonglage',
+              name: t('artists.disciplines.jonglage') || 'Jonglage',
+              image: '/images/disciplines/Jonglage.webp',
+              description: 'Kunstvolle Jonglage mit Bällen, Keulen und LED.',
+              artistCount: 0
+            },
+            {
+              id: 'breakdance',
+              name: t('artists.disciplines.breakdance') || 'Breakdance',
+              image: '/images/disciplines/Breakdance.webp',
+              description: 'Explosive Moves und mitreißende Energie.',
               artistCount: 0
             }
           ])
@@ -338,8 +372,16 @@ export default function Galerie() {
           setAllImages(staticGalleryImages)
         }
       } catch (error) {
-        // Silently fail - page works with static images
+        // Silently fail - page works with static images and fallback disciplines
         console.warn('Gallery API unavailable:', error)
+        setDisciplines([
+          { id: 'zauberer', name: t('booking.disciplines.options.zauberer.label') || 'Zauberei', image: '/images/disciplines/Zauberer.webp', description: 'Magische Momente und Illusionen für jedes Publikum.', artistCount: 0 },
+          { id: 'luftakrobatik', name: t('booking.disciplines.options.luftakrobatik.label') || 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Schwebende Eleganz und atemberaubende Höhenakrobatik.', artistCount: 0 },
+          { id: 'handstand', name: t('artists.disciplines.handstand') || 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft, Balance und Präzision in perfekter Harmonie.', artistCount: 0 },
+          { id: 'cyrwheel', name: t('artists.disciplines.cyrwheel') || 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Dynamische Drehungen im Cyr Wheel.', artistCount: 0 },
+          { id: 'jonglage', name: t('artists.disciplines.jonglage') || 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Kunstvolle Jonglage mit Bällen, Keulen und LED.', artistCount: 0 },
+          { id: 'breakdance', name: t('artists.disciplines.breakdance') || 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Explosive Moves und mitreißende Energie.', artistCount: 0 },
+        ])
       }
     }
 
@@ -365,6 +407,7 @@ export default function Galerie() {
 
   return (
     <main>
+      <SEO {...pageSEO.galerie} />
       {/* Smaller Hero Section */}
       <section className="section bg-gradient-dark">
         <div className="stage-container">
@@ -383,58 +426,72 @@ export default function Galerie() {
       {/* Excellence Section with Discipline Stack Accordion */}
       <section className="section">
         <div className="stage-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-16">
-            <div>
-              <h2 className="h2 mb-6">
-                {t('gallery23.headingDesktop') || 'We don\'t believe in average – with us it\'s excellence.'}
-              </h2>
-              <p className="body-lg mb-6">
-                {t('artists.quote') || 'Weltklasse-Künstler mit internationaler Erfahrung.'}
-              </p>
-              <p className="body text-pepe-t64 mb-0">
-                {t('gallery23.subtitle') || 'Wählen Sie eine Disziplin, um Referenzen, Einsätze und passende Künstler zu sehen.'}
-              </p>
+          <div className="mb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-12">
+              <div>
+                <h2 className="h2 mb-6">
+                  {t('gallery23.headingDesktop') || 'We don\'t believe in average – with us it\'s excellence.'}
+                </h2>
+                <p className="body-lg mb-6">
+                  {t('artists.quote') || 'Weltklasse-Künstler mit internationaler Erfahrung.'}
+                </p>
+                <p className="body text-pepe-t64 mb-0">
+                  {t('gallery23.subtitle') || 'Wählen Sie eine Disziplin, um Referenzen, Einsätze und passende Künstler zu sehen.'}
+                </p>
+              </div>
+              <div 
+                className="discipline-card-stack"
+                onMouseEnter={handleStackMouseEnter}
+                onMouseLeave={handleStackMouseLeave}
+              >
+                {disciplines.map((discipline, index) => (
+                  <div 
+                    key={discipline.id} 
+                    className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
+                    style={{ '--index': index } as React.CSSProperties}
+                    onMouseEnter={() => handleDisciplineClick(index)}
+                  >
+                    {/* Text-only display for closed cards */}
+                    <div className="discipline-text-only">
+                      {discipline.name}
+                    </div>
+                    
+                    {/* Image only - no DotIcon overlay */}
+                    <div className="discipline-image-container">
+                      <img
+                        src={discipline.image}
+                        alt={discipline.name}
+                        className="discipline-image"
+                      />
+                    </div>
+                    
+                    {/* Simplified Overlay content for active card */}
+                    <div className="discipline-overlay">
+                      <h3 className="text-2xl font-bold text-white mb-0">{discipline.name}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div 
-              className="discipline-card-stack"
-              onMouseEnter={handleStackMouseEnter}
-              onMouseLeave={handleStackMouseLeave}
-            >
-              {disciplines.map((discipline, index) => (
-                <div 
-                  key={discipline.id} 
-                  className={`discipline-card ${index === expandedDiscipline ? 'active' : ''}`}
-                  style={{ '--index': index } as React.CSSProperties}
-                  onMouseEnter={() => handleDisciplineClick(index)}
-                >
-                  {/* Text-only display for closed cards */}
-                  <div className="discipline-text-only">
-                    {discipline.name}
-                  </div>
-                  
-                  {/* Image only - no DotIcon overlay */}
-                  <div className="discipline-image-container">
-                    <img
-                      src={discipline.image}
-                      alt={discipline.name}
-                      className="discipline-image"
-                    />
-                  </div>
-                  
-                  {/* Enhanced Overlay content for active card */}
-                  <div className="discipline-overlay">
-                    <h3 className="text-2xl font-bold text-white mb-4">{discipline.name}</h3>
-                    <p className="discipline-description text-white/90 mb-6">
-                      {discipline.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+
           </div>
         </div>
       </section>
 
+
+      {/* Featured Highlights Slider - The "Old Component" */}
+      <section className="section bg-pepe-dark/30 py-20 overflow-hidden">
+        <div className="stage-container">
+          <div className="section-header text-center mb-12">
+            <h2 className="h1 mb-4">Highlights</h2>
+            <p className="body-lg text-pepe-t64">Momentaufnahmen unserer spektakulärsten Shows</p>
+          </div>
+          <ImageCarousel 
+            images={staticGalleryImages.slice(0, 6).map(img => ({ src: img.src, alt: img.alt }))} 
+            className="mx-auto"
+          />
+        </div>
+      </section>
 
       {/* Video Section - "Vorhang auf für unsere Artisten" */}
       <section className="section bg-gradient-dark">
@@ -471,7 +528,7 @@ export default function Galerie() {
                   </div>
                   
                   {/* Play Button Overlay */}
-                  <div className="video-play-overlay">
+                  <div className="video-play-overlay" role="button" aria-label="Showreel-Video abspielen">
                     <div className="video-play-button">
                       <svg className="video-play-icon" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
@@ -523,141 +580,8 @@ export default function Galerie() {
         </div>
       )}
 
-      {/* Dynamic Image Grid */}
-      <section className="section bg-pepe-ink">
-        <div className="stage-container">
-          <div className="section-header text-center mb-16">
-            <h2 className="h1 mb-6">{t('nav.gallery') || 'Gallery'}</h2>
-            <p className="body-lg max-w-3xl mx-auto">
-              {t('gallery.subtitle') || 'Discover our artists in action'}
-            </p>
-          </div>
-
-          {/* Category Filter - Enhanced Styling */}
-          <div className="text-center mb-12">
-            <div className="inline-flex flex-wrap gap-2 justify-center p-2 bg-pepe-dark/50 backdrop-blur-sm rounded-2xl border border-pepe-line/30">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`gallery-filter-btn ${
-                  !selectedCategory ? 'active' : ''
-                }`}
-              >
-                {t('artists.filters.all')}
-              </button>
-              {Array.from(new Set(allImages.map(img => img.category)))
-                .sort((a, b) => {
-                  // "Start" comes first, then alphabetically
-                  if (a === 'Start') return -1
-                  if (b === 'Start') return 1
-                  return a.localeCompare(b)
-                })
-                .map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`gallery-filter-btn ${
-                      selectedCategory === category ? 'active' : ''
-                    } ${
-                      category === 'PepeShows Impressions' ? 'pepe-impressions' : ''
-                    }`}
-                  >
-                    {category === 'PepeShows Impressions' ? 'Impressions' : category}
-                  </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Masonry Layout - Flexible Column Fill */}
-          <div className="gallery-masonry-container">
-            <div className="gallery-column">
-              {filteredImages
-                .filter((_, index) => index % 3 === 0)
-                .map((image) => (
-                  <div 
-                    key={image.id} 
-                    className="gallery-masonry-item group cursor-pointer"
-                  >
-                    <div className="gallery-image-wrapper">
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="gallery-masonry-image"
-                        style={{ aspectRatio: image.aspectRatio }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTYxNjE2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbGVyaWUgQmlsZDwvdGV4dD48L3N2Zz4='
-                        }}
-                      />
-                      <div className="gallery-image-overlay">
-                        <div className="gallery-image-content">
-                          <div className="gallery-image-category">{image.category}</div>
-                          <div className="gallery-image-title">{image.alt}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-            
-            <div className="gallery-column">
-              {filteredImages
-                .filter((_, index) => index % 3 === 1)
-                .map((image) => (
-                  <div 
-                    key={image.id} 
-                    className="gallery-masonry-item group cursor-pointer"
-                  >
-                    <div className="gallery-image-wrapper">
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="gallery-masonry-image"
-                        style={{ aspectRatio: image.aspectRatio }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTYxNjE2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbGVyaWUgQmlsZDwvdGV4dD48L3N2Zz4='
-                        }}
-                      />
-                      <div className="gallery-image-overlay">
-                        <div className="gallery-image-content">
-                          <div className="gallery-image-category">{image.category}</div>
-                          <div className="gallery-image-title">{image.alt}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-            
-            <div className="gallery-column">
-              {filteredImages
-                .filter((_, index) => index % 3 === 2)
-                .map((image) => (
-                  <div 
-                    key={image.id} 
-                    className="gallery-masonry-item group cursor-pointer"
-                  >
-                    <div className="gallery-image-wrapper">
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="gallery-masonry-image"
-                        style={{ aspectRatio: image.aspectRatio }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTYxNjE2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbGVyaWUgQmlsZDwvdGV4dD48L3N2Zz4='
-                        }}
-                      />
-                      <div className="gallery-image-overlay">
-                        <div className="gallery-image-content">
-                          <div className="gallery-image-category">{image.category}</div>
-                          <div className="gallery-image-title">{image.alt}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Gallery25 - Masonry Photo Grid */}
+      <Gallery25 />
 
       {/* Call to Action */}
       <section className="section-large text-center bg-gradient-dark">

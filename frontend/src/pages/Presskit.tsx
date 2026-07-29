@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import SEO, { pageSEO } from '@/components/SEO'
 
 export default function Presskit() {
   const { t } = useTranslation()
@@ -15,6 +16,7 @@ export default function Presskit() {
 
   return (
     <main>
+      <SEO {...pageSEO.presskit} />
       {/* Hero Section */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">

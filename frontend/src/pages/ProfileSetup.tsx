@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/blobUpload";
 import { useNavigate } from "react-router-dom";
@@ -25,8 +25,16 @@ export default function Profile() {
   const [country, setCountry] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [disciplines, setDisciplines] = useState<string[]>([]);
-  const [priceMin, setPriceMin] = useState<number>(700);
-  const [priceMax, setPriceMax] = useState<number>(900);
+  const [priceMin, setPriceMin] = useState<number | null>(null);
+  const [priceMax, setPriceMax] = useState<number | null>(null);
+  const [calculatedGage, setCalculatedGage] = useState<number | null>(null);
+  // Gage criteria
+  const [stageExperience, setStageExperience] = useState("");
+  const [employmentType, setEmploymentType] = useState("");
+  const [circusEducation, setCircusEducation] = useState(false);
+  const [awardsLevel, setAwardsLevel] = useState("keine");
+  const [pepeYears, setPepeYears] = useState(0);
+  const [pepeExclusivity, setPepeExclusivity] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [backendArtistId, setBackendArtistId] = useState<string | null>(null);
@@ -43,6 +51,34 @@ export default function Profile() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const unlockBtnRef = useRef<HTMLButtonElement | null>(null);
+  const profileImageBlobUrlRef = useRef<string | null>(null);
+
+  // Verwaltung der Blob-URL für das Profilbild
+  const profileImageBlobUrl = useMemo(() => {
+    // Alte Blob-URL aufräumen, wenn vorhanden
+    if (profileImageBlobUrlRef.current) {
+      URL.revokeObjectURL(profileImageBlobUrlRef.current);
+      profileImageBlobUrlRef.current = null;
+    }
+    
+    // Neue Blob-URL erstellen, wenn eine Datei vorhanden ist
+    if (profileImageFile) {
+      const url = URL.createObjectURL(profileImageFile);
+      profileImageBlobUrlRef.current = url;
+      return url;
+    }
+    return null;
+  }, [profileImageFile]);
+
+  // Aufräumen beim Unmount
+  useEffect(() => {
+    return () => {
+      if (profileImageBlobUrlRef.current) {
+        URL.revokeObjectURL(profileImageBlobUrlRef.current);
+        profileImageBlobUrlRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) navigate("/login");
@@ -106,10 +142,24 @@ export default function Profile() {
         }
         setPhoneNumber(me.phone_number || "");
         setDisciplines(me.disciplines || []);
-        setPriceMin(me.price_min ?? 700);
-        setPriceMax(me.price_max ?? 900);
+        setPriceMin(me.price_min ?? null);
+        setPriceMax(me.price_max ?? null);
+        setCalculatedGage(me.calculated_gage ?? null);
+        // Gage criteria
+        setStageExperience(me.stage_experience || "");
+        setEmploymentType(me.employment_type || "");
+        setCircusEducation(!!me.circus_education);
+        setAwardsLevel(me.awards_level || "keine");
+        setPepeYears(me.pepe_years ?? 0);
+        setPepeExclusivity(!!me.pepe_exclusivity);
         setBio(me.bio || "");
-        setProfileImageUrl(me.profile_image_url || null);
+        // Prüfe, ob die URL eine Blob-URL ist - wenn ja, ignorieren wir sie, da sie ungültig ist
+        const imageUrl = me.profile_image_url || null;
+        if (imageUrl && imageUrl.startsWith('blob:')) {
+          setProfileImageUrl(null);
+        } else {
+          setProfileImageUrl(imageUrl);
+        }
         setGalleryUrls(Array.isArray(me.gallery_urls) ? me.gallery_urls : []);
         setApprovalStatus((me.approval_status as any) ?? 'unsubmitted');
         setRejectionReason(me.rejection_reason ?? null);
@@ -130,12 +180,17 @@ export default function Profile() {
     e.preventDefault();
     setError(null);
 
-    if (!name || !street || !postalCode || !city || !country || !phoneNumber || disciplines.length === 0) {
-      setError(t('profileSetup.errors.fillRequired'));
-      return;
-    }
-    if (priceMin > priceMax) {
-      setError(t('profileSetup.errors.minGtMax'));
+    const missingFields = [];
+    if (!name) missingFields.push(t('profileSetup.fields.name', 'Name'));
+    if (!street) missingFields.push(t('profileSetup.fields.street', 'Straße'));
+    if (!postalCode) missingFields.push(t('profileSetup.fields.postalCode', 'PLZ'));
+    if (!city) missingFields.push(t('profileSetup.fields.city', 'Stadt'));
+    if (!country) missingFields.push(t('profileSetup.fields.country', 'Land'));
+    if (!phoneNumber) missingFields.push(t('profileSetup.fields.phoneNumber', 'Telefonnummer'));
+    if (disciplines.length === 0) missingFields.push(t('profileSetup.fields.disciplines', 'Disziplinen'));
+
+    if (missingFields.length > 0) {
+      setError(`${t('profileSetup.errors.fillRequired')}: ${missingFields.join(', ')}`);
       return;
     }
 
@@ -153,22 +208,24 @@ export default function Profile() {
 
       let effectiveId = backendArtistId || "new-id";
 
-      // Upload profile image to Vercel Blob
+      // Upload profile image via backend
       let imageUrl = await uploadProfileImage(
         profileImageFile,
         effectiveId,
         setProfileImageUrl,
         setBackendDebug,
-        profileImageUrl
+        profileImageUrl,
+        token || undefined
       );
 
-      // Upload gallery images to Vercel Blob
+      // Upload gallery images via backend
       let mergedGalleryUrls = await uploadGalleryImages(
         galleryFiles,
         effectiveId,
         galleryUrls,
         setGalleryUrls,
-        setBackendDebug
+        setBackendDebug,
+        token || undefined
       );
 
       const nextStatus = approvalStatus === 'approved' ? 'approved' : 'pending';
@@ -180,14 +237,22 @@ export default function Profile() {
         name,
         address: fullAddress,
         phone_number: phoneNumber,
-        price_min: priceMin,
-        price_max: priceMax,
         disciplines,
         bio: bio.toString(),
         gallery_urls: mergedGalleryUrls,
         approval_status: nextStatus,
+        // Gage criteria (price_min/max are calculated server-side)
+        stage_experience: stageExperience || undefined,
+        employment_type: employmentType || undefined,
+        circus_education: circusEducation,
+        awards_level: awardsLevel,
+        pepe_years: pepeYears,
+        pepe_exclusivity: pepeExclusivity,
       };
-      if (imageUrl) payload.profile_image_url = imageUrl;
+      // Nur echte URLs speichern, keine Blob-URLs
+      if (imageUrl && !imageUrl.startsWith('blob:')) {
+        payload.profile_image_url = imageUrl;
+      }
 
       const saveRes = await fetchWithRetry(`${baseUrl}/api/artists/me/profile`, {
         method: "PATCH",
@@ -221,8 +286,22 @@ export default function Profile() {
         setDisciplines(Array.isArray(saved.disciplines) ? saved.disciplines : []);
         setPriceMin(saved.price_min ?? priceMin);
         setPriceMax(saved.price_max ?? priceMax);
+        setCalculatedGage(saved.calculated_gage ?? calculatedGage);
+        // Gage criteria
+        if (saved.stage_experience !== undefined) setStageExperience(saved.stage_experience || "");
+        if (saved.employment_type !== undefined) setEmploymentType(saved.employment_type || "");
+        if (saved.circus_education !== undefined) setCircusEducation(!!saved.circus_education);
+        if (saved.awards_level !== undefined) setAwardsLevel(saved.awards_level || "keine");
+        if (saved.pepe_years !== undefined) setPepeYears(saved.pepe_years ?? 0);
+        if (saved.pepe_exclusivity !== undefined) setPepeExclusivity(!!saved.pepe_exclusivity);
         setBio(saved.bio || "");
-        setProfileImageUrl(saved.profile_image_url || imageUrl || null);
+        // Prüfe, ob die URL eine Blob-URL ist - wenn ja, ignorieren wir sie
+        const savedImageUrl = saved.profile_image_url || imageUrl || null;
+        if (savedImageUrl && savedImageUrl.startsWith('blob:')) {
+          setProfileImageUrl(null);
+        } else {
+          setProfileImageUrl(savedImageUrl);
+        }
         setGalleryUrls(Array.isArray(saved.gallery_urls) ? saved.gallery_urls : mergedGalleryUrls);
         setGalleryFiles([]);
         setApprovalStatus((saved.approval_status as any) ?? nextStatus);
@@ -326,8 +405,15 @@ export default function Profile() {
       setCountry("");
       setPhoneNumber("");
       setDisciplines([]);
-      setPriceMin(700);
-      setPriceMax(900);
+      setPriceMin(null);
+      setPriceMax(null);
+      setCalculatedGage(null);
+      setStageExperience("");
+      setEmploymentType("");
+      setCircusEducation(false);
+      setAwardsLevel("keine");
+      setPepeYears(0);
+      setPepeExclusivity(false);
       setBio("");
       setProfileImageUrl(null);
       setProfileImageFile(null);
@@ -346,6 +432,10 @@ export default function Profile() {
     }
   };
 
+  // Verwende die Blob-URL für die Vorschau, wenn eine Datei vorhanden ist, sonst die gespeicherte URL
+  // Prüfe auch, ob die gespeicherte URL eine ungültige Blob-URL ist
+  const effectiveProfileImageUrl = profileImageBlobUrl || (profileImageUrl && !profileImageUrl.startsWith('blob:') ? profileImageUrl : null);
+
   const profile = {
     name,
     address,
@@ -355,12 +445,21 @@ export default function Profile() {
     country,
     phoneNumber,
     disciplines,
-    priceMin,
-    priceMax,
     bio,
-    profileImageUrl,
+    profileImageUrl: effectiveProfileImageUrl,
     galleryUrls,
     galleryFiles,
+    // Gage criteria
+    stageExperience,
+    employmentType,
+    circusEducation,
+    awardsLevel,
+    pepeYears,
+    pepeExclusivity,
+    // Calculated (read-only)
+    calculatedGage,
+    priceMin,
+    priceMax,
   };
 
   const setProfileAdapter = (next: any) => {
@@ -372,19 +471,22 @@ export default function Profile() {
     if (typeof next.country !== "undefined") setCountry(next.country);
     if (typeof next.phoneNumber !== "undefined") setPhoneNumber(next.phoneNumber);
     if (typeof next.disciplines !== "undefined") setDisciplines(next.disciplines as string[]);
-    if (typeof next.priceMin !== "undefined") setPriceMin(next.priceMin as number);
-    if (typeof next.priceMax !== "undefined") setPriceMax(next.priceMax as number);
     if (typeof next.bio !== "undefined") setBio(next.bio as string);
+    // Gage criteria
+    if (typeof next.stageExperience !== "undefined") setStageExperience(next.stageExperience as string);
+    if (typeof next.employmentType !== "undefined") setEmploymentType(next.employmentType as string);
+    if (typeof next.circusEducation !== "undefined") setCircusEducation(next.circusEducation as boolean);
+    if (typeof next.awardsLevel !== "undefined") setAwardsLevel(next.awardsLevel as string);
+    if (typeof next.pepeYears !== "undefined") setPepeYears(next.pepeYears as number);
+    if (typeof next.pepeExclusivity !== "undefined") setPepeExclusivity(next.pepeExclusivity as boolean);
     if (typeof next.profileImageUrl !== "undefined") setProfileImageUrl(next.profileImageUrl as string | null);
     if (typeof next.galleryUrls !== "undefined") setGalleryUrls(next.galleryUrls as string[]);
 
     if (typeof next.profileImageFile !== "undefined" && next.profileImageFile) {
       const file = next.profileImageFile as File;
       setProfileImageFile(file);
-      try {
-        const preview = URL.createObjectURL(file);
-        setProfileImageUrl(preview);
-      } catch {}
+      // Die Blob-URL wird jetzt durch useMemo verwaltet
+      // Wir setzen hier keine URL mehr, da useMemo das übernimmt
     }
 
     if (typeof next.galleryFiles !== "undefined" && next.galleryFiles) {

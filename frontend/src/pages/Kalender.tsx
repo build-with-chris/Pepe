@@ -9,8 +9,11 @@ import RangeActionsPanel from "../components/RangeActionsPanel";
 import AvailabilityLegend from "../components/AvailabilityLegend";
 import useRangeSelection from "@/hooks/useRangeSelection";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { DashboardCard } from "@/components/DashboardCard";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw } from "lucide-react";
+
+import { ProfileStatusBanner } from '@/components/ProfileStatusBanner';
 
 const baseUrl = import.meta.env.VITE_API_URL as string;
 
@@ -104,53 +107,35 @@ const CalendarPage: React.FC = () => {
 
   const { rangeStart, rangeEnd, setRangeStart, setRangeEnd, handleDayClick } = useRangeSelection({ disabledBefore: startOfToday });
 
-    const fetchAvailability = async () => {
-      if (!token) return;
+  const fetchAvailability = async () => {
+    if (!token || !user) return;
     
-      if (!backendArtistId) {
-        await refreshArtistId();
-        if (!backendArtistId) {
-          await fetch(`${baseUrl}/api/artists/me/ensure`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          }).catch(() => {});
-          await refreshArtistId();
-          if (!backendArtistId) return;
-        }
+    // If artist is not approved, we can't manage availability
+    if (user.approval_status !== 'approved') {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${baseUrl}/api/availability`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || `HTTP ${res.status}`);
       }
-    
-      setLoading(true);
-      setError(null);
-      try {
-        let res = await fetch(`${baseUrl}/api/availability`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-    
-        if (!res.ok) {
-          const text = await res.text().catch(() => '');
-          const linkedErr = text.includes('Current user not linked to an artist');
-    
-          if ((res.status === 400 || res.status === 401 || res.status === 403) && linkedErr) {
-            await fetch(`${baseUrl}/api/artists/me/ensure`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            }).catch(() => {});
-            await refreshArtistId();
-            res = await fetch(`${baseUrl}/api/availability`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          }
-          if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-        }
-    
-        const data = await res.json();
-        setAvailable(Array.isArray(data) ? data : (data?.items ?? []));
-      } catch (e: any) {
-        setError(e?.message || 'Fehler beim Laden der Verfügbarkeiten');
-      } finally {
-        setLoading(false);
-      }
-    };
+  
+      const data = await res.json();
+      setAvailable(Array.isArray(data) ? data : (data?.items ?? []));
+    } catch (e: any) {
+      setError(e?.message || 'Fehler beim Laden der Verfügbarkeiten');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addAvailability = async (date: Date) => {
     if (!token) return;
@@ -298,35 +283,53 @@ const CalendarPage: React.FC = () => {
           <AvailabilityLegend />
         </div>
 
-        {/* Range Actions */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
-          <RangeActionsPanel
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            setRangeStart={setRangeStart}
-            setRangeEnd={setRangeEnd}
-            processingRange={false}
-            setProcessingRange={() => {}}
-            available={available}
-            addAvailability={addAvailability}
-            removeAvailability={removeAvailability}
-          />
-        </div>
+        {/* Not Approved State */}
+        {!loading && user?.approval_status !== 'approved' && (
+          <div className="space-y-6">
+            <ProfileStatusBanner status={user?.approval_status || 'unsubmitted'} />
+            <DashboardCard className="text-center py-12">
+              <p className="text-gray-400">
+                {user?.approval_status === 'pending' 
+                  ? 'Sobald dein Profil freigeschaltet wurde, kannst du hier deine Verfügbarkeiten pflegen.'
+                  : 'Bitte vervollständige dein Profil und reiche es zur Prüfung ein, um den Kalender zu nutzen.'}
+              </p>
+            </DashboardCard>
+          </div>
+        )}
 
-        {/* Calendar */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-          <div className="w-full flex justify-center">
-            <Calendar
-              mode="multiple"
-              numberOfMonths={1}
-              onDayClick={handleDayClick as any}
-              modifiers={modifiers}
-              disabled={disabledDays}
-              initialFocus
-              className="mx-auto w-full max-w-[28rem] md:max-w-[36rem] [--cell-size:2.25rem] md:[--cell-size:2.75rem] lg:[--cell-size:3rem]"
+        {/* Range Actions */}
+        {user?.approval_status === 'approved' && (
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+            <RangeActionsPanel
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              setRangeStart={setRangeStart}
+              setRangeEnd={setRangeEnd}
+              processingRange={false}
+              setProcessingRange={() => {}}
+              available={available}
+              addAvailability={addAvailability}
+              removeAvailability={removeAvailability}
             />
           </div>
-        </div>
+        )}
+
+        {/* Calendar */}
+        {user?.approval_status === 'approved' && (
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+            <div className="w-full flex justify-center">
+              <Calendar
+                mode="multiple"
+                numberOfMonths={1}
+                onDayClick={handleDayClick as any}
+                modifiers={modifiers}
+                disabled={disabledDays}
+                initialFocus
+                className="mx-auto w-full max-w-[28rem] md:max-w-[36rem] [--cell-size:2.25rem] md:[--cell-size:2.75rem] lg:[--cell-size:3rem]"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Backend 500 Hint */}
         {error && error.startsWith("Fehler beim Laden: 500") && (

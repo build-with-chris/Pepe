@@ -37,7 +37,10 @@ if raw_db_url:
         db_url = raw_db_url
 else:
     db_url = 'sqlite:///pepe.db'
-config.set_main_option('sqlalchemy.url', db_url)
+
+# alembic.ini wird intern mit ConfigParser gelesen; % löst Interpolation aus
+# (z. B. %21 im Passwort) → für set_main_option als %% speichern
+config.set_main_option('sqlalchemy.url', db_url.replace('%', '%%'))
 logger.info(f'Using DB URL for migrations: {db_url}')
 
 # Metadata aus den Modellen importieren

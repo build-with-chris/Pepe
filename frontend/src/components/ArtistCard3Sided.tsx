@@ -82,7 +82,7 @@ const ArtistCard3Sided: React.FC<ArtistCard3SidedProps> = ({ artist, enableZoom 
             e.stopPropagation();
             handleFlip('front');
           }}
-          aria-label="Show front"
+          aria-label="Vorderseite anzeigen"
         />
         <button
           className={`w-2 h-2 rounded-full transition-all pointer-events-auto ${
@@ -92,7 +92,7 @@ const ArtistCard3Sided: React.FC<ArtistCard3SidedProps> = ({ artist, enableZoom 
             e.stopPropagation();
             handleFlip('back');
           }}
-          aria-label="Show back"
+          aria-label="Rückseite anzeigen"
         />
         <button
           className={`w-2 h-2 rounded-full transition-all pointer-events-auto ${
@@ -102,7 +102,7 @@ const ArtistCard3Sided: React.FC<ArtistCard3SidedProps> = ({ artist, enableZoom 
             e.stopPropagation();
             handleFlip('side');
           }}
-          aria-label="Show side"
+          aria-label="Seitenansicht anzeigen"
         />
       </div>
     </div>

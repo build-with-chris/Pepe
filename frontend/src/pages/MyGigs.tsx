@@ -5,6 +5,8 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { DashboardCard } from '@/components/DashboardCard';
 import { Loader2, Calendar, MapPin } from 'lucide-react';
 
+import { ProfileStatusBanner } from '@/components/ProfileStatusBanner';
+
 interface Gig {
   id: number;
   event_date: string;
@@ -30,7 +32,7 @@ const formatDateTimeDE = (d: Date) => {
 };
 
 const MyGigs: React.FC = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +41,14 @@ const MyGigs: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
+      if (!token || !user) return;
+      
+      // If artist is not approved, we can't fetch gigs
+      if (user.approval_status !== 'approved') {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -98,7 +108,21 @@ const MyGigs: React.FC = () => {
           </div>
         )}
 
-        {!loading && !error && (
+        {/* Not Approved State */}
+        {!loading && user?.approval_status !== 'approved' && (
+          <div className="space-y-6">
+            <ProfileStatusBanner status={user?.approval_status || 'unsubmitted'} />
+            <DashboardCard className="text-center py-12">
+              <p className="text-gray-400">
+                {user?.approval_status === 'pending' 
+                  ? 'Sobald dein Profil freigeschaltet wurde, siehst du hier deine bestätigten Gigs.'
+                  : 'Bitte vervollständige dein Profil und reiche es zur Prüfung ein, um Gigs zu verwalten.'}
+              </p>
+            </DashboardCard>
+          </div>
+        )}
+
+        {!loading && !error && user?.approval_status === 'approved' && (
           <>
             {/* Upcoming Gigs */}
             <section className="space-y-5">

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { getApiBaseUrl } from '@/lib/apiBase';
+import SEO, { pageSEO } from '@/components/SEO';
 
 interface Artist {
   id: number;
@@ -17,7 +19,8 @@ export default function Agentur() {
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com';
+        const baseUrl = getApiBaseUrl();
+        if (!baseUrl) return;
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
           headers: {
@@ -45,12 +48,14 @@ export default function Agentur() {
   const getImageUrl = (imageUrl: string | undefined) => {
     if (!imageUrl) return '/placeholder-artist.jpg';
     if (imageUrl.startsWith('http')) return imageUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com';
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) return '/placeholder-artist.jpg';
     return `${baseUrl}${imageUrl}`;
   };
 
   return (
     <main>
+      <SEO {...pageSEO.agentur} />
       {/* Hero Section with Artist Network */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">

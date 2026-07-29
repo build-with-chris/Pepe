@@ -1,6 +1,9 @@
+import SEO, { pageSEO } from '@/components/SEO'
+
 export default function Datenschutz() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center py-20 px-6">
+      <SEO {...pageSEO.datenschutz} />
       <div className="max-w-3xl space-y-6">
         <h1 className="text-3xl font-bold text-center mb-8">Datenschutzerklärung</h1>
 
@@ -88,11 +91,12 @@ export default function Datenschutz() {
         <div className="space-y-2">
           <h2 className="text-xl font-semibold">9. Eingesetzte Dienste & Empfänger</h2>
           <p>Wir setzen zur Bereitstellung unserer Leistungen sorgfältig ausgewählte Dienste ein:</p>
-          <h3 className="text-lg font-semibold">9.1 Hosting/Backend (Render)</h3>
+          <h3 className="text-lg font-semibold">9.1 Hosting / Backend-API</h3>
           <p>
-            Unsere Anwendung wird bei Render (USA) betrieben. Dabei können technische Verbindungsdaten (z. B. IP-Adresse,
-            Zeitstempel, Request-Informationen) verarbeitet werden. Eine Übermittlung in Drittländer kann nicht ausgeschlossen
-            werden. Wir haben geeignete Schutzmaßnahmen (u. a. Standardvertragsklauseln) getroffen.
+            Website und Backend werden bei professionellen Hosting-Anbietern betrieben (Standort je nach Anbieter, ggf. EU oder USA).
+            Dabei können technische Verbindungsdaten (z. B. IP-Adresse, Zeitstempel, Request-Informationen) verarbeitet werden.
+            Eine Übermittlung in Drittländer kann nicht ausgeschlossen werden. Wir setzen geeignete Schutzmaßnahmen ein
+            (u. a. Standardvertragsklauseln, wo erforderlich).
           </p>
           <h3 className="text-lg font-semibold">9.2 Authentifizierung (Supabase)</h3>
           <p>

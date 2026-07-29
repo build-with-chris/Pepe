@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import SEO, { pageSEO } from '@/components/SEO'
 
 export default function Kontakt() {
   const { t } = useTranslation()
 
   return (
     <main>
+      <SEO {...pageSEO.kontakt} />
       {/* Hero Section */}
       <section className="section-hero-compact bg-gradient-dark">
         <div className="stage-container">
@@ -60,7 +62,7 @@ export default function Kontakt() {
                 <div className="body-sm">{t('kontakt.methods.space.address')}</div>
               </div>
               <a
-                href="https://maps.google.com/?q=Ostpark+München+81735"
+                href="https://www.google.com/maps/place/Pepe+Dome+im+Theatron+im+Ostpark/@48.1119726,11.640768,17z/data=!3m1!4b1!4m6!3m5!1s0x479ddfe1623e7b83:0x8f776b2413dcab9e!8m2!3d48.1119726!4d11.6433429"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary btn-lg"

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from models import db, Artist
 from models import Discipline, Availability, Artist
 from datetime import date
@@ -138,12 +140,18 @@ class ArtistManager:
             disciplines = [disciplines]
 
         # Normalisierung der Disziplinnamen
-        normalized = []
+        # Frontend sends hyphenated slugs (e.g. 'cyr-wheel'), ALLOWED_DISCIPLINES
+        # uses 'Cyr-Wheel', but DB may store 'Cyr Wheel'. We normalize ALL sides
+        # by lowercasing and replacing hyphens with spaces.
+        normalized_cmp = set()  # normalized comparison forms (lowercase, spaces)
+        normalized_exact = []   # exact ALLOWED_DISCIPLINES names for IN query
         for name in disciplines:
             name = name.strip()
+            name_cmp = name.lower().replace('-', ' ')
+            normalized_cmp.add(name_cmp)
             for allowed in self.discipline_mgr.get_allowed_disciplines():
-                if allowed.lower() == name.lower():
-                    normalized.append(allowed)
+                if allowed.lower().replace('-', ' ') == name_cmp:
+                    normalized_exact.append(allowed)
                     break
 
         # Datum konvertieren
@@ -151,12 +159,18 @@ class ArtistManager:
             event_date = date.fromisoformat(event_date)
 
         # Query: join disciplines und availabilities
+        # Use SQL-level normalization to handle DB inconsistencies
+        # (e.g. DB has "Cyr Wheel" but ALLOWED_DISCIPLINES has "Cyr-Wheel")
+        from sqlalchemy import func
+        disc_norm = func.replace(func.lower(Discipline.name), '-', ' ')
+        normalized_cmp_list = list(normalized_cmp)
+
         return (
             Artist.query
             .join(Artist.disciplines)
             .join(Artist.availabilities)
             .filter(
-                Discipline.name.in_(normalized),
+                disc_norm.in_(normalized_cmp_list),
                 Availability.date == event_date
             )
             .all()
@@ -250,12 +264,11 @@ class ArtistManager:
             calculated_gage = GageCalculator.calculate_gage(artist)
             artist.calculated_gage = calculated_gage
 
-            # Update price_min/max to calculated value (unless admin override exists)
+            # Update price_min/max based on calculated gage
             if not artist.admin_gage_override:
-                # ±20% spread as requested
-                spread = int(calculated_gage * 0.2)
-                artist.price_min = calculated_gage - spread
-                artist.price_max = calculated_gage + spread
+                price_min, price_max = GageCalculator.get_price_range(artist)
+                artist.price_min = price_min
+                artist.price_max = price_max
 
             self.db.session.commit()
             return artist
@@ -304,9 +317,9 @@ class ArtistManager:
                     artist.calculated_gage = new_gage
                     # Only update price range if no admin override
                     if not artist.admin_gage_override:
-                        spread = int(new_gage * 0.2)
-                        artist.price_min = new_gage - spread
-                        artist.price_max = new_gage + spread
+                        price_min, price_max = GageCalculator.get_price_range(artist)
+                        artist.price_min = price_min
+                        artist.price_max = price_max
                     updated_count += 1
 
                 results.append({
@@ -349,16 +362,15 @@ class ArtistManager:
 
             # Update price range to override value
             if override_gage:
-                spread = int(override_gage * 0.2)
-                artist.price_min = override_gage - spread
-                artist.price_max = override_gage + spread
+                artist.price_min = int(override_gage * 0.80)
+                artist.price_max = override_gage
             else:
                 # Recalculate based on criteria
                 calculated_gage = GageCalculator.calculate_gage(artist)
                 artist.calculated_gage = calculated_gage
-                spread = int(calculated_gage * 0.2)
-                artist.price_min = calculated_gage - spread
-                artist.price_max = calculated_gage + spread
+                price_min, price_max = GageCalculator.get_price_range(artist)
+                artist.price_min = price_min
+                artist.price_max = price_max
 
             self.db.session.commit()
             return artist

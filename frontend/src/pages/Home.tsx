@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import DotCloudImage from '../components/ui/DotCloudImage'
+import { getApiBaseUrl } from '@/lib/apiBase'
 import FloatingDisciplines from '../components/FloatingDisciplines'
 import heroImage from '../assets/PepeHero.webp'
+import SEO, { pageSEO } from '@/components/SEO'
+
+const InteractivePepeParticles = lazy(() => import('../components/InteractivePepeParticles'))
 
 interface Artist {
   id: number
@@ -26,9 +30,18 @@ export default function Home() {
   const [responsibilityWorldClicked, setResponsibilityWorldClicked] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const apply = () => setIsDesktop(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   // Available icons for random shuffling
-  const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole', 'hulahoop', 'flooracrobatics', 'moderation']
+  const availableIcons = ['cyrwheel', 'magician', 'breakdance', 'handstand', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole', 'hulahoop', 'flooracrobatics', 'moderation']
 
   // Map discipline names to icon names for DotCloudImage
   const disciplineToIcon: Record<string, string> = {
@@ -215,16 +228,13 @@ export default function Home() {
     // Use hardcoded disciplines with all icons
     const hardcodedDisciplines = [
       { id: '1', name: 'Cyr Wheel', image: '/images/disciplines/Cyr-Wheel.webp', description: 'Spektakuläre Akrobatik im Riesenrad', artistCount: 5 },
-      { id: '2', name: 'Jonglage', image: '/images/disciplines/Jonglage.webp', description: 'Meisterhafte Objekt-Manipulation', artistCount: 8 },
       { id: '3', name: 'Zauberer', image: '/images/disciplines/Zauberer.webp', description: 'Magische Illusionen', artistCount: 6 },
       { id: '4', name: 'Breakdance', image: '/images/disciplines/Breakdance.webp', description: 'Urbane Tanzkunst', artistCount: 4 },
       { id: '5', name: 'Handstand', image: '/images/disciplines/Handstand.webp', description: 'Kraft und Balance', artistCount: 7 },
-      { id: '6', name: 'Pantomime', image: '/images/disciplines/Pantomime.webp', description: 'Stumme Komödie', artistCount: 3 },
       { id: '7', name: 'Contemporary Dance', image: '/images/disciplines/Contemporary_Dance.webp', description: 'Moderne Choreografie', artistCount: 5 },
       { id: '8', name: 'Partnerakrobatik', image: '/images/disciplines/Partnerakrobatik.webp', description: 'Synchrone Bewegungen', artistCount: 6 },
       { id: '9', name: 'Luftakrobatik', image: '/images/disciplines/Luftakrobatik.webp', description: 'Artistik in der Luft', artistCount: 9 },
       { id: '10', name: 'Chinese Pole', image: '/images/disciplines/Chinese_Pole.webp', description: 'Vertikale Akrobatik', artistCount: 4 },
-      { id: '11', name: 'Verantwortung', image: '/images/disciplines/World.webp', description: 'Nachhaltigkeit und soziale Verantwortung', artistCount: 0 },
     ]
 
     setDisciplines(hardcodedDisciplines)
@@ -234,7 +244,8 @@ export default function Home() {
 
     const fetchArtists = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        const baseUrl = getApiBaseUrl()
+        if (!baseUrl) return
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
           headers: {
@@ -262,7 +273,8 @@ export default function Home() {
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return ''
     if (imageUrl.startsWith('http')) return imageUrl
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+    const baseUrl = getApiBaseUrl()
+    if (!baseUrl) return ''
     return `${baseUrl}${imageUrl}`
   }
 
@@ -300,136 +312,31 @@ export default function Home() {
 
   return (
     <main>
-      {/* Hero - 100vh */}
-      <section style={{
-        position: 'relative',
-        height: '100vh',
-        overflow: 'visible'
-      }}>
-        {/* Background image - will be made sticky below */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 0
-        }}>
-          <img
-            src={heroImage}
-            alt="Pepe Shows Hero"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center'
-            }}
-          />
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.4)'
-          }} />
-        </div>
-
-        <div style={{
-          position: 'absolute',
-          top: '66.67%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 'clamp(1rem, 2.5vh, 2rem)',
-          textAlign: 'center',
-          maxWidth: '1200px',
-          width: '90%',
-          padding: '0 1rem'
-        }}>
-          <h1 className="hero-title-elegant display-gradient" style={{
-            fontSize: 'clamp(1.5rem, 6vw, 4rem)',
-            margin: 0,
-            lineHeight: 1.1,
-            maxWidth: '100%',
-            wordWrap: 'break-word'
-          }}>
-            {t('home.hero.title')}
-          </h1>
-
-          <p className="body-lg" style={{
-            color: 'var(--pepe-gold)',
-            margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
-            fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
-            fontWeight: 500,
-            letterSpacing: '0.02em'
-          }}>
-            {t('home.hero.claim')}
-          </p>
-
-          <div style={{
-            display: 'flex',
-            gap: 'clamp(0.5rem, 2vw, 1rem)',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-          }}>
-            <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
-              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
-              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
-            }}>
-              {t('home.hero.primaryCta')}
-            </Link>
-            <Link to="/shows" className="btn btn-secondary btn-lg" style={{
-              fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
-              padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
-            }}>
-              {t('home.hero.secondaryCta')}
-            </Link>
-          </div>
-        </div>
-
-        <div style={{
-          position: 'absolute',
-          bottom: '5vh',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 20
-        }}>
-          <div className="scroll-indicator">
-            <div className="scroll-dot"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Fixed background image - sticky until end of scroll section (200vh total) */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '200vh', // Covers hero (100vh) + scroll section (100vh)
-        zIndex: 0,
-        pointerEvents: 'none'
-      }}>
-        <div style={{
-          position: 'sticky',
-          top: 0,
-          width: '100%',
+      <SEO {...pageSEO.home} />
+      {/* Desktop Hero - Interactive Particles */}
+      {isDesktop ? (
+        <section style={{
+          position: 'relative',
           height: '100vh',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          background: '#000'
         }}>
+          {/* Background image */}
           <img
             src={heroImage}
-            alt="Pepe Shows Background"
+            alt="Pepe Shows – Artistik und Bühnenkunst bei einer Live-Veranstaltung"
+            width={1920}
+            height={1080}
+            fetchPriority="high"
             style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center'
+              objectPosition: 'center',
+              zIndex: 0
             }}
           />
           <div style={{
@@ -438,45 +345,206 @@ export default function Home() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)'
+            background: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 1
           }} />
-        </div>
-      </div>
 
-      {/* Fixed Logo - visible from hero through scroll section */}
-      <div className="hero-logo-doticon" style={{
-        position: 'fixed',
-        top: typeof window !== 'undefined' && window.innerWidth < 768 ? '35%' : '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 50,
-        pointerEvents: 'none',
-        transition: 'opacity 0.3s ease, visibility 0.3s ease'
-      }}>
-        <DotCloudImage
-          disciplineId="logo"
-          size={typeof window !== 'undefined' && window.innerWidth < 768
-            ? Math.min(82, window.innerWidth * 0.32)
-            : 250}
-          color="var(--pepe-gold)"
-          aspectRatio={3}
-          density={0.5}
-          sampleGap={1}
-          minDotSize={1.4}
-          maxDotSize={2.5}
-          reverseScroll={true}
-          dynamicDensity={true}
-        />
-      </div>
+          {/* Particles overlay */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+            <Suspense fallback={null}>
+              <InteractivePepeParticles />
+            </Suspense>
+          </div>
 
-      {/* Scroll spacer + black focus section - 100vh - ends sticky background */}
-      <div style={{
-        position: 'relative',
-        height: '100vh',
-        background: 'linear-gradient(to bottom, transparent 0%, #000000 40%, #000000 60%, transparent 100%)',
-        zIndex: 1
-      }}>
-      </div>
+          <div style={{
+            position: 'absolute',
+            bottom: '10vh',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 'clamp(1rem, 2.5vh, 2rem)',
+            textAlign: 'center',
+            maxWidth: '1200px',
+            width: '90%',
+            padding: '0 1rem'
+          }}>
+            <h1 className="hero-title-elegant display-gradient" style={{
+              fontSize: 'clamp(1.5rem, 6vw, 4rem)',
+              margin: 0,
+              lineHeight: 1.1,
+              maxWidth: '100%',
+              wordWrap: 'break-word'
+            }}>
+              {t('home.hero.title')}
+            </h1>
+
+            <p className="body-lg" style={{
+              color: 'var(--pepe-gold)',
+              margin: 'clamp(0.5rem, 1.5vh, 1rem) 0',
+              fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+              fontWeight: 500,
+              letterSpacing: '0.02em'
+            }}>
+              {t('home.hero.claim')}
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: 'clamp(0.5rem, 2vw, 1rem)',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+            }}>
+              <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
+                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+              }}>
+                {t('home.hero.primaryCta')}
+              </Link>
+              <Link to="/shows" className="btn btn-secondary btn-lg" style={{
+                fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.625rem, 2vw, 0.875rem) clamp(1.25rem, 4vw, 2rem)'
+              }}>
+                {t('home.hero.secondaryCta')}
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : (
+        /* Mobile Hero - Static image with DotCloud logo */
+        <section style={{
+          position: 'relative',
+          height: '100svh',
+          overflow: 'visible'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 0
+          }}>
+            <img
+              src={heroImage}
+              alt="Pepe Shows – Artistik und Bühnenkunst bei einer Live-Veranstaltung"
+              width={1200}
+              height={800}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.7) 100%)'
+            }} />
+          </div>
+
+          {/* Fixed Logo for mobile - smaller and higher */}
+          <div className="hero-logo-doticon" style={{
+            position: 'fixed',
+            top: '25%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 50,
+            pointerEvents: 'none',
+            transition: 'opacity 0.3s ease, visibility 0.3s ease'
+          }}>
+            <DotCloudImage
+              disciplineId="logo"
+              size={Math.min(70, typeof window !== 'undefined' ? window.innerWidth * 0.26 : 70)}
+              color="var(--pepe-gold)"
+              aspectRatio={3}
+              density={0.5}
+              sampleGap={1}
+              minDotSize={1.4}
+              maxDotSize={2.5}
+              reverseScroll={true}
+              dynamicDensity={true}
+            />
+          </div>
+
+          {/* Content positioned lower with more space */}
+          <div style={{
+            position: 'absolute',
+            bottom: 'clamp(10vh, 15vh, 18vh)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 'clamp(0.75rem, 2vh, 1.5rem)',
+            textAlign: 'center',
+            maxWidth: '1200px',
+            width: '90%',
+            padding: '0 1rem'
+          }}>
+            <h1 className="hero-title-elegant display-gradient" style={{
+              fontSize: 'clamp(1.75rem, 7vw, 4rem)',
+              margin: 0,
+              lineHeight: 1.1,
+              maxWidth: '100%',
+              wordWrap: 'break-word'
+            }}>
+              {t('home.hero.title')}
+            </h1>
+
+            <p className="body-lg" style={{
+              color: 'var(--pepe-gold)',
+              margin: '0',
+              fontSize: 'clamp(0.9rem, 2.5vw, 1.125rem)',
+              fontWeight: 500,
+              letterSpacing: '0.02em'
+            }}>
+              {t('home.hero.claim')}
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: 'clamp(0.5rem, 2vw, 1rem)',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              marginTop: 'clamp(0.25rem, 1vh, 0.5rem)'
+            }}>
+              <Link to="/anfragen" className="btn btn-primary btn-lg" style={{
+                fontSize: 'clamp(0.9rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 5vw, 2.5rem)'
+              }}>
+                {t('home.hero.primaryCta')}
+              </Link>
+              <Link to="/shows" className="btn btn-secondary btn-lg" style={{
+                fontSize: 'clamp(0.9rem, 2.5vw, 1.125rem)',
+                padding: 'clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 5vw, 2.5rem)'
+              }}>
+                {t('home.hero.secondaryCta')}
+              </Link>
+            </div>
+          </div>
+
+          <div style={{
+            position: 'absolute',
+            bottom: '3vh',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 20
+          }}>
+            <div className="scroll-indicator">
+              <div className="scroll-dot"></div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Bento Grid Section */}
       <section className="section bg-pepe-ink" style={{ position: 'relative', zIndex: 1 }}>
@@ -487,7 +555,7 @@ export default function Home() {
               <div className="bento-card-bg">
                 <img 
                   src="/images/Bento1/CircusTent.png" 
-                  alt="Circuszelt mit Luftartistin"
+                  alt="Circuszelt mit Luftartistin bei einer Pepe Shows Veranstaltung"
                   className="bento-main-image"
                 />
                 <div className="bento-spotlight-left"></div>
@@ -526,7 +594,7 @@ export default function Home() {
               <div className="bento-card-bg">
                 <img 
                   src="/images/Bento1/Burn.webp" 
-                  alt="Innovative show concepts"
+                  alt="Feuershow – innovative Showkonzepte von Pepe Shows"
                   className="bento-bg-image"
                 />
                 <div className="bento-image-overlay"></div>
@@ -544,17 +612,17 @@ export default function Home() {
               <div className="bento-card-bg">
                 <img 
                   src="/images/Bento1/Slider1.webp" 
-                  alt="Show impression"
+                  alt="Showimpression – Akrobatik auf der Bühne"
                   className="bento-bg-image active"
                 />
-                <img 
-                  src="/images/Bento1/Slider2.webp" 
-                  alt="Show impression"
+                <img
+                  src="/images/Bento1/Slider2.webp"
+                  alt="Showimpression – Artistik bei einer Veranstaltung"
                   className="bento-bg-image"
                 />
-                <img 
-                  src="/images/Bento1/Slider3.webp" 
-                  alt="Show impression"
+                <img
+                  src="/images/Bento1/Slider3.webp"
+                  alt="Showimpression – Künstler in Aktion"
                   className="bento-bg-image"
                 />
                 <div className="bento-image-overlay"></div>
@@ -731,18 +799,28 @@ export default function Home() {
       {/* PepeShows - More than Artist Agency */}
       <section className="section bg-pepe-ink">
         <div className="stage-container">
-          <div className="text-center mb-16">
-            <h2 className="display-2 mb-8">
-              {t('home.cta.heading')}
-            </h2>
-            <p className="lead max-w-4xl mx-auto">
-              {t('home.cta.description')}
-            </p>
-          </div>
-          <div className="text-center">
-            <Link to="/team" className="btn btn-secondary btn-lg">
-              {t('home.cta.button')}
-            </Link>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center lg:text-left order-2 lg:order-1">
+              <h2 className="display-3 mb-6">
+                {t('home.cta.heading')}
+              </h2>
+              <p className="lead text-pepe-t80 mb-8 max-w-xl mx-auto lg:mx-0">
+                {t('home.cta.description')}
+              </p>
+              <Link to="/team" className="btn btn-secondary btn-lg">
+                {t('home.cta.button')}
+              </Link>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/5 group">
+                <img 
+                  src="/images/Brandguide/Header Pepe 16:9.jpg" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  alt="Pepe Shows – mehr als eine Künstleragentur"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

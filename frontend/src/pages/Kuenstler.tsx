@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import ArtistCardFinal from '@/components/ArtistCardFinal'
 import type { Artist } from '@/types/artist'
+import { getApiBaseUrl } from '@/lib/apiBase'
+import SEO, { pageSEO } from '@/components/SEO'
 
 export default function Kuenstler() {
   const [artists, setArtists] = useState<Artist[]>([])
@@ -37,7 +39,8 @@ export default function Kuenstler() {
 
     const fetchArtists = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+        const baseUrl = getApiBaseUrl()
+        if (!baseUrl) return
 
         const response = await fetch(`${baseUrl}/api/artists`, {
           method: 'GET',
@@ -83,7 +86,8 @@ export default function Kuenstler() {
 
   const resolveBackdropImageUrl = (imageUrl: string) => {
     if (imageUrl.startsWith('http')) return imageUrl
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+    const baseUrl = getApiBaseUrl()
+    if (!baseUrl) return imageUrl
     return `${baseUrl}${imageUrl}`
   }
 
@@ -118,6 +122,7 @@ export default function Kuenstler() {
 
   return (
     <main>
+      <SEO {...pageSEO.kuenstler} />
       {/* Hero Section with Layered Animated Background */}
       <section className="artist-hero-layered">
         {/* Layer 1: Black Background */}
@@ -132,7 +137,7 @@ export default function Kuenstler() {
             >
               <img
                 src={resolveBackdropImageUrl(imageUrl)}
-                alt={`Artist ${index + 1}`}
+                alt="Künstler-Hintergrundbild"
                 className="slideshow-img"
               />
             </div>

@@ -19,7 +19,7 @@ A full-stack booking application for an artist agency with artist management, bo
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                         BACKEND                                  │
-│                   (Render - Flask/Python)                       │
+│         (Flask/Python – z. B. Render, ~5 $/Monat Web Service)    │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
 │  │ Clerk JWT   │  │ SQLAlchemy  │  │ REST API Routes         │  │
 │  │ Verification│  │ ORM         │  │ /api/* /auth/* /admin/* │  │
@@ -29,7 +29,7 @@ A full-stack booking application for an artist agency with artist management, bo
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                        DATABASE                                  │
-│               (Render PostgreSQL - pepe_prod_db)                │
+│            (PostgreSQL, z. B. Supabase – empfohlen)              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
 │  │ artists     │  │ bookings    │  │ invoices                │  │
 │  │ disciplines │  │ requests    │  │ availabilities          │  │
@@ -46,14 +46,14 @@ A full-stack booking application for an artist agency with artist management, bo
 - Vercel Blob Storage (images/documents)
 - i18next (DE/EN translations)
 
-### Backend (Render)
+### Backend (Flask)
 - Python Flask + SQLAlchemy
 - Flask-Migrate (Alembic migrations)
 - Clerk JWT verification
 - Flasgger (Swagger API docs)
 
-### Database (Render PostgreSQL)
-- PostgreSQL managed by Render
+### Database (PostgreSQL)
+- Z. B. **Supabase** oder anderer Managed-Postgres (siehe `backend/docs/SUPABASE_MIGRATION.md`)
 - Tables: artists, disciplines, booking_requests, invoices, availabilities
 
 ### Storage (Vercel Blob)
@@ -76,7 +76,7 @@ pepe-shows/
 │   ├── .env                  # Frontend env vars
 │   └── vercel.json           # Vercel config
 │
-├── backend/                  # Flask backend (deployed to Render)
+├── backend/                  # Flask backend (Deploy z. B. via render.yaml im Repo-Root)
 │   ├── routes/               # API route blueprints
 │   │   ├── api_routes.py     # /api/* endpoints
 │   │   ├── auth_routes.py    # /auth/* endpoints
@@ -97,17 +97,22 @@ pepe-shows/
 
 ### Frontend (`frontend/.env`)
 ```env
-VITE_API_URL=http://localhost:5001           # Backend URL (dev)
+VITE_API_URL=http://127.0.0.1:5000           # Backend-URL (dev; Port wie bei `python app.py`)
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx       # Clerk public key
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxx     # Vercel Blob token
 ```
 
 ### Backend (`backend/.env`)
+Siehe `backend/.env.example`. Wichtigste Variablen:
+
 ```env
-CLERK_SECRET_KEY=sk_test_xxx                 # Clerk secret key
-DATABASE_URL=postgresql://user:pass@host/db  # Render PostgreSQL URL
+CLERK_SECRET_KEY=sk_test_xxx
+DATABASE_URL=postgresql://...                 # z. B. Supabase (siehe backend/docs/SUPABASE_MIGRATION.md)
+FLASK_SECRET_KEY=random-long-string         # für Production setzen
 FLASK_ENV=development
 FLASK_DEBUG=1
+SUPABASE_URL=                               # Storage / Service-API
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 ## Local Development
@@ -121,7 +126,7 @@ npm run dev
 
 # Or start separately:
 npm run dev:frontend  # Frontend on :5173
-npm run dev:backend   # Backend on :5001
+npm run dev:backend   # Backend (Flask-Default meist :5000)
 ```
 
 ## Deployment
@@ -133,22 +138,29 @@ npx vercel --prod
 ```
 
 **Vercel Environment Variables:**
-- `VITE_API_URL` = Backend Render URL (e.g., `https://pepe-backend.onrender.com`)
+- `VITE_API_URL` = öffentliche Backend-URL (z. B. `https://pepe-backend-xxxx.onrender.com` oder eigene Domain)
 - `VITE_CLERK_PUBLISHABLE_KEY` = Clerk public key
 - `BLOB_READ_WRITE_TOKEN` = Vercel Blob token
 
-### Backend → Render
-1. Connect GitHub repo to Render
-2. Set build command: `pip install -r requirements.txt`
-3. Set start command: `gunicorn app:app`
-4. Add environment variables:
-   - `CLERK_SECRET_KEY`
-   - `DATABASE_URL` (auto-set if using Render PostgreSQL)
+### Backend → Render (empfohlen, einfach)
+Die API ist **Flask + Gunicorn**; die Datenbank liegt bei **Supabase** (`DATABASE_URL` in Render eintragen, nicht Render-Postgres nötig).
 
-### Database → Render PostgreSQL
-- Managed PostgreSQL on Render
-- Auto-connected via `DATABASE_URL`
-- Run migrations: `flask db upgrade`
+1. Im [Render Dashboard](https://dashboard.render.com) **New → Blueprint** (oder Web Service mit Root **`backend`**) mit Repo verbinden.
+2. Blueprint-Datei: **`render.yaml`** im **Repo-Root** (setzt `rootDir: backend`, Healthcheck `/healthz`).
+3. Im Dashboard alle als **`sync: false`** markierten Variablen setzen, v. a.:
+   - `DATABASE_URL` – Supabase Connection String (Session/Pooler, `sslmode=require` wie lokal)
+   - `FLASK_SECRET_KEY`, `CLERK_*`, `SUPABASE_*`, SMTP falls genutzt
+   - **`CORS_ORIGINS`** – z. B. `https://deine-vercel-app.vercel.app,https://pepeshows.de` (sonst blockt der Browser)
+4. **Kosten:** kleiner **Web Service** oft um **~5 $/Monat** (Stand je nach Render-Tarif) – durchgehend online, ohne Cold-Start wie bei reinem Serverless.
+
+**Alternativen:** Railway, Fly.io, Cloud Run, VPS – gleicher Startbefehl `gunicorn app:app --bind 0.0.0.0:$PORT`.
+
+Siehe auch `backend/docs/SUPABASE_MIGRATION.md`.
+
+### Database → Supabase PostgreSQL (empfohlen)
+- Connection String aus dem Supabase-Dashboard
+- Migrationen: `cd backend && flask db upgrade`
+- Optional: Daten von alter Postgres-Instanz mit `pg_dump` / `psql` migrieren
 
 ## API Documentation
 

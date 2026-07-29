@@ -1,3 +1,15 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# Backend-Root immer auf sys.path, wenn Flask nicht aus backend/ gestartet wird
+# (sonst: ModuleNotFoundError: config → kein „flask db“-Befehl)
+_backend_dir = Path(__file__).resolve().parent
+_backend_dir_str = str(_backend_dir)
+if _backend_dir_str not in sys.path:
+    sys.path.insert(0, _backend_dir_str)
+
 from flask import Flask, jsonify, request
 from config import Config
 from models import db
@@ -6,6 +18,7 @@ from routes.admin_routes import admin_bp
 from flasgger import Swagger
 from flask_cors import CORS
 from routes.request_routes import booking_bp
+from routes.upload_routes import upload_bp
 from flask_migrate import Migrate
 from helpers.clerk_auth import authenticate_request, get_current_artist
 
@@ -24,15 +37,15 @@ from urllib.parse import urlparse
 # --- Flask app & config ---
 app = Flask(__name__)
 app.config.from_object(Config)
-# Ensure robust DB connections (survive restarts/plan changes)
-app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {
-    'pool_pre_ping': True,     # validates connections before using them
-    'pool_recycle': 1800,      # recycle connections every 30 minutes
+# Robuste DB-Verbindungen + optional connect_args aus Config (z. B. Supabase SSL)
+_engine_defaults = {
+    'pool_pre_ping': True,
+    'pool_recycle': 1800,
     'pool_size': 5,
     'max_overflow': 5,
-    # If your provider requires SSL (e.g. Supabase/managed PG), uncomment:
-    # 'connect_args': {'sslmode': 'require'},
-})
+}
+_cfg_engine = dict(getattr(Config, 'SQLALCHEMY_ENGINE_OPTIONS', None) or {})
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {**_engine_defaults, **_cfg_engine}
 # Hilfsfunktion: Passwort in der DB-URL maskieren für Logs
 def mask_db_uri(uri: str) -> str:
     import re
@@ -50,6 +63,7 @@ migrate = Migrate(app, db)
 
 app.register_blueprint(api_bp,   url_prefix='/api')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
+app.register_blueprint(upload_bp, url_prefix='/api/upload')
 app.register_blueprint(booking_bp)
 
 # --- Guard all /api/admin routes via DB flag (Option A) ---
@@ -75,6 +89,11 @@ def _admin_gate_by_db():
         return error_response("unauthorized", "Invalid or missing token", 401)
 
     # 2) Load user and check DB flag (also cached on g as g.current_artist)
+    #
+    # Bewusst *ohne* die zwischenzeitlich ergaenzte Auto-Befoerderung anhand von
+    # Clerk-`public_metadata.role`: Wer sich diese Rolle in den Token bekommt,
+    # haette sich damit dauerhaft `is_admin` in die DB geschrieben. Adminrechte
+    # haengen allein an `artists.is_admin` (SPEC-1/SPEC-2), gesetzt per SQL.
     uid = claims.get('sub')  # Clerk user ID
     artist = get_current_artist()
 
@@ -93,12 +112,19 @@ allowed_patterns = [o.strip() for o in origins_env.split(",") if o.strip()]
 # Fallback, falls ENV leer ist
 if not allowed_patterns:
     allowed_patterns = [
-        "http://localhost:*",  # Allow all localhost ports for dev
+        "http://localhost:*",  # alle localhost-Ports (Vite 5173/5174 …)
+        "http://127.0.0.1:*",
         "https://pepeshows.de",
+        "https://www.pepeshows.de",
         "https://*.vercel.app",  # allow Vercel preview domains via wildcard
     ]
 
 def _pattern_to_regex_fragment(p: str) -> str:
+    # Explizit: localhost / 127.0.0.1 mit beliebigem Port (robuster als nur re.escape)
+    if p in ("http://localhost:*", "https://localhost:*"):
+        return r"https?://localhost(?::\d+)?"
+    if p in ("http://127.0.0.1:*", "https://127.0.0.1:*"):
+        return r"https?://127\.0\.0\.1(?::\d+)?"
     # Exact origin (no wildcard): anchor exact match
     if "*" not in p:
         return re.escape(p)
@@ -280,6 +306,28 @@ def healthz():
 
 
 # Migration endpoint removed after successful migration
+
+
+# --- Cron endpoint for daily availability update ---
+@app.route("/api/cron/auto-availability", methods=["POST"])
+def cron_auto_availability():
+    """
+    Daily cron: add day+365 availability for all approved artists.
+    Protected by CRON_SECRET header to prevent unauthorized access.
+    """
+    cron_secret = os.getenv("CRON_SECRET")
+    if cron_secret:
+        provided = request.headers.get("X-Cron-Secret") or request.args.get("secret")
+        if provided != cron_secret:
+            return error_response("forbidden", "Invalid cron secret", 403)
+
+    try:
+        from cron_jobs.auto_availability import run_daily_availability
+        result = run_daily_availability()
+        return jsonify({"status": "ok", "result": result}), 200
+    except Exception as e:
+        app.logger.exception("Cron auto-availability failed: %s", e)
+        return error_response("internal_error", str(e), 500)
 
 
 if __name__=="__main__":

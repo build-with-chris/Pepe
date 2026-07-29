@@ -76,6 +76,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
                 key={link.href}
                 to={link.href}
                 className={`nav-link ${location.pathname === link.href ? 'active' : ''}`}
+                {...(location.pathname === link.href ? { 'aria-current': 'page' as const } : {})}
               >
                 {link.label}
               </Link>
@@ -89,6 +90,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
               <button
                 onClick={() => changeLanguage(i18n.language === 'de' ? 'en' : 'de')}
                 className="lang-btn-compact"
+                aria-label={i18n.language === 'de' ? 'Sprache zu Englisch wechseln' : 'Switch language to German'}
               >
                 {i18n.language === 'de' ? 'EN' : 'DE'}
               </button>
@@ -115,9 +117,14 @@ export default function Navigation({ className = '' }: NavigationProps) {
                   appearance={{
                     elements: {
                       avatarBox: "w-8 h-8",
-                      userButtonPopoverCard: "bg-[#1A1A1A] border border-[#333]",
-                      userButtonPopoverActionButton: "text-white hover:bg-white/10",
-                      userButtonPopoverActionButtonText: "text-white",
+                      userButtonPopoverCard: "bg-[#1A1A1A] border border-[#333] shadow-xl",
+                      userButtonPopoverActions: "!bg-transparent",
+                      userButtonPopoverActionButton: "!text-white hover:!bg-white/10",
+                      userButtonPopoverActionButtonText: "!text-white",
+                      userButtonPopoverActionButtonIcon: "!text-white",
+                      userButtonPopoverMain: "!bg-transparent",
+                      userPreviewMainIdentifier: "!text-white",
+                      userPreviewSecondaryIdentifier: "!text-gray-400",
                       userButtonPopoverFooter: "hidden",
                     }
                   }}
@@ -139,7 +146,8 @@ export default function Navigation({ className = '' }: NavigationProps) {
           <button
             className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Menu öffnen"
+            aria-label={isMobileMenuOpen ? 'Menü schließen' : 'Menü öffnen'}
+            aria-expanded={isMobileMenuOpen}
           >
             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -165,7 +173,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="mobile-menu-close"
-                aria-label="Menu schließen"
+                aria-label="Menü schließen"
               >
                 <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -179,6 +187,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
                     key={link.href}
                     to={link.href}
                     className={`mobile-menu-link ${location.pathname === link.href ? 'active' : ''}`}
+                    {...(location.pathname === link.href ? { 'aria-current': 'page' as const } : {})}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.label}

@@ -1,6 +1,8 @@
 # helpers/clerk_auth.py
 """Clerk JWT verification helper for Flask backend."""
 
+from __future__ import annotations
+
 import os
 import ssl
 import jwt
@@ -19,6 +21,10 @@ except ImportError:
 # Clerk JWKS URL comes from the environment so switching between the Clerk
 # development and production instance never requires a code change.
 # Example: https://clerk.pepeshows.de/.well-known/jwks.json
+#
+# Bewusst ohne Fallback auf die Dev-Instanz: Ein hartkodierter Default lässt den
+# Wechsel auf Production stillschweigend gegen die Testinstanz laufen, statt
+# klar zu scheitern (Analyse D3).
 CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "").strip()
 
 # Optionaler Aussteller-Check. Ist CLERK_ISSUER gesetzt, muss der `iss`-Claim
@@ -39,8 +45,9 @@ def get_jwks_client():
             "Clerk instance, e.g. https://clerk.pepeshows.de/.well-known/jwks.json"
         )
     if _jwks_client is None:
-        # Use custom SSL context with certifi certificates
-        _jwks_client = PyJWKClient(CLERK_JWKS_URL, ssl_context=SSL_CONTEXT)
+        url = get_clerk_jwks_url()
+        current_app.logger.info(f"Initializing Clerk JWKS client with URL: {url}")
+        _jwks_client = PyJWKClient(url, ssl_context=SSL_CONTEXT)
     return _jwks_client
 
 

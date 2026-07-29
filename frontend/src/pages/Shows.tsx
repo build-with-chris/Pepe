@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import DotCloudImage from '../components/ui/DotCloudImage'
+import { getApiBaseUrl } from '@/lib/apiBase'
+import SEO, { pageSEO } from '@/components/SEO'
 
 interface Show {
   id: number
@@ -63,7 +65,8 @@ export default function Shows() {
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return ''
     if (imageUrl.startsWith('http')) return imageUrl
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://pepe-backend-4nid.onrender.com'
+    const baseUrl = getApiBaseUrl()
+    if (!baseUrl) return ''
     return `${baseUrl}${imageUrl}`
   }
 
@@ -75,6 +78,7 @@ export default function Shows() {
 
   return (
     <main>
+      <SEO {...pageSEO.shows} />
       {/* Hero Section */}
       <section className="section-hero bg-gradient-dark">
         <div className="stage-container">
