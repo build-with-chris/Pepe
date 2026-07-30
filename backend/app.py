@@ -62,18 +62,21 @@ else:
     }
 _cfg_engine = dict(getattr(Config, 'SQLALCHEMY_ENGINE_OPTIONS', None) or {})
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {**_engine_defaults, **_cfg_engine}
-# Hilfsfunktion: Passwort in der DB-URL maskieren für Logs
+# Hilfsfunktion: Passwort in der DB-URL maskieren für Logs.
+#
+# Es gab hier zwei Log-Zeilen: eine maskierte und, direkt darüber, eine mit der
+# vollständigen URI. Auf Render fiel das nicht auf, in den Vercel-Runtime-Logs
+# stand das Datenbank-Passwort damit im Klartext. Es bleibt genau eine Zeile,
+# und die geht durch die Maskierung.
 def mask_db_uri(uri: str) -> str:
     import re
     return re.sub(r'(://[^:]+:)([^@]+)(@)', r"\1****\3", uri)
 
 
 app.logger.info("DB URI: %s | TESTING=%s | ENV=%s",
-                app.config.get("SQLALCHEMY_DATABASE_URI"),
+                mask_db_uri(app.config.get("SQLALCHEMY_DATABASE_URI", "")),
                 app.config.get("TESTING"),
                 os.getenv("FLASK_CONFIG") or os.getenv("FLASK_ENV") or "unset")
-
-logging.getLogger().info(f"Using DB URI: {mask_db_uri(app.config.get('SQLALCHEMY_DATABASE_URI',''))}")
 db.init_app(app)
 migrate = Migrate(app, db)
 

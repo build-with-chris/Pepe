@@ -10,6 +10,7 @@ import base64
 import logging
 from flask import Flask
 from config import Config, normalize_db_url
+from app import mask_db_uri
 
 # Modelle importieren
 import models
@@ -48,14 +49,12 @@ logging.info(f'Using Supabase user id: {SUPABASE_USER_ID}')
 app = Flask(__name__)
 app.config.from_object(Config)
 raw_db = os.getenv('DATABASE_URL', '')
-print(f"DEBUG: raw DATABASE_URL env var: {raw_db!r}")
 if raw_db:
-    normalized_url = normalize_db_url(raw_db)
-    app.config['SQLALCHEMY_DATABASE_URI'] = normalized_url
-    print(f"DEBUG: normalized DATABASE_URL used for SQLALCHEMY_DATABASE_URI: {normalized_url}")
+    app.config['SQLALCHEMY_DATABASE_URI'] = normalize_db_url(raw_db)
 else:
     print("WARNING: DATABASE_URL not set, falling back to default sqlite pepe.db")
-print("DEBUG: final app.config['SQLALCHEMY_DATABASE_URI'] =", app.config.get("SQLALCHEMY_DATABASE_URI"))
+# Nur maskiert ausgeben: die URI enthaelt das Datenbank-Passwort.
+print("Ziel-Datenbank:", mask_db_uri(app.config.get("SQLALCHEMY_DATABASE_URI", "")))
 
 with app.app_context():
     db.init_app(app)
