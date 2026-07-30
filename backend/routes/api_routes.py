@@ -443,11 +443,14 @@ def update_my_profile():
             artist.name = str(name).strip() or artist.name
         address_before = getattr(artist, 'address', None)
         if address is not None:
-            old_address = artist.address
             artist.address = str(address).strip() or None
-            # Re-geocode if address changed
-            if artist.address and artist.address != old_address:
-                artist_mgr._geocode_and_set(artist)
+            # Geocodiert wird weiter unten, an der Stelle, für die `address_before`
+            # festgehalten wird. Hier stand ein zweiter Aufruf auf
+            # `artist_mgr._geocode_and_set` — eine Methode, die es am
+            # ArtistManager nicht gibt (sie heisst ohne Unterstrich). Jedes
+            # Speichern mit geaenderter Adresse endete deshalb in einem 500.
+            # Ersatzlos weg: Der Block unten deckt beide Faelle ab, geaenderte
+            # Adresse und fehlende Koordinaten (SPEC-4).
         if phone_number is not None:
             artist.phone_number = str(phone_number).strip() or None
 

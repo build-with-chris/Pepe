@@ -47,9 +47,33 @@ c=$(code "$BASE/api/requests/requests");            check "GET /api/requests/req
 c=$(code "$BASE/api/admin/artists");                check "GET /api/admin/artists ohne Token" 401 "$c"
 c=$(code "$BASE/api/requests/debug/matching");      check "GET debug/matching ohne Token" 401 "$c"
 c=$(code "$BASE/api/artists/me");                   check "GET /api/artists/me ohne Token" 401 "$c"
-c=$(code -X POST "$BASE/api/upload/image");         check "POST /api/upload/image ohne Token" 401 "$c"
+c=$(code -X POST "$BASE/api/upload/image");          check "POST /api/upload/image ohne Token" 401 "$c"
+c=$(code -X POST "$BASE/api/upload/delete" -H "Content-Type: application/json" -d '{"url":"x"}')
+                                                    check "POST /api/upload/delete ohne Token" 401 "$c"
+c=$(code -X POST "$BASE/api/artists/me/ensure");     check "POST /api/artists/me/ensure ohne Token" 401 "$c"
+c=$(code -X PATCH "$BASE/api/artists/me/profile" -H "Content-Type: application/json" -d '{}')
+                                                    check "PATCH /api/artists/me/profile ohne Token" 401 "$c"
+c=$(code -X POST "$BASE/api/artists/me/submit_review"); check "POST submit_review ohne Token" 401 "$c"
 c=$(code -X POST "$BASE/api/admin/migrate-database-temp"); check "POST migrate ohne Token" 401 "$c"
 c=$(code -H "Authorization: Bearer nonsense" "$BASE/api/admin/artists"); check "Adminroute mit Muelltoken" 401 "$c"
+
+echo
+echo "-- Kein unauthentifizierter Schreibendpunkt --"
+# `frontend/api/upload.ts` schrieb in den Blob-Speicher ohne jede Anmeldung, mit
+# freiem Pfad aus dem Query-String und allowOverwrite. Die Datei ist entfernt.
+# Hier wird geprueft, dass an dem Pfad keine Vercel-Funktion mehr antwortet: Er
+# liegt unter /api und geht damit ans Backend, wo keine Route passt.
+curl -s -m 40 -o /tmp/up.txt -w '%{http_code}' \
+  -X POST "$BASE/api/upload?pathname=smoke-test-darf-nicht-entstehen.txt" \
+  -H 'Content-Type: text/plain' --data 'smoke' > /tmp/up_code.txt
+upc=$(cat /tmp/up_code.txt)
+if [ "$upc" = "404" ] || [ "$upc" = "405" ]; then
+  printf '  OK    %-46s %s (keine Funktion mehr)\n' "POST /api/upload (alter Pfad)" "$upc"; pass=$((pass+1))
+elif grep -qi '"url"\|blob.vercel-storage' /tmp/up.txt; then
+  printf '  FEHL  %-46s %s LEGT DATEIEN AN\n' "POST /api/upload (alter Pfad)" "$upc"; fail=$((fail+1))
+else
+  printf '  OK    %-46s %s, keine Blob-URL in der Antwort\n' "POST /api/upload (alter Pfad)" "$upc"; pass=$((pass+1))
+fi
 
 echo
 echo "-- Abgeschaltetes: darf keine Backend-Daten liefern --"
