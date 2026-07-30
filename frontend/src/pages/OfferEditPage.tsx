@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Check, Users, XCircle } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/PageState';
 
 export default function OfferEditPage() {
   const { reqId, offerId } = useParams<{ reqId: string; offerId: string }>();
@@ -15,7 +19,9 @@ export default function OfferEditPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [requestData, setRequestData] = useState<any>(null);
-  const [adminOffers, setAdminOffers] = useState<any[]>([]);
+  // `adminOffers` stand hier als State, wurde aber nur in einer Debug-Ausgabe
+  // gelesen. Das gesuchte Angebot wird im Ladevorgang direkt aus der Antwort
+  // herausgesucht (`offers.find`), eine eigene Ablage braucht es nicht.
   const [artistNameById, setArtistNameById] = useState<Record<number, string>>({});
   const [artistStatuses, setArtistStatuses] = useState<Record<number, string>>({});
   const [artistGages, setArtistGages] = useState<Record<number, number | null>>({});
@@ -144,14 +150,10 @@ export default function OfferEditPage() {
     });
     Promise.all([reqsPromise, offersPromise, artistStatusesPromise])
       .then(([reqList, offers, artistStatusesList]) => {
-        // Debug: Suche Request in admin list
-        console.log('🔎 Suche Request in admin list nach reqId=', reqId, 'typ:', typeof reqId);
-        console.log('📦 Erstes Element der Liste (falls vorhanden):', reqList[0]);
         const targetIdNum = Number(reqId);
         const reqData = reqList.find((r: any) => Number(r.id) === targetIdNum);
         if (!reqData) {
-          console.error('❌ Request not found in admin list. Available IDs:', reqList.map((r:any)=>r.id));
-          throw new Error(`Request not found (id=${reqId})`);
+          throw new Error(`Anfrage ${reqId} nicht gefunden.`);
         }
         // Set recommended customer price with fallback to price_min/max if missing
         const recMinVal = (reqData.recommended_price_min ?? reqData.price_min ?? 0);
@@ -164,7 +166,6 @@ export default function OfferEditPage() {
         setGage(Number.isFinite(gageInit) ? Number(gageInit) : 0);
         setNotes(currentOffer?.notes ?? '');
         setRequestData(reqData);
-        setAdminOffers(offers);
         // Map per-artist Status & gesendete Gage → { [artist_id]: status } & { [artist_id]: requested_gage }
         if (Array.isArray(artistStatusesList)) {
           const mapStatus: Record<number, string> = {};
@@ -172,13 +173,10 @@ export default function OfferEditPage() {
           for (const row of artistStatusesList) {
             if (!row) continue;
             const idNum = Number((row as any).artist_id);
-            console.log('🧩 per-artist status row', row, '→ parsed artist_id:', idNum, 'raw type:', typeof (row as any).artist_id);
             if (!Number.isFinite(idNum)) continue;
             mapStatus[idNum] = (row as any).status;
             mapGage[idNum] = ((row as any).requested_gage ?? null);
           }
-          console.log('🧭 mapped artistStatuses =', mapStatus);
-          console.log('🧭 mapped artistGages    =', mapGage);
           setArtistStatuses(mapStatus);
           setArtistGages(mapGage);
         }
@@ -195,17 +193,6 @@ export default function OfferEditPage() {
                 }
               }
               setArtistNameById(nameMap);
-              // Debug log loaded data
-              console.log('🔍 OfferEditPage loaded:', {
-                requestData: reqData,
-                adminOffers: offers,
-                artistStatuses: artistStatusesList,
-                artistNameById: nameMap,
-                recMin,
-                recMax,
-                gage,
-                notes
-              });
             })
             .catch(err => console.error('Fehler beim Laden der Künstlernamen:', err));
         }
@@ -243,111 +230,256 @@ export default function OfferEditPage() {
     }
   }
 
-  if (loading) return <p className="p-6 text-white">Lade Daten...</p>;
-  if (error) {
-    console.error('🚨 OfferEditPage error:', error);
-    return <p className="p-6 text-red-500">Fehler: {error}</p>;
+  const backButton = (
+    <button
+      type="button"
+      onClick={() => navigate(-1)}
+      className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      Zurück
+    </button>
+  );
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Angebot bearbeiten" actions={backButton}>
+        <LoadingSkeleton rows={2} />
+      </DashboardLayout>
+    );
   }
-  // Debug log before render
-  console.log('🔄 Rendering OfferEditPage with state:', {
-    requestData,
-    adminOffers,
-    artistStatuses,
-    artistGages,
-    artistNameById,
-    gage,
-    notes
-  });
+
+  if (error) {
+    return (
+      <DashboardLayout title="Angebot bearbeiten" actions={backButton}>
+        <ErrorState message={error} />
+      </DashboardLayout>
+    );
+  }
 
   // Typed artistIds to avoid implicit any in map
   const artistIds: number[] = Array.isArray(requestData?.artist_ids)
     ? (requestData.artist_ids as number[])
     : [];
 
+  const details: { label: string; value: React.ReactNode }[] = [
+    { label: 'Veranstalter', value: requestData.client_name },
+    { label: 'Datum', value: requestData.event_date },
+    { label: 'Uhrzeit', value: requestData.event_time },
+    { label: 'Adresse', value: requestData.event_address },
+    { label: 'Event-Typ', value: requestData.event_type },
+    { label: 'Show-Typ', value: requestData.show_type },
+    { label: 'Disziplin', value: requestData.show_discipline },
+    { label: 'Dauer', value: `${requestData.duration_minutes} Minuten` },
+    { label: 'Gäste', value: requestData.number_of_guests },
+    { label: 'Team-Größe', value: requestData.team_size },
+    { label: 'Indoor', value: requestData.is_indoor ? 'Ja' : 'Nein' },
+    { label: 'Beleuchtung', value: requestData.needs_light ? 'Ja' : 'Nein' },
+    { label: 'Ton', value: requestData.needs_sound ? 'Ja' : 'Nein' },
+    {
+      label: 'Empf. Preis max.',
+      value: `${Number(recMax ?? 0).toLocaleString('de-DE')} €`,
+    },
+    {
+      label: 'Angefragte Künstler',
+      value: artistIds.map((id) => artistNameById[id] ?? id).join(', ') || '–',
+    },
+    { label: 'Besondere Wünsche', value: requestData.special_requests || '–' },
+  ];
+
   return (
-    <div className="w-screen bg-black min-h-screen text-white">
-      <div className="container mx-auto p-6 max-w-6xl">
-        <h1 className="text-2xl font-bold mb-4">Angebot bearbeiten</h1>
-        <div className="flex flex-col gap-6">
-          {/* Left: Event Details */}
-          <div className="bg-gray-800 p-4 rounded shadow grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <h2 className="text-xl font-semibold mb-4 col-span-full">Event-Details</h2>
-            <p><strong>Angefragte Künstler:</strong> {artistIds.map((id) => artistNameById[id] ?? id).join(', ')}</p>
-            <p><strong>Angefragte Disziplinen:</strong> {requestData.show_discipline}</p>
-            <p><strong>Name Veranstalter:</strong> {requestData.client_name}</p>
-            <p><strong>Dauer der Show:</strong> {requestData.duration_minutes} Minuten</p>
-            <p><strong>Adresse:</strong> {requestData.event_address}</p>
-            <p><strong>Datum:</strong> {requestData.event_date}</p>
-            <p><strong>Uhrzeit:</strong> {requestData.event_time}</p>
-            <p><strong>Event-Typ:</strong> {requestData.event_type}</p>
-            <p><strong>Indoor:</strong> {requestData.is_indoor ? 'Ja' : 'Nein'}</p>
-            <p><strong>Beleuchtung:</strong> {requestData.needs_light ? 'Ja' : 'Nein'}</p>
-            <p><strong>Ton:</strong> {requestData.needs_sound ? 'Ja' : 'Nein'}</p>
-            <p><strong>Gäste:</strong> {requestData.number_of_guests}</p>
-            <p><strong>Empf. Preis Max:</strong> {Number(recMax ?? 0).toLocaleString('de-DE')}€</p>
-            <p><strong>Disziplin:</strong> {requestData.show_discipline}</p>
-            <p><strong>Show-Typ:</strong> {requestData.show_type}</p>
-            <p><strong>Besondere Wünsche:</strong> {requestData.special_requests || '–'}</p>
-            <p><strong>Team-Größe:</strong> {requestData.team_size}</p>
-          </div>
-          {/* Right: Artist Offers */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-semibold">Artist-Angebote</h2>
-              <button
-                type="button"
-                onClick={handleBulkCancel}
-                className="px-3 py-2 rounded text-sm bg-red-600 hover:bg-red-700 text-white disabled:opacity-60"
-                disabled={!artistIds.length}
-              >
-                Alle stornieren
-              </button>
+    <DashboardLayout title="Angebot bearbeiten" actions={backButton}>
+      {/* Event-Details als Beschreibungsliste. Vorher waren es 17 Absaetze der
+          Form `<strong>Label:</strong> Wert` — auf dem Handy eine Textwand, in
+          der man nichts fand. */}
+      <section
+        aria-labelledby="event-details-heading"
+        className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6"
+      >
+        <h2 id="event-details-heading" className="text-lg font-semibold text-white">
+          Event-Details
+        </h2>
+        <dl className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          {details.map(({ label, value }) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-xs uppercase tracking-wider text-gray-500">{label}</dt>
+              <dd className="mt-1 break-words text-sm text-gray-100">{value ?? '–'}</dd>
             </div>
-            {artistIds.map((artistId: number, idx: number) => {
-              console.log('🔁 Rendering artist card idx:', idx, 'artistId:', artistId, 'adminOffer:', adminOffers[idx]);
-              return (
-              <div key={artistId} className="bg-gray-800 p-4 rounded shadow">
-                <p><strong>Künstler:</strong> {artistNameById[artistId] ?? artistId}</p>
-                {/* Gesendete Gage (vom Artist). Fallback: Solo-Request → requestData.artist_gage */}
-                {artistGages[artistId] != null ? (
-                  <p><strong>Gesendete Gage:</strong> {Number(artistGages[artistId]).toLocaleString('de-DE')}€</p>
-                ) : (
-                  artistIds.length === 1 && requestData?.artist_gage != null ? (
-                    <p><strong>Gesendete Gage:</strong> {Number(requestData.artist_gage).toLocaleString('de-DE')}€</p>
-                  ) : (
-                    <p className="italic">noch keine Gage gesendet</p>
-                  )
-                )}
-                <label className="block mt-2 font-medium">Status</label>
-                <select
-                  className="mt-1 w-full bg-gray-700 text-white p-2 rounded"
-                  value={artistStatuses[artistId] ?? 'angefragt'}
-                  onChange={e => handleArtistStatusChange(artistId, e.target.value)}
-                >
-                  {allowedStatuses.map(s => (
-                    <option key={s} value={s} className="text-black">
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                {/* Bemerkung an den Künstler (bei Ablehnung erforderlich) */}
-                <label className="block mt-3 text-sm font-medium">Bemerkung an den Künstler</label>
-                <textarea
-                  className="mt-1 w-full bg-gray-700 text-white p-2 rounded resize-y min-h-[72px]"
-                  placeholder="z. B. Termin bereits vergeben / Stil passt nicht zum Event / logistisch nicht machbar"
-                  value={artistRemarks[artistId] ?? ''}
-                  onChange={(e) => setArtistRemarks(prev => ({ ...prev, [artistId]: e.target.value }))}
-                />
-                { (artistStatuses[artistId] === 'abgelehnt') && !(artistRemarks[artistId]?.trim()) && (
-                  <p className="mt-1 text-xs text-red-400">Bei Ablehnung ist eine kurze Bemerkung erforderlich.</p>
-                ) }
-                <p className="mt-1 text-xs text-gray-400">(Status-Quelle: {artistStatuses[artistId] ? 'per-Artist' : 'Default'})</p>
-              </div>
-              );
-            })}
+          ))}
+        </dl>
+      </section>
+
+      {/* Angebot an den Kunden.
+          Diese Felder fehlten. `handleSubmit` gab es schon, war aber an nichts
+          gebunden: kein Formular, kein Knopf, kein onSubmit. Die Seite hiess
+          „Angebot bearbeiten" und konnte nichts speichern. */}
+      <form
+        onSubmit={handleSubmit}
+        aria-labelledby="offer-heading"
+        className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6"
+      >
+        <h2 id="offer-heading" className="text-lg font-semibold text-white">
+          Angebot an den Kunden
+        </h2>
+
+        <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div>
+            <label htmlFor="offer-price" className="block text-sm font-medium text-gray-200">
+              Kundenpreis
+            </label>
+            <div className="relative mt-1.5">
+              <input
+                id="offer-price"
+                type="number"
+                min={0}
+                step={10}
+                inputMode="decimal"
+                value={gage}
+                onChange={(e) => setGage(Number(e.target.value))}
+                aria-describedby="offer-price-hint"
+                className="w-full rounded-lg border border-white/10 bg-pepe-surface py-2.5 pl-3 pr-9 text-sm tabular-nums text-white focus:border-pepe-gold focus:outline-none focus:ring-1 focus:ring-pepe-gold"
+              />
+              <span
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+                aria-hidden="true"
+              >
+                €
+              </span>
+            </div>
+            <p id="offer-price-hint" className="mt-1.5 text-xs text-gray-500">
+              Empfehlung {Number(recMin ?? 0).toLocaleString('de-DE')} € bis{' '}
+              {Number(recMax ?? 0).toLocaleString('de-DE')} €
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="offer-notes" className="block text-sm font-medium text-gray-200">
+              Anmerkung <span className="text-gray-500">(optional)</span>
+            </label>
+            <textarea
+              id="offer-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Interne Notiz zu diesem Angebot"
+              className="mt-1.5 min-h-[76px] w-full resize-y rounded-lg border border-white/10 bg-pepe-surface px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:border-pepe-gold focus:outline-none focus:ring-1 focus:ring-pepe-gold"
+            />
           </div>
         </div>
-      </div>
-    </div>
+
+        <div className="mt-5 flex justify-end">
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-pepe-gold px-4 py-2.5 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal"
+          >
+            <Check className="h-4 w-4" aria-hidden="true" />
+            Angebot speichern
+          </button>
+        </div>
+      </form>
+
+      <section aria-labelledby="artist-offers-heading" className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 id="artist-offers-heading" className="text-lg font-semibold text-white">
+            Künstler-Angebote
+          </h2>
+          <button
+            type="button"
+            onClick={handleBulkCancel}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-200 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!artistIds.length}
+          >
+            <XCircle className="h-4 w-4" aria-hidden="true" />
+            Alle stornieren
+          </button>
+        </div>
+
+        {artistIds.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="Keine Künstler angefragt"
+            hint="Zu dieser Anfrage sind keine Künstler hinterlegt."
+          />
+        ) : (
+          artistIds.map((artistId: number) => {
+            const sentGage =
+              artistGages[artistId] ??
+              (artistIds.length === 1 ? requestData?.artist_gage : null);
+            const status = artistStatuses[artistId] ?? 'angefragt';
+            const remark = artistRemarks[artistId] ?? '';
+            const remarkMissing = status === 'abgelehnt' && !remark.trim();
+            // Eigene IDs je Künstler, sonst zeigen alle Beschriftungen auf das
+            // erste Feld und ein Klick darauf springt in die falsche Karte.
+            const statusId = `status-${artistId}`;
+            const remarkId = `remark-${artistId}`;
+            const remarkErrorId = `remark-error-${artistId}`;
+
+            return (
+              <div
+                key={artistId}
+                className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h3 className="font-medium text-white">
+                    {artistNameById[artistId] ?? `Künstler ${artistId}`}
+                  </h3>
+                  {sentGage != null ? (
+                    <p className="text-sm text-gray-300">
+                      Gesendete Gage{' '}
+                      <span className="font-semibold tabular-nums text-white">
+                        {Number(sentGage).toLocaleString('de-DE')} €
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Noch keine Gage gesendet</p>
+                  )}
+                </div>
+
+                <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                  <div>
+                    <label htmlFor={statusId} className="block text-sm font-medium text-gray-200">
+                      Status
+                    </label>
+                    <select
+                      id={statusId}
+                      className="mt-1.5 w-full rounded-lg border border-white/10 bg-pepe-surface px-3 py-2.5 text-sm text-white focus:border-pepe-gold focus:outline-none focus:ring-1 focus:ring-pepe-gold"
+                      value={status}
+                      onChange={(e) => handleArtistStatusChange(artistId, e.target.value)}
+                    >
+                      {allowedStatuses.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor={remarkId} className="block text-sm font-medium text-gray-200">
+                      Bemerkung an den Künstler
+                    </label>
+                    <textarea
+                      id={remarkId}
+                      className="mt-1.5 min-h-[76px] w-full resize-y rounded-lg border border-white/10 bg-pepe-surface px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:border-pepe-gold focus:outline-none focus:ring-1 focus:ring-pepe-gold"
+                      placeholder="z. B. Termin bereits vergeben, Stil passt nicht zum Event, logistisch nicht machbar"
+                      value={remark}
+                      onChange={(e) =>
+                        setArtistRemarks((prev) => ({ ...prev, [artistId]: e.target.value }))
+                      }
+                      aria-invalid={remarkMissing || undefined}
+                      aria-describedby={remarkMissing ? remarkErrorId : undefined}
+                    />
+                    {remarkMissing && (
+                      <p id={remarkErrorId} className="mt-1.5 text-xs text-red-400">
+                        Bei einer Ablehnung ist eine kurze Bemerkung erforderlich.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </section>
+    </DashboardLayout>
   );
 }

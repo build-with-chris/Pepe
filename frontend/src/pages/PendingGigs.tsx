@@ -1,5 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CalendarCheck, CalendarClock, MapPin } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/PageState';
+import { cn } from '@/lib/utils';
 
 interface AdminGig {
   id: number;
@@ -26,41 +31,113 @@ const formatDateTimeDE = (d: Date) => {
   return `${datum} ${zeit}`;
 };
 
+function GigList({
+  gigs,
+  variant,
+}: {
+  gigs: (AdminGig & { _dt: Date })[];
+  variant: 'upcoming' | 'past';
+}) {
+  return (
+    <ul className="list-none space-y-3">
+      {gigs.map((g) => (
+        <li
+          key={`${variant}-${g.id}`}
+          className={cn(
+            'rounded-2xl border p-4 sm:p-5',
+            variant === 'upcoming'
+              ? 'border-white/10 bg-white/5'
+              : // Vergangenes tritt zurueck, statt gleich stark zu wirken.
+                'border-white/5 bg-white/[0.02]'
+          )}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p
+                className={cn(
+                  'font-medium',
+                  variant === 'upcoming' ? 'text-white' : 'text-gray-300'
+                )}
+              >
+                {g.event_type || 'Event'}
+                {g.show_type ? ` – ${g.show_type}` : ''}
+              </p>
+              {g.client_name && (
+                <p className="mt-0.5 truncate text-sm text-gray-400">{g.client_name}</p>
+              )}
+              {g.event_address && (
+                <p className="mt-1.5 flex items-start gap-1.5 text-sm text-gray-500">
+                  <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 break-words">{g.event_address}</span>
+                </p>
+              )}
+            </div>
+
+            {/* tabular-nums haelt die Datumsspalte ruhig, sonst zappeln die
+                Ziffern je nach Breite. Das <time>-Element gibt Assistenz-
+                software das maschinenlesbare Datum. */}
+            <time
+              dateTime={g._dt.toISOString()}
+              className="flex-shrink-0 text-sm tabular-nums text-gray-300 sm:text-right"
+            >
+              {formatDateTimeDE(g._dt)}
+            </time>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SectionHeading({ children, count }: { children: React.ReactNode; count: number }) {
+  return (
+    <div className="mb-4 flex items-baseline justify-between gap-3">
+      <h2 className="text-lg font-semibold text-white">{children}</h2>
+      <span className="flex-shrink-0 text-sm tabular-nums text-gray-500">
+        {count} {count === 1 ? 'Eintrag' : 'Einträge'}
+      </span>
+    </div>
+  );
+}
+
 export default function AnstehendeGigs() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gigs, setGigs] = useState<AdminGig[]>([]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/requests/all`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) {
-          const txt = await res.text().catch(() => '');
-          throw new Error(`HTTP ${res.status} ${txt}`);
-        }
-        const json = await res.json();
-        const list: AdminGig[] = Array.isArray(json) ? json : (json?.requests ?? []);
-        if (!isMounted) return;
-        setGigs(list);
-        console.log('📦 Admin gigs loaded:', list.length, list.map(g => g.id));
-      } catch (e: any) {
-        if (!isMounted) return;
-        console.error('❌ PendingGigs fetch failed:', e);
-        setError(e?.message ?? 'Fehler beim Laden');
-      } finally {
-        if (isMounted) setLoading(false);
+  // Als eigene Funktion, damit der Fehlerzustand einen „Erneut versuchen"-Knopf
+  // anbieten kann.
+  const load = useCallback(async (signal?: AbortSignal) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/requests/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status} ${txt}`);
       }
-    };
-    load();
-    return () => { isMounted = false; };
+      const json = await res.json();
+      const list: AdminGig[] = Array.isArray(json) ? json : (json?.requests ?? []);
+      if (signal?.aborted) return;
+      setGigs(list);
+    } catch (e: any) {
+      if (signal?.aborted || e?.name === 'AbortError') return;
+      console.error('PendingGigs fetch failed:', e);
+      setError(e?.message ?? 'Fehler beim Laden');
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
   }, [token]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
 
   const { upcoming, past } = useMemo(() => {
     const accepted = gigs.filter(g => normalize(g.status) === 'akzeptiert');
@@ -79,77 +156,43 @@ export default function AnstehendeGigs() {
   }, [gigs]);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6">📋 Gigs – Übersicht (Admin)</h1>
+    <DashboardLayout
+      title="Gigs"
+      description="Alle bestätigten Gigs aus dem gesamten System, nach Datum sortiert."
+    >
+      {loading && <LoadingSkeleton rows={3} />}
 
-      {loading && <p>⏳ Lädt…</p>}
-      {error && <p className="text-red-400">{error}</p>}
+      {error && !loading && <ErrorState message={error} onRetry={() => void load()} />}
 
       {!loading && !error && (
         <>
-          {/* Bevorstehende Gigs */}
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Bevorstehende Gigs</h2>
-              <span className="text-sm text-gray-300">{upcoming.length} Einträge</span>
-            </div>
+          <section aria-labelledby="upcoming-heading">
+            <SectionHeading count={upcoming.length}>
+              <span id="upcoming-heading">Bevorstehend</span>
+            </SectionHeading>
             {upcoming.length === 0 ? (
-              <p className="text-gray-400">Keine bevorstehenden Gigs.</p>
+              <EmptyState
+                icon={CalendarClock}
+                title="Keine bevorstehenden Gigs"
+                hint="Sobald eine Anfrage bestätigt wird und das Datum in der Zukunft liegt, erscheint sie hier."
+              />
             ) : (
-              <ul className="space-y-3">
-                {upcoming.map(g => {
-                  const dt = parseEventDateTime(g.event_date, g.event_time);
-                  return (
-                    <li key={`up-${g.id}`} className="bg-gray-800 rounded p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                          <div className="font-medium">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
-                          <div className="text-sm text-gray-300">{g.client_name || ''}</div>
-                          {g.event_address && <div className="text-sm text-gray-400">📍 {g.event_address}</div>}
-                        </div>
-                        <div className="text-sm text-gray-200 text-right">
-                          <div>📅 {formatDateTimeDE(dt)}</div>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              <GigList gigs={upcoming} variant="upcoming" />
             )}
           </section>
 
-          {/* Vergangene Gigs */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Vergangene Gigs</h2>
-              <span className="text-sm text-gray-300">{past.length} Einträge</span>
-            </div>
+          <section aria-labelledby="past-heading" className="pt-4">
+            <SectionHeading count={past.length}>
+              <span id="past-heading">Vergangen</span>
+            </SectionHeading>
             {past.length === 0 ? (
-              <p className="text-gray-400">Keine vergangenen Gigs.</p>
+              <EmptyState icon={CalendarCheck} title="Noch keine vergangenen Gigs" />
             ) : (
-              <ul className="space-y-3">
-                {past.map(g => {
-                  const dt = parseEventDateTime(g.event_date, g.event_time);
-                  return (
-                    <li key={`past-${g.id}`} className="bg-gray-900 rounded p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                          <div className="font-medium">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
-                          <div className="text-sm text-gray-300">{g.client_name || ''}</div>
-                          {g.event_address && <div className="text-sm text-gray-400">📍 {g.event_address}</div>}
-                        </div>
-                        <div className="text-sm text-gray-200 text-right">
-                          <div>📅 {formatDateTimeDE(dt)}</div>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              <GigList gigs={past} variant="past" />
             )}
           </section>
         </>
       )}
-    </div>
+    </DashboardLayout>
   );
 }

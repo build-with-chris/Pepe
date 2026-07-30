@@ -16,6 +16,31 @@
 @import './styling/artist-card-compact.css';
 @import './styling/artist-card-final.css';
 
+/* ===== Farben als echte Tailwind-Utilities =====
+
+   Dies ist Tailwind v4. Die `tailwind.config.js` im Projektwurzelverzeichnis
+   wird davon *nicht* gelesen — die dort eingetragenen `pepe`-Farben haben also
+   nie Utilities erzeugt. Was es gab, waren einzelne handgeschriebene Regeln in
+   styling/components.css (`.text-pepe-gold`, `.bg-pepe-dark`). Deshalb standen
+   in den Dashboard-Seiten ueberall Hex-Werte in Klammern: `text-[#D4A574]`.
+   `bg-pepe-gold` oder `border-pepe-gold/30` hatte einfach keine Wirkung.
+
+   Mit `@theme` erzeugt Tailwind daraus die volle Familie — Hintergrund, Text,
+   Rahmen, Ring — samt Deckkraft-Schreibweise wie `bg-pepe-gold/10`.
+
+   Die Werte verweisen auf styling/tokens.css, damit es bei einer Quelle
+   bleibt. */
+@theme {
+  --color-pepe-coal: var(--pepe-coal);
+  --color-pepe-black: var(--pepe-black);
+  --color-pepe-dark: var(--pepe-dark);
+  --color-pepe-surface: var(--pepe-surface);
+  --color-pepe-line: var(--pepe-line);
+  --color-pepe-gold: var(--pepe-gold);
+  --color-pepe-gold-hover: var(--pepe-gold-hover);
+  --color-pepe-gold-active: var(--pepe-gold-active);
+}
+
 /* ===== Base Reset ===== */
 * {
   box-sizing: border-box;
@@ -64,15 +89,76 @@ main.dashboard-main {
   padding-top: 0;
 }
 
+/* Breite der festen Seitenleiste. Eine Quelle für CSS und TSX — vorher stand
+   die 260 doppelt, hier und als Konstante in DashboardLayout.tsx. */
+:root {
+  --sidebar-width: 260px;
+  --tabbar-height: 3.5rem;
+}
+
 /* Dashboard main content area - offset for fixed sidebar on large screens */
 .main-content-area {
   margin-left: 0;
-  transition: margin-left 0.3s ease;
 }
 
 @media (min-width: 1024px) {
   .main-content-area {
-    margin-left: 260px;
+    margin-left: var(--sidebar-width);
+  }
+}
+
+/* Platz für die Tab-Leiste am unteren Rand, damit sie den letzten Eintrag
+   nicht verdeckt. Ab lg gibt es die Leiste nicht. */
+.dashboard-main {
+  padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 1.5rem);
+}
+
+@media (min-width: 1024px) {
+  .dashboard-main {
+    padding-bottom: 2.5rem;
+  }
+}
+
+/* Die „Mehr"-Schublade fährt von unten ein. Eigene Keyframes, weil
+   `tailwindcss-animate` in diesem Projekt nicht eingebunden ist. */
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.sheet-slide-up {
+  animation: sheet-slide-up 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-slide-up {
+    animation: none;
+  }
+}
+
+/* Platzhalter waehrend des Ladens. */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-pulse {
+    animation: none;
+    opacity: 0.7;
   }
 }
 

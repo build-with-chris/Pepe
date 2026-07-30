@@ -81,8 +81,8 @@ function StatCard({ title, value, icon: Icon, trend, trendUp }: StatCardProps) {
             </p>
           )}
         </div>
-        <div className="w-12 h-12 rounded-xl bg-[#D4A574]/20 flex items-center justify-center">
-          <Icon className="w-6 h-6 text-[#D4A574]" />
+        <div className="w-12 h-12 rounded-xl bg-pepe-gold/20 flex items-center justify-center">
+          <Icon className="w-6 h-6 text-pepe-gold" />
         </div>
       </div>
     </div>
@@ -354,7 +354,7 @@ export default function Admin() {
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
+            <Loader2 className="w-8 h-8 animate-spin text-pepe-gold" />
             <span className="ml-3 text-gray-400">Lade Dashboard-Daten...</span>
           </div>
         )}
@@ -440,7 +440,7 @@ export default function Admin() {
                 {dashboardData?.offers?.length > 0 && statusFilter !== 'all' && (
                   <button
                     onClick={() => setStatusFilter('all')}
-                    className="mt-3 text-[#D4A574] hover:text-[#D4A574]/80 text-sm underline"
+                    className="mt-3 text-pepe-gold hover:text-pepe-gold/80 text-sm underline"
                   >
                     Alle Anfragen anzeigen
                   </button>

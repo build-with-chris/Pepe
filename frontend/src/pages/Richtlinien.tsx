@@ -150,8 +150,8 @@ export default function Richtlinien() {
         </p>
 
         {/* TL;DR Card */}
-        <div className="bg-gradient-to-br from-[#D4A574]/10 to-[#D4A574]/5 border border-[#D4A574]/20 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-[#D4A574] mb-3">Kurz gesagt (TL;DR)</h2>
+        <div className="bg-gradient-to-br from-pepe-gold/10 to-pepe-gold/5 border border-pepe-gold/20 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-pepe-gold mb-3">Kurz gesagt (TL;DR)</h2>
           <p className="text-gray-300 leading-relaxed">
             Du entscheidest über Anfragen & Gagen – wir kümmern uns um Matching, Vertrag & Support.
             Medien bleiben deine – wir nutzen sie nur zur Bewerbung.
@@ -170,8 +170,8 @@ export default function Richtlinien() {
                 className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-colors"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-xl bg-[#D4A574]/10">
-                    <Icon className="w-5 h-5 text-[#D4A574]" />
+                  <div className="p-2 rounded-xl bg-pepe-gold/10">
+                    <Icon className="w-5 h-5 text-pepe-gold" />
                   </div>
                   <h3 className="font-semibold text-white">{section.title}</h3>
                 </div>
@@ -185,7 +185,7 @@ export default function Richtlinien() {
         <div className="text-center pt-6 border-t border-white/10">
           <p className="text-sm text-gray-500">
             Stand: {new Date().toLocaleDateString("de-DE")} •
-            Bei Fragen wende dich an <a href="mailto:info@pepeshows.de" className="text-[#D4A574] hover:underline">info@pepeshows.de</a>
+            Bei Fragen wende dich an <a href="mailto:info@pepeshows.de" className="text-pepe-gold hover:underline">info@pepeshows.de</a>
           </p>
         </div>
       </div>

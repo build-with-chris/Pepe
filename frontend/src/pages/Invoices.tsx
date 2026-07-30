@@ -236,7 +236,7 @@ export default function AdminInvoicesPage() {
       <div className="space-y-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <StatCard title="Gesamt" value={stats.total} icon={Receipt} color="bg-[#D4A574]/20" />
+          <StatCard title="Gesamt" value={stats.total} icon={Receipt} color="bg-pepe-gold/20" />
           <StatCard title="Hochgeladen" value={stats.uploaded} icon={Upload} color="bg-gray-500/20" />
           <StatCard title="Geprüft" value={stats.verified} icon={FileCheck} color="bg-amber-500/20" />
           <StatCard title="Bezahlt" value={stats.paid} icon={CheckCircle} color="bg-emerald-500/20" />
@@ -297,7 +297,7 @@ export default function AdminInvoicesPage() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
+            <Loader2 className="w-8 h-8 animate-spin text-pepe-gold" />
             <span className="ml-3 text-gray-400">Lade Rechnungen...</span>
           </div>
         )}

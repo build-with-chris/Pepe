@@ -96,7 +96,7 @@ const MyGigs: React.FC = () => {
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
+            <Loader2 className="w-8 h-8 animate-spin text-pepe-gold" />
             <span className="ml-3 text-gray-400">{t('myGigs.loading')}</span>
           </div>
         )}
@@ -136,7 +136,7 @@ const MyGigs: React.FC = () => {
                   {upcoming.map(g => {
                     const dt = parseEventDateTime(g.event_date, g.event_time);
                     return (
-                      <DashboardCard key={`up-${g.id}`} className="hover:border-[#D4A574]/30 transition-all p-5">
+                      <DashboardCard key={`up-${g.id}`} className="hover:border-pepe-gold/30 transition-all p-5">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                           <div>
                             <div className="font-medium text-white text-base">{g.event_type || 'Event'}{g.show_type ? ` – ${g.show_type}` : ''}</div>
@@ -144,12 +144,12 @@ const MyGigs: React.FC = () => {
                           </div>
                           <div className="text-sm space-y-2">
                             <div className="flex items-center text-gray-300">
-                              <Calendar className="w-4 h-4 mr-3 text-[#D4A574]" />
+                              <Calendar className="w-4 h-4 mr-3 text-pepe-gold" />
                               {formatDateTimeDE(dt)}
                             </div>
                             {g.event_address && (
                               <div className="flex items-center text-gray-300">
-                                <MapPin className="w-4 h-4 mr-3 text-[#D4A574]" />
+                                <MapPin className="w-4 h-4 mr-3 text-pepe-gold" />
                                 {g.event_address}
                               </div>
                             )}

@@ -551,7 +551,7 @@ export default function Profile() {
                 setLocked(false);
                 setSuccess(false);
               }}
-              className="bg-[#D4A574] hover:bg-[#E6B887] text-black font-medium"
+              className="bg-pepe-gold hover:bg-pepe-gold-hover text-black font-medium"
               aria-label={t('profileSetup.editAria')}
             >
               <Pencil className="w-4 h-4 mr-2" />
@@ -597,9 +597,9 @@ export default function Profile() {
           />
           {locked && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
-              <div className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-8 text-white max-w-md text-center shadow-2xl">
-                <div className="w-12 h-12 rounded-full bg-[#D4A574]/10 flex items-center justify-center mx-auto mb-4">
-                  <Pencil className="w-6 h-6 text-[#D4A574]" />
+              <div className="bg-pepe-surface border border-white/10 rounded-2xl p-8 text-white max-w-md text-center shadow-2xl">
+                <div className="w-12 h-12 rounded-full bg-pepe-gold/10 flex items-center justify-center mx-auto mb-4">
+                  <Pencil className="w-6 h-6 text-pepe-gold" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Profil bearbeiten</h3>
                 <p className="mb-6 text-gray-400">{t('profileSetup.lockedHint')}</p>
@@ -607,7 +607,7 @@ export default function Profile() {
                   ref={unlockBtnRef}
                   id="unlock-profile-button"
                   onClick={() => { setLocked(false); setSuccess(false); }}
-                  className="bg-[#D4A574] hover:bg-[#E6B887] text-black font-medium"
+                  className="bg-pepe-gold hover:bg-pepe-gold-hover text-black font-medium"
                   aria-label={t('profileSetup.editAria')}
                 >
                   <Pencil className="w-4 h-4 mr-2" />

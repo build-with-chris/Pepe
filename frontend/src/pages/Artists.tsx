@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { invalidatePendingArtistCount } from '@/components/dashboard/usePendingArtistCount';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -245,6 +246,10 @@ export default function KuenstlerVerwaltung() {
     };
     setSelected(updated);
     setArtists(prev => prev.map(a => (a.id === updated.id ? { ...a, ...updated } : a)));
+    // Das Abzeichen in der Navigation zeigt die offenen Freigaben. Nach einer
+    // Entscheidung ist die Zahl eine andere, also den Zwischenspeicher
+    // verwerfen — sonst stimmt sie bis zu eine Minute lang nicht.
+    invalidatePendingArtistCount();
     setMailNotice(
       data?.email_sent
         ? 'E-Mail an den Artist wurde versendet.'
@@ -339,7 +344,7 @@ export default function KuenstlerVerwaltung() {
       <div className="space-y-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <StatCard title="Gesamt" value={stats.total} icon={Users} color="bg-[#D4A574]/20" />
+          <StatCard title="Gesamt" value={stats.total} icon={Users} color="bg-pepe-gold/20" />
           <StatCard title="Pending" value={stats.pending} icon={Clock} color="bg-amber-500/20" />
           <StatCard title="Approved" value={stats.approved} icon={CheckCircle} color="bg-emerald-500/20" />
           <StatCard title="Rejected" value={stats.rejected} icon={XCircle} color="bg-red-500/20" />
@@ -389,7 +394,7 @@ export default function KuenstlerVerwaltung() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#D4A574]" />
+            <Loader2 className="w-8 h-8 animate-spin text-pepe-gold" />
             <span className="ml-3 text-gray-400">Lade Künstler...</span>
           </div>
         )}
@@ -414,7 +419,7 @@ export default function KuenstlerVerwaltung() {
             {filteredSorted.map((artist) => (
               <button
                 key={artist.id}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden text-left hover:border-[#D4A574]/30 hover:bg-white/[0.07] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#D4A574]/50"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden text-left hover:border-pepe-gold/30 hover:bg-white/[0.07] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pepe-gold/50"
                 onClick={() => openDetails(artist)}
               >
                 <div className="flex items-start gap-4 p-4">
@@ -456,7 +461,7 @@ export default function KuenstlerVerwaltung() {
                     {artist.disciplines && artist.disciplines.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {artist.disciplines.slice(0, 2).map((d, i) => (
-                          <span key={i} className="text-xs bg-[#D4A574]/20 text-[#D4A574] px-2 py-0.5 rounded-full">{d}</span>
+                          <span key={i} className="text-xs bg-pepe-gold/20 text-pepe-gold px-2 py-0.5 rounded-full">{d}</span>
                         ))}
                         {artist.disciplines.length > 2 && (
                           <span className="text-xs text-gray-500">+{artist.disciplines.length - 2}</span>
@@ -490,7 +495,7 @@ export default function KuenstlerVerwaltung() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeDetails} />
-          <div className="relative bg-[#111111] border border-white/10 text-white w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative bg-pepe-dark border border-white/10 text-white w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
               <div className="flex items-center gap-3">
@@ -672,7 +677,7 @@ export default function KuenstlerVerwaltung() {
                   <div className="flex flex-wrap gap-2">
                     {(selected.disciplines || []).length ? (
                       selected.disciplines!.map((d, i) => (
-                        <span key={i} className="text-sm bg-[#D4A574]/20 text-[#D4A574] px-3 py-1.5 rounded-full">{d}</span>
+                        <span key={i} className="text-sm bg-pepe-gold/20 text-pepe-gold px-3 py-1.5 rounded-full">{d}</span>
                       ))
                     ) : <span className="text-gray-500">—</span>}
                   </div>
