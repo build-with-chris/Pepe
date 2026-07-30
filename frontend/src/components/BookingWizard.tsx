@@ -365,12 +365,10 @@ export default function BookingWizard() {
     try {
       // Backend-URL kommt ausschliesslich aus der Umgebung. Ein hartkodierter
       // Hoster als Fallback laesst eine falsch konfigurierte Umgebung
-      // unbemerkt gegen die falsche Instanz laufen.
+      // unbemerkt gegen die falsche Instanz laufen. Ein leerer Wert ist dagegen
+      // gueltig und heisst "gleiche Herkunft" — der Normalfall, wenn Frontend
+      // und Backend als zwei Services unter einer Domain liegen.
       const baseUrl = getApiBaseUrl()
-      if (!baseUrl) {
-        failWith(new Error('VITE_API_URL ist nicht gesetzt'))
-        return
-      }
 
       const response = await fetch(`${baseUrl}/api/requests/requests`, {
         method: 'POST',
