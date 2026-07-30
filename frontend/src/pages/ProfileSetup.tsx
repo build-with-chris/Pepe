@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { uploadProfileImage, uploadGalleryImages } from "@/lib/storage/blobUpload";
+import { uploadProfileImage, uploadGalleryImages, UploadError } from "@/lib/storage/blobUpload";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
 import { ProfileForm } from "../components/ProfileForm";
@@ -176,6 +176,36 @@ export default function Profile() {
     loadProfile();
   }, [user, token]);
 
+  /**
+   * Artist-ID beschaffen — das erste Glied der Onboarding-Kette.
+   *
+   * Wirft, wenn keine ID zustande kommt. Der Aufrufer darf dann nichts
+   * hochladen und nichts speichern: Ohne ID gibt es keinen Datensatz, an dem
+   * Bild oder Profil hängen könnten.
+   */
+  const ensureArtistId = async (): Promise<string> => {
+    if (backendArtistId) return backendArtistId;
+
+    setBackendDebug('Artist-Datensatz wird angelegt...');
+    const res = await fetchWithRetry(`${baseUrl}/api/artists/me/ensure`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    });
+    const me = await res.json().catch(() => null);
+    const id = me?.id;
+    if (!id) {
+      throw new Error(
+        'Dein Künstlerprofil konnte nicht angelegt werden. Bitte melde dich neu an und versuche es erneut.'
+      );
+    }
+
+    // Auch im State ablegen, damit ein zweiter Versuch nicht erneut anlegt.
+    // Der Rückgabewert wird trotzdem gebraucht: setState wirkt erst im nächsten
+    // Render, `backendArtistId` waere hier unten noch null.
+    setBackendArtistId(String(id));
+    return String(id);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -194,19 +224,23 @@ export default function Profile() {
       return;
     }
 
-    if (!backendArtistId) {
-      await fetchWithRetry(`${baseUrl}/api/artists/me/ensure`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      }).catch(() => null);
+    if (!token) {
+      setError(t('profileSetup.errors.notLoggedIn'));
+      return;
     }
 
     setLoading(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_URL;
       if (!user?.email) throw new Error(t('profileSetup.errors.userEmailMissing'));
 
-      let effectiveId = backendArtistId || "new-id";
+      // Erst die Artist-ID sichern, dann hochladen, dann speichern.
+      //
+      // Vorher lief `ensure` mit `.catch(() => null)` und der Ablauf ging mit
+      // `effectiveId = backendArtistId || "new-id"` weiter. Scheiterte `ensure`,
+      // landeten Bilder unter `artists/new-id/…` und das Profil wurde trotzdem
+      // gespeichert — eine halbe Anmeldung, die niemandem auffiel
+      // (SPEC-4, Befund O4). Jetzt bricht es hier ab, mit Grund.
+      const effectiveId = await ensureArtistId();
 
       // Upload profile image via backend
       let imageUrl = await uploadProfileImage(
@@ -215,7 +249,7 @@ export default function Profile() {
         setProfileImageUrl,
         setBackendDebug,
         profileImageUrl,
-        token || undefined
+        token
       );
 
       // Upload gallery images via backend
@@ -225,7 +259,7 @@ export default function Profile() {
         galleryUrls,
         setGalleryUrls,
         setBackendDebug,
-        token || undefined
+        token
       );
 
       const nextStatus = approvalStatus === 'approved' ? 'approved' : 'pending';
@@ -352,6 +386,14 @@ export default function Profile() {
         } else if (err instanceof ConflictError) {
           setError('Konflikt – Eintrag ist verknüpft und kann nicht geändert werden.');
         } else if (err instanceof NetworkError) {
+          setError(err.message);
+        } else if (err instanceof UploadError) {
+          // Die Servermeldung nennt Grösse, Inhaltstyp oder fehlende
+          // Berechtigung konkret — die ist hilfreicher als ein Sammeltext.
+          setError(err.message);
+        } else if (err?.message) {
+          // Auch der Abbruch aus `ensureArtistId` landet hier. Vorher lief der
+          // Ablauf in diesem Fall stumm weiter (SPEC-4, Befund O4).
           setError(err.message);
         } else {
           setError(t('profileSetup.errors.saveFailed'));
