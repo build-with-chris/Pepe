@@ -20,8 +20,11 @@ const ArtistCardFinal: React.FC<ArtistCardFinalProps> = ({ artist, isInitiallySe
   const galleryImages = mergeGallery(artist);
   const allImages = [primaryImage, ...galleryImages];
   
-  // Get social links
-  const instagram = normalizeInstagram(artist.social_links?.instagram);
+  // Get social links.
+  // `GET /api/artists` liefert das Handle flach als `instagram`, andere
+  // Aufrufer reichen es in `social_links` herein. Wurde nur das Verschachtelte
+  // gelesen, blieb der Link auf der öffentlichen Seite immer leer.
+  const instagram = normalizeInstagram(artist.social_links?.instagram ?? artist.instagram);
   const website = artist.social_links?.website;
   
   const nextImage = () => {

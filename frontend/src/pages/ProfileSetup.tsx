@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
 import { ProfileForm } from "../components/ProfileForm";
 import { ProfileStatusBanner } from "../components/ProfileStatusBanner";
+import { ProfileWizard } from "@/components/profile/ProfileWizard";
+import { FIELD_LABELS, missingRequiredFields, profileCompleteness } from "@/components/profile/options";
 import { useTranslation } from "react-i18next";
 import { fetchWithRetry, ValidationError, AuthError, ForbiddenError, ConflictError, NetworkError, NotFoundError } from "@/lib/http";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -42,6 +44,7 @@ export default function Profile() {
   const [backendDebug, setBackendDebug] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [bio, setBio] = useState<string>("");
+  const [instagram, setInstagram] = useState<string>("");
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
@@ -49,6 +52,11 @@ export default function Profile() {
   const [approvalStatus, setApprovalStatus] = useState<'approved' | 'pending' | 'rejected' | 'unsubmitted'>('unsubmitted');
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Der Assistent leitet seinen Einstiegsschritt aus den fehlenden
+  // Pflichtangaben ab, und zwar einmal beim Einhängen. Rendert er, bevor
+  // `/api/artists/me` geantwortet hat, sieht er ein leeres Profil und landet
+  // immer in Schritt 1 — der gespeicherte Stand wäre da, aber unsichtbar.
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const unlockBtnRef = useRef<HTMLButtonElement | null>(null);
   const profileImageBlobUrlRef = useRef<string | null>(null);
@@ -153,6 +161,7 @@ export default function Profile() {
         setPepeYears(me.pepe_years ?? 0);
         setPepeExclusivity(!!me.pepe_exclusivity);
         setBio(me.bio || "");
+        setInstagram(me.instagram || "");
         // Prüfe, ob die URL eine Blob-URL ist - wenn ja, ignorieren wir sie, da sie ungültig ist
         const imageUrl = me.profile_image_url || null;
         if (imageUrl && imageUrl.startsWith('blob:')) {
@@ -171,6 +180,10 @@ export default function Profile() {
       }
       } catch (err) {
         setBackendDebug(`Load backend profile failed: ${err}`);
+      } finally {
+        // Auch die Abbruchwege oben laufen hier durch. Sonst bliebe die Seite
+        // bei einem fehlgeschlagenen Laden dauerhaft im Ladezustand hängen.
+        setProfileLoaded(true);
       }
     };
     loadProfile();
@@ -206,27 +219,38 @@ export default function Profile() {
     return String(id);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /**
+   * Speichern — einmal als Entwurf, einmal als Einreichung.
+   *
+   * Der Unterschied steckt in einem einzigen Feld: `approval_status` geht nur
+   * mit, wenn `submit` gesetzt ist. Das Backend rührt den Status nur an, wenn
+   * das Feld im Payload steht (`update_my_profile`), also braucht der Entwurf
+   * keine eigene Route.
+   *
+   * Bilder wandern auch im Entwurf hoch. Sonst wäre die Vorschau nach einem
+   * Neuladen leer, obwohl man gerade ein Bild gewählt hat.
+   *
+   * Gibt `true` zurück, wenn gespeichert wurde. Der Assistent wechselt den
+   * Schritt nur dann; sonst bleibt man stehen und sieht den Grund in `error`.
+   */
+  const persist = async ({ submit }: { submit: boolean }): Promise<boolean> => {
     setError(null);
 
-    const missingFields = [];
-    if (!name) missingFields.push(t('profileSetup.fields.name', 'Name'));
-    if (!street) missingFields.push(t('profileSetup.fields.street', 'Straße'));
-    if (!postalCode) missingFields.push(t('profileSetup.fields.postalCode', 'PLZ'));
-    if (!city) missingFields.push(t('profileSetup.fields.city', 'Stadt'));
-    if (!country) missingFields.push(t('profileSetup.fields.country', 'Land'));
-    if (!phoneNumber) missingFields.push(t('profileSetup.fields.phoneNumber', 'Telefonnummer'));
-    if (disciplines.length === 0) missingFields.push(t('profileSetup.fields.disciplines', 'Disziplinen'));
-
-    if (missingFields.length > 0) {
-      setError(`${t('profileSetup.errors.fillRequired')}: ${missingFields.join(', ')}`);
-      return;
+    // Pflichtprüfung nur beim Einreichen. Ein halb gefüllter Entwurf ist der
+    // Normalfall — die Liste kommt aus `options.ts`, damit sie nicht an zwei
+    // Stellen auseinanderlaufen kann.
+    if (submit) {
+      const missing = missingRequiredFields({ name, phoneNumber, street, postalCode, city, country, disciplines });
+      if (missing.length > 0) {
+        const labels = missing.map((f) => FIELD_LABELS[f] ?? f);
+        setError(`${t('profileSetup.errors.fillRequired')}: ${labels.join(', ')}`);
+        return false;
+      }
     }
 
     if (!token) {
       setError(t('profileSetup.errors.notLoggedIn'));
-      return;
+      return false;
     }
 
     setLoading(true);
@@ -262,19 +286,22 @@ export default function Profile() {
         token
       );
 
-      const nextStatus = approvalStatus === 'approved' ? 'approved' : 'pending';
+      const nextStatus = submit ? (approvalStatus === 'approved' ? 'approved' : 'pending') : undefined;
 
+      // Positionsformat beibehalten: Beim Laden wird die Adresse an den Kommas
+      // wieder auseinandergenommen. Ist noch gar nichts eingetragen, geht das
+      // Feld nicht mit — sonst stünde ", ," in der Datenbank.
       const fullAddress = `${street}, ${postalCode} ${city}, ${country}`.trim();
-      setAddress(fullAddress);
+      const hasAddress = [street, postalCode, city, country].some((part) => part.trim());
+      if (hasAddress) setAddress(fullAddress);
 
       const payload: any = {
         name,
-        address: fullAddress,
         phone_number: phoneNumber,
         disciplines,
         bio: bio.toString(),
+        instagram: instagram.trim() || undefined,
         gallery_urls: mergedGalleryUrls,
-        approval_status: nextStatus,
         // Gage criteria (price_min/max are calculated server-side)
         stage_experience: stageExperience || undefined,
         employment_type: employmentType || undefined,
@@ -283,6 +310,9 @@ export default function Profile() {
         pepe_years: pepeYears,
         pepe_exclusivity: pepeExclusivity,
       };
+      if (hasAddress) payload.address = fullAddress;
+      // Der einzige Unterschied zwischen Entwurf und Einreichen.
+      if (nextStatus) payload.approval_status = nextStatus;
       // Nur echte URLs speichern, keine Blob-URLs
       if (imageUrl && !imageUrl.startsWith('blob:')) {
         payload.profile_image_url = imageUrl;
@@ -329,6 +359,7 @@ export default function Profile() {
         if (saved.pepe_years !== undefined) setPepeYears(saved.pepe_years ?? 0);
         if (saved.pepe_exclusivity !== undefined) setPepeExclusivity(!!saved.pepe_exclusivity);
         setBio(saved.bio || "");
+        setInstagram(saved.instagram || "");
         // Prüfe, ob die URL eine Blob-URL ist - wenn ja, ignorieren wir sie
         const savedImageUrl = saved.profile_image_url || imageUrl || null;
         if (savedImageUrl && savedImageUrl.startsWith('blob:')) {
@@ -338,15 +369,20 @@ export default function Profile() {
         }
         setGalleryUrls(Array.isArray(saved.gallery_urls) ? saved.gallery_urls : mergedGalleryUrls);
         setGalleryFiles([]);
-        setApprovalStatus((saved.approval_status as any) ?? nextStatus);
+        setApprovalStatus((saved.approval_status as any) ?? nextStatus ?? approvalStatus);
         setRejectionReason(saved.rejection_reason ?? null);
       }
 
-      setSuccess(true);
       setFieldErrors({});
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      if (nextStatus === 'pending') setRejectionReason(null);
-      setLocked(true);
+      // Ein Entwurf ist kein Ereignis: keine Erfolgsmeldung, kein Sprung nach
+      // oben, und das Profil bleibt offen. Der Assistent führt selbst weiter.
+      if (submit) {
+        setSuccess(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (nextStatus === 'pending') setRejectionReason(null);
+        setLocked(true);
+      }
+      return true;
     } catch (err: any) {
         if (err instanceof ValidationError) {
           const mapKey = (k: string) => ({
@@ -399,9 +435,18 @@ export default function Profile() {
           setError(t('profileSetup.errors.saveFailed'));
         }
         setBackendDebug(prev => `Sync error: ${err?.message || err}${prev ? "\n" + prev : ""}`);
+        return false;
       } finally {
       setLoading(false);
     }
+  };
+
+  /** Stand sichern, ohne die Prüfung anzustossen. */
+  const saveDraft = () => persist({ submit: false });
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    await persist({ submit: true });
   };
 
   const handleDeleteArtist = async () => {
@@ -457,6 +502,7 @@ export default function Profile() {
       setPepeYears(0);
       setPepeExclusivity(false);
       setBio("");
+      setInstagram("");
       setProfileImageUrl(null);
       setProfileImageFile(null);
       setGalleryFiles([]);
@@ -488,6 +534,7 @@ export default function Profile() {
     phoneNumber,
     disciplines,
     bio,
+    instagram,
     profileImageUrl: effectiveProfileImageUrl,
     galleryUrls,
     galleryFiles,
@@ -514,6 +561,7 @@ export default function Profile() {
     if (typeof next.phoneNumber !== "undefined") setPhoneNumber(next.phoneNumber);
     if (typeof next.disciplines !== "undefined") setDisciplines(next.disciplines as string[]);
     if (typeof next.bio !== "undefined") setBio(next.bio as string);
+    if (typeof next.instagram !== "undefined") setInstagram(next.instagram as string);
     // Gage criteria
     if (typeof next.stageExperience !== "undefined") setStageExperience(next.stageExperience as string);
     if (typeof next.employmentType !== "undefined") setEmploymentType(next.employmentType as string);
@@ -524,11 +572,12 @@ export default function Profile() {
     if (typeof next.profileImageUrl !== "undefined") setProfileImageUrl(next.profileImageUrl as string | null);
     if (typeof next.galleryUrls !== "undefined") setGalleryUrls(next.galleryUrls as string[]);
 
-    if (typeof next.profileImageFile !== "undefined" && next.profileImageFile) {
-      const file = next.profileImageFile as File;
-      setProfileImageFile(file);
-      // Die Blob-URL wird jetzt durch useMemo verwaltet
-      // Wir setzen hier keine URL mehr, da useMemo das übernimmt
+    // Auch `null` muss ankommen: Der Assistent leert damit die Auswahl wieder
+    // („Entfernen"). Vorher fiel jeder falsy Wert durch, und ein entferntes
+    // Bild kam beim nächsten Speichern zurück.
+    if (typeof next.profileImageFile !== "undefined") {
+      setProfileImageFile((next.profileImageFile as File | null) ?? null);
+      // Die Blob-URL wird durch useMemo verwaltet, hier wird keine gesetzt.
     }
 
     if (typeof next.galleryFiles !== "undefined" && next.galleryFiles) {
@@ -536,6 +585,13 @@ export default function Profile() {
       setGalleryFiles(files);
     }
   };
+
+  // Der Assistent ist für die erste Anmeldung da. Wer schon eingereicht hat und
+  // nur eine Telefonnummer nachtragen will, soll nicht durch vier Schritte
+  // laufen — für den bleibt das Formular.
+  const useWizard = approvalStatus === 'unsubmitted' && !locked;
+
+  const completeness = profileCompleteness(profile, profile);
 
   return (
     <DashboardLayout title={t('profileSetup.title')}>
@@ -560,8 +616,9 @@ export default function Profile() {
           )}
         </div>
 
-        {/* Error Message */}
-        {error && (
+        {/* Error Message — der Assistent zeigt den Fehler selbst, direkt über
+            seiner Steuerung. Zweimal derselbe Kasten hilft niemandem. */}
+        {error && !useWizard && (
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300" role="alert" aria-live="assertive">
             {error}
           </div>
@@ -585,6 +642,58 @@ export default function Profile() {
           }}
           supportEmail="info@pepeshows.de"
         />
+
+        {!profileLoaded ? (
+          <p className="rounded-2xl border border-white/10 bg-white/5 p-5 text-gray-400" role="status">
+            Dein Profil wird geladen…
+          </p>
+        ) : useWizard ? (
+          <ProfileWizard
+            profile={profile}
+            setProfile={setProfileAdapter}
+            email={user?.email}
+            saving={loading}
+            error={error}
+            onSaveDraft={saveDraft}
+            onSubmit={handleSubmit}
+          />
+        ) : (
+        <>
+        {/* Fortschritt. Steht nur beim Formular, denn der Assistent hat einen
+            eigenen Balken. Hier ist der Ort, an dem ein nachgereichtes Foto
+            angestossen wird — nach dem Einreichen ist die Pflicht erfüllt, das
+            Profil aber selten fertig. */}
+        <section
+          aria-label="Vollständigkeit deines Profils"
+          className="rounded-2xl border border-white/10 bg-white/5 p-5"
+        >
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-medium text-white">Dein Profil</h2>
+            <p className="tabular-nums text-sm text-gray-400">{completeness.percent} % ausgefüllt</p>
+          </div>
+          <div
+            className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"
+            role="progressbar"
+            aria-valuenow={completeness.percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Vollständigkeit deines Profils"
+          >
+            <div
+              className="h-full rounded-full bg-pepe-gold transition-[width] duration-300"
+              style={{ width: `${completeness.percent}%` }}
+            />
+          </div>
+          {completeness.todo.length > 0 ? (
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-400">
+              {completeness.todo.map((item) => (
+                <li key={item.key}>{item.label}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-gray-400">Alles ausgefüllt. Mehr braucht es nicht.</p>
+          )}
+        </section>
 
         {/* Profile Form - now uses Card components internally */}
         <div className="relative">
@@ -617,6 +726,8 @@ export default function Profile() {
             </div>
           )}
         </div>
+        </>
+        )}
 
         {/* Danger Zone */}
         <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-6">
