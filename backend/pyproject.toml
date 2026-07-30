@@ -2,6 +2,10 @@
 name = "pepe-backend"
 version = "1.0.0"
 description = "Booking-Backend der Artistenagentur Pepe Shows (Flask)"
+# Untergrenze bewusst durchlaessig, damit eine vorhandene 3.11-venv lokal
+# weiterlaeuft. Fuer das Deployment gilt `.python-version` (3.12): Vercels
+# `vercel-runtime` verlangt 3.12, mit dem alten Pin auf 3.11.11 brach der Build
+# mit "No solution found when resolving dependencies" ab.
 requires-python = ">=3.11"
 
 # Abhaengigkeiten stehen weiterhin in requirements.txt (Vercel und Render lesen
