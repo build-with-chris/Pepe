@@ -128,6 +128,89 @@ def test_verify_clerk_token_without_token_returns_none(real_jwks_client):
     assert not real_jwks_client
 
 
+# ---------------------------------------------------------------------------
+# AK 2: Fehlkonfiguration, Infrastruktur und abgelehntes Token sind im Log
+# auseinanderzuhalten. Nach aussen bleibt alles 401 — im Log nicht.
+# ---------------------------------------------------------------------------
+
+
+def test_missing_config_is_logged_as_config_not_as_bad_token(
+    real_jwks_client, monkeypatch, clerk_token, caplog
+):
+    monkeypatch.setattr(clerk_auth, "CLERK_JWKS_URL", "")
+
+    with caplog.at_level("WARNING"):
+        assert clerk_auth.verify_clerk_token(clerk_token("user_x")) is None
+
+    records = [r for r in caplog.records if "Konfiguration" in r.message]
+    assert records, f"keine Konfigurationsmeldung, nur: {[r.message for r in caplog.records]}"
+    assert records[0].levelname == "CRITICAL"
+    assert "CLERK_JWKS_URL" in records[0].getMessage()
+
+
+def test_unreachable_jwks_is_logged_as_infrastructure(real_jwks_client, clerk_token, caplog):
+    """Ein nicht erreichbarer JWKS-Endpunkt ist kein ungültiges Token."""
+    from jwt.exceptions import PyJWKClientConnectionError
+
+    def _boom(self, token):
+        raise PyJWKClientConnectionError('Fail to fetch data from the url, err: "timed out"')
+
+    _RecordingJWKSClient.get_signing_key_from_jwt = _boom
+    try:
+        with caplog.at_level("WARNING"):
+            assert clerk_auth.verify_clerk_token(clerk_token("user_x")) is None
+    finally:
+        del _RecordingJWKSClient.get_signing_key_from_jwt
+
+    records = [r for r in caplog.records if "JWKS" in r.message]
+    assert records, f"keine JWKS-Meldung, nur: {[r.message for r in caplog.records]}"
+    assert records[0].levelname == "ERROR"
+    assert clerk_auth.CLERK_JWKS_URL in records[0].getMessage()
+
+
+def test_expired_and_invalid_tokens_stay_warnings(real_jwks_client, clerk_keys, clerk_token, caplog):
+    """Ein abgelehntes Token ist Alltag und bleibt eine Warnung, kein Fehler."""
+    _, public_key = clerk_keys
+    _RecordingJWKSClient.get_signing_key_from_jwt = (
+        lambda self, token: type("K", (), {"key": public_key})()
+    )
+    try:
+        with caplog.at_level("WARNING"):
+            expired = clerk_token("user_x", email="a@example.com", expires_in=-60)
+            assert clerk_auth.verify_clerk_token(expired) is None
+        assert any(r.levelname == "WARNING" and "expired" in r.getMessage()
+                   for r in caplog.records), [r.getMessage() for r in caplog.records]
+
+        caplog.clear()
+        with caplog.at_level("WARNING"):
+            assert clerk_auth.verify_clerk_token("kein.gueltiges.jwt") is None
+        assert any(r.levelname == "WARNING" and "Invalid Clerk token" in r.getMessage()
+                   for r in caplog.records), [r.getMessage() for r in caplog.records]
+
+        # Kein CRITICAL/ERROR: sonst geht die echte Fehlkonfiguration im Rauschen
+        # abgelehnter Anmeldeversuche unter.
+        assert not [r for r in caplog.records if r.levelname in ("ERROR", "CRITICAL")]
+    finally:
+        del _RecordingJWKSClient.get_signing_key_from_jwt
+
+
+def test_unexpected_error_is_not_swallowed(real_jwks_client, clerk_token):
+    """AK 2: Ein Programmierfehler taucht als Exception auf, nicht als 401.
+
+    Das ist die Lehre aus O1: Ein NameError, der zu `None` weggefangen wird,
+    sieht nach aussen wie ein falsches Passwort aus und bleibt unentdeckt.
+    """
+    def _boom(self, token):
+        raise AttributeError("Tippfehler im Verifikationspfad")
+
+    _RecordingJWKSClient.get_signing_key_from_jwt = _boom
+    try:
+        with pytest.raises(AttributeError, match="Tippfehler"):
+            clerk_auth.verify_clerk_token(clerk_token("user_x"))
+    finally:
+        del _RecordingJWKSClient.get_signing_key_from_jwt
+
+
 def test_pyjwt_encode_decode_roundtrip_uses_rs256(clerk_keys):
     """Absicherung der Test-Factory selbst: sie signiert wirklich mit RS256."""
     private_pem, public_key = clerk_keys

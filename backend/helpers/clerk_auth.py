@@ -7,6 +7,7 @@ import os
 import ssl
 import jwt
 from jwt import PyJWKClient
+from jwt.exceptions import PyJWKClientError
 from functools import wraps
 from flask import request, g, current_app
 from helpers.http_responses import error_response
@@ -60,19 +61,33 @@ def verify_clerk_token(token: str) -> dict | None:
 
     Returns:
         dict with claims if valid, None if invalid
+
+    Raises:
+        Unerwartete Fehler werden *nicht* abgefangen. Ein Programmierfehler in
+        diesem Pfad soll als 500 mit Stacktrace auffallen und nicht als 401
+        auftreten — genau das hat einen NameError hier monatelang verdeckt
+        (SPEC-4, O1). Abgefangen wird nur, was fachlich vorkommen kann:
+        Fehlkonfiguration, unerreichbares JWKS, ungültiges Token. Alle drei
+        ergeben eine eigene, unterscheidbare Logzeile.
     """
     if not token:
         return None
 
     try:
         jwks_client = get_jwks_client()
+    except RuntimeError as e:
+        # Fehlkonfiguration, kein Token-Problem: Ohne JWKS-URL ist keine
+        # Prüfung möglich. Nach aussen bleibt es 401, im Log ist der
+        # Unterschied zum abgelehnten Token aber sichtbar.
+        current_app.logger.critical("Clerk-Konfiguration unbrauchbar: %s", e)
+        return None
+
+    decode_kwargs = {}
+    if CLERK_ISSUER:
+        decode_kwargs["issuer"] = CLERK_ISSUER
+
+    try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
-
-        # Decode and verify the token
-        decode_kwargs = {}
-        if CLERK_ISSUER:
-            decode_kwargs["issuer"] = CLERK_ISSUER
-
         claims = jwt.decode(
             token,
             signing_key.key,
@@ -84,19 +99,23 @@ def verify_clerk_token(token: str) -> dict | None:
             },
             **decode_kwargs,
         )
-        if not claims.get("sub"):
-            current_app.logger.warning("Clerk token without sub claim rejected")
-            return None
-        return claims
+    except PyJWKClientError as e:
+        # JWKS nicht erreichbar oder kein passender Schlüssel. Betrifft die
+        # Infrastruktur, nicht den Anmeldeversuch. Muss vor InvalidTokenError
+        # stehen: PyJWKClientError haengt an PyJWTError, nicht darunter.
+        current_app.logger.error("Clerk-JWKS nicht nutzbar (%s): %s", CLERK_JWKS_URL, e)
+        return None
     except jwt.ExpiredSignatureError:
         current_app.logger.warning("Clerk token expired")
         return None
     except jwt.InvalidTokenError as e:
-        current_app.logger.warning(f"Invalid Clerk token: {e}")
+        current_app.logger.warning("Invalid Clerk token: %s", e)
         return None
-    except Exception as e:
-        current_app.logger.error(f"Clerk token verification error: {e}")
+
+    if not claims.get("sub"):
+        current_app.logger.warning("Clerk token without sub claim rejected")
         return None
+    return claims
 
 
 def get_clerk_user_id() -> str | None:
