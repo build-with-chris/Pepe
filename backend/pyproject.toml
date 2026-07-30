@@ -8,7 +8,10 @@ requires-python = ">=3.11"
 # beide diese Datei). Hier bewusst nicht doppelt gepflegt.
 
 [tool.vercel]
-# Ohne diese Zeile muesste sich Vercel den Einstiegspunkt selbst suchen. Explizit
-# ist besser: `app.py` definiert die Flask-Instanz `app`, dieselbe, die auch
+# `app.py` definiert die Flask-Instanz `app`, dieselbe, die auch
 # `flask db upgrade` ueber FLASK_APP benutzt (siehe .flaskenv).
+#
+# Derselbe Wert steht in der Root-`vercel.json` beim Service `backend`. Das ist
+# Absicht: In der Services-Aufstellung gilt die Root-Datei, diese Angabe hier
+# greift, falls das Backend einmal als eigenes Vercel-Projekt laeuft.
 entrypoint = "app:app"

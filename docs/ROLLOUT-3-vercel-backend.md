@@ -5,39 +5,63 @@ das Vercel-Dashboard, Supabase oder Clerk brauchen und deshalb nicht aus dem Rep
 heraus erledigt werden können.
 
 Ausgangslage: Beide Render-Dienste stehen auf "Suspended by Render". Die
-Datenbank liegt bei **Supabase** und ist davon nicht betroffen. Das Frontend
-läuft schon als Vercel-Projekt `pepe` auf `pepeshows.de`.
+Datenbank liegt bei **Supabase** und ist davon nicht betroffen.
+
+## Die Aufstellung
+
+Vercel erkennt das Repo als Monorepo mit zwei Services und bietet den
+Application Preset **Services** an. Das ist besser als zwei getrennte Projekte:
+
+```
+pepeshows.de/            -> Service "frontend" (Vite)
+pepeshows.de/api/...     -> Service "backend"  (Flask)
+```
+
+Frontend und Backend liegen damit auf **derselben Herkunft**. CORS entfällt für
+den Produktionsbetrieb, es gibt eine Domain und ein Deployment für beides.
+
+`vercel.json` im Repo-Wurzelverzeichnis beschreibt genau das. Wichtig daran: Der
+Pfad wird beim Weiterleiten an den Service **nicht** abgeschnitten. Das Backend
+sieht `/api/artists`, und genau so heissen die Flask-Routen auch
+(`api_bp` hängt unter `/api`). Wer den Präfix abschneiden will, braucht laut
+Vercel-Doku einen ausdrücklichen `request.path`-Transform — den wollen wir hier
+nicht.
+
+`/healthz` liegt ausserhalb von `/api` und ist deshalb einzeln eingetragen.
+`/api-docs/` und `/apispec_1.json` sind bewusst **nicht** eingetragen: Die
+Swagger-Oberfläche war auf Render öffentlich erreichbar und muss das nicht sein.
 
 ---
 
-## 1. Zweites Vercel-Projekt für das Backend
+## 1. Projekt: das bestehende umstellen, kein neues anlegen
 
-Bewusst ein eigenes Projekt, nicht das Frontend-Projekt mitbenutzen: Der
-Frontend-Build ist Node, das Backend ist Python. Getrennt bleibt der
-Build-Schritt einfach und das Frontend spricht das Backend weiter über eine
-eigene URL an, also bleibt es bei der bestehenden CORS-Logik.
+Im Vercel-Konto gibt es schon ein Projekt `pepe`, und **an dem hängen
+`pepeshows.de` und `www.pepeshows.de`**. Ein zweites Projekt mit demselben Namen
+geht nicht, und ein neues Projekt hätte die Domain nicht.
 
-Vercel → **Add New… → Project** → dasselbe GitHub-Repo:
+**Empfohlen:** Import abbrechen und im bestehenden Projekt `pepe` unter
+Settings → Build & Deployment den **Framework Preset auf "Services"** stellen,
+Root Directory auf `./`. Dann greift die Root-`vercel.json`, die Domain bleibt,
+wo sie ist, und es gibt keine Umzugsaktion.
 
-- **Root Directory:** `backend`
-- **Framework Preset:** Flask (wird über `backend/pyproject.toml` erkannt,
-  Eintrag `[tool.vercel] entrypoint = "app:app"`)
-- Build- und Install-Command: leer lassen, Vercel liest `requirements.txt`
+**Falls der Preset dort nicht angeboten wird:** neues Projekt unter einem
+anderen Namen anlegen (z. B. `pepe-services`), auf der `*.vercel.app`-URL alles
+durchprüfen (Abschnitt 7) und **erst danach** `pepeshows.de` im alten Projekt
+entfernen und im neuen hinzufügen. In dieser Reihenfolge, sonst ist die Seite
+zwischenzeitlich nicht erreichbar.
 
-`backend/vercel.json` setzt bereits `maxDuration: 30` und `memory: 1024`. Die
-30 Sekunden sind nötig, weil beim Anlegen einer Anfrage ein Geocoding-Aufruf und
-der Mailversand im Request-Pfad liegen; 1 GB, weil die Bildverarbeitung mit
-Pillow läuft.
+Auf dem Import-Bildschirm selbst sind sonst keine Angaben nötig: Root Directory
+bleibt `./`, Build- und Output-Einstellungen bleiben leer. Alles steht in
+`vercel.json`, und "Refresh" liest sie neu ein.
 
-## 2. Umgebungsvariablen im Backend-Projekt
+## 2. Umgebungsvariablen
 
 Aus der bisherigen Render-Konfiguration übernehmen:
 
 ```
-DATABASE_URL          Supabase, siehe Schritt 3 (Pooler-URL!)
+DATABASE_URL          Supabase, siehe Abschnitt 3 (Pooler-URL!)
 CLERK_JWKS_URL        https://clerk.pepeshows.de/.well-known/jwks.json
 CLERK_ISSUER          https://clerk.pepeshows.de        (optional, empfohlen)
-CORS_ORIGINS          https://pepeshows.de,https://www.pepeshows.de
 AGENCY_FEE_PERCENT    20
 APP_URL               https://pepeshows.de
 ADMIN_EMAIL           <Adresse für Anfrage-Benachrichtigungen>
@@ -47,7 +71,25 @@ SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_PROFILE_BUCKET
 BLOB_READ_WRITE_TOKEN falls die Upload-Routen genutzt werden
 ```
 
-Nicht setzen: `ENABLE_DEBUG_ROUTES`, `ALLOW_HTTP_MIGRATION`. Beide sind
+Dazu für das Frontend:
+
+```
+VITE_API_URL          https://pepeshows.de
+```
+
+Also die eigene Domain. Das Frontend baut seine Aufrufe als
+`${VITE_API_URL}/api/...` zusammen, damit landet es auf derselben Herkunft. Der
+Wert wird zur **Build-Zeit** eingebacken: eine Änderung wirkt erst nach einem
+neuen Deployment.
+
+```
+CORS_ORIGINS          https://pepeshows.de,https://www.pepeshows.de
+```
+
+Im Normalbetrieb überflüssig, weil gleiche Herkunft. Trotzdem setzen: für
+Preview-Deployments und damit der Fallback im Code nicht greift.
+
+**Nicht** setzen: `ENABLE_DEBUG_ROUTES`, `ALLOW_HTTP_MIGRATION`. Beide sind
 Notschalter und gehören in Produktion aus.
 
 `VERCEL=1` setzt Vercel selbst. Der Code liest das und schaltet damit auf
@@ -55,7 +97,7 @@ Notschalter und gehören in Produktion aus.
 
 ## 3. DATABASE_URL auf den Supabase-Pooler umstellen
 
-**Der wichtigste Schritt.** Serverless heißt viele kurzlebige Instanzen. Jede
+**Der wichtigste Schritt.** Serverless heisst viele kurzlebige Instanzen. Jede
 würde eine eigene direkte Postgres-Verbindung aufbauen, und das
 Verbindungslimit ist schnell erreicht.
 
@@ -93,45 +135,39 @@ Vercel → Storage → **Upstash Redis** hinzufügen (Marketplace). Die Integrat
 setzt `KV_REST_API_URL` und `KV_REST_API_TOKEN` selbst; `helpers/shared_store.py`
 liest beide Namen und ausserdem die `UPSTASH_*`-Varianten.
 
-Gegenprobe nach dem Deploy: dasselbe Formular zweimal mit demselben
-`Idempotency-Key` abschicken. Der zweite Aufruf muss den Header
-`Idempotent-Replay: true` liefern.
-
-## 6. Frontend umstellen
-
-Im Vercel-Projekt `pepe` die Variable `VITE_API_URL` auf die neue Backend-URL
-setzen und **neu deployen** — `VITE_*` wird zur Build-Zeit eingebacken, eine
-Änderung wirkt ohne Rebuild nicht.
-
-## 7. Zwei offene Punkte, die nichts mit dem Umzug zu tun haben
-
-Beide sind aktuell live sichtbar und blockieren unabhängig vom Hosting:
-
-1. **Clerk-JWT-Template fehlt in der Produktionsinstanz.** `POST .../tokens/pepe-backend`
-   antwortet mit 404. Im Clerk-Dashboard von `clerk.pepeshows.de` unter
-   JWT Templates anlegen, Claims wie in ROLLOUT-1 beschrieben. Bis dahin läuft
-   die App mit dem Standard-Token: bestehende Konten funktionieren, eine
-   Neuanmeldung scheitert bewusst mit `invalid_token`.
-2. **Vercel Attack Challenge Mode** im Frontend-Projekt blockt dynamisch
-   nachgeladene JS-Chunks mit 403 (`x-vercel-mitigated: challenge`). Unter
-   Project → Firewall abschalten oder auf einzelne Pfade eingrenzen.
-
-## 8. Kosten im Blick behalten
+## 6. Kosten begrenzen
 
 Vercel → Settings → **Spend Management** ein Limit setzen (z. B. 5 €). Dann kann
-die Rechnung nicht unbemerkt über das Budget laufen. Upstash Redis in der
-kleinsten Stufe und Supabase bleiben davon unberührt.
+die Rechnung nicht unbemerkt über das Budget laufen.
 
-## 9. End-to-End-Prüfung
+## 7. End-to-End-Prüfung
 
-1. `GET <backend>/healthz` → `{"status":"ok"}`, also Datenbank erreichbar.
-2. `GET <backend>/api/artists` → Liste der freigegebenen Artists.
-3. `GET <backend>/__debug/whoami` → **404** (Debug-Routen sind aus).
-4. `POST <backend>/api/admin/artists` ohne Token → **401**.
-5. Auf `pepeshows.de` eine Anfrage über den Wizard abschicken → Preisspanne
-   erscheint, Anfrage liegt in der DB, Mail an `ADMIN_EMAIL` kommt an.
-6. Formular zweimal abschicken → nur eine Anfrage in der DB.
+Auf der Deployment-URL, vor dem Domain-Wechsel:
+
+1. `GET /healthz` → `{"status":"ok"}`, also Datenbank über den Pooler erreichbar.
+2. `GET /api/artists` → Liste der freigegebenen Artists. Beweist, dass die
+   Weiterleitung den Pfad **nicht** abschneidet. Kommt hier ein 404 vom
+   Frontend, greift der Rewrite nicht; kommt ein 404 von Flask, wurde der
+   Präfix doch abgeschnitten.
+3. `GET /__debug/whoami` → **404** (Debug-Routen sind aus).
+4. `POST /api/admin/artists` ohne Token → **401**.
+5. Eine Anfrage über den Wizard abschicken → Preisspanne erscheint, Anfrage
+   liegt in der DB, Mail an `ADMIN_EMAIL` kommt an.
+6. Dasselbe Formular zweimal abschicken → nur **eine** Anfrage in der DB.
 7. Einloggen, Profil laden, als Admin `/admin/kuenstler` öffnen.
 
 Schritt 5 ist der aussagekräftigste: Er berührt Geocoding, Preisberechnung,
 Datenbank und Mailversand in einem Durchlauf.
+
+## 8. Zwei offene Punkte, die nichts mit dem Umzug zu tun haben
+
+Beide sind unabhängig vom Hosting und blockieren jetzt schon:
+
+1. **Clerk-JWT-Template fehlt in der Produktionsinstanz.**
+   `POST .../tokens/pepe-backend` antwortet mit 404. Im Clerk-Dashboard von
+   `clerk.pepeshows.de` unter JWT Templates anlegen, Claims wie in ROLLOUT-1.
+   Bis dahin läuft die App mit dem Standard-Token: bestehende Konten
+   funktionieren, eine Neuanmeldung scheitert bewusst mit `invalid_token`.
+2. **Vercel Attack Challenge Mode** blockt dynamisch nachgeladene JS-Chunks mit
+   403 (`x-vercel-mitigated: challenge`). Unter Project → Firewall abschalten
+   oder auf einzelne Pfade eingrenzen.
