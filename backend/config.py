@@ -8,6 +8,14 @@ _backend_root = Path(__file__).resolve().parent
 load_dotenv(_backend_root / ".env")
 
 def normalize_db_url(raw: str) -> str:
+    # Fuehrende und abschliessende Leerzeichen und Zeilenumbrueche abschneiden.
+    # Beim Einfuegen in ein Dashboard-Feld rutscht schnell ein "\n" ans Ende;
+    # Postgres sucht dann nach einer Datenbank namens "postgres\n" und meldet
+    # `FATAL: database "postgres\n" does not exist`. Das kostet eine halbe
+    # Stunde Suche, weil man das Zeichen nirgends sieht.
+    raw = (raw or "").strip()
+    if not raw:
+        return ""
     if raw.startswith("postgres://"):
         raw = raw.replace("postgres://", "postgresql+psycopg://", 1)
     elif raw.startswith("postgresql://") and not raw.startswith("postgresql+psycopg://"):
@@ -47,7 +55,7 @@ class Config:
     # Clerk: JWKS endpoint of the active instance (dev or production).
     CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL")
 
-    raw_db = os.getenv("DATABASE_URL", "")
+    raw_db = os.getenv("DATABASE_URL", "").strip()
     if raw_db:
         SQLALCHEMY_DATABASE_URI = normalize_db_url(raw_db)
     else:
