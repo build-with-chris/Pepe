@@ -6,9 +6,11 @@
  *
  * Was sich gegenüber vorher geändert hat und warum:
  *
- * - **Ein Bereich zur Zeit.** Für Admins wurden Admin- und Künstler-Ziele zu
- *   einer Liste mit neun Einträgen zusammengelegt. Jetzt zeigt die Leiste den
- *   Bereich, in dem man ist, und oben steht ein Umschalter.
+ * - **Alle Ziele sichtbar, nach Bereich gruppiert.** Ein Zwischenstand zeigte
+ *   immer nur einen Bereich und oben einen Umschalter. Das war in der Praxis ein
+ *   Verlust: Aus neun erreichbaren Zielen wurden vier, und der Umschalter war zu
+ *   unauffällig, um das aufzuwiegen. Jetzt steht wieder alles da, aber mit
+ *   deutlichen Gruppentiteln statt einer Liste ohne Struktur.
  * - **Ein Antippen auf dem Handy.** Vorher lief jeder Seitenwechsel über das
  *   Hamburger-Menü, also drei Schritte.
  * - **Markierung auf Unterseiten.** Die Prüfung war `pathname === href`, auf
@@ -27,17 +29,17 @@ import { Home } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
-import { AreaSwitcher } from './dashboard/AreaSwitcher';
 import { MobileTabBar } from './dashboard/MobileTabBar';
 import { MoreSheet } from './dashboard/MoreSheet';
 import { NavLink } from './dashboard/NavLink';
 import { usePendingArtistCount } from './dashboard/usePendingArtistCount';
 import {
   activeHref as findActiveHref,
+  allItems,
   areaForPath,
   navFor,
+  navGroups,
   primaryItems,
-  secondaryItems,
 } from './dashboard/nav';
 
 interface DashboardLayoutProps {
@@ -67,12 +69,20 @@ export function DashboardLayout({
   const isAdmin = user?.is_admin === true;
 
   const area = areaForPath(location.pathname);
-  const items = navFor(area);
-  const activeHref = findActiveHref(location.pathname, items);
+  const groups = navGroups(isAdmin, area);
+  // Über alle Gruppen suchen, sonst bliebe ein Admin auf einer Künstlerseite
+  // ohne Markierung.
+  const activeHref = findActiveHref(location.pathname, allItems(isAdmin));
   const pendingCount = usePendingArtistCount(token, isAdmin);
 
-  const primary = primaryItems(items);
-  const secondary = secondaryItems(items);
+  // Die Tab-Leiste auf dem Handy bleibt beim aktuellen Bereich — fünf Felder
+  // sind das Maximum. Alles andere, auch der jeweils andere Bereich, liegt
+  // vollständig unter „Mehr".
+  const areaItems = navFor(area);
+  const primary = primaryItems(areaItems);
+  const secondary = groups.flatMap((group) =>
+    group.items.filter((item) => !primary.some((p) => p.href === item.href))
+  );
 
   // Ein Seitenwechsel schliesst die Schublade. Ohne das bleibt sie beim
   // Zurück-Knopf des Browsers offen stehen.
@@ -113,25 +123,31 @@ export function DashboardLayout({
           </Link>
         </div>
 
-        {isAdmin && (
-          <div className="flex-shrink-0 px-4 pt-5">
-            <AreaSwitcher current={area} pendingCount={pendingCount} />
-          </div>
-        )}
-
         {/* min-h-0 ist Pflicht, damit overflow-y in einem Flex-Kind greift. */}
         <nav aria-label="Hauptnavigation" className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
-          <ul className="list-none space-y-1">
-            {items.map((item) => (
-              <li key={item.href}>
-                <NavLink
-                  item={item}
-                  isActive={activeHref === item.href}
-                  badgeCount={item.badge === 'pendingArtists' ? pendingCount : null}
-                />
-              </li>
-            ))}
-          </ul>
+          {groups.map((group, index) => (
+            <div key={group.area} className={index > 0 ? 'mt-6 border-t border-white/10 pt-5' : ''}>
+              {/* Gruppentitel nur, wenn es mehr als eine Gruppe gibt. Ein
+                  einzelner Künstler braucht keine Überschrift über seiner
+                  einzigen Liste. */}
+              {groups.length > 1 && (
+                <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  {group.label}
+                </p>
+              )}
+              <ul className="list-none space-y-1">
+                {group.items.map((item) => (
+                  <li key={item.href}>
+                    <NavLink
+                      item={item}
+                      isActive={activeHref === item.href}
+                      badgeCount={item.badge === 'pendingArtists' ? pendingCount : null}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         <div className="flex-shrink-0 border-t border-white/10 px-4 py-4">
@@ -233,8 +249,6 @@ export function DashboardLayout({
         onClose={() => setMoreOpen(false)}
         items={secondary}
         activeHref={activeHref}
-        area={area}
-        isAdmin={isAdmin}
         pendingCount={pendingCount}
       />
     </div>

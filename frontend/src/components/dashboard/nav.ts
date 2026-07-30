@@ -79,6 +79,38 @@ export function navFor(area: NavArea): NavItem[] {
   return area === 'admin' ? adminNav : artistNav;
 }
 
+export interface NavGroup {
+  area: NavArea;
+  label: string;
+  items: NavItem[];
+}
+
+/**
+ * Alle Ziele, nach Bereich gruppiert.
+ *
+ * Ein Admin sieht beides. Der Versuch, immer nur einen Bereich zu zeigen und
+ * oben umzuschalten, hat sich in der Praxis als Verlust erwiesen: Aus neun
+ * erreichbaren Zielen wurden vier, und der Umschalter war zu unauffällig, um das
+ * aufzuwiegen. Eine Liste mit zwei deutlichen Gruppentiteln ist länger, aber
+ * alles ist mit einem Blick da.
+ *
+ * Der aktuelle Bereich kommt zuerst — man arbeitet meist dort, wo man ist.
+ */
+export function navGroups(isAdmin: boolean, current: NavArea): NavGroup[] {
+  if (!isAdmin) {
+    return [{ area: 'artist', label: AREA_LABEL.artist, items: artistNav }];
+  }
+
+  const admin: NavGroup = { area: 'admin', label: 'Verwaltung', items: adminNav };
+  const artist: NavGroup = { area: 'artist', label: 'Mein Künstlerprofil', items: artistNav };
+  return current === 'admin' ? [admin, artist] : [artist, admin];
+}
+
+/** Alle Ziele über alle Gruppen — für die Suche nach dem aktiven Eintrag. */
+export function allItems(isAdmin: boolean): NavItem[] {
+  return isAdmin ? [...adminNav, ...artistNav] : [...artistNav];
+}
+
 /** Alle Pfade, unter denen ein Eintrag erreichbar ist. */
 function pathsOf(item: NavItem): string[] {
   return [item.href, ...(item.aliases ?? [])];

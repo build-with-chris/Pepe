@@ -2,12 +2,12 @@
  * Rendertests für den Dashboard-Rahmen.
  *
  * Die Zusicherungen hier sind genau die Punkte, die vorher fehlten: ein `<h1>`
- * je Seite, ein Bereich zur Zeit statt neun Einträgen in einer Liste, eine
- * Markierung auch auf Unterseiten, die Tab-Leiste auf dem Handy und eine
- * Schublade, die sich mit der Tastatur wieder schliessen lässt.
+ * je Seite, alle Ziele erreichbar und nach Bereich gruppiert, eine Markierung
+ * auch auf Unterseiten, die Tab-Leiste auf dem Handy und eine Schublade, die
+ * sich mit der Tastatur wieder schliessen lässt.
  */
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { act } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -89,9 +89,12 @@ describe('Künstler-Portal', () => {
     }
   });
 
-  it('zeigt einem Nicht-Admin keinen Bereichsumschalter', () => {
+  it('zeigt einem Nicht-Admin nur die eigenen Ziele, ohne Gruppentitel', () => {
     renderLayout('/meine-anfragen');
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    const nav = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
+    expect(within(nav).getAllByRole('link')).toHaveLength(6);
+    expect(within(nav).queryByRole('link', { name: 'Dashboard' })).not.toBeInTheDocument();
+    expect(within(nav).queryByText('Verwaltung')).not.toBeInTheDocument();
   });
 
   it('fragt für einen Nicht-Admin keine Freigabezahl ab', () => {
@@ -120,24 +123,41 @@ describe('Admin-Bereich', () => {
     authState.user = { is_admin: true };
   });
 
-  it('zeigt nur die vier Admin-Ziele, nicht alle neun', () => {
+  it('zeigt alle zehn Ziele, in zwei Gruppen', () => {
+    // Ein Zwischenstand zeigte nur die vier Admin-Ziele und schob den Rest
+    // hinter einen Umschalter. Das war in der Praxis ein Verlust.
     renderLayout('/admin/kuenstler');
     const nav = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
-    expect(within(nav).getAllByRole('link')).toHaveLength(4);
-    // Die Künstler-Ziele stehen hier bewusst nicht mehr mit drin.
-    expect(within(nav).queryByRole('link', { name: 'Richtlinien' })).not.toBeInTheDocument();
+    expect(within(nav).getAllByRole('link')).toHaveLength(10);
+    expect(within(nav).getByRole('link', { name: 'Richtlinien' })).toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: 'Buchhaltung' })).toBeInTheDocument();
   });
 
-  it('zeigt den Bereichsumschalter', () => {
+  it('stellt den aktuellen Bereich nach oben', () => {
     renderLayout('/admin/kuenstler');
-    const switcher = within(sidebar()).getByLabelText('Bereich wechseln');
-    expect(within(switcher).getByRole('link', { name: /Admin/ })).toHaveAttribute(
+    const nav = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
+    const labels = within(nav).getAllByRole('link').map((el) => el.textContent);
+    expect(labels[0]).toBe('Dashboard');
+
+    cleanup();
+    renderLayout('/profil');
+    const nav2 = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
+    expect(within(nav2).getAllByRole('link').map((el) => el.textContent)[0]).toBe('Profil');
+  });
+
+  it('benennt die Gruppen', () => {
+    renderLayout('/admin');
+    const nav = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
+    expect(within(nav).getByText('Verwaltung')).toBeInTheDocument();
+    expect(within(nav).getByText('Mein Künstlerprofil')).toBeInTheDocument();
+  });
+
+  it('markiert eine Künstlerseite auch bei einem Admin', () => {
+    renderLayout('/buchhaltung');
+    const nav = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
+    expect(within(nav).getByRole('link', { name: 'Buchhaltung' })).toHaveAttribute(
       'aria-current',
       'page'
-    );
-    expect(within(switcher).getByRole('link', { name: /Künstler/ })).toHaveAttribute(
-      'href',
-      '/profil'
     );
   });
 
@@ -158,8 +178,7 @@ describe('Admin-Bereich', () => {
 
     renderLayout('/admin');
 
-    // Auf die Navigation eingegrenzt: Im Umschalter darueber steht „Künstler"
-    // ebenfalls, das ist der Weg ins andere Portal.
+    // Auf die Navigation eingegrenzt, damit die Abfrage eindeutig bleibt.
     const nav = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
     const link = await waitFor(() => within(nav).getByRole('link', { name: /Künstler/ }));
     expect(within(link).getByText('3')).toBeInTheDocument();

@@ -1,27 +1,25 @@
 /**
  * Die „Mehr"-Schublade auf dem Handy.
  *
- * Enthält, was nicht in die Tab-Leiste passt: den Bereichsumschalter für
- * Admins, die übrigen Ziele und den Weg zurück zur Website. Fährt von unten
- * ein, weil sie vom unteren Rand aus geöffnet wird.
+ * Enthält alles, was nicht in die Tab-Leiste passt — bei einem Admin auch die
+ * Ziele des jeweils anderen Bereichs, damit von hier aus wirklich alles
+ * erreichbar ist. Fährt von unten ein, weil sie vom unteren Rand aus geöffnet
+ * wird.
  */
 
 import { Home, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
-import { AreaSwitcher } from './AreaSwitcher';
 import { NavLink } from './NavLink';
 import { useDialog } from './useDialog';
-import type { NavArea, NavItem } from './nav';
+import type { NavItem } from './nav';
 
 interface MoreSheetProps {
   isOpen: boolean;
   onClose: () => void;
   items: NavItem[];
   activeHref: string | null;
-  area: NavArea;
-  isAdmin: boolean;
   pendingCount: number | null;
 }
 
@@ -30,8 +28,6 @@ export function MoreSheet({
   onClose,
   items,
   activeHref,
-  area,
-  isAdmin,
   pendingCount,
 }: MoreSheetProps) {
   const sheetRef = useDialog<HTMLDivElement>(isOpen, onClose);
@@ -79,10 +75,6 @@ export function MoreSheet({
         </div>
 
         <div className="space-y-5 px-4 py-5">
-          {isAdmin && (
-            <AreaSwitcher current={area} pendingCount={pendingCount} onNavigate={onClose} />
-          )}
-
           {items.length > 0 && (
             <nav aria-label="Weitere Ziele">
               <ul className="list-none space-y-1">

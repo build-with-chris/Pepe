@@ -5,12 +5,14 @@ import SEO from '@/components/SEO';
 import {
   MoreVertical,
   Check,
+  Pencil,
   Trash2,
   CalendarDays,
   TrendingUp,
   Clock,
   Search,
-  Filter
+  Filter,
+  X
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/PageState';
@@ -98,17 +100,21 @@ function StatCard({ title, value, icon: Icon, trend, trendUp, onClick, isActive 
 
 export default function Admin() {
   const { token, getFreshToken } = useAuth();
-  // Kein useNavigate mehr: Die Zeile öffnet die Anfrage über einen echten
-  // <Link>, damit sie per Tastatur erreichbar ist.
+  // Kein useNavigate mehr: Die Anfrage wird über einen sichtbaren
+  // „Angebot"-Knopf geöffnet, der ein echter Link ist und damit per Tastatur
+  // erreichbar.
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string>('receivedDesc');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Rückmeldung zu Annehmen und Löschen. Ersetzt zwei alert()-Fenster.
+  const [notice, setNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
   async function handleAcceptRequest(id: number) {
     if (!token) return;
+    setNotice(null);
     try {
       const res = await fetch(api('/api/requests/requests/' + id + '/accept'), {
         method: 'PUT',
@@ -119,16 +125,22 @@ export default function Admin() {
         if (!prev?.offers) return prev;
         return { ...prev, offers: prev.offers.map((o: any) => o.id === id ? { ...o, status: 'akzeptiert' } : o) };
       });
-    } catch (e) {
-      alert('Konnte Anfrage nicht annehmen.');
+      setNotice({ kind: 'success', text: `Anfrage #${id} ist angenommen.` });
+    } catch (e: any) {
+      setNotice({
+        kind: 'error',
+        text: `Anfrage #${id} konnte nicht angenommen werden${e?.message ? `: ${e.message}` : '.'}`,
+      });
     }
   }
 
   async function handleDeleteRequest(id: number) {
     if (!token) return;
-    const ok = window.confirm('Anfrage wirklich löschen?');
+    // Rückfrage bleibt: Löschen ist nicht umkehrbar.
+    const ok = window.confirm(`Anfrage #${id} wirklich löschen? Das lässt sich nicht rückgängig machen.`);
     if (!ok) return;
 
+    setNotice(null);
     setDashboardData((prev: any) => {
       if (!prev?.offers) return prev;
       return { ...prev, offers: prev.offers.filter((o: any) => o.id !== id) };
@@ -142,20 +154,15 @@ export default function Admin() {
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
-    } catch (e) {
-      await new Promise(r => setTimeout(r, 0));
-      setLoading(true);
-      try {
-        const res = await fetch(api('/api/admin/dashboard'), { headers: { Authorization: `Bearer ${token}` } });
-        const data = await res.json();
-        const { availabilities, artistAvailability, slots, ...filtered } = data;
-        setDashboardData(filtered);
-      } catch (err) {
-        console.error('Reload after delete failed', err);
-      } finally {
-        setLoading(false);
-      }
-      alert('Löschen fehlgeschlagen.');
+      setNotice({ kind: 'success', text: `Anfrage #${id} ist gelöscht.` });
+    } catch (e: any) {
+      // Die Zeile war schon aus der Liste genommen — neu laden, damit sie
+      // wieder erscheint und der Stand wieder dem Server entspricht.
+      await loadDashboard();
+      setNotice({
+        kind: 'error',
+        text: `Anfrage #${id} konnte nicht gelöscht werden${e?.message ? `: ${e.message}` : '.'}`,
+      });
     }
   }
 
@@ -372,6 +379,29 @@ export default function Admin() {
           </div>
         </div>
 
+        {/* Rückmeldung zu Annehmen und Löschen, statt eines alert()-Fensters. */}
+        {notice && (
+          <div
+            aria-live="polite"
+            className={
+              'flex items-start justify-between gap-3 rounded-2xl border p-4 text-sm ' +
+              (notice.kind === 'success'
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                : 'border-red-500/30 bg-red-500/10 text-red-200')
+            }
+          >
+            <span>{notice.text}</span>
+            <button
+              type="button"
+              onClick={() => setNotice(null)}
+              aria-label="Meldung ausblenden"
+              className="flex-shrink-0 rounded p-0.5 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && <LoadingSkeleton rows={4} />}
 
@@ -388,26 +418,16 @@ export default function Admin() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1.5 flex flex-wrap items-center gap-2">
                         {/*
-                          Ein echter Link statt onClick auf einem <div>. Vorher
-                          war die Zeile per Tastatur nicht erreichbar: kein
-                          Fokus, kein Enter, und Screenreader kündigten sie
-                          nicht als Ziel an. `after:absolute after:inset-0`
-                          macht trotzdem die ganze Zeile klickbar.
-
-                          Der Pfad enthält die Anfrage-ID zweimal. Das ist die
-                          bestehende Route; OfferEditPage löst das Angebot
-                          inzwischen über die Anfrage auf und nicht mehr über
-                          das zweite Segment.
+                          Nur die Nummer, kein Link. Die Zeile war vorher ein
+                          <div> mit onClick: per Tastatur nicht erreichbar und
+                          für Screenreader kein Ziel. Ein Zwischenstand legte
+                          dafür eine unsichtbare Überlagerung über die ganze
+                          Zeile — die machte das Markieren von Text unmöglich
+                          und verdeckte die anderen Bedienelemente. Jetzt gibt es
+                          rechts einen sichtbaren „Angebot"-Knopf; das ist das
+                          Ziel, und es steht da.
                         */}
-                        <Link
-                          to={`/admin/requests/${offer.id}/offers/${offer.id}/edit`}
-                          className="rounded font-mono text-sm text-white after:absolute after:inset-0 hover:text-pepe-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
-                        >
-                          #{offer.id}
-                          <span className="sr-only">
-                            {` – Anfrage von ${offer.client_name ?? 'unbekannt'} bearbeiten`}
-                          </span>
-                        </Link>
+                        <span className="font-mono text-sm text-gray-400">#{offer.id}</span>
                         {offer.status && (
                           <span
                             className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(offer.status)}`}
@@ -440,7 +460,7 @@ export default function Admin() {
                       </div>
                     </div>
 
-                    <div className="flex flex-shrink-0 flex-col items-end gap-2">
+                    <div className="flex flex-shrink-0 flex-col items-end gap-3">
                       {/* Der Preis fehlte in der Liste komplett — die Zahl, um
                           die es geht, musste man in jeder Anfrage einzeln
                           aufschlagen. z-10, damit er nicht unter der
@@ -465,34 +485,57 @@ export default function Admin() {
                         )}
                       </div>
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Aktionen für Anfrage #${offer.id}`}
-                            className="relative z-10 h-8 w-8 flex-shrink-0 text-gray-400 hover:bg-white/10 hover:text-white"
-                          >
-                            <MoreVertical className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="border-white/10 bg-pepe-surface">
-                          <DropdownMenuItem
-                            onClick={() => handleAcceptRequest(offer.id)}
-                            className="text-emerald-400 focus:bg-white/5 focus:text-emerald-300"
-                          >
-                            <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-                            Annehmen
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteRequest(offer.id)}
-                            className="text-red-400 focus:bg-white/5 focus:text-red-300"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                            Löschen
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {/* Sichtbare Aktionen. Vorher lagen „Bearbeiten",
+                          „Annehmen" und „Löschen" alle drei hinter einem ⋮ ohne
+                          Beschriftung, und das einzige erkennbare Ziel war das
+                          kleine `#12`. Man sah nicht, was hier möglich ist.
+                          Löschen bleibt im Menü — es ist nicht umkehrbar und
+                          gehört nicht neben die Alltagsaktion. */}
+                      <div className="relative z-10 flex items-center gap-2">
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="border-white/15 bg-transparent text-gray-200 hover:bg-white/10 hover:text-white"
+                        >
+                          <Link to={`/admin/requests/${offer.id}/offers/${offer.id}/edit`}>
+                            <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                            Angebot
+                          </Link>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAcceptRequest(offer.id)}
+                          className="border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 hover:text-emerald-100"
+                        >
+                          <Check className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                          Annehmen
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Weitere Aktionen für Anfrage #${offer.id}`}
+                              className="h-8 w-8 flex-shrink-0 text-gray-400 hover:bg-white/10 hover:text-white"
+                            >
+                              <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="border-white/10 bg-pepe-surface">
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteRequest(offer.id)}
+                              className="text-red-400 focus:bg-white/5 focus:text-red-300"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                              Löschen
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
                 </li>
