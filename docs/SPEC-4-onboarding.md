@@ -2,6 +2,53 @@
 
 Setzt SPEC-1 bis SPEC-3 voraus.
 
+## Stand 30.07.2026
+
+Die Schritte 0 bis 3 sind umgesetzt und gegen `pepe-services.vercel.app`
+geprüft. 204 Tests grün, `scripts/smoke-deployment.sh` 29 von 29.
+
+| Kriterium | Stand |
+|---|---|
+| 1 Token-Prüfung funktioniert und ist getestet | erledigt |
+| 2 Fehlkonfiguration ist unterscheidbar | erledigt |
+| 3 Genau ein Upload-Weg, geschützt | erledigt |
+| 4 Onboarding bricht sichtbar ab | erledigt |
+| 5 Ablauf am Stück getestet | erledigt |
+| 6 Missbrauchsschutz instanzübergreifend | **offen**, siehe unten |
+| 7 Prüfung von aussen | erledigt |
+
+Gegenprobe zu Kriterium 1 in Produktion: In den Vercel-Runtime-Logs steht
+`Initializing Clerk JWKS client with URL: https://clerk.pepeshows.de/...` und
+dahinter ein `GET /api/artists/me 200` aus einem Browser. Vorher endete jeder
+authentifizierte Aufruf in 401.
+
+Zwei Befunde kamen bei der Umsetzung hinzu, beide vom selben Typ wie O1, also
+Reste vom Merge:
+
+- `api_routes.py` rief `artist_mgr._geocode_and_set()` auf. Die Methode heisst
+  ohne Unterstrich. Jedes Profil-Speichern mit geänderter Adresse endete in
+  einem 500. Gefunden vom neuen Kettentest.
+- `Buchhaltung.tsx` rief `put()` aus `@vercel/blob` direkt im Browser auf. Das
+  SDK liest dort `process.env.BLOB_READ_WRITE_TOKEN`, was im Browser-Bundle
+  nicht existiert: Der Rechnungsupload war kaputt. Das Token war nirgends im
+  Frontend gesetzt, also auch nicht geleakt.
+
+### Was noch Zugriff auf ein Dashboard braucht
+
+1. **Upstash Redis** in Vercel hinzufügen (ROLLOUT-3, Abschnitt 5).
+   Nachgemessen am 30.07.2026: Limit ausgeschöpft, dann zwölf gleichzeitige
+   Aufrufe, **fünf kamen durch**. Zähler und Idempotenz liegen weiter pro
+   Funktionsinstanz. Kein Code-Eingriff nötig, `helpers/shared_store.py`
+   erkennt `KV_REST_API_*` und `UPSTASH_*` von allein.
+2. **Clerk-JWT-Template `pepe-backend`** in der Produktionsinstanz anlegen
+   (ROLLOUT-3, Abschnitt 8.1). Ohne das Template fehlt der `email`-Claim, und
+   `ensure` lehnt eine **Neuanmeldung** bewusst mit `invalid_token` ab.
+   Bestehende Konten laufen über den Rückfall auf das Standard-Token weiter.
+   Solange das offen ist, ist das Ziel dieser Spec für neue Artists nicht
+   erreicht.
+3. **`BLOB_READ_WRITE_TOKEN` im Frontend-Projekt entfernen.** Die
+   Vercel-Funktion, die ihn brauchte, ist weg; er gehört nur noch ins Backend.
+
 ---
 
 ## Kontext
