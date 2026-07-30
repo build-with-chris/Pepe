@@ -24,9 +24,10 @@ HAMBURG_ADDRESS = 'Reeperbahn 1, 20359 Hamburg'
 @pytest.fixture(autouse=True)
 def reset_rate_limit():
     """Die Route erlaubt 5 Anfragen/Stunde pro IP — im Test hinderlich."""
-    request_routes._rate_limit_hits.clear()
+    from helpers import shared_store
+    shared_store.reset_for_tests()
     yield
-    request_routes._rate_limit_hits.clear()
+    shared_store.reset_for_tests()
 
 
 @pytest.fixture(autouse=True)

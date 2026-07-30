@@ -1,0 +1,14 @@
+[project]
+name = "pepe-backend"
+version = "1.0.0"
+description = "Booking-Backend der Artistenagentur Pepe Shows (Flask)"
+requires-python = ">=3.11"
+
+# Abhaengigkeiten stehen weiterhin in requirements.txt (Vercel und Render lesen
+# beide diese Datei). Hier bewusst nicht doppelt gepflegt.
+
+[tool.vercel]
+# Ohne diese Zeile muesste sich Vercel den Einstiegspunkt selbst suchen. Explizit
+# ist besser: `app.py` definiert die Flask-Instanz `app`, dieselbe, die auch
+# `flask db upgrade` ueber FLASK_APP benutzt (siehe .flaskenv).
+entrypoint = "app:app"

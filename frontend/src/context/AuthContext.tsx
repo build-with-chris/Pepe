@@ -54,10 +54,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isSyncingRef = useRef(false);
 
-  const getTemplateToken = useCallback(
-    () => getToken({ template: CLERK_JWT_TEMPLATE }),
-    [getToken]
-  );
+  // Merker, damit die Warnung nicht bei jeder Auffrischung erneut im Log steht.
+  const templateMissingRef = useRef(false);
+
+  /**
+   * Token holen — bevorzugt über das JWT-Template.
+   *
+   * Fehlt das Template in der aktiven Clerk-Instanz, antwortet Clerk mit 404.
+   * Vorher hiess das: gar kein Token, und damit war die gesamte Anmeldung tot.
+   * Das ist unnötig scharf. Für alles ausser dem allerersten Login braucht das
+   * Backend nur `sub`, und das steht auch im Standard-Token. Deshalb hier der
+   * Rückfall darauf — laut protokolliert, damit die Fehlkonfiguration auffällt.
+   * Neuanlagen scheitern weiterhin bewusst mit "invalid_token" (SPEC-1).
+   */
+  const getTemplateToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const templated = await getToken({ template: CLERK_JWT_TEMPLATE });
+      if (templated) {
+        templateMissingRef.current = false;
+        return templated;
+      }
+    } catch (e) {
+      if (!templateMissingRef.current) {
+        console.error(
+          `[Auth] Clerk-JWT-Template "${CLERK_JWT_TEMPLATE}" nicht verfügbar. ` +
+          'Im Clerk-Dashboard unter JWT Templates anlegen (Claims: email, name, ' +
+          'public_metadata). Bis dahin laeuft die App mit dem Standard-Token: ' +
+          'bestehende Konten funktionieren, eine Neuanmeldung nicht.',
+          e
+        );
+      }
+    }
+    templateMissingRef.current = true;
+    return getToken();
+  }, [getToken]);
 
   // Fresh token getter – always calls Clerk's getToken() for a non-expired token
   const getFreshToken = useCallback(async (): Promise<string | null> => {
@@ -146,10 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (isSignedIn && clerkUser) {
           const clerkToken = await getTemplateToken();
           if (!clerkToken) {
-            throw new Error(
-              `Clerk returned no token for template "${CLERK_JWT_TEMPLATE}". ` +
-              'Is the JWT template configured in the Clerk dashboard?'
-            );
+            throw new Error('Clerk lieferte kein Token für die aktuelle Sitzung.');
           }
           setToken(clerkToken);
 

@@ -1,88 +1,5 @@
 from __future__ import annotations
 
-import time
-from typing import Deque, Tuple
-from collections import OrderedDict, deque
-
-# Beide Speicher liegen im Prozess. Bei mehreren Gunicorn-Workern oder
-# Render-Instanzen gilt das Limit deshalb pro Worker, nicht global — bekannte
-# Einschränkung (Analyse D7). Ein geteilter Store (Redis) wäre die saubere
-# Lösung. Was hier zählt: beide Speicher sind nach oben begrenzt, damit ein
-# lang laufender Prozess nicht unbemerkt Speicher frisst.
-_RATE_LIMIT_WINDOW_SECONDS = 3600  # 1 hour
-_RATE_LIMIT_MAX_REQUESTS = 5       # 5 requests/hour per IP
-_RATE_LIMIT_MAX_TRACKED_IPS = 10_000
-_rate_limit_hits: "OrderedDict[str, Deque[float]]" = OrderedDict()
-
-# In-memory idempotency cache: key -> (created_ts, payload_dict)
-_IDEMPOTENCY_TTL_SECONDS = 3600
-_IDEMPOTENCY_MAX_ENTRIES = 1_000
-_idempotency_cache: "OrderedDict[str, Tuple[float, dict]]" = OrderedDict()
-
-def _client_ip() -> str:
-    """Best-effort client IP extraction (respects X-Forwarded-For)."""
-    xff = request.headers.get('X-Forwarded-For')
-    if xff:
-        return xff.split(',')[0].strip()
-    return request.remote_addr or 'unknown'
-
-def _prune_rate_limit(now: float) -> None:
-    """Entfernt IPs, deren Zeitfenster komplett abgelaufen ist.
-
-    Ohne dieses Aufräumen bleibt jede IP, die je eine Anfrage gestellt hat, für
-    die Lebensdauer des Prozesses im Dict stehen.
-    """
-    cutoff = now - _RATE_LIMIT_WINDOW_SECONDS
-    for ip in [ip for ip, dq in _rate_limit_hits.items() if not dq or dq[-1] < cutoff]:
-        _rate_limit_hits.pop(ip, None)
-
-def _rate_limit_allow(ip: str) -> bool:
-    """Return True if request is allowed under the rate limit."""
-    now = time.time()
-    _prune_rate_limit(now)
-    dq = _rate_limit_hits.setdefault(ip, deque())
-    # prune old entries
-    cutoff = now - _RATE_LIMIT_WINDOW_SECONDS
-    while dq and dq[0] < cutoff:
-        dq.popleft()
-    if len(dq) >= _RATE_LIMIT_MAX_REQUESTS:
-        return False
-    dq.append(now)
-    _rate_limit_hits.move_to_end(ip)
-    # Notbremse, falls sehr viele IPs innerhalb *eines* Fensters auflaufen:
-    # die am längsten unbenutzten Einträge zuerst verwerfen. Erst nach dem
-    # Einfügen kappen, sonst liegt die Obergrenze faktisch um eins höher.
-    while len(_rate_limit_hits) > _RATE_LIMIT_MAX_TRACKED_IPS:
-        _rate_limit_hits.popitem(last=False)
-    return True
-
-def _idempotency_lookup(key: str):
-    """Return cached payload if key exists and not expired, else None."""
-    if not key:
-        return None
-    entry = _idempotency_cache.get(key)
-    if not entry:
-        return None
-    created, payload = entry
-    if time.time() - created > _IDEMPOTENCY_TTL_SECONDS:
-        # expired
-        _idempotency_cache.pop(key, None)
-        return None
-    return payload
-
-def _idempotency_store(key: str, payload: dict) -> None:
-    if not key:
-        return
-    now = time.time()
-    # Abgelaufene Einträge fallen sonst nur beim Nachschlagen heraus — ein Key,
-    # der nie wieder abgefragt wird, bliebe für immer liegen.
-    for stale in [k for k, (created, _) in _idempotency_cache.items()
-                  if now - created > _IDEMPOTENCY_TTL_SECONDS]:
-        _idempotency_cache.pop(stale, None)
-    _idempotency_cache[key] = (now, payload)
-    _idempotency_cache.move_to_end(key)
-    while len(_idempotency_cache) > _IDEMPOTENCY_MAX_ENTRIES:
-        _idempotency_cache.popitem(last=False)
 from flask import Blueprint, request, jsonify
 from helpers.clerk_auth import (
     admin_required,
@@ -107,6 +24,7 @@ from helpers.emails import (
 
 from managers.booking_requests_manager import BookingRequestManager
 from managers.artist_manager import ArtistManager
+from helpers import shared_store
 
 # Manager-Instanzen
 request_mgr = BookingRequestManager()
@@ -115,6 +33,51 @@ artist_mgr = ArtistManager()
 """
 Booking module: Endpoints to create, list and manage booking requests.
 """
+
+# --- Missbrauchsschutz der oeffentlichen Anfrage-Route -------------------------
+#
+# Beide Werte liegen im geteilten Store (`helpers/shared_store`), nicht mehr im
+# Prozessspeicher. Auf einem dauerhaft laufenden Server war das gleichwertig; in
+# einer Serverless-Umgebung ist jeder Aufruf potenziell eine neue Instanz, und
+# ein prozesslokaler Zaehler schuetzt dort gar nicht mehr.
+_RATE_LIMIT_WINDOW_SECONDS = 3600  # 1 hour
+_RATE_LIMIT_MAX_REQUESTS = 5       # 5 requests/hour per IP
+_IDEMPOTENCY_TTL_SECONDS = 3600
+
+
+def _client_ip() -> str:
+    """Best-effort client IP extraction (respects X-Forwarded-For)."""
+    xff = request.headers.get('X-Forwarded-For')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+
+def _rate_limit_allow(ip: str) -> bool:
+    """True, solange die IP im laufenden Fenster unter dem Limit liegt.
+
+    Gezaehlt wird hochlaufend mit fester Ablaufzeit statt mit einer Liste von
+    Zeitstempeln: ein Zaehler ist im geteilten Store eine einzige atomare
+    Operation, eine Liste waere ein Lesen-Aendern-Schreiben mit Wettlauf.
+    """
+    count = shared_store.incr_with_ttl(
+        f"ratelimit:booking:{ip}", _RATE_LIMIT_WINDOW_SECONDS
+    )
+    return count <= _RATE_LIMIT_MAX_REQUESTS
+
+
+def _idempotency_lookup(key: str):
+    """Zwischengespeicherte Antwort zu einem Idempotency-Key, sonst None."""
+    if not key:
+        return None
+    return shared_store.get_json(f"idem:booking:{key}")
+
+
+def _idempotency_store(key: str, payload: dict) -> None:
+    if not key:
+        return
+    shared_store.set_json(f"idem:booking:{key}", payload, _IDEMPOTENCY_TTL_SECONDS)
+
 
 # --- 80/20 constants & helpers -------------------------------------------------
 MAX_MATCHED_ARTISTS = 5

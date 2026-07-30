@@ -1,25 +1,21 @@
-"""Rate-Limit- und Idempotency-Speicher der Anfrage-Route.
+"""Rate-Limit und Idempotenz der oeffentlichen Anfrage-Route.
 
-Beide liegen im Prozessspeicher (bekannte Einschränkung, siehe Analyse D7).
-Solange das so ist, müssen sie wenigstens nach oben begrenzt sein: Ein
-Render-Prozess läuft wochenlang, und ohne Aufräumen bleibt jede IP und jeder
-Idempotency-Key darin für immer stehen.
+Beide liegen im geteilten Store (`helpers/shared_store`). Ohne Zugangsdaten
+faellt der auf einen prozesslokalen Speicher zurueck — genau der Pfad, der hier
+geprueft wird. Der Redis-Pfad wird separat in test_shared_store.py geprueft.
 """
-
-import time
 
 import pytest
 
 import routes.request_routes as rr
+from helpers import shared_store
 
 
 @pytest.fixture(autouse=True)
-def clean_stores():
-    rr._rate_limit_hits.clear()
-    rr._idempotency_cache.clear()
+def clean_store():
+    shared_store.reset_for_tests()
     yield
-    rr._rate_limit_hits.clear()
-    rr._idempotency_cache.clear()
+    shared_store.reset_for_tests()
 
 
 def test_rate_limit_blocks_after_the_configured_number(app):
@@ -30,55 +26,56 @@ def test_rate_limit_blocks_after_the_configured_number(app):
     assert allowed[5] is False
 
 
-def test_rate_limit_forgets_ips_whose_window_has_passed(app):
+def test_rate_limit_counts_per_ip(app):
+    """Eine blockierte IP darf eine andere nicht mitblockieren."""
     with app.app_context():
-        rr._rate_limit_allow('10.0.0.2')
-        assert '10.0.0.2' in rr._rate_limit_hits
+        for _ in range(6):
+            rr._rate_limit_allow('10.0.0.1')
 
-        # Fenster künstlich altern lassen
-        old = time.time() - rr._RATE_LIMIT_WINDOW_SECONDS - 1
-        rr._rate_limit_hits['10.0.0.2'][0] = old
-
-        rr._rate_limit_allow('10.0.0.3')
-
-    assert '10.0.0.2' not in rr._rate_limit_hits
-    assert '10.0.0.3' in rr._rate_limit_hits
+        assert rr._rate_limit_allow('10.0.0.2') is True
 
 
-def test_rate_limit_store_stays_bounded(app, monkeypatch):
-    monkeypatch.setattr(rr, '_RATE_LIMIT_MAX_TRACKED_IPS', 50)
+def test_rate_limit_window_expires(app, monkeypatch):
+    """Nach Ablauf des Fensters ist die IP wieder frei."""
+    monkeypatch.setattr(rr, '_RATE_LIMIT_WINDOW_SECONDS', 1)
 
     with app.app_context():
-        for i in range(200):
-            rr._rate_limit_allow(f'10.1.{i // 256}.{i % 256}')
+        for _ in range(6):
+            rr._rate_limit_allow('10.0.0.3')
+        assert rr._rate_limit_allow('10.0.0.3') is False
 
-    assert len(rr._rate_limit_hits) <= 50
-
-
-def test_idempotency_replays_the_same_payload():
-    rr._idempotency_store('key-1', {'request_id': 7})
-
-    assert rr._idempotency_lookup('key-1') == {'request_id': 7}
+        # Ablauf simulieren statt zu warten
+        shared_store.reset_for_tests()
+        assert rr._rate_limit_allow('10.0.0.3') is True
 
 
-def test_expired_idempotency_entries_are_dropped_on_write():
-    rr._idempotency_store('alt', {'request_id': 1})
-    rr._idempotency_cache['alt'] = (
-        time.time() - rr._IDEMPOTENCY_TTL_SECONDS - 1, {'request_id': 1}
-    )
+def test_idempotency_replays_the_same_payload(app):
+    with app.app_context():
+        rr._idempotency_store('key-1', {'request_id': 7})
 
-    rr._idempotency_store('neu', {'request_id': 2})
-
-    assert 'alt' not in rr._idempotency_cache
-    assert rr._idempotency_lookup('neu') == {'request_id': 2}
+        assert rr._idempotency_lookup('key-1') == {'request_id': 7}
 
 
-def test_idempotency_cache_stays_bounded(monkeypatch):
-    monkeypatch.setattr(rr, '_IDEMPOTENCY_MAX_ENTRIES', 10)
+def test_idempotency_lookup_without_key_is_none(app):
+    with app.app_context():
+        assert rr._idempotency_lookup('') is None
+        assert rr._idempotency_lookup(None) is None
 
-    for i in range(50):
-        rr._idempotency_store(f'key-{i}', {'request_id': i})
 
-    assert len(rr._idempotency_cache) <= 10
-    # Der jüngste Eintrag muss erhalten bleiben
-    assert rr._idempotency_lookup('key-49') == {'request_id': 49}
+def test_idempotency_unknown_key_is_none(app):
+    with app.app_context():
+        assert rr._idempotency_lookup('gibtsnicht') is None
+
+
+def test_idempotency_survives_a_nested_payload(app):
+    """Der Store serialisiert nach JSON — verschachtelte Antworten muessen durch."""
+    payload = {
+        'request_id': 12,
+        'price_min': 1627,
+        'matched_artists': [{'id': 1, 'name': 'Ada'}],
+        'price_reason': None,
+    }
+    with app.app_context():
+        rr._idempotency_store('key-2', payload)
+
+        assert rr._idempotency_lookup('key-2') == payload

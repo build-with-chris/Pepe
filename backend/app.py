@@ -34,16 +34,32 @@ from urllib.parse import urlparse
 
 
 
+# Serverless (Vercel) verhaelt sich anders als ein dauerhaft laufender Prozess:
+# Es gibt viele kurzlebige Instanzen statt einer langen. Alles, was auf "ein
+# Prozess, der lange lebt" baut, muss das wissen. Vercel setzt VERCEL=1.
+IS_SERVERLESS = bool(os.getenv("VERCEL"))
+
 # --- Flask app & config ---
 app = Flask(__name__)
 app.config.from_object(Config)
 # Robuste DB-Verbindungen + optional connect_args aus Config (z. B. Supabase SSL)
-_engine_defaults = {
-    'pool_pre_ping': True,
-    'pool_recycle': 1800,
-    'pool_size': 5,
-    'max_overflow': 5,
-}
+if IS_SERVERLESS:
+    # Kein Verbindungspool: Jede Instanz haette ihren eigenen, und bei
+    # gleichzeitigen Aufrufen waere das Verbindungslimit von Postgres schnell
+    # erreicht. Pooling uebernimmt in dieser Aufstellung der Supabase-Pooler
+    # (Port 6543), nicht SQLAlchemy.
+    from sqlalchemy.pool import NullPool
+    _engine_defaults = {
+        'poolclass': NullPool,
+        'pool_pre_ping': True,
+    }
+else:
+    _engine_defaults = {
+        'pool_pre_ping': True,
+        'pool_recycle': 1800,
+        'pool_size': 5,
+        'max_overflow': 5,
+    }
 _cfg_engine = dict(getattr(Config, 'SQLALCHEMY_ENGINE_OPTIONS', None) or {})
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {**_engine_defaults, **_cfg_engine}
 # Hilfsfunktion: Passwort in der DB-URL maskieren für Logs
