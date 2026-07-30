@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { CheckCircle2, Inbox } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
 import { useAuth } from '../../context/AuthContext';
 import List from "./components/List";
-import RequestCard from "./components/RequestCard";
-import { useTranslation } from 'react-i18next';
+import RequestCard, { type RequestNotice } from "./components/RequestCard";
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { DashboardCard } from '@/components/DashboardCard';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/PageState';
 
 import { ProfileStatusBanner } from '@/components/ProfileStatusBanner';
 
@@ -58,6 +59,8 @@ const MeineAnfragen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'aktion' | 'alle'>('aktion');
   const [offerInputs, setOfferInputs] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | number | null>(null);
+  // Rückmeldung je Anfrage. Ersetzt die drei alert()-Aufrufe.
+  const [notices, setNotices] = useState<Record<string, RequestNotice | null>>({});
 
   const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -77,104 +80,107 @@ const MeineAnfragen: React.FC = () => {
     return res.json();
   };
 
-  useEffect(() => {
-    const load = async () => {
-      if (!token || !user) return;
-      
-      // If artist is not approved, we can't fetch requests
-      if (user.approval_status !== 'approved') {
-        setLoading(false);
-        return;
-      }
+  // Als eigene Funktion, damit der Fehlerzustand einen „Erneut versuchen"-Knopf
+  // anbieten kann.
+  const load = useCallback(async () => {
+    if (!token || !user) return;
 
-      console.log('Lade Anfragen, Token:', token);
-      setLoading(true);
-      setError(null);
-      try {
-        const url = '/api/requests/requests';
-        console.log('Fetch URL:', import.meta.env.VITE_API_URL + url);
-        const data = await apiFetch(url);
-        console.log('Rohdaten von /api/requests/requests:', data);
-        // Erwartet ein Array direkt oder in { requests: [...] }
-        const rawList: any[] = Array.isArray(data) ? data : data.requests || [];
-        const list: Anfrage[] = rawList.map((item: any) => ({
-          ...item,
-          admin_comment: item.comment ?? item.artist_comment ?? undefined,
-        }));
-        // Sort by received/created date (newest first)
-        list.sort((a, b) => getReceivedAtTs(b) - getReceivedAtTs(a));
-        setAnfragen(list);
-        console.log('🕵️‍♀️ Loaded requests with all fields:', list);
-        console.log('🧐 Loaded statuses:', list.map(a => a.status));
-      } catch (e: any) {
-        console.error('Fehler beim Laden:', e);
-        setError(e.message || t('requests.errors.loadFailed', { defaultValue: 'Fehler beim Laden der Anfragen' }));
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [token]);
+    // If artist is not approved, we can't fetch requests
+    if (user.approval_status !== 'approved') {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch('/api/requests/requests');
+      // Erwartet ein Array direkt oder in { requests: [...] }
+      const rawList: any[] = Array.isArray(data) ? data : data.requests || [];
+      const list: Anfrage[] = rawList.map((item: any) => ({
+        ...item,
+        admin_comment: item.comment ?? item.artist_comment ?? undefined,
+      }));
+      // Sort by received/created date (newest first)
+      list.sort((a, b) => getReceivedAtTs(b) - getReceivedAtTs(a));
+      setAnfragen(list);
+    } catch (e: any) {
+      console.error('Anfragen konnten nicht geladen werden:', e);
+      setError(e.message || t('requests.errors.loadFailed', { defaultValue: 'Die Anfragen konnten nicht geladen werden.' }));
+    } finally {
+      setLoading(false);
+    }
+    // apiFetch haengt an getFreshToken und token; die Abhaengigkeiten hier
+    // bewusst auf das Wesentliche begrenzt, sonst laedt die Seite bei jedem
+    // Render neu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, user?.approval_status]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const openCount = anfragen.filter(a => String(a.status).toLowerCase() === 'angefragt').length;
 
   const filtered = anfragen.filter(a => {
-    const st = String(a.status).toLowerCase();
-    console.log(`🧐 Filtering id=${a.id}, raw='${a.status}', norm='${st}', tab='${activeTab}'`);
     if (activeTab === 'aktion') {
-      // Zeige nur angefragte (noch nicht beantwortete) Anfragen
-      return st === 'angefragt';
+      // Nur angefragte, also die noch nicht beantworteten.
+      return String(a.status).toLowerCase() === 'angefragt';
     }
-    // Bei 'alle' Tab wirklich alle anzeigen
-    if (activeTab === 'alle') {
-      return true;
-    }
-    return false;  // falls später weitere Tabs hinzukommen
+    return true;
   });
 
-  const formatDate = (d: string) => {
-    try {
-      return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    } catch {
-      return d;
-    }
-  };
-
-  const formatTime = (t: string) => {
-    // expects HH:MM:SS
-    return t.slice(0,5);
-  };
-
-  // Extract the city part from an address (last segment after comma)
-  const getCity = (address: string) => {
-    const parts = address.split(',');
-    return parts.length > 1 ? parts[parts.length - 1].trim() : address;
+  /** Eine Stelle für den Meldungstyp — sonst verbreitert TypeScript `kind` zu string. */
+  const setNotice = (id: string | number, notice: RequestNotice | null) => {
+    setNotices(prev => ({ ...prev, [String(id)]: notice }));
   };
 
   const handleOfferChange = (id: string | number, value: string) => {
-    setOfferInputs(prev => ({ ...prev, [id]: value }));
+    setOfferInputs(prev => ({ ...prev, [String(id)]: value }));
+    // Eine alte Meldung passt nicht mehr, sobald der Betrag sich aendert.
+    if (notices[String(id)]) setNotice(id, null);
   };
 
   const sendOffer = async (id: string | number, preisNum: number) => {
     if (!Number.isFinite(preisNum) || preisNum <= 0) {
-      alert(t('requests.offer.invalidPrice', { defaultValue: 'Bitte gültigen Preis eingeben.' }));
+      setNotice(id, {
+        kind: 'error',
+        text: t('requests.offer.invalidPrice', { defaultValue: 'Bitte einen Betrag groesser als 0 eintragen.' }),
+      });
       return;
     }
+
     setSubmitting(id);
+    setNotice(id, null);
+
+    // Vorher merken, um bei einem Fehler genau dorthin zurueckzurollen.
+    const before = anfragen.find(a => a.id === id);
+
     // Optimistische Aktualisierung von Status und Gage
     setAnfragen(prev => prev.map(a => a.id === id ? { ...a, status: 'angeboten', artist_gage: preisNum } : a));
     try {
-      console.log('🛰️ Sende Artist-Angebot PUT payload:', { price_offered: preisNum });
       const result = await apiFetch(`/api/requests/requests/${id}/offer`, {
         method: 'PUT',
         body: JSON.stringify({ price_offered: preisNum }),
       });
-      // Serverwerte übernehmen
       setAnfragen(prev => prev.map(a => a.id === id ? { ...a, status: result.status, artist_gage: result.price_offered } : a));
-      alert(t('requests.offer.success', { defaultValue: 'Angebot erfolgreich an den Admin weitergegeben.' }));
+      // Rückmeldung an der Karte statt in einem alert()-Fenster, und sie sagt,
+      // was als Naechstes passiert.
+      setNotice(id, {
+        kind: 'success',
+        text: t('requests.offer.success', {
+          defaultValue: 'Angebot gesendet. Die Agentur prüft es und meldet sich beim Kunden.',
+        }),
+      });
     } catch (e: any) {
-      console.error(e);
-      alert(t('requests.offer.failed', { defaultValue: 'Fehler beim Absenden des Angebots' }) + ': ' + (e.message || ''));
-      // rollback
-      setAnfragen(prev => prev.map(a => a.id === id ? { ...a, status: 'angefragt' } : a));
+      console.error('Angebot konnte nicht gesendet werden:', e);
+      setAnfragen(prev => prev.map(a => (a.id === id && before ? before : a)));
+      setNotice(id, {
+        kind: 'error',
+        text:
+          t('requests.offer.failed', { defaultValue: 'Das Angebot konnte nicht gesendet werden' }) +
+          (e?.message ? `: ${e.message}` : '. Bitte versuche es erneut.'),
+      });
     } finally {
       setSubmitting(null);
     }
@@ -184,41 +190,48 @@ const MeineAnfragen: React.FC = () => {
     <DashboardLayout title={t('requests.title', { defaultValue: 'Meine Anfragen' })}>
       <div className="space-y-6">
 
-        {/* Tabs */}
-        <div className="flex gap-3">
-          <Button
-            variant={activeTab === 'aktion' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('aktion')}
-            className={activeTab === 'aktion'
-              ? 'bg-white text-black hover:bg-white/90'
-              : 'border-white/20 bg-white/5 hover:bg-white/10 text-white'}
-          >
-            {t('requests.tabs.actionNeeded', { defaultValue: 'Aktion nötig' })}
-          </Button>
-          <Button
-            variant={activeTab === 'alle' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('alle')}
-            className={activeTab === 'alle'
-              ? 'bg-white text-black hover:bg-white/90'
-              : 'border-white/20 bg-white/5 hover:bg-white/10 text-white'}
-          >
-            {t('requests.tabs.all', { defaultValue: 'Alle Anfragen' })}
-          </Button>
+        {/* Reiter mit Zähler: Ohne die Zahl muss man umschalten, um zu sehen,
+            ob überhaupt etwas zu tun ist. */}
+        <div role="tablist" aria-label="Ansicht" className="flex gap-2">
+          {([
+            { key: 'aktion' as const, label: t('requests.tabs.actionNeeded', { defaultValue: 'Aktion nötig' }), count: openCount },
+            { key: 'alle' as const, label: t('requests.tabs.all', { defaultValue: 'Alle' }), count: anfragen.length },
+          ]).map(tab => {
+            const active = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveTab(tab.key)}
+                className={
+                  'inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold ' +
+                  (active
+                    ? 'border-pepe-gold/40 bg-pepe-gold/15 text-pepe-gold'
+                    : 'border-white/15 text-gray-300 hover:bg-white/5 hover:text-white')
+                }
+              >
+                {tab.label}
+                <span
+                  className={
+                    'min-w-[1.5rem] rounded-full px-1.5 py-0.5 text-xs tabular-nums ' +
+                    (active ? 'bg-pepe-gold text-pepe-black' : 'bg-white/10 text-gray-300')
+                  }
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-2" />
-            <span className="text-gray-400">{t('requests.loading', { defaultValue: 'Lade Anfragen…' })}</span>
-          </div>
-        )}
+        {loading && <LoadingSkeleton rows={2} />}
 
         {/* Error State */}
-        {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-4 py-3 text-red-300">
-            {error}
-          </div>
+        {error && !loading && (
+          <ErrorState message={error} onRetry={() => void load()} />
         )}
 
         {/* Not Approved State */}
@@ -235,11 +248,32 @@ const MeineAnfragen: React.FC = () => {
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && user?.approval_status === 'approved' && filtered.length === 0 && (
-          <DashboardCard className="text-center py-12">
-            <p className="text-gray-400">{t('requests.empty', { defaultValue: 'Keine Anfragen in dieser Ansicht.' })}</p>
-          </DashboardCard>
+        {/* Leerzustand. Vorher stand hier für beide Fälle derselbe Satz
+            („Keine Anfragen in dieser Ansicht"), obwohl „alles beantwortet" und
+            „noch nie eine Anfrage bekommen" völlig Verschiedenes bedeuten. */}
+        {!loading && !error && user?.approval_status === 'approved' && filtered.length === 0 && (
+          activeTab === 'aktion' && anfragen.length > 0 ? (
+            <EmptyState
+              icon={CheckCircle2}
+              title="Alles beantwortet"
+              hint="Auf keine Anfrage wartet gerade ein Angebot von dir."
+              action={
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('alle')}
+                  className="text-sm font-medium text-pepe-gold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+                >
+                  Alle {anfragen.length} Anfragen ansehen
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={Inbox}
+              title="Noch keine Anfragen"
+              hint="Sobald eine Buchungsanfrage zu deinen Disziplinen und deiner Verfügbarkeit passt, erscheint sie hier. Ein gepflegter Kalender erhöht die Chance."
+            />
+          )
         )}
 
         {/* Requests List */}
@@ -249,11 +283,15 @@ const MeineAnfragen: React.FC = () => {
               <RequestCard
                 key={anfrage.id}
                 request={anfrage}
-                activeTab={activeTab}
-                offerInput={offerInputs[anfrage.id as any] ?? String(anfrage.recommended_price_min)}
+                // Bewusst kein Vorbelegen mit `recommended_price_min`: Das war
+                // der niedrigste Wert der Empfehlung, ein schneller Klick auf
+                // „Senden" verschenkte damit Geld. Die Karte bietet stattdessen
+                // Minimum, Mitte und Maximum zum Antippen an.
+                offerInput={offerInputs[String(anfrage.id)] ?? ''}
                 onOfferChange={handleOfferChange}
                 onSendOffer={sendOffer}
                 submitting={submitting === anfrage.id}
+                notice={notices[String(anfrage.id)] ?? null}
               />
             ))}
           </List>

@@ -1,12 +1,11 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import SEO from '@/components/SEO';
 import {
   MoreVertical,
   Check,
   Trash2,
-  Loader2,
   CalendarDays,
   TrendingUp,
   Clock,
@@ -14,6 +13,14 @@ import {
   Filter
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/PageState';
+import {
+  eventCity,
+  formatDateTimeDE,
+  formatEventDateTime,
+  formatMoney,
+  getReceivedAt,
+} from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -33,32 +40,8 @@ import {
 const API_BASE: string = (import.meta.env.VITE_API_URL as string) || '';
 const api = (path: string) => `${API_BASE}${path}`.replace(/([^:]\/)\/+/g, '$1');
 
-function formatDate(value: any) {
-  if (!value) return '—';
-  try {
-    const d = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return '—';
-    return new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(d);
-  } catch {
-    return '—';
-  }
-}
-
-function getReceivedAt(offer: any): Date | null {
-  const v =
-    offer?.request_created_at ||
-    offer?.booking_request_created_at ||
-    offer?.request?.created_at ||
-    offer?.created_at ||
-    offer?.createdAt ||
-    offer?.created ||
-    offer?.received_at ||
-    offer?.submitted_at;
-
-  if (!v) return null;
-  const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
+// formatDate und getReceivedAt standen hier als eigene Kopien. Sie kommen jetzt
+// aus utils/dates, damit Künstler- und Admin-Ansicht dieselben Formate zeigen.
 
 interface StatCardProps {
   title: string;
@@ -66,11 +49,14 @@ interface StatCardProps {
   icon: React.ElementType;
   trend?: string;
   trendUp?: boolean;
+  /** Macht die Kachel zum Filter. Ohne das ist sie nur Dekoration. */
+  onClick?: () => void;
+  isActive?: boolean;
 }
 
-function StatCard({ title, value, icon: Icon, trend, trendUp }: StatCardProps) {
-  return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+function StatCard({ title, value, icon: Icon, trend, trendUp, onClick, isActive }: StatCardProps) {
+  const inner = (
+    <>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-gray-400 text-sm font-medium">{title}</p>
@@ -81,17 +67,39 @@ function StatCard({ title, value, icon: Icon, trend, trendUp }: StatCardProps) {
             </p>
           )}
         </div>
-        <div className="w-12 h-12 rounded-xl bg-pepe-gold/20 flex items-center justify-center">
-          <Icon className="w-6 h-6 text-pepe-gold" />
+        <div className="w-12 h-12 rounded-xl bg-pepe-gold/20 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-6 h-6 text-pepe-gold" aria-hidden="true" />
         </div>
       </div>
-    </div>
+    </>
+  );
+
+  const shell =
+    'rounded-2xl border p-6 text-left transition-colors ' +
+    (isActive ? 'border-pepe-gold/40 bg-pepe-gold/10' : 'border-white/10 bg-white/5');
+
+  // Als Knopf, wenn sie filtert. Sonst bleibt es ein reiner Anzeigeblock — ein
+  // Knopf ohne Wirkung wäre für Tastatur- und Screenreader-Nutzer irreführend.
+  if (!onClick) {
+    return <div className={shell}>{inner}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isActive}
+      className={`${shell} w-full hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold`}
+    >
+      {inner}
+    </button>
   );
 }
 
 export default function Admin() {
   const { token, getFreshToken } = useAuth();
-  const navigate = useNavigate();
+  // Kein useNavigate mehr: Die Zeile öffnet die Anfrage über einen echten
+  // <Link>, damit sie per Tastatur erreichbar ist.
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,30 +159,35 @@ export default function Admin() {
     }
   }
 
-  useEffect(() => {
+  // Als eigene Funktion, damit der Fehlerzustand einen „Erneut versuchen"-Knopf
+  // anbieten kann.
+  const loadDashboard = useCallback(async () => {
     if (!token) return;
-    const loadDashboard = async () => {
-      setLoading(true);
-      try {
-        // Always use a fresh token to avoid 401 from admin gate
-        const freshToken = await getFreshToken() || token;
-        const res = await fetch(api('/api/admin/dashboard'), {
-          headers: { Authorization: `Bearer ${freshToken}` },
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        const data = await res.json();
-        const { availabilities, artistAvailability, slots, ...filtered } = data;
-        console.log('[Admin] Dashboard loaded, offers:', data.offers?.length, 'raw:', data.offers);
-        setDashboardData(filtered);
-      } catch (err: any) {
-        console.error('[Admin] Dashboard load failed:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadDashboard();
+    setLoading(true);
+    setError(null);
+    try {
+      // Always use a fresh token to avoid 401 from admin gate
+      const freshToken = await getFreshToken() || token;
+      const res = await fetch(api('/api/admin/dashboard'), {
+        headers: { Authorization: `Bearer ${freshToken}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const data = await res.json();
+      // slots und die Availability-Felder braucht diese Seite nicht.
+      const { availabilities, artistAvailability, slots, ...filtered } = data;
+      setDashboardData(filtered);
+    } catch (err: any) {
+      console.error('[Admin] Dashboard load failed:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
 
   const filteredAndSortedOffers = useMemo(() => {
     if (!dashboardData?.offers) return [] as any[];
@@ -282,22 +295,30 @@ export default function Admin() {
     <DashboardLayout title="Admin Dashboard">
       <SEO title="Admin Dashboard" noindex />
       <div className="space-y-8">
-        {/* Stats Grid */}
+        {/* Kennzahlen. Die ersten drei filtern die Liste darunter — vorher waren
+            sie reine Anzeige, und man musste den Filter daneben von Hand
+            umstellen, obwohl die Zahl direkt danebenstand. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Gesamt Anfragen"
+            title="Alle Anfragen"
             value={stats.total}
             icon={CalendarDays}
+            onClick={() => setStatusFilter('all')}
+            isActive={statusFilter === 'all'}
           />
           <StatCard
-            title="Offene Anfragen"
+            title="Offen"
             value={stats.pending}
             icon={Clock}
+            onClick={() => setStatusFilter('offen')}
+            isActive={statusFilter === 'offen'}
           />
           <StatCard
             title="Akzeptiert"
             value={stats.accepted}
             icon={Check}
+            onClick={() => setStatusFilter('akzeptiert')}
+            isActive={statusFilter === 'akzeptiert'}
           />
           <StatCard
             title="Diesen Monat"
@@ -352,102 +373,158 @@ export default function Admin() {
         </div>
 
         {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-pepe-gold" />
-            <span className="ml-3 text-gray-400">Lade Dashboard-Daten...</span>
-          </div>
-        )}
+        {loading && <LoadingSkeleton rows={4} />}
 
         {/* Error State */}
-        {error && (
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-6 py-4 text-red-300">
-            Fehler: {error}
-          </div>
-        )}
+        {error && !loading && <ErrorState message={error} onRetry={() => void loadDashboard()} />}
 
         {/* Requests List */}
-        {!loading && !error && (
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
-            {/* Unified card layout - works on all screen sizes */}
-            <div className="divide-y divide-white/10">
+        {!loading && !error && filteredAndSortedOffers.length > 0 && (
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+            <ul className="list-none divide-y divide-white/10">
               {filteredAndSortedOffers.map((offer: any) => (
-                <div
-                  key={offer.id}
-                  className="p-4 lg:px-6 lg:py-5 hover:bg-white/5 cursor-pointer transition-colors"
-                  onClick={() => navigate(`/admin/requests/${offer.id}/offers/${offer.id}/edit`)}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap mb-2">
-                        <span className="text-white font-mono text-sm">#{offer.id}</span>
+                <li key={offer.id} className="relative transition-colors hover:bg-white/5">
+                  <div className="flex items-start justify-between gap-3 p-4 lg:px-6 lg:py-5">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        {/*
+                          Ein echter Link statt onClick auf einem <div>. Vorher
+                          war die Zeile per Tastatur nicht erreichbar: kein
+                          Fokus, kein Enter, und Screenreader kündigten sie
+                          nicht als Ziel an. `after:absolute after:inset-0`
+                          macht trotzdem die ganze Zeile klickbar.
+
+                          Der Pfad enthält die Anfrage-ID zweimal. Das ist die
+                          bestehende Route; OfferEditPage löst das Angebot
+                          inzwischen über die Anfrage auf und nicht mehr über
+                          das zweite Segment.
+                        */}
+                        <Link
+                          to={`/admin/requests/${offer.id}/offers/${offer.id}/edit`}
+                          className="rounded font-mono text-sm text-white after:absolute after:inset-0 hover:text-pepe-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+                        >
+                          #{offer.id}
+                          <span className="sr-only">
+                            {` – Anfrage von ${offer.client_name ?? 'unbekannt'} bearbeiten`}
+                          </span>
+                        </Link>
                         {offer.status && (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(offer.status)}`}>
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(offer.status)}`}
+                          >
                             {getStatusLabel(offer.status)}
                           </span>
                         )}
                       </div>
-                      <p className="text-white font-medium">{offer.client_name}</p>
-                      <p className="text-gray-500 text-sm">{offer.client_email}</p>
-                      <div className="mt-2 flex items-center gap-4 text-sm text-gray-400 flex-wrap">
-                        <span>{offer.event_date} {offer.event_time || ''}</span>
-                        {offer.show_discipline && (
+
+                      <p className="font-medium text-white">{offer.client_name}</p>
+                      <p className="truncate text-sm text-gray-500">{offer.client_email}</p>
+
+                      {/* Das Event-Datum stand hier als rohes „2026-09-19
+                          19:00:00". Jetzt mit Wochentag, denn ob ein Gig auf ein
+                          Wochenende fällt, ist die erste Frage. */}
+                      <p className="mt-2 text-sm text-gray-300">
+                        {formatEventDateTime(offer.event_date, offer.event_time)}
+                      </p>
+
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+                        {offer.show_discipline && <span>{offer.show_discipline}</span>}
+                        {offer.event_address && (
                           <>
-                            <span className="hidden sm:inline">•</span>
-                            <span className="hidden sm:inline">{offer.show_discipline}</span>
+                            <span aria-hidden="true">·</span>
+                            <span className="truncate">{eventCity(offer.event_address)}</span>
                           </>
                         )}
-                        <span>•</span>
-                        <span>Eingegangen: {formatDate(getReceivedAt(offer))}</span>
+                        <span aria-hidden="true">·</span>
+                        <span>Eingegangen {formatDateTimeDE(getReceivedAt(offer))}</span>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 text-gray-400 hover:text-white hover:bg-white/10">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-gray-900 border-white/10">
-                        <DropdownMenuItem
-                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleAcceptRequest(offer.id); }}
-                          className="text-emerald-400 focus:text-emerald-300 focus:bg-white/5"
-                        >
-                          <Check className="mr-2 h-4 w-4" />
-                          Annehmen
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDeleteRequest(offer.id); }}
-                          className="text-red-400 focus:text-red-300 focus:bg-white/5"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Löschen
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Empty State */}
-            {filteredAndSortedOffers.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-400">
-                  {dashboardData?.offers?.length > 0
-                    ? `Keine Anfragen mit Filter "${statusFilter}" gefunden. ${dashboardData.offers.length} Anfrage(n) insgesamt vorhanden.`
-                    : 'Noch keine Anfragen eingegangen.'}
-                </p>
-                {dashboardData?.offers?.length > 0 && statusFilter !== 'all' && (
-                  <button
-                    onClick={() => setStatusFilter('all')}
-                    className="mt-3 text-pepe-gold hover:text-pepe-gold/80 text-sm underline"
-                  >
-                    Alle Anfragen anzeigen
-                  </button>
-                )}
-              </div>
-            )}
+                    <div className="flex flex-shrink-0 flex-col items-end gap-2">
+                      {/* Der Preis fehlte in der Liste komplett — die Zahl, um
+                          die es geht, musste man in jeder Anfrage einzeln
+                          aufschlagen. z-10, damit er nicht unter der
+                          Zeilen-Überlagerung liegt. */}
+                      <div className="relative z-10 text-right">
+                        {typeof offer.price_offered === 'number' ? (
+                          <>
+                            <p className="text-xs text-gray-500">Angebot</p>
+                            <p className="font-semibold tabular-nums text-white">
+                              {formatMoney(offer.price_offered)}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs text-gray-500">Empfehlung</p>
+                            <p className="text-sm tabular-nums text-gray-400">
+                              {typeof offer.price_min === 'number' || typeof offer.price_max === 'number'
+                                ? `${formatMoney(offer.price_min)} – ${formatMoney(offer.price_max)}`
+                                : '—'}
+                            </p>
+                          </>
+                        )}
+                      </div>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Aktionen für Anfrage #${offer.id}`}
+                            className="relative z-10 h-8 w-8 flex-shrink-0 text-gray-400 hover:bg-white/10 hover:text-white"
+                          >
+                            <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="border-white/10 bg-pepe-surface">
+                          <DropdownMenuItem
+                            onClick={() => handleAcceptRequest(offer.id)}
+                            className="text-emerald-400 focus:bg-white/5 focus:text-emerald-300"
+                          >
+                            <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                            Annehmen
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteRequest(offer.id)}
+                            className="text-red-400 focus:bg-white/5 focus:text-red-300"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                            Löschen
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
+        )}
+
+        {/* Leerzustand */}
+        {!loading && !error && filteredAndSortedOffers.length === 0 && (
+          dashboardData?.offers?.length > 0 ? (
+            <EmptyState
+              icon={Filter}
+              title="Keine Anfrage passt zu diesem Filter"
+              hint={`${dashboardData.offers.length} Anfragen sind insgesamt vorhanden.`}
+              action={
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter('all'); setSearchQuery(''); }}
+                  className="text-sm font-medium text-pepe-gold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+                >
+                  Filter zurücksetzen
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={CalendarDays}
+              title="Noch keine Anfragen"
+              hint="Anfragen aus dem Buchungsformular der Website erscheinen hier."
+            />
+          )
         )}
       </div>
     </DashboardLayout>

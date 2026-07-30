@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Users, XCircle } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Users, XCircle } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/PageState';
+import { cn } from '@/lib/utils';
 
 export default function OfferEditPage() {
   const { reqId, offerId } = useParams<{ reqId: string; offerId: string }>();
@@ -19,9 +20,24 @@ export default function OfferEditPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [requestData, setRequestData] = useState<any>(null);
-  // `adminOffers` stand hier als State, wurde aber nur in einer Debug-Ausgabe
-  // gelesen. Das gesuchte Angebot wird im Ladevorgang direkt aus der Antwort
-  // herausgesucht (`offers.find`), eine eigene Ablage braucht es nicht.
+
+  /**
+   * Die *echte* ID des Admin-Angebots, oder null, wenn es noch keins gibt.
+   *
+   * Nicht mit `offerId` aus der URL zu verwechseln: Die Dashboard-Liste
+   * navigiert mit `/admin/requests/<id>/offers/<id>/edit`, also zweimal
+   * derselben ID — und das ist eine Buchungsanfrage-ID
+   * (`/api/admin/dashboard` liefert `r.id` aus BookingRequest). Admin-Angebote
+   * sind eine eigene Tabelle mit eigenen IDs. `offers.find(o => o.id ===
+   * offerId)` traf deshalb nur zufaellig etwas, und ein `PUT
+   * /admin_offers/<Anfrage-ID>` haette einen fremden Datensatz ueberschrieben.
+   *
+   * Darum wird das Angebot hier ueber die Anfrage aufgeloest, nicht ueber die
+   * URL. Gibt es noch keins, wird beim Speichern eins angelegt.
+   */
+  const [resolvedOfferId, setResolvedOfferId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [artistNameById, setArtistNameById] = useState<Record<number, string>>({});
   const [artistStatuses, setArtistStatuses] = useState<Record<number, string>>({});
   const [artistGages, setArtistGages] = useState<Record<number, number | null>>({});
@@ -160,8 +176,17 @@ export default function OfferEditPage() {
         const recMaxVal = (reqData.recommended_price_max ?? reqData.price_max ?? 0);
         setRecMin(recMinVal);
         setRecMax(recMaxVal);
-        // Determine current offer override price or fallback to recommendation
-        const currentOffer = offers.find((o: any) => String(o.id) === offerId);
+        // Das Angebot dieser Anfrage. Erst nach der URL-ID suchen, falls doch
+        // mal eine echte Angebots-ID verlinkt wird, sonst das Angebot der
+        // Anfrage nehmen (es gibt hoechstens eins pro Anfrage).
+        const list: any[] = Array.isArray(offers) ? offers : [];
+        const currentOffer =
+          list.find((o: any) => String(o.id) === offerId) ??
+          list.find((o: any) => String(o.request_id) === String(reqId)) ??
+          list[0] ??
+          null;
+        setResolvedOfferId(currentOffer ? Number(currentOffer.id) : null);
+
         const gageInit = (currentOffer?.override_price ?? recMinVal);
         setGage(Number.isFinite(gageInit) ? Number(gageInit) : 0);
         setNotes(currentOffer?.notes ?? '');
@@ -206,27 +231,54 @@ export default function OfferEditPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSaveNotice(null);
+
+    if (!Number.isFinite(gage) || gage <= 0) {
+      setSaveNotice('Bitte einen Kundenpreis groesser als 0 eintragen.');
+      return;
+    }
+
+    setSaving(true);
     try {
-      setLoading(true);
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/admin/admin_offers/${offerId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ override_price: gage, notes }),
-        }
-      );
+      const base = import.meta.env.VITE_API_URL;
+      const body = JSON.stringify({ override_price: gage, notes });
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      };
+
+      // Vorhandenes Angebot aendern, sonst eins anlegen. Vorher lief das
+      // unabhaengig davon immer als PUT auf die ID aus der URL — und die ist
+      // eine Anfrage-ID, nicht die des Angebots.
+      const res = resolvedOfferId
+        ? await fetch(`${base}/api/admin/admin_offers/${resolvedOfferId}`, {
+            method: 'PUT',
+            headers,
+            body,
+          })
+        : await fetch(`${base}/api/admin/requests/${reqId}/admin_offers`, {
+            method: 'POST',
+            headers,
+            body,
+          });
+
       if (!res.ok) {
-        const text = await res.text();
+        const text = await res.text().catch(() => '');
         throw new Error(text || `HTTP ${res.status}`);
       }
-      navigate(-1);
+
+      // Beim Anlegen kommt die neue ID zurueck. Merken, damit ein zweites
+      // Speichern aendert statt ein weiteres Angebot anzulegen.
+      if (!resolvedOfferId) {
+        const created = await res.json().catch(() => null);
+        if (created?.id) setResolvedOfferId(Number(created.id));
+      }
+
+      setSaveNotice('Angebot gespeichert.');
     } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
+      setSaveNotice(`Speichern fehlgeschlagen: ${err?.message ?? 'unbekannter Fehler'}`);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -366,13 +418,34 @@ export default function OfferEditPage() {
           </div>
         </div>
 
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* aria-live: Die Meldung entsteht nach dem Klick. Ohne das erfaehrt
+              ein Screenreader-Nutzer nicht, dass gespeichert wurde. */}
+          <p
+            aria-live="polite"
+            className={cn(
+              'text-sm',
+              !saveNotice && 'sr-only',
+              saveNotice?.startsWith('Angebot gespeichert') ? 'text-emerald-300' : 'text-red-300'
+            )}
+          >
+            {saveNotice}
+          </p>
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-pepe-gold px-4 py-2.5 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal"
+            disabled={saving}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-pepe-gold px-4 py-2.5 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto"
           >
-            <Check className="h-4 w-4" aria-hidden="true" />
-            Angebot speichern
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Check className="h-4 w-4" aria-hidden="true" />
+            )}
+            {saving
+              ? 'Speichert…'
+              : resolvedOfferId
+                ? 'Angebot speichern'
+                : 'Angebot anlegen'}
           </button>
         </div>
       </form>

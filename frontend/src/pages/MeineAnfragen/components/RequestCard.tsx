@@ -1,7 +1,15 @@
-import * as React from "react";
-import clsx from "clsx";
-import { useTranslation } from "react-i18next";
-import { formatDateTimeDE, getReceivedAt } from "@/utils/dates";
+import * as React from 'react';
+import clsx from 'clsx';
+import { Check, Clock, MapPin, Users, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+import {
+  eventCity,
+  formatDateTimeDE,
+  formatEventDateTime,
+  formatMoney,
+  getReceivedAt,
+} from '@/utils/dates';
 
 // --- Types (local, aligned with your API shape) ---
 export type Anfrage = {
@@ -23,203 +31,298 @@ export type Anfrage = {
   admin_comment?: string;
 };
 
+/** Rückmeldung zu einer Karte, statt eines alert()-Fensters. */
+export type RequestNotice = { kind: 'success' | 'error'; text: string };
+
 export type RequestCardProps = {
   request: Anfrage;
-  /** which tab is active on the page, e.g. 'aktion'|'alle' */
-  activeTab?: string;
   /** controlled input value for offer field */
-  offerInput: string | number;
+  offerInput: string;
   /** called when the offer input changes */
-  onOfferChange: (id: Anfrage["id"], value: string) => void;
+  onOfferChange: (id: Anfrage['id'], value: string) => void;
   /** called to submit an offer */
-  onSendOffer: (id: Anfrage["id"], price: number) => Promise<any>;
+  onSendOffer: (id: Anfrage['id'], price: number) => void | Promise<unknown>;
   /** disable send while submitting */
   submitting?: boolean;
+  notice?: RequestNotice | null;
   className?: string;
 };
 
-// --- Small helpers ---
-const formatMoney = (v?: number) =>
-  typeof v === "number" && !Number.isNaN(v)
-    ? new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v)
-    : "—";
-
-const join = (...parts: Array<string | undefined>) => parts.filter(Boolean).join(" · ");
-
-const getCity = (addr?: string) => {
-  if (!addr) return undefined;
-  const bits = addr.split(",").map((s) => s.trim());
-  return bits[bits.length - 1] || addr;
+const STATUS_STYLES: Record<string, { className: string; label: string }> = {
+  angefragt: { className: 'border-pepe-gold/40 bg-pepe-gold/15 text-pepe-gold', label: 'Angebot offen' },
+  angeboten: { className: 'border-sky-500/40 bg-sky-500/10 text-sky-200', label: 'Angebot gesendet' },
+  akzeptiert: { className: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200', label: 'Zugesagt' },
+  abgelehnt: { className: 'border-white/15 bg-white/5 text-gray-400', label: 'Abgelehnt' },
+  storniert: { className: 'border-white/15 bg-white/5 text-gray-400', label: 'Storniert' },
 };
 
-const StatusBadge: React.FC<{ status?: string }>
-  = ({ status }) => {
-  const s = String(status || "").toLowerCase();
+const StatusBadge: React.FC<{ status?: string }> = ({ status }) => {
+  const s = String(status || '').toLowerCase();
   const { t } = useTranslation();
-  const color = s === "akzeptiert"
-    ? "bg-green-900/30 text-green-200 border-green-700"
-    : s === "abgelehnt" || s === "storniert"
-    ? "bg-red-900/30 text-red-200 border-red-700"
-    : s === "angeboten"
-    ? "bg-amber-900/30 text-amber-200 border-amber-700"
-    : "bg-slate-800 text-slate-200 border-slate-600";
+  // „angefragt" ist der Zustand, der etwas vom Künstler verlangt — der bekommt
+  // deshalb die Akzentfarbe. Vorher war er das unauffälligste Grau der Karte.
+  const style = STATUS_STYLES[s] ?? {
+    className: 'border-white/15 bg-white/5 text-gray-300',
+    label: status || '—',
+  };
   return (
-    <span className={clsx("inline-flex items-center px-2 py-1 rounded border text-xs font-medium", color)}>
-      {t(`requests.status.${s || 'unknown'}`, { defaultValue: status || '—' })}
+    <span
+      className={clsx(
+        'inline-flex flex-shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-medium',
+        style.className
+      )}
+    >
+      {t(`requests.status.${s || 'unknown'}`, { defaultValue: style.label })}
     </span>
   );
 };
 
-const Row: React.FC<{ label: React.ReactNode; value: React.ReactNode }>
-  = ({ label, value }) => (
-  <div className="grid grid-cols-3 gap-3 text-sm">
-    <div className="col-span-1 text-white/70">{label}</div>
-    <div className="col-span-2 text-white">{value}</div>
-  </div>
+/** Ein Fakt mit Symbol. Auf schmalen Schirmen untereinander, sonst in einer Reihe. */
+const Fact: React.FC<{ icon: React.ElementType; children: React.ReactNode }> = ({
+  icon: Icon,
+  children,
+}) => (
+  <span className="flex min-w-0 items-start gap-1.5 text-sm text-gray-300">
+    <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" aria-hidden="true" />
+    <span className="min-w-0 break-words">{children}</span>
+  </span>
 );
 
 const OfferPanel: React.FC<{
-  id: Anfrage["id"];
-  value: string | number;
-  onChange: (id: Anfrage["id"], v: string) => void;
-  onSubmit: (id: Anfrage["id"], price: number) => void | Promise<void>;
+  request: Anfrage;
+  value: string;
+  onChange: (id: Anfrage['id'], v: string) => void;
+  onSubmit: (id: Anfrage['id'], price: number) => void | Promise<unknown>;
   submitting?: boolean;
-}>
-  = ({ id, value, onChange, onSubmit, submitting }) => {
+}> = ({ request, value, onChange, onSubmit, submitting }) => {
   const { t } = useTranslation();
-  return (
-    <div className="mt-4 flex flex-col sm:flex-row gap-3">
-      <input
-        type="number"
-        inputMode="numeric"
-        className="w-full sm:w-48 rounded-md border border-white/20 bg-transparent px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30"
-        placeholder={t('requests.offer.placeholder', { defaultValue: 'Dein Angebot (€)' })}
-        value={value}
-        onChange={(e) => onChange(id, e.target.value)}
-      />
-      <button
-        disabled={submitting || !value}
-        onClick={() => {
-          const n = Number(value);
-          if (!Number.isFinite(n) || n <= 0) return;
-          void onSubmit(id, n);
-        }}
-        className={clsx(
-          "inline-flex items-center justify-center rounded-md px-4 py-2 bg-blue-600 text-white",
-          "hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        )}
-      >
-        {submitting ? t('requests.offer.submitting', { defaultValue: 'Sende…' }) : t('requests.offer.send', { defaultValue: 'Angebot senden' })}
-      </button>
-    </div>
-  );
-};
+  const id = request.id;
+  const min = request.recommended_price_min;
+  const max = request.recommended_price_max;
+  const inputId = `offer-${id}`;
+  const hintId = `offer-hint-${id}`;
 
-const Meta: React.FC<{ request: Anfrage }> = ({ request }) => {
-  const { t } = useTranslation();
-  const dateStr = request.event_date ? new Date(request.event_date + (request.event_time ? `T${request.event_time}` : "T00:00:00")).toLocaleString() : "—";
-  const guests = request.number_of_guests ? `${request.number_of_guests}` : "—";
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <Row label={t('requests.meta.dateTime', { defaultValue: 'Datum & Uhrzeit' })} value={dateStr} />
-      <Row label={t('requests.meta.address', { defaultValue: 'Adresse' })} value={request.event_address || "—"} />
-      <Row label={t('requests.meta.duration', { defaultValue: 'Dauer' })} value={request.duration_minutes ? `${request.duration_minutes} min` : "—"} />
-      <Row label={t('requests.meta.guests', { defaultValue: 'Gäste' })} value={guests} />
-      <Row label={t('requests.meta.location', { defaultValue: 'Ort' })} value={request.is_indoor ? t('requests.meta.indoor', { defaultValue: 'Indoor' }) : t('requests.meta.outdoor', { defaultValue: 'Outdoor' })} />
-      <Row label={t('requests.meta.disciplines', { defaultValue: 'Disziplinen' })} value={request.show_discipline || "—"} />
-    </div>
-  );
-};
+  const num = Number(value);
+  const valid = value.trim() !== '' && Number.isFinite(num) && num > 0;
 
-const PriceSummary: React.FC<{ request: Anfrage }> = ({ request }) => {
-  const { t } = useTranslation();
-  const min = formatMoney(request.recommended_price_min);
-  const max = formatMoney(request.recommended_price_max);
-  const offered = request.artist_gage;
-
-  // Detect if recommended price is below the typical base gage range
-  // (event factors like Private Feier can reduce the recommendation)
-  const isBelowBase = typeof request.recommended_price_min === 'number'
-    && typeof request.recommended_price_max === 'number'
-    && request.recommended_price_min < (request.recommended_price_max * 0.7);
+  // Schnellwahl statt Vorbelegung. Das Feld war mit `recommended_price_min`
+  // vorbelegt, also mit dem *niedrigsten* Wert der Empfehlung — ein Klick auf
+  // „Senden" verschenkte damit Geld. Leer lassen und die Spanne anbieten heisst:
+  // Der Künstler entscheidet, und zwar mit einem Antippen.
+  const quick = [
+    typeof min === 'number' ? { label: 'Minimum', value: min } : null,
+    typeof min === 'number' && typeof max === 'number'
+      ? { label: 'Mitte', value: Math.round((min + max) / 2) }
+      : null,
+    typeof max === 'number' ? { label: 'Maximum', value: max } : null,
+  ].filter(Boolean) as { label: string; value: number }[];
 
   return (
-    <div className="mt-3 rounded-md border border-white/20 p-3">
-      <div className="text-sm text-white/70">
-        {t('requests.price.recommended', { defaultValue: 'Empfohlene Gage' })}
+    <div className="mt-5 border-t border-white/10 pt-5">
+      <label htmlFor={inputId} className="block text-sm font-medium text-white">
+        {t('requests.offer.label', { defaultValue: 'Deine Gage für diesen Auftritt' })}
+      </label>
+
+      {quick.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          {quick.map((q) => (
+            <button
+              key={q.label}
+              type="button"
+              onClick={() => onChange(id, String(q.value))}
+              className={clsx(
+                'rounded-full border px-3 py-1.5 text-xs font-medium tabular-nums transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold',
+                Number(value) === q.value
+                  ? 'border-pepe-gold/50 bg-pepe-gold/15 text-pepe-gold'
+                  : 'border-white/15 text-gray-300 hover:bg-white/5 hover:text-white'
+              )}
+            >
+              {q.label} · {formatMoney(q.value)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+        <div className="relative sm:w-52">
+          <input
+            id={inputId}
+            type="number"
+            min={1}
+            step={10}
+            inputMode="decimal"
+            aria-describedby={hintId}
+            className="w-full rounded-lg border border-white/15 bg-pepe-surface py-2.5 pl-3 pr-9 text-white tabular-nums placeholder:text-gray-600 focus:border-pepe-gold focus:outline-none focus:ring-1 focus:ring-pepe-gold"
+            placeholder={t('requests.offer.placeholder', { defaultValue: 'Betrag' })}
+            value={value}
+            onChange={(e) => onChange(id, e.target.value)}
+          />
+          <span
+            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+            aria-hidden="true"
+          >
+            €
+          </span>
+        </div>
+        <button
+          type="button"
+          disabled={submitting || !valid}
+          onClick={() => {
+            if (!valid) return;
+            void onSubmit(id, num);
+          }}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-pepe-gold px-4 py-2.5 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {submitting
+            ? t('requests.offer.submitting', { defaultValue: 'Sende…' })
+            : t('requests.offer.send', { defaultValue: 'Angebot senden' })}
+        </button>
       </div>
-      <div className="text-lg text-white font-medium">{min} – {max}</div>
-      {isBelowBase && (
-        <div className="mt-1 text-xs text-amber-300/80">
-          {t('requests.price.belowBaseHint', {
-            defaultValue: 'Reduziert aufgrund Event-Art & Faktoren – du kannst ein höheres Angebot machen'
-          })}
-        </div>
-      )}
-      {typeof offered === 'number' && (
-        <div className="mt-2 text-sm text-green-300">
-          {t('requests.price.offered', { defaultValue: 'Gesendet' })}: {formatMoney(offered)}
-        </div>
-      )}
+
+      <p id={hintId} className="mt-2 text-xs text-gray-500">
+        {t('requests.offer.hint', {
+          defaultValue:
+            'Die Agentur prüft dein Angebot und meldet sich beim Kunden. Du kannst es danach nicht mehr selbst ändern.',
+        })}
+      </p>
     </div>
   );
 };
 
 export default function RequestCard({
   request,
-  activeTab,
   offerInput,
   onOfferChange,
   onSendOffer,
   submitting,
+  notice,
   className,
 }: RequestCardProps) {
   const { t } = useTranslation();
 
-  const headerLeft = join(
-    request.event_type,
-    request.show_type,
-    getCity(request.event_address)
-  );
+  const status = String(request.status || '').toLowerCase();
+  // Nur im Zustand „angefragt". Vorher stand hier zusaetzlich
+  // `|| activeTab === 'aktion'`, wodurch das Feld auch bei einer bereits
+  // zugesagten Anfrage erschienen waere, sobald der Filter sich aendert.
+  const showOfferPanel = status === 'angefragt';
 
-  const showOfferPanel = String(request.status || '').toLowerCase() === 'angefragt' || activeTab === 'aktion';
+  const title = [request.event_type, request.show_type].filter(Boolean).join(' · ');
+  const city = eventCity(request.event_address);
 
   return (
-    <div className={clsx("rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm p-4 sm:p-5 text-white", className)}>
-      {/* Header */}
+    <div
+      className={clsx(
+        'rounded-2xl border bg-white/5 p-4 text-white sm:p-5',
+        // Was Aufmerksamkeit braucht, hebt sich ab.
+        status === 'angefragt' ? 'border-pepe-gold/25' : 'border-white/10',
+        className
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg sm:text-xl font-semibold">{headerLeft || t('requests.card.untitled', { defaultValue: 'Anfrage' })}</h3>
-          {request.special_requests && (
-            <div className="mt-1 text-sm text-white/70 line-clamp-2">
-              {request.special_requests}
-            </div>
-          )}
-          <div className="mt-1 text-xs text-white/60">
-            {t('requests.receivedAt', { defaultValue: 'Eingegangen am' })}: {formatDateTimeDE(getReceivedAt(request))}
-          </div>
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold sm:text-xl">
+            {title || t('requests.card.untitled', { defaultValue: 'Anfrage' })}
+          </h3>
+          {/* Das Wichtigste zuerst: Wann und wo. Vorher stand das Datum weiter
+              unten in einer Tabelle mit sechs gleich gewichteten Zeilen. */}
+          <p className="mt-1 font-medium text-gray-200">
+            {formatEventDateTime(request.event_date, request.event_time)}
+            {city ? ` · ${city}` : ''}
+          </p>
         </div>
         <StatusBadge status={request.status} />
       </div>
 
-      {/* Meta */}
-      <div className="mt-4">
-        <Meta request={request} />
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-x-6">
+        {request.event_address && <Fact icon={MapPin}>{request.event_address}</Fact>}
+        {typeof request.duration_minutes === 'number' && (
+          <Fact icon={Clock}>{request.duration_minutes} Minuten</Fact>
+        )}
+        {typeof request.number_of_guests === 'number' && (
+          <Fact icon={Users}>{request.number_of_guests} Gäste</Fact>
+        )}
+        <Fact icon={request.is_indoor ? Check : XCircle}>
+          {request.is_indoor
+            ? t('requests.meta.indoor', { defaultValue: 'Indoor' })
+            : t('requests.meta.outdoor', { defaultValue: 'Outdoor' })}
+        </Fact>
       </div>
 
-      {/* Price */}
-      <PriceSummary request={request} />
+      {request.show_discipline && (
+        <p className="mt-3 text-sm text-gray-400">
+          <span className="text-gray-500">
+            {t('requests.meta.disciplines', { defaultValue: 'Disziplinen' })}:{' '}
+          </span>
+          {request.show_discipline}
+        </p>
+      )}
 
-      {/* Offer */}
-      {showOfferPanel ? (
+      {request.special_requests && (
+        <p className="mt-3 rounded-lg bg-white/5 p-3 text-sm text-gray-300">
+          <span className="text-gray-500">
+            {t('requests.meta.specialRequests', { defaultValue: 'Besondere Wünsche' })}:{' '}
+          </span>
+          {request.special_requests}
+        </p>
+      )}
+
+      {request.admin_comment && (
+        <p className="mt-3 rounded-lg border border-sky-500/25 bg-sky-500/10 p-3 text-sm text-sky-100">
+          <span className="text-sky-300/80">Anmerkung der Agentur: </span>
+          {request.admin_comment}
+        </p>
+      )}
+
+      {/* Empfehlung und gesendete Gage */}
+      <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+        <span className="text-sm text-gray-400">
+          {t('requests.price.recommended', { defaultValue: 'Empfohlene Gage' })}:{' '}
+          <span className="font-medium tabular-nums text-white">
+            {formatMoney(request.recommended_price_min)} –{' '}
+            {formatMoney(request.recommended_price_max)}
+          </span>
+        </span>
+        {typeof request.artist_gage === 'number' && (
+          <span className="text-sm text-gray-400">
+            {t('requests.price.offered', { defaultValue: 'Gesendet' })}:{' '}
+            <span className="font-semibold tabular-nums text-emerald-300">
+              {formatMoney(request.artist_gage)}
+            </span>
+          </span>
+        )}
+      </div>
+
+      <p className="mt-3 text-xs text-gray-500">
+        {t('requests.receivedAt', { defaultValue: 'Eingegangen am' })}:{' '}
+        {formatDateTimeDE(getReceivedAt(request))}
+      </p>
+
+      {showOfferPanel && (
         <OfferPanel
-          id={request.id}
+          request={request}
           value={offerInput}
           onChange={onOfferChange}
           onSubmit={onSendOffer}
           submitting={submitting}
         />
-      ) : null}
+      )}
+
+      {/* Rückmeldung an der Karte, nicht als alert()-Fenster. aria-live, damit
+          Screenreader sie mitbekommen. */}
+      {notice && (
+        <p
+          aria-live="polite"
+          className={clsx(
+            'mt-4 rounded-lg border p-3 text-sm',
+            notice.kind === 'success'
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+              : 'border-red-500/30 bg-red-500/10 text-red-200'
+          )}
+        >
+          {notice.text}
+        </p>
+      )}
     </div>
   );
 }
