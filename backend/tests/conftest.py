@@ -21,6 +21,16 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from flask import g
 
 import helpers.clerk_auth as clerk_auth
+
+# Die echte `get_jwks_client`, festgehalten bevor die Stub-Fixture unten sie
+# ersetzt. conftest.py wird vor allen Testmodulen importiert, hier ist die
+# Funktion also garantiert noch im Original.
+#
+# Warum das nötig ist: Der Stub hat einen NameError in genau dieser Funktion
+# verdeckt — 173 Tests grün, während in Produktion keine Anmeldung durchkam
+# (SPEC-4, O1). `tests/unit/test_clerk_auth.py` umgeht den Stub darüber gezielt.
+REAL_GET_JWKS_CLIENT = clerk_auth.get_jwks_client
+
 from app import app as flask_app
 from models import db, Artist
 from managers.artist_manager import ArtistManager

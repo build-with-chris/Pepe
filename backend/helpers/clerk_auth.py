@@ -45,9 +45,10 @@ def get_jwks_client():
             "Clerk instance, e.g. https://clerk.pepeshows.de/.well-known/jwks.json"
         )
     if _jwks_client is None:
-        url = get_clerk_jwks_url()
-        current_app.logger.info(f"Initializing Clerk JWKS client with URL: {url}")
-        _jwks_client = PyJWKClient(url, ssl_context=SSL_CONTEXT)
+        current_app.logger.info(
+            "Initializing Clerk JWKS client with URL: %s", CLERK_JWKS_URL
+        )
+        _jwks_client = PyJWKClient(CLERK_JWKS_URL, ssl_context=SSL_CONTEXT)
     return _jwks_client
 
 
