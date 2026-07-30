@@ -1170,7 +1170,17 @@ def get_my_gage_criteria():
 @api_bp.route('/artists/me/upload-image', methods=['POST'])
 @clerk_auth_required
 def upload_artist_image():
-    """Upload and process profile or gallery images for the current artist."""
+    """VERALTET. Neue Uploads laufen über `POST /api/upload/image`.
+
+    Diese Route legt in Supabase Storage ab, der Rest der Anwendung im
+    Vercel-Blob-Speicher. Zwei Speicherorte für dieselbe Sache waren einer der
+    Gründe, weshalb ein ungeschützter dritter Upload-Weg unbemerkt blieb
+    (SPEC-4, Befund O3). Das Frontend ruft sie nicht mehr auf.
+
+    Sie bleibt vorerst stehen, weil unklar ist, ob Bestandsbilder aus Supabase
+    Storage ausgeliefert werden. Ist das geklärt, kann sie ersatzlos weg —
+    siehe „Offene Punkte" in docs/SPEC-4-onboarding.md.
+    """
     user_id, artist = get_current_user()
     if not artist:
         return error_response('forbidden', 'Current user not linked to an artist', 403)

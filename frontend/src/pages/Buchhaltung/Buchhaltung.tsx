@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { put } from '@vercel/blob';
+import { uploadInvoice } from '@/lib/storage/blobUpload';
 import UploadSection from "./components/UploadSection";
 import RegisteredTable from "./components/RegisteredTable";
 import EarningsSummary from "./components/EarningsSummary";
@@ -137,44 +137,49 @@ export default function Buhaltung() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artistId]);
 
-  // Upload-Handler (PDF oder Bild) - using Vercel Blob
+  // Upload-Handler (PDF oder Bild) — über den Backend-Endpunkt.
+  //
+  // Vorher lief das über `put()` aus @vercel/blob direkt im Browser. Das SDK
+  // liest dort `process.env.BLOB_READ_WRITE_TOKEN`, was im Browser-Bundle nicht
+  // existiert: Der Rechnungsupload war damit schlicht kaputt. Jetzt derselbe
+  // Weg wie alle anderen Uploads (SPEC-4, AK 3).
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!artistId) return;
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    if (!token) {
+      setInvError('Nicht angemeldet. Bitte neu anmelden und erneut versuchen.');
+      return;
+    }
     setUploading(true);
     setInvError(null);
     try {
       const backendUrl = import.meta.env.VITE_API_URL as string;
 
       for (const file of Array.from(files)) {
-        const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
-        const pathname = `invoices/${artistId}/${safeName}`;
-
-        // Upload to Vercel Blob
-        const { url } = await put(pathname, file, {
-          access: 'public',
-          contentType: file.type || 'application/octet-stream',
-        });
+        const url = await uploadInvoice(file, String(artistId), token);
 
         // Register invoice in backend with the Blob URL as storage_path
-        try {
-          await fetch(`${backendUrl}/api/invoices`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              storage_path: url, // Store the full Vercel Blob URL
-              amount_cents: amount ? Math.round(parseFloat(amount.replace(',', '.')) * 100) : undefined,
-              currency: 'EUR',
-              invoice_date: invoiceDate || undefined,
-              notes: note || undefined,
-            }),
-          });
-        } catch (regErr) {
-          console.warn('⚠️ Backend-Registrierung der Rechnung fehlgeschlagen:', regErr);
+        const regRes = await fetch(`${backendUrl}/api/invoices`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            storage_path: url, // Store the full Vercel Blob URL
+            amount_cents: amount ? Math.round(parseFloat(amount.replace(',', '.')) * 100) : undefined,
+            currency: 'EUR',
+            invoice_date: invoiceDate || undefined,
+            notes: note || undefined,
+          }),
+        });
+        // Nicht mehr stillschweigend weglaufen: Ohne Registrierung liegt die
+        // Datei im Speicher, taucht aber in keiner Liste auf.
+        if (!regRes.ok) {
+          throw new Error(
+            `Rechnung ${file.name} wurde hochgeladen, aber nicht registriert (${regRes.status}).`
+          );
         }
       }
       await listRegistered();
