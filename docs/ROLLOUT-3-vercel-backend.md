@@ -125,15 +125,25 @@ DATABASE_URL='<direkte Supabase-URL, Port 5432>' ./.venv/bin/flask db upgrade
 Für Migrationen die **direkte** Verbindung nehmen, nicht den Pooler: pgbouncer
 im Transaction-Mode verträgt sich schlecht mit DDL.
 
-## 5. Geteilter Store für Rate-Limit und Idempotenz (empfohlen)
+## 5. Geteilter Store für Rate-Limit und Idempotenz
 
-Ohne diesen Schritt läuft alles, aber zwei Schutzmechanismen wirken nicht mehr:
-Das Limit von 5 Anfragen pro Stunde und IP zählt dann pro Funktionsinstanz, und
-ein doppelt abgeschicktes Formular erzeugt zwei Buchungsanfragen statt einer.
+**Nicht optional, sondern am Deployment nachgewiesen offen.** Gegenprobe vom
+30.07.2026 gegen `pepe-services.vercel.app`: Nach Erreichen des Limits wurden
+zwölf Aufrufe gleichzeitig abgeschickt, **sieben kamen durch**. Der Zähler liegt
+also pro Funktionsinstanz. Damit gilt:
+
+- Das Limit von 5 Anfragen pro Stunde und IP bremst nur, wen es zufällig auf
+  derselben Instanz trifft. Bei Parallellast, also genau im Missbrauchsfall,
+  wirkt es nicht.
+- Ein doppelt abgeschicktes Formular kann zwei Buchungsanfragen erzeugen, weil
+  der Idempotency-Key auf einer anderen Instanz unbekannt ist.
 
 Vercel → Storage → **Upstash Redis** hinzufügen (Marketplace). Die Integration
 setzt `KV_REST_API_URL` und `KV_REST_API_TOKEN` selbst; `helpers/shared_store.py`
-liest beide Namen und ausserdem die `UPSTASH_*`-Varianten.
+liest beide Namen und ausserdem die `UPSTASH_*`-Varianten. Kein Code-Eingriff
+nötig, das Modul erkennt die Variablen von allein.
+
+Gegenprobe danach: dieselben zwölf parallelen Aufrufe müssen alle 429 liefern.
 
 ## 6. Kosten begrenzen
 
@@ -142,22 +152,33 @@ die Rechnung nicht unbemerkt über das Budget laufen.
 
 ## 7. End-to-End-Prüfung
 
-Auf der Deployment-URL, vor dem Domain-Wechsel:
+Der Teil, der von aussen prüfbar ist, steckt in einem Skript:
 
-1. `GET /healthz` → `{"status":"ok"}`, also Datenbank über den Pooler erreichbar.
-2. `GET /api/artists` → Liste der freigegebenen Artists. Beweist, dass die
-   Weiterleitung den Pfad **nicht** abschneidet. Kommt hier ein 404 vom
-   Frontend, greift der Rewrite nicht; kommt ein 404 von Flask, wurde der
-   Präfix doch abgeschnitten.
-3. `GET /__debug/whoami` → **404** (Debug-Routen sind aus).
-4. `POST /api/admin/artists` ohne Token → **401**.
-5. Eine Anfrage über den Wizard abschicken → Preisspanne erscheint, Anfrage
-   liegt in der DB, Mail an `ADMIN_EMAIL` kommt an.
-6. Dasselbe Formular zweimal abschicken → nur **eine** Anfrage in der DB.
-7. Einloggen, Profil laden, als Admin `/admin/kuenstler` öffnen.
+```bash
+./scripts/smoke-deployment.sh https://pepe-services.vercel.app
+```
 
-Schritt 5 ist der aussagekräftigste: Er berührt Geocoding, Preisberechnung,
-Datenbank und Mailversand in einem Durchlauf.
+Es prüft die öffentlichen Endpunkte, alle Auth-Schranken, dass die
+abgeschalteten Debug- und Legacy-Pfade keine Backend-Daten liefern, die
+Eingabevalidierung, den SPA-Fallback und dass der Fallback die statischen Assets
+nicht verschluckt. Stand 30.07.2026: 23 von 24 in Ordnung, die eine Abweichung
+war das Rate-Limit aus vorherigen Läufen.
+
+Was das Skript **nicht** prüfen kann, weil es echte Daten anlegen oder eine
+Anmeldung brauchen würde:
+
+1. Eine Anfrage über den Wizard abschicken → Preisspanne erscheint, Anfrage
+   liegt in der DB, Mail an `ADMIN_EMAIL` kommt an. Der aussagekräftigste
+   Schritt: Er berührt Geocoding, Preisberechnung, Datenbank und Mailversand in
+   einem Durchlauf.
+2. Dasselbe Formular zweimal abschicken → nur **eine** Anfrage in der DB
+   (setzt Abschnitt 5 voraus).
+3. Einloggen, Profil laden, als Admin `/admin/kuenstler` öffnen.
+
+Zu den Debug-Pfaden: `/__debug/whoami` und `/auth/debug-secret` antworten jetzt
+mit **200**, aber nur mit der SPA-HTML. Sie liegen ausserhalb von `/api` und
+landen im Frontend-Fallback, erreichen das Backend also gar nicht. Das Skript
+prüft deshalb den Inhalt statt des Statuscodes.
 
 ## 8. Zwei offene Punkte, die nichts mit dem Umzug zu tun haben
 
