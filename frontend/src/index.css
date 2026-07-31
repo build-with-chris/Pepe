@@ -6,11 +6,33 @@
 /* Tailwind CSS v4 */
 @import "tailwindcss";
 
-/* Import Design System */
+/* ===== Import Design System =====
+
+   `layer(base)` bei typography und animations ist kein Beiwerk, sondern eine
+   Fehlerbehebung.
+
+   Tailwind v4 legt seine Utilities in `@layer utilities`. Ungeschichtetes CSS
+   gewinnt gegen jede Schicht, unabhaengig von der Spezifitaet und unabhaengig
+   von der Reihenfolge. Beide Dateien bauen Tailwind-Klassen von Hand nach
+   (`.hidden`, `.flex-col`, `.grid-cols-2`, `.font-semibold`, `.truncate`,
+   `.animate-spin` und rund vierzig weitere). Ungeschichtet schlugen sie jede
+   Variante fuer Bildschirmgroessen im ganzen Projekt:
+
+   - `.hidden` schlug `lg:flex`. Die Seitenleiste des Dashboards war auf jeder
+     Fensterbreite ausgeblendet, obwohl sie im Markup stand.
+   - `.flex-col` schlug `sm:flex-row`, `.grid-cols-1` schlug `sm:grid-cols-2`.
+     Zweispaltige Formulare blieben einspaltig.
+
+   In `base` gelten beide Dateien weiter dort, wo sie die einzige Quelle sind,
+   treten aber zurueck, sobald eine Utility dasselbe anspricht.
+
+   `components.css` bleibt ungeschichtet: Darin stehen echte Bausteine, die
+   sich Tailwind nicht teilt. Die Utility-Nachbauten in dieser Datei sind
+   einzeln mit `@layer base` eingefasst. */
 @import './styling/tokens.css';
-@import './styling/typography.css';
+@import './styling/typography.css' layer(base);
 @import './styling/components.css';
-@import './styling/animations.css';
+@import './styling/animations.css' layer(base);
 @import './styling/particles.css';
 @import './styling/artist-card-3d.css';
 @import './styling/artist-card-compact.css';

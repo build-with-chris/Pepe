@@ -3306,123 +3306,146 @@
   }
 }
 
-/* ===== Grid System ===== */
+/* In `@layer base`, aus demselben Grund wie der Utility-Block weiter unten:
+   ungeschichtet schlaegt `.grid-cols-1` jedes `sm:grid-cols-2`. */
+@layer base {
 
-.grid {
-  display: grid;
-}
+  .grid {
+    display: grid;
+  }
 
-.grid-cols-1 {
-  grid-template-columns: repeat(1, 1fr);
-}
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, 1fr);
+  }
 
-.grid-cols-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-cols-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-cols-4 {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.gap-4 { gap: var(--space-4); }
-.gap-6 { gap: var(--space-6); }
-.gap-8 { gap: var(--space-8); }
-
-@media (min-width: 768px) {
-  .md\\:grid-cols-2 {
+  .grid-cols-2 {
     grid-template-columns: repeat(2, 1fr);
   }
-  .md\\:grid-cols-3 {
+
+  .grid-cols-3 {
     grid-template-columns: repeat(3, 1fr);
   }
-  .md\\:grid-cols-4 {
+
+  .grid-cols-4 {
     grid-template-columns: repeat(4, 1fr);
   }
-  .md\\:flex {
-    display: flex;
+
+  .gap-4 { gap: var(--space-4); }
+  .gap-6 { gap: var(--space-6); }
+  .gap-8 { gap: var(--space-8); }
+
+  @media (min-width: 768px) {
+    .md\\:grid-cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .md\\:grid-cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .md\\:grid-cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .md\\:flex {
+      display: flex;
+    }
+    .md\\:flex-row {
+      flex-direction: row;
+    }
+    .md\\:hidden {
+      display: none;
+    }
   }
-  .md\\:flex-row {
-    flex-direction: row;
+
+  @media (min-width: 1024px) {
+    .lg\\:grid-cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .lg\\:grid-cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
-  .md\\:hidden {
-    display: none;
+
+  @media (min-width: 640px) {
+    .sm\\:grid-cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 }
 
-@media (min-width: 1024px) {
-  .lg\\:grid-cols-3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .lg\\:grid-cols-4 {
-    grid-template-columns: repeat(4, 1fr);
-  }
+/*
+ * ===== Utility Classes =====
+ *
+ * Handgeschriebene Nachbauten von Tailwind-Klassen aus der Zeit vor Tailwind.
+ * Sie stehen in `@layer base`, und das ist kein Schoenheitsfehler:
+ *
+ * Tailwind v4 legt seine Utilities in `@layer utilities`. Ungeschichtetes CSS
+ * gewinnt gegen jede Schicht, unabhaengig von Spezifitaet und Reihenfolge.
+ * Ungeschichtet schlug `.hidden` hier also `lg:flex` - die Seitenleiste des
+ * Dashboards war auf jeder Fensterbreite ausgeblendet, obwohl sie im Markup
+ * stand. Genauso schlug `.flex-col` jedes `sm:flex-row` und `.p-6` jedes
+ * `sm:p-8`. Jede Variante fuer Bildschirmgroessen war damit wirkungslos.
+ *
+ * In der Schicht gelten die Klassen weiter dort, wo sie die einzige Quelle
+ * sind (`.bg-pepe-ink`, `.text-pepe-t64`), treten aber zurueck, sobald eine
+ * Tailwind-Utility dasselbe anspricht.
+ *
+ * Neuen Code hier nicht erweitern. Tailwind kann all das schon.
+ */
+@layer base {
+
+  .hidden { display: none; }
+  .flex { display: flex; }
+  .flex-wrap { flex-wrap: wrap; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-center { justify-content: center; }
+  .justify-between { justify-content: space-between; }
+  .text-center { text-align: center; }
+  .w-full { width: 100%; }
+  .h-full { height: 100%; }
+  .min-h-screen { min-height: 100vh; }
+  .max-w-2xl { max-width: 42rem; }
+  .max-w-3xl { max-width: 48rem; }
+  .max-w-4xl { max-width: 56rem; }
+  .mx-auto { margin-left: auto; margin-right: auto; }
+  .mb-2 { margin-bottom: var(--space-2); }
+  .mb-3 { margin-bottom: var(--space-3); }
+  .mb-4 { margin-bottom: var(--space-4); }
+  .mb-6 { margin-bottom: var(--space-6); }
+  .mb-8 { margin-bottom: var(--space-8); }
+  .mb-12 { margin-bottom: var(--space-12); }
+  .mb-16 { margin-bottom: var(--space-16); }
+  .p-6 { padding: var(--space-6); }
+  .p-8 { padding: var(--space-8); }
+  .py-12 { padding-top: var(--space-12); padding-bottom: var(--space-12); }
+  .pt-8 { padding-top: var(--space-8); }
+  .mt-8 { margin-top: var(--space-8); }
+  .space-y-2 > * + * { margin-top: var(--space-2); }
+  .space-y-4 > * + * { margin-top: var(--space-4); }
+  .block { display: block; }
+  .relative { position: relative; }
+  .overflow-hidden { overflow: hidden; }
+  .aspect-video { aspect-ratio: 16 / 9; }
+  .object-cover { object-fit: cover; }
+  .rounded-lg { border-radius: var(--radius-lg); }
+  .absolute { position: absolute; }
+  .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+  .z-0 { z-index: 0; }
+  .z-10 { z-index: 10; }
+  .opacity-30 { opacity: 0.3; }
+  .bg-gradient-to-t { background-image: linear-gradient(to top, var(--tw-gradient-stops)); }
+  .from-black\\/90 { --tw-gradient-from: rgba(0, 0, 0, 0.9); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)); }
+  .via-black\\/50 { --tw-gradient-stops: var(--tw-gradient-from), rgba(0, 0, 0, 0.5), var(--tw-gradient-to, rgba(0, 0, 0, 0)); }
+  .to-black\\/20 { --tw-gradient-to: rgba(0, 0, 0, 0.2); }
+
+  /* Color utilities */
+  .text-pepe-gold { color: var(--pepe-gold); }
+  .text-pepe-gold-hover:hover { color: var(--pepe-gold-hover); }
+  .text-pepe-t64 { color: var(--pepe-t64); }
+  .bg-pepe-ink { background-color: var(--pepe-ink); }
+  .bg-pepe-dark { background-color: var(--pepe-dark); }
+  .border-pepe-line { border-color: var(--pepe-line); }
+  .border-t { border-top-width: 1px; }
 }
-
-@media (min-width: 640px) {
-  .sm\\:grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ===== Utility Classes ===== */
-
-.hidden { display: none; }
-.flex { display: flex; }
-.flex-wrap { flex-wrap: wrap; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.text-center { text-align: center; }
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-.min-h-screen { min-height: 100vh; }
-.max-w-2xl { max-width: 42rem; }
-.max-w-3xl { max-width: 48rem; }
-.max-w-4xl { max-width: 56rem; }
-.mx-auto { margin-left: auto; margin-right: auto; }
-.mb-2 { margin-bottom: var(--space-2); }
-.mb-3 { margin-bottom: var(--space-3); }
-.mb-4 { margin-bottom: var(--space-4); }
-.mb-6 { margin-bottom: var(--space-6); }
-.mb-8 { margin-bottom: var(--space-8); }
-.mb-12 { margin-bottom: var(--space-12); }
-.mb-16 { margin-bottom: var(--space-16); }
-.p-6 { padding: var(--space-6); }
-.p-8 { padding: var(--space-8); }
-.py-12 { padding-top: var(--space-12); padding-bottom: var(--space-12); }
-.pt-8 { padding-top: var(--space-8); }
-.mt-8 { margin-top: var(--space-8); }
-.space-y-2 > * + * { margin-top: var(--space-2); }
-.space-y-4 > * + * { margin-top: var(--space-4); }
-.block { display: block; }
-.relative { position: relative; }
-.overflow-hidden { overflow: hidden; }
-.aspect-video { aspect-ratio: 16 / 9; }
-.object-cover { object-fit: cover; }
-.rounded-lg { border-radius: var(--radius-lg); }
-.absolute { position: absolute; }
-.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-.z-0 { z-index: 0; }
-.z-10 { z-index: 10; }
-.opacity-30 { opacity: 0.3; }
-.bg-gradient-to-t { background-image: linear-gradient(to top, var(--tw-gradient-stops)); }
-.from-black\\/90 { --tw-gradient-from: rgba(0, 0, 0, 0.9); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)); }
-.via-black\\/50 { --tw-gradient-stops: var(--tw-gradient-from), rgba(0, 0, 0, 0.5), var(--tw-gradient-to, rgba(0, 0, 0, 0)); }
-.to-black\\/20 { --tw-gradient-to: rgba(0, 0, 0, 0.2); }
-
-/* Color utilities */
-.text-pepe-gold { color: var(--pepe-gold); }
-.text-pepe-gold-hover:hover { color: var(--pepe-gold-hover); }
-.text-pepe-t64 { color: var(--pepe-t64); }
-.bg-pepe-ink { background-color: var(--pepe-ink); }
-.bg-pepe-dark { background-color: var(--pepe-dark); }
-.border-pepe-line { border-color: var(--pepe-line); }
-.border-t { border-top-width: 1px; }
 
 /* ===== Form Elements ===== */
 
@@ -3466,19 +3489,22 @@ textarea.input {
   min-height: 120px;
 }
 
-/* Utility additions */
-.mr-4 { margin-right: var(--space-4); }
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* In `@layer base`, aus demselben Grund wie der Utility-Block weiter oben:
+   ungeschichtet schlaegt `.transition-transform` jede Variante. */
+@layer base {
+  .mr-4 { margin-right: var(--space-4); }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .transition-transform { transition: transform var(--duration-normal) var(--ease-out); }
+  .transition-opacity { transition: opacity var(--duration-normal) var(--ease-out); }
+  .duration-300 { transition-duration: 300ms; }
+  .group:hover .group-hover\\:scale-105 { transform: scale(1.05); }
+  .group:hover .group-hover\\:opacity-100 { opacity: 1; }
 }
-.transition-transform { transition: transform var(--duration-normal) var(--ease-out); }
-.transition-opacity { transition: opacity var(--duration-normal) var(--ease-out); }
-.duration-300 { transition-duration: 300ms; }
-.group:hover .group-hover\\:scale-105 { transform: scale(1.05); }
-.group:hover .group-hover\\:opacity-100 { opacity: 1; }
 
 /* ===== Stepper Component ===== */
 

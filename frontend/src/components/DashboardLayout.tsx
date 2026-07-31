@@ -25,7 +25,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
-import { Home } from 'lucide-react';
+import { Eye, Home } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -150,10 +150,21 @@ export function DashboardLayout({
           ))}
         </nav>
 
+        {/* Der Weg zurück auf die öffentliche Seite. Zwei Ziele statt einem:
+            Die Künstlerübersicht ist der Ort, an dem man die eigene Karte so
+            sieht, wie ein Kunde sie sieht — von der Startseite aus sind das
+            noch zwei Klicks. */}
         <div className="flex-shrink-0 border-t border-white/10 px-4 py-4">
           <Link
+            to="/kuenstler"
+            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+          >
+            <Eye className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+            Meine Karte ansehen
+          </Link>
+          <Link
             to="/"
-            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-gray-500 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+            className="mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-gray-500 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
           >
             <Home className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
             Zur Website

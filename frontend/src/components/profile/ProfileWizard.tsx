@@ -154,7 +154,9 @@ function StepProgress({
           einem Schritt, dessen Voraussetzungen fehlen. Die Flächen sind Knöpfe
           und müssen sich auch auf dem Handy treffen lassen: mindestens 44 px
           hoch, nicht die 16 px, die reiner Text ergibt. */}
-      <ol className="mt-3 flex list-none flex-wrap gap-x-1 gap-y-1">
+      {/* `pl-0 mb-0`: Die Grundregel für Listen setzt beides, und diese hier ist
+          keine Aufzählung, sondern eine Reihe von Schaltflächen. */}
+      <ol className="mb-0 mt-3 flex list-none flex-wrap gap-x-1 gap-y-1 pl-0">
         {STEPS.map((step, index) => {
           const done = index < current;
           const reachable = index <= maxReached;
@@ -347,17 +349,17 @@ export function ProfileWizard({
         </p>
       )}
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-7">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8">
         <h2 className="font-display text-xl font-semibold text-white sm:text-2xl">{STEPS[step].title}</h2>
 
         {/* ---------------- Schritt 1: Person ---------------- */}
         {step === 0 && (
           <>
-            <p className="mt-1.5 text-sm text-gray-400">
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
               Nur das Nötigste. Die Adresse braucht die Agentur, um die Anfahrt zu berechnen.
               Öffentlich gezeigt wird sie nicht.
             </p>
-            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Field id="w-name" label="Künstlername oder Name" required error={errorFor('name')}>
                 <Input
                   id="w-name"
@@ -427,11 +429,11 @@ export function ProfileWizard({
         {/* ---------------- Schritt 2: Disziplinen ---------------- */}
         {step === 1 && (
           <>
-            <p className="mt-1.5 text-sm text-gray-400">
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
               Wähle alles, was du auftrittsreif kannst. Danach richtet sich, welche Anfragen bei dir
               landen. Eine genügt.
             </p>
-            <fieldset className="mt-5">
+            <fieldset className="mt-7">
               <legend className="sr-only">Disziplinen</legend>
               <div className="flex flex-wrap gap-2.5">
                 {availableDisciplines.map((d) => {
@@ -451,7 +453,7 @@ export function ProfileWizard({
                       className={cn(
                         // min-h-[44px]: Eine Auswahlfläche muss sich mit dem
                         // Daumen treffen lassen. Mit py-2 kam sie auf 34 px.
-                        'inline-flex min-h-[44px] items-center rounded-full border px-4 text-sm transition-colors',
+                        'inline-flex min-h-[44px] flex-shrink-0 items-center whitespace-nowrap rounded-full border px-5 text-sm transition-colors',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold',
                         active
                           ? 'border-pepe-gold/50 bg-pepe-gold/15 text-pepe-gold'
@@ -478,11 +480,11 @@ export function ProfileWizard({
         {step === 2 && (
           <>
             {/* Einmal gesagt statt sechsmal als Marke an jedem Feld. */}
-            <p className="mt-1.5 text-sm text-gray-400">
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
               Dieser Schritt ist ganz freiwillig. Die Angaben bestimmen aber deine Gage: Ohne sie
               rechnet die Agentur mit dem Grundwert. Du kannst sie jederzeit nachtragen.
             </p>
-            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Field id="w-exp" label="Bühnenerfahrung" showOptional={false}>
                 <SelectField
                   id="w-exp"
@@ -554,12 +556,12 @@ export function ProfileWizard({
         {/* ---------------- Schritt 4: Bild, Text, Vorschau ---------------- */}
         {step === 3 && (
           <>
-            <p className="mt-1.5 text-sm text-gray-400">
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
               Rechts siehst du live, was daraus wird. Beides ist freiwillig. Du kannst auch ohne
               Bild einreichen und es später nachlegen.
             </p>
 
-            <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="mt-7 grid grid-cols-1 gap-8 lg:grid-cols-2">
               <div className="space-y-5">
                 <Field
                   id="w-bio"
@@ -728,7 +730,7 @@ export function ProfileWizard({
             type="button"
             onClick={() => goTo(Math.max(0, step - 1))}
             disabled={step === 0 || saving}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-white/15 px-4 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-[44px] flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-white/15 px-4 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Zurück
@@ -740,7 +742,7 @@ export function ProfileWizard({
               type="button"
               onClick={() => void handleNext()}
               disabled={saving}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-lg px-3 text-sm text-gray-500 underline-offset-4 transition-colors hover:text-gray-200 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+              className="inline-flex min-h-[44px] flex-shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-3 text-sm text-gray-500 underline-offset-4 transition-colors hover:text-gray-200 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
             >
               Später ausfüllen
             </button>
@@ -752,7 +754,7 @@ export function ProfileWizard({
             type="button"
             onClick={() => void onSubmit()}
             disabled={saving || missing.length > 0}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-pepe-gold px-6 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-[48px] flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-pepe-gold px-6 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -766,7 +768,7 @@ export function ProfileWizard({
             type="button"
             onClick={() => void handleNext()}
             disabled={saving}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-pepe-gold px-6 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[48px] flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-pepe-gold px-6 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

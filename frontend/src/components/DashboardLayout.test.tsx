@@ -89,6 +89,29 @@ describe('Künstler-Portal', () => {
     }
   });
 
+  it('führt aus der Seitenleiste zurück auf die öffentliche Seite', () => {
+    renderLayout('/meine-anfragen');
+    const nav = within(sidebar());
+    // Die eigene Karte so sehen, wie ein Kunde sie sieht — von der Startseite
+    // aus wären das zwei weitere Klicks.
+    expect(nav.getByRole('link', { name: 'Meine Karte ansehen' })).toHaveAttribute(
+      'href',
+      '/kuenstler'
+    );
+    expect(nav.getByRole('link', { name: 'Zur Website' })).toHaveAttribute('href', '/');
+  });
+
+  it('blendet die Seitenleiste nicht dauerhaft aus', () => {
+    // `hidden lg:flex`: Die Klasse `hidden` gab es zusätzlich ungeschichtet in
+    // components.css und schlug damit `lg:flex`, weil ungeschichtetes CSS in
+    // Tailwind v4 jede Schicht sticht. Die Seitenleiste war auf jeder
+    // Fensterbreite weg. Der Test haelt die beiden Klassen zusammen fest.
+    renderLayout('/meine-anfragen');
+    const cls = sidebar().className;
+    expect(cls).toContain('hidden');
+    expect(cls).toContain('lg:flex');
+  });
+
   it('zeigt einem Nicht-Admin nur die eigenen Ziele, ohne Gruppentitel', () => {
     renderLayout('/meine-anfragen');
     const nav = within(sidebar()).getByRole('navigation', { name: 'Hauptnavigation' });
