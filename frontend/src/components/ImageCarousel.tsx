@@ -68,15 +68,30 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
       switch (offsetFromCenter(index)) {
         case 0:
           // Das gewählte Bild: gerade, vorn, in voller Grösse.
-          return "md:rotate-0 md:scale-100 md:z-20";
+          return "md:rotate-0 md:scale-100";
         case -1:
-          return "md:-rotate-45 md:translate-x-40 md:scale-75 md:z-0";
+          return "md:-rotate-45 md:translate-x-40 md:scale-75";
         case 1:
-          return "md:rotate-45 md:-translate-x-40 md:scale-75 md:z-0";
+          return "md:rotate-45 md:-translate-x-40 md:scale-75";
         default:
           return "";
       }
     },
+    [offsetFromCenter],
+  );
+
+  /**
+   * Die Stapelreihenfolge gehört an den Slide, nicht an das gedrehte Kästchen
+   * darin.
+   *
+   * Das Kästchen trägt `transform`, und eine Transformation eröffnet einen
+   * eigenen Stapelkontext. Ein `z-index` darin ordnet nur seinen eigenen Inhalt
+   * und sagt nichts darüber, wo das Kästchen gegenüber den Nachbarslides liegt.
+   * Deshalb lag das mittlere Bild mal vorn und mal hinten: Es entschied allein
+   * die Reihenfolge im Markup, und die wechselt beim Weiterdrehen.
+   */
+  const stackClass = useCallback(
+    (index: number) => (offsetFromCenter(index) === 0 ? "z-20" : "z-0"),
     [offsetFromCenter],
   );
 
@@ -129,10 +144,10 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
             selbst. Der Zusatz sorgte nur dafür, dass links und rechts dasselbe
             Bild stand. */}
         {images.map((image, index) => (
-          <CarouselItem key={index} className="my-10 md:basis-1/3">
+          <CarouselItem key={index} className={cn("relative my-10 md:basis-1/3", stackClass(index))}>
             <div
               className={cn(
-                "relative h-105 w-full transition-transform duration-500 ease-in-out",
+                "h-105 w-full transition-transform duration-500 ease-in-out",
                 getRotation(index),
               )}
             >

@@ -239,17 +239,19 @@
   --screen-2xl: 1536px;
   --screen-3xl: 1920px;
   
-  /* ===== Container Sizes ===== */
-  
-  --container-xs: 475px;
-  --container-sm: 640px;
-  --container-md: 768px;
-  --container-lg: 1024px;
-  --container-xl: 1280px;
-  --container-2xl: 1536px;
-  --container-3xl: 1920px;
+  /* ===== Container Sizes =====
+
+     Entfernt. Die Namen gehoeren in Tailwind v4 der Theme-Gruppe `--container-*`,
+     aus der die `max-w-*`-Klassen ihre Werte ziehen. Hier ueberschrieben,
+     bedeutete `max-w-2xl` nicht mehr 42rem sondern 1536px, `max-w-sm` nicht
+     384px sondern 640px, und so weiter durch die ganze Reihe. Im Browser
+     nachgemessen: Ein Formular mit `max-w-2xl` lief ueber die volle Breite.
+
+     Benutzt wurden sie an keiner Stelle, weder in TSX noch in CSS. Wer wieder
+     eigene Breiten braucht, nimmt einen anderen Namensraum, etwa `--layout-*`.
+     Die Bildschirmgroessen darueber (`--screen-*`) sind davon nicht betroffen. */
   --container-full: 100%;
-  
+
   /* ===== Aspect Ratios ===== */
   
   --aspect-square: 1 / 1;

@@ -63,11 +63,25 @@
   --color-pepe-gold-active: var(--pepe-gold-active);
 }
 
-/* ===== Base Reset ===== */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ===== Base Reset =====
+
+   In `@layer base`, und daran haengt mehr, als es aussieht.
+
+   Ungeschichtet gewinnt eine Regel in Tailwind v4 gegen jede Schicht, und
+   Spezifitaet spielt dabei keine Rolle. `* { padding: 0 }` schlug damit jedes
+   `p-6`, jedes `px-4`, jedes `pt-8` im gesamten Projekt, und `margin: 0`
+   entsprechend jedes `mt-*` und jedes `space-y-*`. Im Browser nachgemessen:
+   Eine Karte mit `p-6 sm:p-8` kam auf `padding: 0px`.
+
+   Das erklaert, warum die Oberflaeche ueberall gedraengt wirkte, obwohl im
+   Markup Abstaende standen. In der Schicht raeumt der Reset weiterhin die
+   Browser-Vorgaben weg und tritt hinter jede Utility zurueck. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 html {

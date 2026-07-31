@@ -559,12 +559,17 @@ export function ProfileWizard({
         {step === 3 && (
           <>
             <p className="mt-3 max-w-prose text-sm leading-relaxed text-gray-400">
-              Rechts siehst du live, was daraus wird. Beides ist freiwillig. Du kannst auch ohne
+              Unten siehst du live, was daraus wird. Beides ist freiwillig. Du kannst auch ohne
               Bild einreichen und es später nachlegen.
             </p>
 
-            <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="space-y-6">
+            {/* Vorschau unter dem Formular statt daneben.
+                Nebeneinander bauen die zwei Vorschaukarten rund doppelt so hoch
+                wie die vier Felder, und links blieb ein Loch von etwa 700
+                Pixeln. Untereinander bekommt jeder Teil die volle Breite: die
+                Felder zwei Spalten, die Vorschau zwei Karten nebeneinander. */}
+            <div className="mt-8 grid grid-cols-1 items-start gap-x-6 gap-y-7 sm:grid-cols-2">
+              <div className="sm:col-span-2">
                 <Field
                   id="w-bio"
                   label="Kurzvorstellung"
@@ -579,19 +584,20 @@ export function ProfileWizard({
                     placeholder="Cyr Wheel seit zwölf Jahren, auf Bühnen und auf der Strasse…"
                   />
                 </Field>
+              </div>
 
-                <Field id="w-insta" label="Instagram" hint="Erscheint als Link auf deiner Künstlerseite.">
+              <Field id="w-insta" label="Instagram" hint="Erscheint als Link auf deiner Künstlerseite.">
                   <Input
                     id="w-insta"
                     className={inputClass}
                     value={profile.instagram ?? ''}
                     onChange={(e) => setProfile({ instagram: e.target.value })}
-                    placeholder="@deinname"
-                  />
-                </Field>
+                  placeholder="@deinname"
+                />
+              </Field>
 
-                <div>
-                  <Label htmlFor="w-photo" className="text-sm text-gray-200">
+              <div>
+                <Label htmlFor="w-photo" className="text-sm text-gray-200">
                     Profilbild
                     <span className="ml-1.5 text-xs font-normal text-gray-500">optional</span>
                   </Label>
@@ -629,8 +635,8 @@ export function ProfileWizard({
                   </p>
                 </div>
 
-                <div>
-                  <Label htmlFor="w-gallery" className="text-sm text-gray-200">
+              <div className="sm:col-span-2">
+                <Label htmlFor="w-gallery" className="text-sm text-gray-200">
                     Galerie
                     <span className="ml-1.5 text-xs font-normal text-gray-500">optional</span>
                   </Label>
@@ -656,13 +662,13 @@ export function ProfileWizard({
                       }}
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {profile.galleryUrls.length + profile.galleryFiles.length} ausgewählt
-                  </p>
-                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  {profile.galleryUrls.length + profile.galleryFiles.length} ausgewählt
+                </p>
               </div>
+            </div>
 
-              <div className="space-y-4">
+            <div className="mt-10 space-y-4 border-t border-white/10 pt-8">
                 <p className="flex items-center gap-2 text-sm font-medium text-gray-300">
                   <Eye className="h-4 w-4" aria-hidden="true" />
                   Vorschau
@@ -691,7 +697,6 @@ export function ProfileWizard({
                     priceMax: profile.priceMax,
                   }}
                 />
-              </div>
             </div>
 
             {missing.length > 0 && (

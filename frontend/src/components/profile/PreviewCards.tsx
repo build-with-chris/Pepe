@@ -65,7 +65,7 @@ function CardShell({
     <section
       aria-label={title}
       className={cn(
-        'rounded-2xl border p-5',
+        'rounded-2xl border p-4 sm:p-5',
         tone === 'public' ? 'border-pepe-gold/25 bg-pepe-gold/5' : 'border-white/10 bg-white/5'
       )}
     >
@@ -103,7 +103,7 @@ export function CustomerPreviewCard({ profile }: { profile: PreviewProfile }) {
       hint="Öffentlich auf pepeshows.de, sobald du freigegeben bist."
       tone="public"
     >
-      <div className="mx-auto max-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-pepe-surface">
+      <div className="mx-auto max-w-[240px] overflow-hidden rounded-xl border border-white/10 bg-pepe-surface">
         <div className="aspect-[3/4] w-full">
           {profile.profileImageUrl ? (
             <img
@@ -183,8 +183,8 @@ export function AdminPreviewCard({ profile }: { profile: PreviewProfile }) {
     .filter((part) => part && part.trim())
     .join(', ');
 
-  const rows: { icon: React.ElementType; label: string; value: string }[] = [
-    { icon: Mail, label: 'E-Mail', value: profile.email?.trim() || '—' },
+  const rows: { icon: React.ElementType; label: string; value: string; tight?: boolean }[] = [
+    { icon: Mail, label: 'E-Mail', value: profile.email?.trim() || '—', tight: true },
     { icon: Phone, label: 'Telefon', value: profile.phoneNumber?.trim() || '—' },
     { icon: MapPin, label: 'Adresse', value: address || '—' },
   ];
@@ -219,11 +219,17 @@ export function AdminPreviewCard({ profile }: { profile: PreviewProfile }) {
       </div>
 
       <dl className="mt-4 space-y-2.5">
-        {rows.map(({ icon: Icon, label, value }) => (
+        {rows.map(({ icon: Icon, label, value, tight }) => (
           <div key={label} className="flex items-start gap-2 text-sm">
             <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" aria-hidden="true" />
             <dt className="sr-only">{label}</dt>
-            <dd className={cn('min-w-0 break-words', value === '—' ? 'text-gray-500' : 'text-gray-200')}>
+            <dd
+              className={cn(
+                'min-w-0',
+                tight ? 'break-all' : 'break-words',
+                value === '—' ? 'text-gray-500' : 'text-gray-200'
+              )}
+            >
               {value}
             </dd>
           </div>
@@ -249,7 +255,7 @@ export function AdminPreviewCard({ profile }: { profile: PreviewProfile }) {
 /** Beide Karten nebeneinander, auf schmalen Schirmen untereinander. */
 export function ProfilePreview({ profile }: { profile: PreviewProfile }) {
   return (
-    <div className="ui-surface grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div className="ui-surface grid grid-cols-1 items-start gap-4 md:grid-cols-2">
       <CustomerPreviewCard profile={profile} />
       <AdminPreviewCard profile={profile} />
     </div>
