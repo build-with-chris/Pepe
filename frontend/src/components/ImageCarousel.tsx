@@ -10,7 +10,6 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface CarouselImage {
@@ -30,23 +29,55 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
   React.useEffect(() => {
     if (!api) return;
 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-    });
+    // Auch beim Aufbau einmal setzen. `select` feuert erst beim Wechsel, davor
+    // stand `current` auf 0, ohne dass das mit dem tatsächlich gewählten Bild
+    // etwas zu tun haben musste.
+    const sync = () => setCurrent(api.selectedScrollSnap());
+    sync();
+    api.on("select", sync);
+    api.on("reInit", sync);
+    return () => {
+      api.off("select", sync);
+      api.off("reInit", sync);
+    };
   }, [api]);
 
-  const isMobile = useIsMobile();
+  const count = images.length;
 
-  // Exactly matches hero228: current = left (-45°), current+1 = center (0°, featured), current+2 = right (45°)
+  /**
+   * Abstand eines Bildes zur Mitte, über den Rand hinweg gezählt: 0 ist die
+   * Mitte, -1 links davon, +1 rechts davon.
+   *
+   * Vorher rechnete die Komponente mit `current`, `current + 1` und
+   * `current + 2` und nahm damit an, `selectedScrollSnap()` liefere das linke
+   * der drei sichtbaren Bilder. Das tut es nicht, und das Fächern kippte um:
+   * Das mittlere Bild stand schräg, die äusseren flach. Mit `align: 'center'`
+   * ist der gewählte Slide der mittlere, und die Rechnung geht über den
+   * Rundenwechsel hinweg auf, statt am Ende der Liste ins Leere zu greifen.
+   */
+  const offsetFromCenter = useCallback(
+    (index: number) => {
+      const raw = (index - current + count) % count;
+      return raw > count / 2 ? raw - count : raw;
+    },
+    [current, count],
+  );
+
   const getRotation = useCallback(
     (index: number) => {
-      if (index === current)
-        return "md:-rotate-45 md:translate-x-40 md:scale-75 md:z-0 md:relative";
-      if (index === current + 1) return "md:rotate-0 md:z-20 md:relative";
-      if (index === current + 2)
-        return "md:rotate-45 md:-translate-x-40 md:scale-75 md:z-0 md:relative";
+      switch (offsetFromCenter(index)) {
+        case 0:
+          // Das gewählte Bild: gerade, vorn, in voller Grösse.
+          return "md:rotate-0 md:scale-100 md:z-20";
+        case -1:
+          return "md:-rotate-45 md:translate-x-40 md:scale-75 md:z-0";
+        case 1:
+          return "md:rotate-45 md:-translate-x-40 md:scale-75 md:z-0";
+        default:
+          return "";
+      }
     },
-    [current],
+    [offsetFromCenter],
   );
 
   const scrollbarBars = useMemo(
@@ -86,30 +117,29 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
         }),
       ]}
       setApi={setApi}
-      opts={{ loop: true }}
+      // `align: 'center'` ist die Voraussetzung für die Rechnung oben: Erst
+      // damit ist der gewählte Slide auch der mittlere der drei sichtbaren.
+      opts={{ loop: true, align: "center" }}
       aria-label="Bildergalerie"
       aria-roledescription="Karussell"
     >
       <CarouselContent>
-        {Array.from({
-          length: isMobile ? images.length : images.length + 2,
-        }).map((_, index) => (
+        {/* Vorher liefen hier `images.length + 2` Durchgänge, um die Reihe zu
+            füllen. Das brauchte es nie: Bei `loop` klont Embla die Bilder
+            selbst. Der Zusatz sorgte nur dafür, dass links und rechts dasselbe
+            Bild stand. */}
+        {images.map((image, index) => (
           <CarouselItem key={index} className="my-10 md:basis-1/3">
             <div
-              className={`h-105 w-full transition-transform duration-500 ease-in-out ${getRotation(index)}`}
+              className={cn(
+                "relative h-105 w-full transition-transform duration-500 ease-in-out",
+                getRotation(index),
+              )}
             >
               <img
-                src={
-                  index >= images.length
-                    ? images[index - images.length].src
-                    : images[index].src
-                }
-                className="h-full w-full object-cover rounded-lg"
-                alt={
-                  index >= images.length
-                    ? images[index - images.length]?.alt ?? ""
-                    : images[index]?.alt ?? ""
-                }
+                src={image.src}
+                className="h-full w-full rounded-lg object-cover"
+                alt={image.alt}
                 loading="lazy"
               />
             </div>
@@ -127,7 +157,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, className = "" })
             exit={{ opacity: 0, y: -20, scale: 0.9, filter: "blur(5px)" }}
             transition={{ duration: 0.5 }}
           >
-            {images[current % images.length]?.alt}
+            {images[current]?.alt}
           </motion.p>
         </AnimatePresence>
         <div className="flex gap-2">{scrollbarBars}</div>

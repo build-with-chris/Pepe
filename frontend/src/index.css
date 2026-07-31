@@ -97,6 +97,47 @@ body.mobile-menu-open .hero-logo-doticon {
   flex-direction: column;
 }
 
+/* ===== Bedienoberflaeche statt Fliesstext =====
+
+   `typography.css` gibt jeder Ueberschrift eine Groesse und jedem Absatz einen
+   Abstand. Fuer einen Artikel ist das richtig. In einer Bedienoberflaeche ist
+   es falsch: Dort ist ein `<h3>` die Zeile ueber einer Karte und keine
+   Kapitelueberschrift, und `h3 { font-size: var(--text-3xl) }` macht daraus
+   eine 30-Pixel-Zeile mitten in einem Formular.
+
+   Wo `.ui-surface` steht, treten diese Grundregeln zurueck. Groesse und
+   Abstand kommen dann ausschliesslich aus den Utility-Klassen am Element, so
+   wie es im Markup steht.
+
+   Die Regeln liegen in `@layer base`, damit sie zwei Dinge gleichzeitig tun:
+   Ueber die Klassen-Spezifitaet schlagen sie die Element-Regeln aus
+   typography.css, und als Teil der Schicht treten sie ihrerseits hinter jede
+   Tailwind-Utility zurueck. Ungeschichtet wuerden sie auch `mt-4` schlucken.
+
+   Bewusst nicht global: Startseite, Galerie und die anderen oeffentlichen
+   Seiten leben von genau diesen Grundregeln. */
+@layer base {
+  .ui-surface :is(h1, h2, h3, h4, h5, h6) {
+    font-size: inherit;
+    line-height: inherit;
+    letter-spacing: normal;
+    margin: 0;
+  }
+
+  .ui-surface :is(p, ul, ol, li, figure, blockquote) {
+    margin: 0;
+  }
+
+  .ui-surface :is(ul, ol) {
+    padding-left: 0;
+    color: inherit;
+  }
+
+  .ui-surface li {
+    line-height: inherit;
+  }
+}
+
 /* ===== Universal Layout System ===== */
 
 /* Main content offset for fixed navbar - only for public pages with Navigation */

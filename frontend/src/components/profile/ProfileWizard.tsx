@@ -337,7 +337,9 @@ export function ProfileWizard({
      */
     <div
       className={cn(
-        'mx-auto w-full space-y-6',
+        // `ui-surface`: Groesse und Abstand kommen hier aus den Klassen am
+        // Element, nicht aus den Grundregeln fuer Fliesstext. Siehe index.css.
+        'ui-surface mx-auto w-full space-y-8',
         step === STEPS.length - 1 ? 'max-w-5xl' : 'max-w-2xl'
       )}
     >
@@ -350,16 +352,16 @@ export function ProfileWizard({
       )}
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8">
-        <h2 className="font-display text-xl font-semibold text-white sm:text-2xl">{STEPS[step].title}</h2>
+        <h2 className="font-display text-xl font-semibold leading-snug text-white sm:text-2xl">{STEPS[step].title}</h2>
 
         {/* ---------------- Schritt 1: Person ---------------- */}
         {step === 0 && (
           <>
-            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
+            <p className="mt-3 max-w-prose text-sm leading-relaxed text-gray-400">
               Nur das Nötigste. Die Adresse braucht die Agentur, um die Anfahrt zu berechnen.
               Öffentlich gezeigt wird sie nicht.
             </p>
-            <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Field id="w-name" label="Künstlername oder Name" required error={errorFor('name')}>
                 <Input
                   id="w-name"
@@ -429,11 +431,11 @@ export function ProfileWizard({
         {/* ---------------- Schritt 2: Disziplinen ---------------- */}
         {step === 1 && (
           <>
-            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
+            <p className="mt-3 max-w-prose text-sm leading-relaxed text-gray-400">
               Wähle alles, was du auftrittsreif kannst. Danach richtet sich, welche Anfragen bei dir
               landen. Eine genügt.
             </p>
-            <fieldset className="mt-7">
+            <fieldset className="mt-8">
               <legend className="sr-only">Disziplinen</legend>
               <div className="flex flex-wrap gap-2.5">
                 {availableDisciplines.map((d) => {
@@ -480,11 +482,11 @@ export function ProfileWizard({
         {step === 2 && (
           <>
             {/* Einmal gesagt statt sechsmal als Marke an jedem Feld. */}
-            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
+            <p className="mt-3 max-w-prose text-sm leading-relaxed text-gray-400">
               Dieser Schritt ist ganz freiwillig. Die Angaben bestimmen aber deine Gage: Ohne sie
               rechnet die Agentur mit dem Grundwert. Du kannst sie jederzeit nachtragen.
             </p>
-            <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Field id="w-exp" label="Bühnenerfahrung" showOptional={false}>
                 <SelectField
                   id="w-exp"
@@ -520,7 +522,7 @@ export function ProfileWizard({
             </div>
 
             {/* Abgesetzt: Das sind Ja-Nein-Fragen, keine weiteren Auswahllisten. */}
-            <fieldset className="mt-7 border-t border-white/10 pt-6">
+            <fieldset className="mt-8 border-t border-white/10 pt-7">
               <legend className="sr-only">Ausbildung und Exklusivität</legend>
               <div className="space-y-3">
                 {[
@@ -556,13 +558,13 @@ export function ProfileWizard({
         {/* ---------------- Schritt 4: Bild, Text, Vorschau ---------------- */}
         {step === 3 && (
           <>
-            <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-400">
+            <p className="mt-3 max-w-prose text-sm leading-relaxed text-gray-400">
               Rechts siehst du live, was daraus wird. Beides ist freiwillig. Du kannst auch ohne
               Bild einreichen und es später nachlegen.
             </p>
 
-            <div className="mt-7 grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="space-y-5">
+            <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+              <div className="space-y-6">
                 <Field
                   id="w-bio"
                   label="Kurzvorstellung"

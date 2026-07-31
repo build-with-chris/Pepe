@@ -65,7 +65,7 @@ function CardShell({
     <section
       aria-label={title}
       className={cn(
-        'rounded-2xl border p-4 sm:p-5',
+        'rounded-2xl border p-5',
         tone === 'public' ? 'border-pepe-gold/25 bg-pepe-gold/5' : 'border-white/10 bg-white/5'
       )}
     >
@@ -78,7 +78,7 @@ function CardShell({
           aria-hidden="true"
         />
         <div className="min-w-0">
-          <h3 className="font-semibold text-white">{title}</h3>
+          <h3 className="text-sm font-semibold leading-snug text-white sm:text-base">{title}</h3>
           <p className="mt-0.5 text-xs text-gray-400">{hint}</p>
         </div>
       </header>
@@ -249,7 +249,7 @@ export function AdminPreviewCard({ profile }: { profile: PreviewProfile }) {
 /** Beide Karten nebeneinander, auf schmalen Schirmen untereinander. */
 export function ProfilePreview({ profile }: { profile: PreviewProfile }) {
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div className="ui-surface grid grid-cols-1 gap-4 lg:grid-cols-2">
       <CustomerPreviewCard profile={profile} />
       <AdminPreviewCard profile={profile} />
     </div>

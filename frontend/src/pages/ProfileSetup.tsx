@@ -673,10 +673,10 @@ export default function Profile() {
             Profil aber selten fertig. */}
         <section
           aria-label="Vollständigkeit deines Profils"
-          className="rounded-2xl border border-white/10 bg-white/5 p-5"
+          className="ui-surface rounded-2xl border border-white/10 bg-white/5 p-6"
         >
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-medium text-white">Dein Profil</h2>
+            <h2 className="text-base font-medium leading-snug text-white">Dein Profil</h2>
             <p className="tabular-nums text-sm text-gray-400">{completeness.percent} % ausgefüllt</p>
           </div>
           <div
@@ -718,7 +718,7 @@ export default function Profile() {
                 <div className="w-12 h-12 rounded-full bg-pepe-gold/10 flex items-center justify-center mx-auto mb-4">
                   <Pencil className="w-6 h-6 text-pepe-gold" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Profil bearbeiten</h3>
+                <h3 className="mb-2 text-lg font-semibold leading-snug">Profil bearbeiten</h3>
                 <p className="mb-6 text-gray-400">{t('profileSetup.lockedHint')}</p>
                 <Button
                   ref={unlockBtnRef}
@@ -746,7 +746,7 @@ export default function Profile() {
               <Trash2 className="w-5 h-5 text-red-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-red-400 mb-1">Gefahrenzone</h3>
+              <h3 className="mb-1 text-lg font-semibold leading-snug text-red-400">Gefahrenzone</h3>
               <p className="text-sm text-gray-400 mb-4">{t('profileSetup.delete.help')}</p>
               <Button
                 variant="outline"
