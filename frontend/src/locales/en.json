@@ -1249,15 +1249,24 @@
 
 
   "profileStatusBanner": {
+    "approved": {
+      "title": "Profile approved",
+      "info": "Your profile is approved and visible to clients.",
+      "notice": "You can keep updating your profile at any time."
+    },
     "pending": {
-      "info": "Your profile is currently under review. This may take a little time."
+      "title": "Profile under review",
+      "info": "Your profile is currently under review. This may take a little time.",
+      "notice": "We will let you know once the review is done."
     },
     "rejected": {
       "title": "Your profile needs changes",
       "reason": "Reason: {{reason}}",
+      "reasonLabel": "Reason",
       "hint": "Please adjust your profile and resubmit."
     },
     "unsubmitted": {
+      "title": "Complete your profile",
       "hint": "Your profile hasn’t been submitted yet. Complete it to get discovered."
     },
     "actions": {

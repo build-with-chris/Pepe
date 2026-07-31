@@ -1085,15 +1085,24 @@
   },
 
   "profileStatusBanner": {
+    "approved": {
+      "title": "Profil freigegeben",
+      "info": "Dein Profil ist freigegeben und für Kunden sichtbar.",
+      "notice": "Du kannst dein Profil jederzeit weiter ergänzen."
+    },
     "pending": {
-      "info": "Dein Profil wird derzeit geprüft. Das kann etwas Zeit in Anspruch nehmen."
+      "title": "Profil in Prüfung",
+      "info": "Dein Profil wird derzeit geprüft. Das kann etwas Zeit in Anspruch nehmen.",
+      "notice": "Wir melden uns, sobald die Prüfung durch ist."
     },
     "rejected": {
       "title": "Dein Profil benötigt Anpassungen",
       "reason": "Grund: {{reason}}",
+      "reasonLabel": "Grund",
       "hint": "Bitte passe dein Profil an und reiche es erneut ein."
     },
     "unsubmitted": {
+      "title": "Profil vervollständigen",
       "hint": "Dein Profil ist noch nicht eingereicht. Vervollständige es, um gefunden zu werden."
     },
     "actions": {

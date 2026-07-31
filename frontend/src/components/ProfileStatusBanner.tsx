@@ -29,8 +29,11 @@ export function ProfileStatusBanner({
           bgColor: 'bg-green-900/20',
           borderColor: 'border-green-700',
           textColor: 'text-green-300',
-          title: 'Profile Approved',
-          message: 'Your profile has been approved and is now visible to clients.'
+          title: t('profileStatusBanner.approved.title', 'Profil freigegeben'),
+          message: t(
+            'profileStatusBanner.approved.info',
+            'Dein Profil ist freigegeben und für Kunden sichtbar.'
+          )
         };
       case 'pending':
         return {
@@ -38,7 +41,7 @@ export function ProfileStatusBanner({
           bgColor: 'bg-yellow-900/20',
           borderColor: 'border-yellow-700',
           textColor: 'text-yellow-300',
-          title: 'Profile Under Review',
+          title: t('profileStatusBanner.pending.title', 'Profil in Prüfung'),
           message: t('profileStatusBanner.pending.info')
         };
       case 'rejected':
@@ -57,7 +60,7 @@ export function ProfileStatusBanner({
           bgColor: 'bg-gray-900/20',
           borderColor: 'border-gray-700',
           textColor: 'text-gray-300',
-          title: 'Complete Your Profile',
+          title: t('profileStatusBanner.unsubmitted.title', 'Profil vervollständigen'),
           message: t('profileStatusBanner.unsubmitted.hint')
         };
     }
@@ -81,7 +84,7 @@ export function ProfileStatusBanner({
           {status === 'rejected' && rejectionReason && (
             <div className="mt-3 p-3 bg-red-950/50 border border-red-800/50 rounded">
               <p className="text-sm font-medium text-red-200">
-                Reason:
+                {t('profileStatusBanner.rejected.reasonLabel', 'Grund')}
               </p>
               <p className="text-sm text-red-300 mt-1">
                 {rejectionReason}
@@ -127,13 +130,13 @@ export function ProfileStatusBanner({
 
           {status === 'pending' && (
             <div className="mt-3 text-sm text-yellow-400">
-              <p>We will notify you once the review is complete.</p>
+              <p>{t('profileStatusBanner.pending.notice', 'Wir melden uns, sobald die Prüfung durch ist.')}</p>
             </div>
           )}
 
           {status === 'approved' && (
             <div className="mt-3 text-sm text-green-400">
-              <p>You can continue to update your profile as needed.</p>
+              <p>{t('profileStatusBanner.approved.notice', 'Du kannst dein Profil jederzeit weiter ergänzen.')}</p>
             </div>
           )}
         </div>

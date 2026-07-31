@@ -98,6 +98,25 @@ describe('ProfileSetup', () => {
     expect(completenessBar()).toBeNull();
   });
 
+  it('lässt im Assistenten Statusbanner, Untertitel und Gefahrenzone weg', async () => {
+    renderWithStatus('unsubmitted');
+    await waitFor(() => expect(wizardBar()).toBeInTheDocument());
+
+    // Der Banner sagte dasselbe wie der Fortschritt zwei Zeilen tiefer.
+    expect(screen.queryByText('Profil vervollständigen')).toBeNull();
+    // Und ein Knopf zum Löschen gehört nicht unter „Weiter".
+    expect(screen.queryByText('Gefahrenzone')).toBeNull();
+    expect(screen.queryByText(/Verwalte dein Künstlerprofil/)).toBeNull();
+  });
+
+  it('zeigt Banner und Gefahrenzone beim Formular weiterhin', async () => {
+    renderWithStatus('pending');
+    await waitFor(() => expect(completenessBar()).toBeInTheDocument());
+
+    expect(screen.getByText('Profil in Prüfung')).toBeInTheDocument();
+    expect(screen.getByText('Gefahrenzone')).toBeInTheDocument();
+  });
+
   it('zeigt das Formular, sobald die Prüfung läuft', async () => {
     renderWithStatus('pending');
 

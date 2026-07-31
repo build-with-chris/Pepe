@@ -27,6 +27,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
   Eye,
   ImagePlus,
   Loader2,
@@ -129,15 +130,14 @@ function StepProgress({
 
   return (
     <div>
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-sm text-gray-400">
-          Schritt <span className="font-semibold text-white">{current + 1}</span> von {STEPS.length}
-        </p>
-        <p className="text-sm text-gray-500">{STEPS[current].title}</p>
-      </div>
+      {/* Nur die Zählung. Der Titel des Schritts stand hier nochmal und wieder
+          als Überschrift zwei Zeilen tiefer — einmal genügt. */}
+      <p className="text-sm text-gray-400">
+        Schritt <span className="font-semibold text-white">{current + 1}</span> von {STEPS.length}
+      </p>
 
       <div
-        className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"
+        className="mt-2 h-2 overflow-hidden rounded-full bg-white/10"
         role="progressbar"
         aria-valuenow={percent}
         aria-valuemin={0}
@@ -151,8 +151,10 @@ function StepProgress({
       </div>
 
       {/* Zurückspringen ist erlaubt, vorspringen nicht — sonst landet man in
-          einem Schritt, dessen Voraussetzungen fehlen. */}
-      <ol className="mt-3 flex list-none flex-wrap gap-x-4 gap-y-1">
+          einem Schritt, dessen Voraussetzungen fehlen. Die Flächen sind Knöpfe
+          und müssen sich auch auf dem Handy treffen lassen: mindestens 44 px
+          hoch, nicht die 16 px, die reiner Text ergibt. */}
+      <ol className="mt-3 flex list-none flex-wrap gap-x-1 gap-y-1">
         {STEPS.map((step, index) => {
           const done = index < current;
           const reachable = index <= maxReached;
@@ -164,16 +166,16 @@ function StepProgress({
                 disabled={!reachable}
                 aria-current={index === current ? 'step' : undefined}
                 className={cn(
-                  'flex items-center gap-1.5 rounded text-xs transition-colors',
+                  'flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 text-sm transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold',
                   index === current
                     ? 'font-semibold text-pepe-gold'
                     : reachable
-                      ? 'text-gray-400 hover:text-white'
+                      ? 'text-gray-400 hover:bg-white/5 hover:text-white'
                       : 'cursor-default text-gray-600'
                 )}
               >
-                {done && <Check className="h-3 w-3" aria-hidden="true" />}
+                {done && <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />}
                 {step.short}
               </button>
             </li>
@@ -190,6 +192,7 @@ function Field({
   required,
   error,
   hint,
+  showOptional = true,
   children,
 }: {
   id: string;
@@ -197,6 +200,11 @@ function Field({
   required?: boolean;
   error?: string;
   hint?: string;
+  /**
+   * Ob „optional" am Feld steht. In Schritt 3 ist der ganze Schritt freiwillig;
+   * dort stand die Marke sechsmal untereinander und sagte jedes Mal dasselbe.
+   */
+  showOptional?: boolean;
   children: React.ReactNode;
 }) {
   const hintId = hint ? `${id}-hint` : undefined;
@@ -209,18 +217,18 @@ function Field({
           <span className="ml-1 text-pepe-gold" aria-hidden="true">
             *
           </span>
-        ) : (
+        ) : showOptional ? (
           <span className="ml-1.5 text-xs font-normal text-gray-500">optional</span>
-        )}
+        ) : null}
       </Label>
-      <div className="mt-1.5">{children}</div>
+      <div className="mt-2">{children}</div>
       {hint && (
-        <p id={hintId} className="mt-1 text-xs text-gray-500">
+        <p id={hintId} className="mt-1.5 text-xs text-gray-500">
           {hint}
         </p>
       )}
       {error && (
-        <p id={errorId} className="mt-1 text-xs text-red-400">
+        <p id={errorId} className="mt-1.5 text-xs text-red-400">
           {error}
         </p>
       )}
@@ -230,6 +238,54 @@ function Field({
 
 const inputClass =
   'w-full rounded-lg border border-white/15 bg-pepe-surface px-3 py-2.5 text-white placeholder:text-gray-600 focus:border-pepe-gold focus:outline-none focus:ring-1 focus:ring-pepe-gold';
+
+/**
+ * Auswahlliste im Look der Eingabefelder.
+ *
+ * Ohne `appearance-none` zeichnet das Betriebssystem den Kasten selbst: andere
+ * Höhe, andere Rundung, anderer Hintergrund als das Eingabefeld daneben. Der
+ * Pfeil kommt deshalb als eigenes Icon obendrauf.
+ *
+ * Nicht als Hintergrundbild über `bg-[url(…)]`: Eine Daten-URL enthält
+ * Leerzeichen und Schrägstriche, an denen Tailwind den Klassennamen nicht mehr
+ * erkennt. Die Utility wird dann gar nicht erst erzeugt, und die Klasse wirkt
+ * stillschweigend nicht — im gebauten CSS nachgeprüft.
+ *
+ * `color-scheme: dark` gilt der aufgeklappten Liste: Die zeichnet das
+ * Betriebssystem, und ohne den Hinweis blitzt sie weiss auf.
+ */
+function SelectField({
+  id,
+  value,
+  onChange,
+  options,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: readonly { value: string | number; label: string }[];
+}) {
+  return (
+    <div className="relative">
+      <select
+        id={id}
+        className={cn(inputClass, 'min-h-[46px] cursor-pointer appearance-none pr-10 [color-scheme:dark]')}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={String(o.value)}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
 
 export function ProfileWizard({
   profile,
@@ -270,7 +326,19 @@ export function ProfileWizard({
     touched && missing.includes(field) ? `${FIELD_LABELS[field]} fehlt noch.` : undefined;
 
   return (
-    <div className="space-y-6">
+    /*
+     * Lesebreite begrenzen. Der Dashboard-Rahmen gibt bis zu 72rem her; ein
+     * Eingabefeld für „Straße und Hausnummer" über die volle Breite ist
+     * unbrauchbar, und Fliesstext über etwa 90 Zeichen liest sich schlecht.
+     * Nur der letzte Schritt darf breiter werden, dort stehen Formular und
+     * die zwei Vorschaukarten nebeneinander.
+     */
+    <div
+      className={cn(
+        'mx-auto w-full space-y-6',
+        step === STEPS.length - 1 ? 'max-w-5xl' : 'max-w-2xl'
+      )}
+    >
       <StepProgress current={step} onJump={goTo} maxReached={maxReached} />
 
       {error && (
@@ -279,15 +347,15 @@ export function ProfileWizard({
         </p>
       )}
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-        <h2 className="font-display text-xl font-semibold text-white">{STEPS[step].title}</h2>
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-7">
+        <h2 className="font-display text-xl font-semibold text-white sm:text-2xl">{STEPS[step].title}</h2>
 
         {/* ---------------- Schritt 1: Person ---------------- */}
         {step === 0 && (
           <>
             <p className="mt-1.5 text-sm text-gray-400">
-              Nur das Nötigste. Die Adresse braucht die Agentur, um die Anfahrt zu berechnen — sie
-              wird nicht öffentlich gezeigt.
+              Nur das Nötigste. Die Adresse braucht die Agentur, um die Anfahrt zu berechnen.
+              Öffentlich gezeigt wird sie nicht.
             </p>
             <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
               <Field id="w-name" label="Künstlername oder Name" required error={errorFor('name')}>
@@ -365,7 +433,7 @@ export function ProfileWizard({
             </p>
             <fieldset className="mt-5">
               <legend className="sr-only">Disziplinen</legend>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {availableDisciplines.map((d) => {
                   const active = profile.disciplines.includes(d);
                   return (
@@ -381,14 +449,16 @@ export function ProfileWizard({
                         })
                       }
                       className={cn(
-                        'rounded-full border px-4 py-2 text-sm transition-colors',
+                        // min-h-[44px]: Eine Auswahlfläche muss sich mit dem
+                        // Daumen treffen lassen. Mit py-2 kam sie auf 34 px.
+                        'inline-flex min-h-[44px] items-center rounded-full border px-4 text-sm transition-colors',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold',
                         active
                           ? 'border-pepe-gold/50 bg-pepe-gold/15 text-pepe-gold'
                           : 'border-white/15 text-gray-300 hover:bg-white/5 hover:text-white'
                       )}
                     >
-                      {active && <Check className="mr-1.5 inline h-3.5 w-3.5" aria-hidden="true" />}
+                      {active && <Check className="mr-1.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />}
                       {d}
                     </button>
                   );
@@ -407,96 +477,77 @@ export function ProfileWizard({
         {/* ---------------- Schritt 3: Erfahrung ---------------- */}
         {step === 2 && (
           <>
+            {/* Einmal gesagt statt sechsmal als Marke an jedem Feld. */}
             <p className="mt-1.5 text-sm text-gray-400">
-              Freiwillig — aber diese Angaben bestimmen deine Gage. Ohne sie rechnet die Agentur mit
-              dem Grundwert. Du kannst sie jederzeit nachtragen.
+              Dieser Schritt ist ganz freiwillig. Die Angaben bestimmen aber deine Gage: Ohne sie
+              rechnet die Agentur mit dem Grundwert. Du kannst sie jederzeit nachtragen.
             </p>
-            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <Field id="w-exp" label="Bühnenerfahrung">
-                <select
+            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <Field id="w-exp" label="Bühnenerfahrung" showOptional={false}>
+                <SelectField
                   id="w-exp"
-                  className={inputClass}
                   value={profile.stageExperience}
-                  onChange={(e) => setProfile({ stageExperience: e.target.value })}
-                >
-                  {stageExperienceOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setProfile({ stageExperience: v })}
+                  options={stageExperienceOptions}
+                />
               </Field>
-              <Field id="w-empl" label="Wie oft trittst du auf?">
-                <select
+              <Field id="w-empl" label="Wie oft trittst du auf?" showOptional={false}>
+                <SelectField
                   id="w-empl"
-                  className={inputClass}
                   value={profile.employmentType}
-                  onChange={(e) => setProfile({ employmentType: e.target.value })}
-                >
-                  {employmentTypeOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setProfile({ employmentType: v })}
+                  options={employmentTypeOptions}
+                />
               </Field>
-              <Field id="w-awards" label="Auszeichnungen">
-                <select
+              <Field id="w-awards" label="Auszeichnungen" showOptional={false}>
+                <SelectField
                   id="w-awards"
-                  className={inputClass}
                   value={profile.awardsLevel}
-                  onChange={(e) => setProfile({ awardsLevel: e.target.value })}
-                >
-                  {awardsOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setProfile({ awardsLevel: v })}
+                  options={awardsOptions}
+                />
               </Field>
-              <Field id="w-years" label="Schon bei Pepe Shows?">
-                <select
+              <Field id="w-years" label="Schon bei Pepe Shows?" showOptional={false}>
+                <SelectField
                   id="w-years"
-                  className={inputClass}
                   value={String(profile.pepeYears)}
-                  onChange={(e) => setProfile({ pepeYears: Number(e.target.value) })}
-                >
-                  {pepeYearsOptions.map((o) => (
-                    <option key={o.value} value={String(o.value)}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setProfile({ pepeYears: Number(v) })}
+                  options={pepeYearsOptions}
+                />
               </Field>
             </div>
 
-            <div className="mt-5 space-y-3">
-              {[
-                {
-                  key: 'circusEducation' as const,
-                  label: 'Ich habe eine Zirkus- oder Artistikausbildung',
-                  value: profile.circusEducation,
-                },
-                {
-                  key: 'pepeExclusivity' as const,
-                  label: 'Ich trete ausschliesslich über Pepe Shows auf',
-                  value: profile.pepeExclusivity,
-                },
-              ].map((item) => (
-                <label
-                  key={item.key}
-                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 p-3 transition-colors hover:bg-white/5"
-                >
-                  <input
-                    type="checkbox"
-                    checked={item.value}
-                    onChange={(e) => setProfile({ [item.key]: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[var(--pepe-gold)]"
-                  />
-                  <span className="text-sm text-gray-200">{item.label}</span>
-                </label>
-              ))}
-            </div>
+            {/* Abgesetzt: Das sind Ja-Nein-Fragen, keine weiteren Auswahllisten. */}
+            <fieldset className="mt-7 border-t border-white/10 pt-6">
+              <legend className="sr-only">Ausbildung und Exklusivität</legend>
+              <div className="space-y-3">
+                {[
+                  {
+                    key: 'circusEducation' as const,
+                    label: 'Ich habe eine Zirkus- oder Artistikausbildung',
+                    value: profile.circusEducation,
+                  },
+                  {
+                    key: 'pepeExclusivity' as const,
+                    label: 'Ich trete ausschliesslich über Pepe Shows auf',
+                    value: profile.pepeExclusivity,
+                  },
+                ].map((item) => (
+                  <label
+                    key={item.key}
+                    className="flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border border-white/10 px-4 py-3 transition-colors hover:border-white/20 hover:bg-white/5"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.value}
+                      onChange={(e) => setProfile({ [item.key]: e.target.checked })}
+                      className="h-5 w-5 flex-shrink-0 accent-[var(--pepe-gold)]"
+                    />
+                    <span className="text-sm text-gray-200">{item.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
           </>
         )}
 
@@ -504,7 +555,7 @@ export function ProfileWizard({
         {step === 3 && (
           <>
             <p className="mt-1.5 text-sm text-gray-400">
-              Rechts siehst du live, was daraus wird. Beides ist freiwillig — du kannst auch ohne
+              Rechts siehst du live, was daraus wird. Beides ist freiwillig. Du kannst auch ohne
               Bild einreichen und es später nachlegen.
             </p>
 
@@ -662,61 +713,69 @@ export function ProfileWizard({
         )}
       </div>
 
-      {/* Steuerung. Auf dem Handy untereinander, damit die Flächen gross bleiben. */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          onClick={() => goTo(Math.max(0, step - 1))}
-          disabled={step === 0 || saving}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Zurück
-        </button>
+      {/*
+       * Steuerung. Vorher klebte sie ohne Trennung an der Kartenunterkante, und
+       * „Später ausfüllen" stand unter „Weiter" — zwei gleich grosse Flächen
+       * untereinander lesen sich wie zwei Hauptknöpfe. Jetzt steht der Ausweg
+       * links, klein, und der Hauptweg rechts.
+       *
+       * `flex-col-reverse` auf dem Handy: Der Hauptknopf gehört nach oben, in
+       * Daumenreichweite, nicht ans Ende der Liste.
+       */}
+      <div className="flex flex-col-reverse gap-3 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => goTo(Math.max(0, step - 1))}
+            disabled={step === 0 || saving}
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-white/15 px-4 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Zurück
+          </button>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          {step === STEPS.length - 1 ? (
-            <button
-              type="button"
-              onClick={() => void onSubmit()}
-              disabled={saving || missing.length > 0}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-pepe-gold px-5 py-2.5 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Send className="h-4 w-4" aria-hidden="true" />
-              )}
-              {saving ? 'Wird gesendet…' : 'Zur Prüfung einreichen'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void handleNext()}
-              disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-pepe-gold px-5 py-2.5 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              )}
-              {saving ? 'Speichert…' : 'Weiter'}
-            </button>
-          )}
-
-          {/* Der Ausweg für Schritt 3 und 4: weiter, ohne etwas auszufüllen. */}
+          {/* Der Ausweg für den Erfahrungs-Schritt: weiter, ohne etwas auszufüllen. */}
           {step === 2 && (
             <button
               type="button"
               onClick={() => void handleNext()}
               disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg px-3 text-sm text-gray-500 underline-offset-4 transition-colors hover:text-gray-200 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold"
             >
               Später ausfüllen
             </button>
           )}
         </div>
+
+        {step === STEPS.length - 1 ? (
+          <button
+            type="button"
+            onClick={() => void onSubmit()}
+            disabled={saving || missing.length > 0}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-pepe-gold px-6 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Send className="h-4 w-4" aria-hidden="true" />
+            )}
+            {saving ? 'Wird gesendet…' : 'Zur Prüfung einreichen'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void handleNext()}
+            disabled={saving}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-pepe-gold px-6 text-sm font-semibold text-pepe-black transition-colors hover:bg-pepe-gold-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pepe-gold focus-visible:ring-offset-2 focus-visible:ring-offset-pepe-coal disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            )}
+            {saving ? 'Speichert…' : 'Weiter'}
+          </button>
+        )}
       </div>
 
       <p className="flex items-start gap-2 text-xs text-gray-500">

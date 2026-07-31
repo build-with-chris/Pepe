@@ -126,6 +126,23 @@ describe('ProfileWizard', () => {
     );
   });
 
+  it('nennt den Titel des Schritts genau einmal', () => {
+    render(<Harness />);
+    // Stand vorher zweimal: rechts in der Fortschrittszeile und als Überschrift.
+    expect(screen.getAllByText('Wer bist du?')).toHaveLength(1);
+  });
+
+  it('markiert in Schritt 3 nicht jedes Feld einzeln als optional', async () => {
+    render(<Harness initial={{ ...completeProfile, disciplines: [] }} />);
+    await click(screen.getByRole('button', { name: 'Jonglage' }));
+    await click(screen.getByRole('button', { name: /Weiter/ }));
+    await waitFor(() => expect(currentStep()).toBe('Deine Erfahrung'));
+
+    // Der ganze Schritt ist freiwillig, das steht einmal im Einleitungssatz.
+    expect(screen.queryAllByText('optional')).toHaveLength(0);
+    expect(screen.getByText(/Dieser Schritt ist ganz freiwillig/)).toBeInTheDocument();
+  });
+
   it('geht ohne Pflichtangabe nicht weiter und nennt die fehlenden Felder', async () => {
     const onSaveDraft = vi.fn(async () => true);
     render(<Harness onSaveDraft={onSaveDraft} />);

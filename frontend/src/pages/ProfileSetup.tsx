@@ -596,9 +596,13 @@ export default function Profile() {
   return (
     <DashboardLayout title={t('profileSetup.title')}>
       <div className="space-y-6">
-        {/* Header with actions */}
+        {/* Header with actions. Der Untertitel spricht vom Verwalten — das
+            passt zum Bearbeiten, nicht zur ersten Anmeldung. Im Assistenten
+            steht ohnehin in jedem Schritt, worum es geht. */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <p className="text-gray-400">{t('profileSetup.subtitle', { defaultValue: 'Verwalte dein Künstlerprofil und Informationen' })}</p>
+          {!useWizard && (
+            <p className="text-gray-400">{t('profileSetup.subtitle', { defaultValue: 'Verwalte dein Künstlerprofil und Informationen' })}</p>
+          )}
           {locked && (
             <Button
               ref={unlockBtnRef}
@@ -631,17 +635,21 @@ export default function Profile() {
           </div>
         )}
 
-        {/* Status Banner */}
-        <ProfileStatusBanner
-          status={approvalStatus}
-          rejectionReason={rejectionReason}
-          className="rounded-xl"
-          onEdit={() => { setLocked(false); setSuccess(false); }}
-          onOpenGuidelines={() => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-          }}
-          supportEmail="info@pepeshows.de"
-        />
+        {/* Status Banner. Im Assistenten sagt er dasselbe wie der Schritt
+            darunter — „noch nicht eingereicht" steht dort schon im Fortschritt.
+            Drei Überschriften vor der ersten Frage sind zwei zu viel. */}
+        {!useWizard && (
+          <ProfileStatusBanner
+            status={approvalStatus}
+            rejectionReason={rejectionReason}
+            className="rounded-xl"
+            onEdit={() => { setLocked(false); setSuccess(false); }}
+            onOpenGuidelines={() => {
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }}
+            supportEmail="info@pepeshows.de"
+          />
+        )}
 
         {!profileLoaded ? (
           <p className="rounded-2xl border border-white/10 bg-white/5 p-5 text-gray-400" role="status">
@@ -729,7 +737,9 @@ export default function Profile() {
         </>
         )}
 
-        {/* Danger Zone */}
+        {/* Danger Zone. Nicht während der Anmeldung: Wer sich gerade einträgt,
+            braucht keinen Knopf zum Löschen direkt unter „Weiter". */}
+        {!useWizard && (
         <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-6">
           <div className="flex items-start gap-4">
             <div className="p-2 rounded-lg bg-red-500/10">
@@ -750,6 +760,7 @@ export default function Profile() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Debug Info */}
         {backendDebug && (
