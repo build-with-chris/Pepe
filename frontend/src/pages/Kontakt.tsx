@@ -90,13 +90,23 @@ const CONTACTS = [
   },
 ];
 
+/**
+ * Kundenlogos mit optischem Ausgleich.
+ *
+ * Alle auf dieselbe Höhe zu setzen ist der naheliegende Fehler: Gemessen kam
+ * das Porsche-Wappen dann auf 28 Pixel Breite und der AstraZeneca-Schriftzug
+ * auf 144. Das eine verschwindet, das andere erschlägt die Reihe. Ein Wappen
+ * darf höher stehen als eine Wortmarke, damit beide gleich gross *wirken*.
+ *
+ * `h` ist deshalb je Logo gesetzt, nicht global.
+ */
 const CLIENTS = [
-  { src: '/images/Logos/Porsche.png', alt: 'Porsche' },
-  { src: '/images/Logos/google.svg', alt: 'Google' },
-  { src: '/images/Logos/mcdonalds.svg', alt: "McDonald's" },
-  { src: '/images/Logos/astrazeneca.svg', alt: 'AstraZeneca' },
-  { src: '/images/Logos/tollwood.svg', alt: 'Tollwood Festival' },
-  { src: '/images/Logos/european-championships.svg', alt: 'European Championships' },
+  { src: '/images/Logos/Porsche.png', alt: 'Porsche', h: 'h-11' },
+  { src: '/images/Logos/google.svg', alt: 'Google', h: 'h-7' },
+  { src: '/images/Logos/mcdonalds.svg', alt: "McDonald's", h: 'h-9' },
+  { src: '/images/Logos/astrazeneca.svg', alt: 'AstraZeneca', h: 'h-6' },
+  { src: '/images/Logos/tollwood.svg', alt: 'Tollwood Festival', h: 'h-7' },
+  { src: '/images/Logos/european-championships.svg', alt: 'European Championships', h: 'h-10' },
 ];
 
 export default function Kontakt() {
@@ -202,14 +212,14 @@ export default function Kontakt() {
       {/* ---------- Aufmacher: was hier passiert und wie lange es dauert ---------- */}
       <section className="section-hero-compact bg-gradient-dark">
         <div className="stage-container">
-          <div className="mx-auto max-w-3xl py-10 text-center sm:py-14">
+          <div className="mx-auto max-w-4xl py-12 text-center sm:py-16">
             <p className="text-sm font-semibold uppercase tracking-wider text-pepe-gold">
               {t('kontakt.hero.kicker', 'Künstler für Ihre Veranstaltung')}
             </p>
-            <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight text-white sm:text-5xl">
+            <h1 className="mt-4 text-balance font-display text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl">
               {t('kontakt.hero.title', 'Ihr Angebot binnen 24 Stunden')}
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-gray-300">
+            <p className="mx-auto mt-5 max-w-2xl text-balance text-lg leading-relaxed text-gray-300">
               {t(
                 'kontakt.hero.description',
                 'Firmenfeiern, Incentives, öffentliche Feste und private Anlässe. Sagen Sie uns, was ansteht, und Sie bekommen eine Auswahl passender Künstlerinnen und Künstler mit Preisen.'
@@ -244,11 +254,11 @@ export default function Kontakt() {
           </p>
           <ul className="mt-7 flex list-none flex-wrap items-center justify-center gap-x-10 gap-y-7 pl-0 sm:gap-x-14">
             {CLIENTS.map((c) => (
-              <li key={c.alt}>
+              <li key={c.alt} className="flex h-12 items-center">
                 <img
                   src={c.src}
                   alt={c.alt}
-                  className="h-8 w-auto opacity-75 brightness-0 invert transition-opacity hover:opacity-100 sm:h-9"
+                  className={`${c.h} w-auto max-w-[150px] object-contain opacity-75 brightness-0 invert transition-opacity hover:opacity-100`}
                   loading="lazy"
                 />
               </li>
@@ -294,11 +304,11 @@ export default function Kontakt() {
                   </div>
                 </div>
 
-                <p className="mt-5 flex-1 text-sm leading-relaxed text-gray-400">
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-gray-400">
                   {t(c.forKey, c.forFallback)}
                 </p>
 
-                <dl className="mt-5 space-y-3 border-t border-white/10 pt-5 text-sm">
+                <dl className="mt-5 space-y-2.5 border-t border-white/10 pt-4 text-sm">
                   <div className="flex items-start gap-3">
                     <Mail
                       className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500"
@@ -337,7 +347,16 @@ export default function Kontakt() {
       {/* ---------- Die drei Wege, mit Aufwand und Antwortzeit ---------- */}
       <section className="section bg-pepe-ink">
         <div className="stage-container">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-3xl font-bold leading-tight text-white">
+              {t('kontakt.routes.title', 'Drei Wege zum Angebot')}
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-gray-400">
+              {t('kontakt.routes.intro', 'Suchen Sie sich aus, was Ihnen am wenigsten Aufwand macht.')}
+            </p>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-3">
               {routes.map(({ icon: Icon, title, meta, body, cta, to, href, primary }) => (
                 <div
                   key={title}
@@ -385,14 +404,18 @@ export default function Kontakt() {
               {t('kontakt.facts.title', 'Das Kaufmännische auf einen Blick')}
             </h2>
             <p className="mt-4 text-base leading-relaxed text-gray-400">
-              {t(
-                'kontakt.facts.intro',
-                'Damit Sie nicht erst nachfragen müssen. Es gelten unsere AGB.'
-              )}
+              {t('kontakt.facts.intro', 'Damit Sie nicht erst nachfragen müssen. Es gelten unsere')}{' '}
+              <Link
+                to="/agb"
+                className="text-gray-300 underline underline-offset-4 hover:text-pepe-gold"
+              >
+                {t('kontakt.facts.terms', 'AGB')}
+              </Link>
+              .
             </p>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-x-10 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
             {facts.map(({ icon: Icon, title, body }) => (
               <div key={title} className="flex gap-4">
                 <Icon className="mt-0.5 h-5 w-5 flex-shrink-0 text-pepe-gold" aria-hidden="true" />
@@ -404,19 +427,17 @@ export default function Kontakt() {
             ))}
           </div>
 
-          <p className="mt-10 text-center text-sm text-gray-500">
-            <Link to="/agb" className="underline-offset-4 hover:text-gray-300 hover:underline">
-              {t('kontakt.facts.terms', 'Vollständige AGB lesen')}
-            </Link>
-          </p>
         </div>
       </section>
 
-      {/* ---------- Was eine Anfrage vollständig macht ---------- */}
-      <section className="section">
+      {/* ---------- Was eine Anfrage vollständig macht ----------
+           `bg-pepe-ink`: Der Abschnitt davor hat keinen eigenen Grund. Ohne den
+           Wechsel stossen zwei gleich helle Flächen mit je 64 Pixel Polsterung
+           aneinander, und aus der Kante wird ein Loch von 128 Pixeln. */}
+      <section className="section bg-pepe-ink">
         <div className="stage-container">
           <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16">
-            <div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8">
               <h2 className="font-display text-3xl font-bold leading-tight text-white">
                 {t('kontakt.briefing.title', 'Das brauchen wir von Ihnen')}
               </h2>

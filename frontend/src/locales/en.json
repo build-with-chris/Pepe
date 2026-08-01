@@ -1571,12 +1571,14 @@
         "title": "Call",
         "meta": "Monday to Friday, 9 to 17",
         "body": "When it has to be quick, or when you first want to sort out what fits at all."
-      }
+      },
+      "title": "Three ways to a quote",
+      "intro": "Pick whichever costs you the least effort."
     },
     "facts": {
       "title": "The commercial terms at a glance",
-      "intro": "So you do not have to ask first. Our terms and conditions apply.",
-      "terms": "Read the full terms",
+      "intro": "So you do not have to ask first. Our",
+      "terms": "terms and conditions",
       "payment": {
         "title": "Payment by invoice",
         "body": "Net 14 days after invoicing."

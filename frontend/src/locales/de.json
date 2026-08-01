@@ -1439,12 +1439,14 @@
         "title": "Anrufen",
         "meta": "Montag bis Freitag, 9 bis 17 Uhr",
         "body": "Wenn es schnell gehen muss oder Sie erst sortieren wollen, was überhaupt passt."
-      }
+      },
+      "title": "Drei Wege zum Angebot",
+      "intro": "Suchen Sie sich aus, was Ihnen am wenigsten Aufwand macht."
     },
     "facts": {
       "title": "Das Kaufmännische auf einen Blick",
-      "intro": "Damit Sie nicht erst nachfragen müssen. Es gelten unsere AGB.",
-      "terms": "Vollständige AGB lesen",
+      "intro": "Damit Sie nicht erst nachfragen müssen. Es gelten unsere",
+      "terms": "AGB",
       "payment": {
         "title": "Zahlung auf Rechnung",
         "body": "14 Tage netto nach Rechnungsstellung."
