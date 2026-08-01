@@ -99,6 +99,10 @@ const CONTACTS = [
  * darf höher stehen als eine Wortmarke, damit beide gleich gross *wirken*.
  *
  * `h` ist deshalb je Logo gesetzt, nicht global.
+ *
+ * Die Logos stehen in ihren Markenfarben. Ein weisses Logo-Band waere ruhiger,
+ * aber das Porsche-Wappen wird darin zur leeren Silhouette, und gerade die
+ * bekannten Namen sollen ein Einkaeufer im Vorbeiscrollen erkennen.
  */
 const CLIENTS = [
   { src: '/images/Logos/Porsche.png', alt: 'Porsche', h: 'h-11' },
@@ -258,7 +262,7 @@ export default function Kontakt() {
                 <img
                   src={c.src}
                   alt={c.alt}
-                  className={`${c.h} w-auto max-w-[150px] object-contain opacity-75 brightness-0 invert transition-opacity hover:opacity-100`}
+                  className={`${c.h} w-auto max-w-[150px] object-contain opacity-90 transition-opacity hover:opacity-100`}
                   loading="lazy"
                 />
               </li>
