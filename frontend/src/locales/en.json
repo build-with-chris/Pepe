@@ -1498,8 +1498,10 @@
   },
   "kontakt": {
     "hero": {
-      "title": "Contact",
-      "description": "We are here for you."
+      "title": "Your quote within 24 hours",
+      "description": "Company parties, incentives, public festivals and private occasions. Tell us what is coming up and you get a selection of matching performers with prices.",
+      "kicker": "Performers for your event",
+      "primary": "Request a quote"
     },
     "booking": {
       "title": "Quick & easy to your show",
@@ -1532,12 +1534,87 @@
       }
     },
     "clients": {
-      "title": "These clients trust Pepe"
+      "title": "We have worked for these companies"
     },
     "cta": {
-      "title": "Ready for your show?",
-      "booking_button": "Start booking assistant",
-      "email_button": "Direct email"
+      "title": "Tell us what is coming up",
+      "booking_button": "Request a quote",
+      "email_button": "Rather write",
+      "body": "Three minutes for the enquiry, a quote within 24 hours. Non-binding."
+    },
+    "person": {
+      "title": "Who handles what",
+      "intro": "So your question reaches the person who can answer it.",
+      "hours": "Available Monday to Friday, 9 to 17",
+      "christoph": {
+        "role": "Enquiries, details and contract",
+        "for": "Quote, date, terms and everything in writing."
+      },
+      "michael": {
+        "role": "Artistic questions and feasibility",
+        "for": "What works on your floor, under your ceiling, in your schedule."
+      }
+    },
+    "routes": {
+      "assistant": {
+        "title": "Request a quote",
+        "meta": "About 3 minutes, quote within 24 hours",
+        "body": "Enter occasion, date, place and setting. You get a selection of matching performers with prices, non-binding.",
+        "cta": "Start enquiry"
+      },
+      "mail": {
+        "title": "Write",
+        "meta": "Usually answered within 24 hours",
+        "body": "For tenders, framework agreements and anything a form cannot capture."
+      },
+      "phone": {
+        "title": "Call",
+        "meta": "Monday to Friday, 9 to 17",
+        "body": "When it has to be quick, or when you first want to sort out what fits at all."
+      }
+    },
+    "facts": {
+      "title": "The commercial terms at a glance",
+      "intro": "So you do not have to ask first. Our terms and conditions apply.",
+      "terms": "Read the full terms",
+      "payment": {
+        "title": "Payment by invoice",
+        "body": "Net 14 days after invoicing."
+      },
+      "cancel": {
+        "title": "Free cancellation up to 30 days",
+        "body": "Free of charge up to 30 days before the event."
+      },
+      "contract": {
+        "title": "Confirmed in writing",
+        "body": "The contract comes into effect with our written confirmation, not before."
+      },
+      "replacement": {
+        "title": "Replacement if someone drops out",
+        "body": "If a performer cannot make it, we provide an equivalent act. Your programme stands."
+      },
+      "area": {
+        "title": "German-speaking countries",
+        "body": "Germany, Austria and Switzerland. Beyond that on request."
+      },
+      "short": {
+        "title": "Short notice possible",
+        "body": "If an act drops out or a date comes up: ask, it often still works."
+      }
+    },
+    "briefing": {
+      "title": "What we need from you",
+      "intro": "The more of this is in your first message, the more precise the quote. If something is missing, we will ask.",
+      "date": "Date and time, an alternative date helps",
+      "place": "Place and type of venue, indoors or outdoors",
+      "occasion": "Occasion and rough number of guests",
+      "format": "Desired length, and whether stage, walking act or both",
+      "budget": "Budget range, if you already have one"
+    },
+    "space": {
+      "title": "The PepeDome",
+      "body": "Our venue in Ostpark Munich. We rehearse here, we show programmes here, and you can watch an act before you book it.",
+      "button": "Plan route"
     }
   },
   "mediamaterialNew": {

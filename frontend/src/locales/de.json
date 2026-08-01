@@ -1366,8 +1366,10 @@
   },
   "kontakt": {
     "hero": {
-      "title": "Kontakt",
-      "description": "Wir sind für dich da."
+      "title": "Ihr Angebot binnen 24 Stunden",
+      "description": "Firmenfeiern, Incentives, öffentliche Feste und private Anlässe. Sagen Sie uns, was ansteht, und Sie bekommen eine Auswahl passender Künstlerinnen und Künstler mit Preisen.",
+      "kicker": "Künstler für Ihre Veranstaltung",
+      "primary": "Angebot anfordern"
     },
     "booking": {
       "title": "Schnell & einfach zur Show",
@@ -1400,12 +1402,87 @@
       }
     },
     "clients": {
-      "title": "Diese Kunden vertrauen auf Pepe"
+      "title": "Für diese Häuser haben wir schon gearbeitet"
     },
     "cta": {
-      "title": "Bereit für Ihre Show?",
-      "booking_button": "Booking-Assistent starten",
-      "email_button": "Direkte E-Mail"
+      "title": "Sagen Sie uns, was ansteht",
+      "booking_button": "Angebot anfordern",
+      "email_button": "Lieber schreiben",
+      "body": "Drei Minuten für die Anfrage, ein Angebot binnen 24 Stunden. Unverbindlich."
+    },
+    "person": {
+      "title": "Wer bei uns wofür zuständig ist",
+      "intro": "Damit Ihre Frage direkt bei dem landet, der sie beantworten kann.",
+      "hours": "Erreichbar Montag bis Freitag, 9 bis 17 Uhr",
+      "christoph": {
+        "role": "Anfragen, Details und Vertrag",
+        "for": "Angebot, Termin, Konditionen und alles Schriftliche."
+      },
+      "michael": {
+        "role": "Künstlerisches und Machbarkeit",
+        "for": "Was geht auf Ihrer Fläche, unter Ihrer Decke, in Ihrem Ablauf."
+      }
+    },
+    "routes": {
+      "assistant": {
+        "title": "Angebot anfordern",
+        "meta": "Rund 3 Minuten, Angebot binnen 24 Stunden",
+        "body": "Anlass, Datum, Ort und Rahmen eingeben. Sie bekommen eine Auswahl passender Künstlerinnen und Künstler mit Preisen, unverbindlich.",
+        "cta": "Anfrage starten"
+      },
+      "mail": {
+        "title": "Schreiben",
+        "meta": "Antwort in der Regel binnen 24 Stunden",
+        "body": "Für Ausschreibungen, Rahmenverträge und alles, was ein Formular nicht abbildet."
+      },
+      "phone": {
+        "title": "Anrufen",
+        "meta": "Montag bis Freitag, 9 bis 17 Uhr",
+        "body": "Wenn es schnell gehen muss oder Sie erst sortieren wollen, was überhaupt passt."
+      }
+    },
+    "facts": {
+      "title": "Das Kaufmännische auf einen Blick",
+      "intro": "Damit Sie nicht erst nachfragen müssen. Es gelten unsere AGB.",
+      "terms": "Vollständige AGB lesen",
+      "payment": {
+        "title": "Zahlung auf Rechnung",
+        "body": "14 Tage netto nach Rechnungsstellung."
+      },
+      "cancel": {
+        "title": "Storno bis 30 Tage vorher",
+        "body": "Bis 30 Tage vor der Veranstaltung kostenfrei."
+      },
+      "contract": {
+        "title": "Schriftlich bestätigt",
+        "body": "Der Vertrag kommt mit unserer schriftlichen Bestätigung zustande, nicht vorher."
+      },
+      "replacement": {
+        "title": "Ersatz bei Ausfall",
+        "body": "Fällt jemand aus, stellen wir einen gleichwertigen Act. Ihr Programm steht."
+      },
+      "area": {
+        "title": "Deutschsprachiger Raum",
+        "body": "Deutschland, Österreich und Schweiz. Darüber hinaus auf Anfrage."
+      },
+      "short": {
+        "title": "Auch kurzfristig",
+        "body": "Wenn ein Act abspringt oder ein Termin dazukommt: fragen Sie an, oft geht es noch."
+      }
+    },
+    "briefing": {
+      "title": "Das brauchen wir von Ihnen",
+      "intro": "Je mehr davon in der ersten Nachricht steht, desto genauer wird das Angebot. Fehlt etwas, fragen wir nach.",
+      "date": "Datum und Uhrzeit, gern mit Ausweichtermin",
+      "place": "Ort und Art der Location, drinnen oder draussen",
+      "occasion": "Anlass und ungefähre Gästezahl",
+      "format": "Gewünschte Länge und ob Bühne, Walking Act oder beides",
+      "budget": "Budgetrahmen, wenn er schon steht"
+    },
+    "space": {
+      "title": "Der PepeDome",
+      "body": "Unsere Spielstätte im Ostpark München. Hier proben wir, hier zeigen wir Programme, und hier können Sie sich einen Act vorher ansehen.",
+      "button": "Route planen"
     }
   },
   "mediamaterialNew": {

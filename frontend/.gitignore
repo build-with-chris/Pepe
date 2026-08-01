@@ -26,3 +26,7 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Kamera-Originale. Ins Repo kommt nur die verkleinerte Fassung unter
+# public/images/Team/ - siehe CLAUDE.md.
+.originale/
