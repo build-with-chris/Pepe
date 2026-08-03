@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StepContent, ResultStep, type BookingResult } from './BookingWizardSteps'
 import { getApiBaseUrl } from '@/lib/apiBase'
+import {
+  TEAM_SIZES,
+  TEAM_SIZE_LABELS,
+  TEAM_SIZE_PEOPLE,
+  durationMinutes,
+  type TeamSize,
+} from '@/constraints/booking'
 
 interface BookingData {
   // Step 1: Event Type
@@ -49,14 +56,6 @@ interface BookingData {
 
 // Backend expects different field structure - transform new format to old
 function transformToBackendPayload(newData: BookingData) {
-  // Map team sizes to numbers
-  const teamSizeMap: { [key: string]: number } = {
-    'solo': 1,
-    'duo': 2, 
-    'group': 5,
-    'gruppe': 5
-  }
-  
   // Map event types to backend expected values
   const eventTypeMap: { [key: string]: string } = {
     'firmenfeier': 'Firmenfeier',
@@ -64,38 +63,27 @@ function transformToBackendPayload(newData: BookingData) {
     'incentive': 'Incentive',
     'streetshow': 'Streetshow'
   }
-  
-  // Map duration strings to minutes
-  const durationMap: { [key: string]: number } = {
-    '5min': 5,
-    '10min': 10,
-    '15min': 15,
-    '30min': 30,
-    '45min': 45,
-    '60min': 60,
-    '90min': 90,
-    '120min': 120
-  }
-  
-  // Combine address fields if separate fields are used
-  const eventAddress = newData.eventAddress || 
-    (newData.street && newData.postalCode && newData.city ? 
-      `${newData.street}, ${newData.postalCode} ${newData.city}` : 
-      '')
 
-  const parsedCustomDuration = () => {
-    const minutes = parseInt(newData.customDuration, 10)
-    return Number.isFinite(minutes) && minutes > 0 ? minutes : 30
-  }
+  // Combine address fields if separate fields are used
+  const eventAddress = newData.eventAddress ||
+    (newData.street && newData.postalCode && newData.city ?
+      `${newData.street}, ${newData.postalCode} ${newData.city}` :
+      '')
 
   return {
     client_email: newData.email,
     client_name: `${newData.firstName} ${newData.lastName}`.trim(),
+    // Telefonnummer, Unternehmen, Budget und Ortshinweise standen im Formular
+    // schon drin, wurden aber nie mitgeschickt. Bei der Telefonnummer war das
+    // besonders unschön: ein Pflichtfeld, das niemand je zu sehen bekam.
+    client_phone: newData.phone,
+    client_company: newData.company,
     disciplines: newData.performanceStyle,
     // distance_km wird bewusst nicht mitgeschickt — der Server berechnet die
     // Entfernung aus Event-Adresse und Künstler-Koordinaten.
-    duration_minutes: durationMap[newData.duration] || parsedCustomDuration(),
+    duration_minutes: durationMinutes(newData.duration, newData.customDuration),
     event_address: eventAddress,
+    location_details: newData.locationDetails,
     event_date: newData.eventDate,
     event_time: newData.eventTime,
     event_type: eventTypeMap[newData.eventType] || newData.eventType,
@@ -103,10 +91,13 @@ function transformToBackendPayload(newData: BookingData) {
     is_indoor: newData.venueType === 'indoor',
     needs_light: newData.needsLight,
     needs_sound: newData.needsSound,
+    needs_stage_floor: newData.needsStageFloor,
+    needs_rigging: newData.needsRigging,
     newsletter_opt_in: newData.marketingConsent,
     number_of_guests: parseInt(newData.guestCount) || 0,
     special_requests: newData.message,
-    team_size: teamSizeMap[newData.teamSize] || 1,
+    team_size: TEAM_SIZE_PEOPLE[newData.teamSize as TeamSize] || 1,
+    budget_range: newData.budget,
     planning_status: newData.planningStatus,
     timestamp: new Date().toISOString(),
     source: 'booking-wizard'
@@ -155,6 +146,10 @@ export default function BookingWizard() {
   const [result, setResult] = useState<BookingResult | null>(null)
   const wizardRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState<BookingData>(EMPTY_FORM_DATA)
+  // Schlüssel für genau diese Anfrage. Er bleibt über Fehlversuche hinweg
+  // gleich, damit ein zweiter Anlauf keine zweite Anfrage anlegt, und wird nach
+  // einem erfolgreichen Absenden verworfen.
+  const idempotencyKey = useRef<string | null>(null)
 
   const totalSteps = 7
 
@@ -192,26 +187,26 @@ export default function BookingWizard() {
     }
   ]
 
-  const teamSizes = [
-    {
-      value: 'solo',
+  // Reihenfolge und Werte kommen aus TEAM_SIZES, damit sie nicht von der
+  // Zusammenfassung abweichen können.
+  const teamSizeDetails: Record<TeamSize, { label: string; image: string; description: string }> = {
+    solo: {
       label: t('booking.artistCount.options.solo') || 'Solo Performance',
       image: '/images/teamSizes/Solo.webp',
       description: t('about1.cards.solo.b1') || 'Ein Künstler für intime Auftritte'
     },
-    {
-      value: 'duo', 
+    duo: {
       label: t('booking.artistCount.options.duo') || 'Duo Act',
       image: '/images/teamSizes/Duo.webp',
       description: 'Zwei Künstler für dynamische Shows'
     },
-    {
-      value: 'gruppe',
+    gruppe: {
       label: t('booking.artistCount.options.group') || 'Gruppe',
-      image: '/images/teamSizes/Gruppe.webp', 
+      image: '/images/teamSizes/Gruppe.webp',
       description: t('about1.cards.variete.b1') || 'Mehrere Künstler für große Events'
     }
-  ]
+  }
+  const teamSizes = TEAM_SIZES.map(value => ({ value, ...teamSizeDetails[value] }))
 
   const performanceStyles = [
     {
@@ -354,6 +349,7 @@ export default function BookingWizard() {
       priceMax: null,
       reason: null,
       numArtists: 0,
+      disciplines: formData.performanceStyle,
       errorMessage: SUBMIT_ERROR_TEXT
     })
   }
@@ -370,11 +366,18 @@ export default function BookingWizard() {
       // und Backend als zwei Services unter einer Domain liegen.
       const baseUrl = getApiBaseUrl()
 
+      if (!idempotencyKey.current) {
+        idempotencyKey.current = crypto.randomUUID()
+      }
+
       const response = await fetch(`${baseUrl}/api/requests/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          // Der Server erkennt daran einen zweiten Anlauf derselben Anfrage und
+          // gibt die erste Antwort zurück, statt eine Dublette anzulegen.
+          'Idempotency-Key': idempotencyKey.current,
         },
         body: JSON.stringify(transformToBackendPayload(formData)),
       })
@@ -401,9 +404,12 @@ export default function BookingWizard() {
         priceMin: data.price_min ?? null,
         priceMax: data.price_max ?? null,
         reason: data.price_reason ?? null,
-        numArtists: data.num_available_artists ?? 0
+        numArtists: data.num_available_artists ?? 0,
+        disciplines: formData.performanceStyle
       })
 
+      // Die Anfrage ist durch: der nächste Absendeversuch ist eine neue.
+      idempotencyKey.current = null
       setFormData(EMPTY_FORM_DATA)
       setCurrentStep(1)
     } catch (error) {
@@ -419,7 +425,12 @@ export default function BookingWizard() {
       case 2: return formData.teamSize !== ''
       case 3: return formData.performanceStyle.length > 0
       case 4: return formData.venueType !== '' && (formData.eventAddress !== '' || (formData.street !== '' && formData.postalCode !== '' && formData.city !== ''))
-      case 5: return formData.eventDate !== '' && formData.eventTime !== '' && formData.duration !== '' && formData.guestCount !== '' && formData.planningStatus !== ''
+      // Die Dauer zählt erst als angegeben, wenn sich Minuten daraus ergeben.
+      // Nur auf `duration !== ''` zu prüfen liess "Andere" ohne Minutenangabe
+      // durch, und der Kunde bekam still einen Preis für 30 Minuten genannt.
+      case 5: return formData.eventDate !== '' && formData.eventTime !== '' &&
+        durationMinutes(formData.duration, formData.customDuration) !== null &&
+        formData.guestCount !== '' && formData.planningStatus !== ''
       case 6: return formData.firstName !== '' && formData.lastName !== '' && formData.email !== '' && formData.phone !== ''
       case 7: return formData.termsAccepted
       default: return true
@@ -434,7 +445,7 @@ export default function BookingWizard() {
     }
     if (formData.teamSize) {
       const teamSize = teamSizes.find(t => t.value === formData.teamSize)
-      choices.push(teamSize?.label || formData.teamSize)
+      choices.push(teamSize?.label || TEAM_SIZE_LABELS[formData.teamSize as TeamSize] || formData.teamSize)
     }
     if (formData.performanceStyle && formData.performanceStyle.length > 0) {
       const selectedStyles = formData.performanceStyle.map(styleValue => {

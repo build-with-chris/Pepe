@@ -1,9 +1,15 @@
 // import React from 'react' - not needed in modern React
 // DotCloudImage replaced with static PNGs for performance
 import DotCloudImage from './ui/DotCloudImage'
-import { DotLottieReact } from '@lottiefiles/dotlottie-react'
-import { ArrowRight, Home } from 'lucide-react'
+import { ArrowRight, Check, Home } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import {
+  DURATION_CUSTOM,
+  DURATION_OPTIONS,
+  disciplineVideo,
+  durationLabel,
+  teamSizeLabel,
+} from '@/constraints/booking'
 
 interface ChoiceCardProps {
   image: string
@@ -81,6 +87,8 @@ export interface BookingResult {
   /** Maschinenlesbarer Grund vom Server, z.B. 'group' | 'duration' | 'no_artists' */
   reason: string | null
   numArtists: number
+  /** Gewählte Disziplinen — bestimmt, welches Vorschauvideo läuft. */
+  disciplines: string[]
   /** Nur bei status === 'error' */
   errorMessage?: string
 }
@@ -119,13 +127,14 @@ export function ResultStep({ result, onRestart }: { result: BookingResult; onRes
         </>
       ) : (
         <>
+          {/* Vorher lief hier eine Lottie-Animation von lottie.host. Die URL
+              antwortet seit einiger Zeit mit 403, zurück blieb ein leeres Feld
+              von 260 mal 260 Pixeln — ausgerechnet an der Stelle, an der die
+              Bestätigung wirken soll. Ein lokales Häkchen kann nicht ausfallen. */}
           <div className="success-animation mb-6 flex justify-center">
-            <DotLottieReact
-              src="https://lottie.host/6334277f-37f7-4892-a202-a5ae73be94d6/0.json"
-              autoplay
-              loop={false}
-              style={{ width: '260px', height: '260px' }}
-            />
+            <div className="booking-result-check" aria-hidden="true">
+              <Check strokeWidth={3} />
+            </div>
           </div>
           <h3 className="wizard-step-title">Vielen Dank für Ihre Anfrage!</h3>
           <p className="wizard-step-subtitle">
@@ -145,6 +154,21 @@ export function ResultStep({ result, onRestart }: { result: BookingResult; onRes
             Künstler Ihre Anfrage bestätigt hat.
           </p>
         </div>
+      )}
+
+      {result.status !== 'error' && (
+        <figure className="booking-result-video">
+          <video
+            src={disciplineVideo(result.disciplines)}
+            muted
+            autoPlay
+            loop
+            playsInline
+            preload="metadata"
+            aria-label="Ausschnitt aus einer Show von PepeShows"
+          />
+          <figcaption>Ein Ausschnitt aus dem, was Sie gerade angefragt haben.</figcaption>
+        </figure>
       )}
 
       {result.status === 'individual_offer' && (
@@ -444,7 +468,52 @@ export function StepContent({
                     <span className="toggle-slider"></span>
                   </label>
                 </div>
+
+                {/* Buehnenboden und Rigging: standen bisher nur in der
+                    Zusammenfassung, ohne dass man sie irgendwo setzen konnte. */}
+                <div className="toggle-switch-item">
+                  <div className="toggle-switch-content">
+                    <div className="toggle-switch-text" style={{textAlign: 'left'}}>
+                      <h5 className="toggle-switch-title">Bühnenboden</h5>
+                      <p className="toggle-switch-description">
+                        Ebener, rutschfester Untergrund, nötig für Akrobatik und Tanz
+                      </p>
+                    </div>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.needsStageFloor || false}
+                      onChange={(e) => onUpdate('needsStageFloor', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div className="toggle-switch-item">
+                  <div className="toggle-switch-content">
+                    <div className="toggle-switch-text" style={{textAlign: 'left'}}>
+                      <h5 className="toggle-switch-title">Rigging</h5>
+                      <p className="toggle-switch-description">
+                        Aufhängepunkte für Luftakrobatik, geprüft und tragfähig
+                      </p>
+                    </div>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.needsRigging || false}
+                      onChange={(e) => onUpdate('needsRigging', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
               </div>
+              <p className="form-helper-text mt-4">
+                Licht und Ton stellen wir gegen Aufpreis. Bühnenboden und Rigging
+                geben wir an den Künstler weiter, damit er vorab weiß, was der Ort
+                hergeben muss.
+              </p>
             </div>
           </div>
         </div>
@@ -487,45 +556,42 @@ export function StepContent({
                 <label className="form-label">Gewünschte Show-Dauer *</label>
                 <div className="duration-selector">
                   <div className="duration-quick-options">
+                    {DURATION_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`duration-btn ${formData.duration === option.value ? 'active' : ''}`}
+                        onClick={() => onUpdate('duration', option.value)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                     <button
                       type="button"
-                      className={`duration-btn ${formData.duration === '5min' ? 'active' : ''}`}
-                      onClick={() => onUpdate('duration', '5min')}
-                    >
-                      5 Min
-                    </button>
-                    <button
-                      type="button"
-                      className={`duration-btn ${formData.duration === '10min' ? 'active' : ''}`}
-                      onClick={() => onUpdate('duration', '10min')}
-                    >
-                      10 Min
-                    </button>
-                    <button
-                      type="button"
-                      className={`duration-btn ${formData.duration === '15min' ? 'active' : ''}`}
-                      onClick={() => onUpdate('duration', '15min')}
-                    >
-                      15 Min
-                    </button>
-                    <button
-                      type="button"
-                      className={`duration-btn ${formData.duration === 'custom' ? 'active' : ''}`}
-                      onClick={() => onUpdate('duration', 'custom')}
+                      className={`duration-btn ${formData.duration === DURATION_CUSTOM ? 'active' : ''}`}
+                      onClick={() => onUpdate('duration', DURATION_CUSTOM)}
                     >
                       Andere
                     </button>
                   </div>
-                  {formData.duration === 'custom' && (
-                    <input
-                      type="number"
-                      className="input mt-3"
-                      placeholder="Minuten eingeben..."
-                      value={formData.customDuration}
-                      onChange={(e) => onUpdate('customDuration', e.target.value)}
-                      min="1"
-                      max="480"
-                    />
+                  {formData.duration === DURATION_CUSTOM && (
+                    <>
+                      <input
+                        type="number"
+                        className="input mt-3"
+                        placeholder="Minuten eingeben..."
+                        value={formData.customDuration}
+                        onChange={(e) => onUpdate('customDuration', e.target.value)}
+                        min="1"
+                        max="480"
+                        required
+                      />
+                      {!formData.customDuration && (
+                        <p className="form-helper-text mt-2">
+                          Bitte tragen Sie die gewünschte Dauer in Minuten ein.
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -722,11 +788,10 @@ export function StepContent({
               <div className="event-details-with-venue">
                 <div className="summary-grid">
                   <div><strong>Veranstaltungsart</strong><span className="summary-value">{eventTypes.find(t => t.value === formData.eventType)?.label || '-'}</span></div>
+                  {/* Der Wert heisst 'gruppe'; hier stand frueher eine Abfrage
+                      auf 'group', weshalb bei einer Gruppe gar nichts erschien. */}
                   <div><strong>Team-Größe</strong><span className="summary-value">
-                    {formData.teamSize === 'solo' && 'Solo-Künstler'}
-                    {formData.teamSize === 'duo' && 'Duo'}
-                    {formData.teamSize === 'group' && 'Gruppe (3+)'}
-                    {!formData.teamSize && '-'}
+                    {teamSizeLabel(formData.teamSize) || '-'}
                   </span></div>
                   <div><strong>Datum & Zeit</strong><span className="summary-value">
                     {formData.eventDate ?
@@ -738,7 +803,11 @@ export function StepContent({
                     } {formData.eventTime && `um ${formData.eventTime} Uhr`}
                   </span></div>
                   <div><strong>Anzahl Gäste</strong><span className="summary-value">{formData.guestCount || '-'} Personen</span></div>
-                  <div><strong>Show-Dauer</strong><span className="summary-value">{formData.duration || '-'}</span></div>
+                  {/* Frueher stand hier der rohe Formularwert, der Kunde las
+                      also "15min" oder gar "custom". */}
+                  <div><strong>Show-Dauer</strong><span className="summary-value">
+                    {durationLabel(formData.duration, formData.customDuration) || '-'}
+                  </span></div>
                 </div>
 
                 {/* Venue thumbnail on right side */}
@@ -845,6 +914,20 @@ export function StepContent({
                   Datenschutzerklärung
                 </a>
                 . Meine Anfrage wird vertraulich behandelt. *
+              </span>
+            </label>
+
+            {/* Das Feld `marketingConsent` ging bisher immer als false ans
+                Backend, weil es nirgends zu setzen war. */}
+            <label className="terms-checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.marketingConsent || false}
+                onChange={(e) => onUpdate('marketingConsent', e.target.checked)}
+              />
+              <span className="terms-text">
+                Schicken Sie mir gelegentlich Neues von PepeShows per E-Mail.
+                Abbestellen jederzeit möglich.
               </span>
             </label>
           </div>

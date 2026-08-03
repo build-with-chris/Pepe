@@ -2477,6 +2477,9 @@
   width: 100%;
   margin: 0 auto;
   max-width: 900px;
+  /* Der Wizard scrollt sich bei jedem Schritt selbst nach oben. Ohne diesen
+     Abstand landet seine Oberkante hinter der festen Navigation. */
+  scroll-margin-top: 120px;
 }
 
 .wizard-step {
@@ -8070,6 +8073,66 @@ textarea.input {
   color: var(--pepe-t64);
   margin: 0;
   max-width: 42ch;
+}
+
+/* Bestaetigungshaekchen. Ersetzt eine Lottie-Animation, die von einem fremden
+   Host kam und dort mit 403 antwortete: Die Bestaetigungsseite zeigte an ihrer
+   wichtigsten Stelle ein leeres Feld. Lokal gezeichnet faellt nichts aus. */
+.booking-result-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  color: var(--pepe-gold);
+  background: rgba(212, 175, 55, 0.12);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  animation: booking-result-check-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.booking-result-check svg {
+  width: 40px;
+  height: 40px;
+}
+
+@keyframes booking-result-check-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-result-check {
+    animation: none;
+  }
+}
+
+/* Vorschauvideo: zeigt dem Kunden, wofuer der genannte Preis steht. */
+.booking-result-video {
+  margin: 0 auto var(--space-6);
+  max-width: 560px;
+}
+
+.booking-result-video video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.booking-result-video figcaption {
+  font-size: var(--text-sm);
+  color: var(--pepe-t64);
+  margin-top: var(--space-2);
 }
 
 .booking-result-note {
