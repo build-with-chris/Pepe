@@ -176,8 +176,11 @@ def origin_allowed(origin: str) -> bool:
 CORS(
     app,
     origins=allowed_origins_regex,  # compiled regex accepted by flask-cors
-    allow_headers=["Content-Type", "Authorization"],
-    expose_headers=["Content-Type", "Authorization", "X-Request-ID"],
+    # `Idempotency-Key` schickt der Booking-Assistent bei jeder Anfrage. Fehlt
+    # er hier, scheitert schon der Preflight, und im Browser sieht das aus wie
+    # ein Ausfall des Backends: Die Anfrage geht gar nicht erst raus.
+    allow_headers=["Content-Type", "Authorization", "Idempotency-Key"],
+    expose_headers=["Content-Type", "Authorization", "X-Request-ID", "Idempotent-Replay"],
     supports_credentials=False,
 )
 
