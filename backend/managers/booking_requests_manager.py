@@ -98,54 +98,77 @@ class BookingRequestManager:
         items = q.limit(max(0, int(limit))).offset(max(0, int(offset))).all()
         return items, int(total)
 
-    def _compute_travel_distance(self, event_address, artists) -> Tuple[Optional[Tuple[float, float]], float]:
-        """Ermittelt (Event-Koordinate, mittlere Entfernung in km) für eine Anfrage.
+    def _artist_coord(self, artist) -> Optional[Tuple[float, float]]:
+        """Koordinate eines Artists, notfalls einmalig nachgeocodiert.
 
-        Artist-Koordinaten kommen aus der DB (`lat`/`lon`), die beim Speichern der
-        Adresse gesetzt werden. Fehlen sie, wird die Adresse einmal nachgeocodiert
-        und das Ergebnis am Artist persistiert — jede Adresse kostet so höchstens
+        Die Werte stehen normalerweise als `lat`/`lon` in der DB, gesetzt beim
+        Speichern der Adresse. Fehlen sie, wird die Adresse einmal aufgelöst und
+        das Ergebnis am Artist nachgetragen — jede Adresse kostet so höchstens
         einen Nominatim-Aufruf statt einen pro Anfrage.
+        """
+        lat = getattr(artist, 'lat', None)
+        lon = getattr(artist, 'lon', None)
+        if lat is not None and lon is not None:
+            return (float(lat), float(lon))
 
-        Rückgabe (None, 0.0), wenn die Event-Adresse nicht auflösbar ist.
+        addr = getattr(artist, 'address', None)
+        if not addr:
+            return None
+        try:
+            coord = geocode_address(addr)
+        except Exception as e:
+            current_app.logger.warning(f"artist geocoding failed: {e}")
+            return None
+        if not coord:
+            return None
+        try:
+            artist.lat, artist.lon = coord
+        except Exception:
+            pass
+        return coord
+
+    def artist_distances(self, event_coord, artists) -> dict:
+        """{artist_id: Entfernung in km} zur Event-Koordinate.
+
+        Artists ohne auflösbare Adresse fehlen im Ergebnis. Der Aufrufer
+        entscheidet, was das heißt — für die Preisauskunft ist eine unbekannte
+        Anreise etwas anderes als eine Anreise von null Kilometern.
+        """
+        if not event_coord:
+            return {}
+        result = {}
+        for a in artists:
+            coord = self._artist_coord(a)
+            if not coord:
+                continue
+            aid = getattr(a, 'id', None)
+            if aid is None:
+                continue
+            result[aid] = round(haversine_km(coord, event_coord), 1)
+        return result
+
+    def _compute_travel_distance(self, event_address, artists) -> Tuple[Optional[Tuple[float, float]], dict]:
+        """Ermittelt (Event-Koordinate, {artist_id: km}) für eine Anfrage.
+
+        Früher stand hier ein Mittelwert über alle gematchten Artists. Der war
+        als Preisbestandteil unbrauchbar: Bei je einem Artist in München und
+        Berlin kam für ein Event in München dieselbe Entfernung heraus wie für
+        eines in Berlin, und ein Solo-Kunde zahlte anteilig die Anreise eines
+        Artists, der gar nicht auftritt. Abgerechnet wird jetzt je Artist.
+
+        Rückgabe (None, {}), wenn die Event-Adresse nicht auflösbar ist.
         """
         try:
             event_coord = geocode_address(event_address)
         except Exception as e:
             current_app.logger.warning(f"event geocoding failed: {e}")
-            return None, 0.0
+            return None, {}
 
         if not event_coord:
             current_app.logger.info("distance calculation skipped – event address not geocodable: %r", event_address)
-            return None, 0.0
+            return None, {}
 
-        distances = []
-        for a in artists:
-            lat = getattr(a, 'lat', None)
-            lon = getattr(a, 'lon', None)
-            if lat is None or lon is None:
-                addr = getattr(a, 'address', None)
-                if not addr:
-                    continue
-                try:
-                    coord = geocode_address(addr)
-                except Exception as e:
-                    current_app.logger.warning(f"artist geocoding failed: {e}")
-                    continue
-                if not coord:
-                    continue
-                lat, lon = coord
-                # Nachtragen, damit die nächste Anfrage ohne Netzaufruf auskommt
-                try:
-                    a.lat, a.lon = lat, lon
-                except Exception:
-                    pass
-            distances.append(haversine_km((float(lat), float(lon)), event_coord))
-
-        if not distances:
-            return event_coord, 0.0
-
-        # Heuristik: Mittelwert der Entfernungen aller zugeordneten Artists
-        return event_coord, round(sum(distances) / len(distances), 1)
+        return event_coord, self.artist_distances(event_coord, artists)
 
     def create_request(
         self,
@@ -166,9 +189,21 @@ class BookingRequestManager:
         artists,
         event_time="18:00",
         distance_km=None,  # ignoriert – die Distanz wird immer serverseitig berechnet
-        newsletter_opt_in=False
+        newsletter_opt_in=False,
+        client_phone=None,
+        client_company=None,
+        budget_range=None,
+        planning_status=None,
+        location_details=None,
+        needs_stage_floor=False,
+        needs_rigging=False
     ):
-        """Erstellt eine neue Buchungsanfrage und verknüpft sie mit Artists."""
+        """Erstellt eine neue Buchungsanfrage und verknüpft sie mit Artists.
+
+        Rückgabe: die gespeicherte Anfrage. Die Einzelentfernungen der Artists
+        hängen als `_artist_distances` (dict) an ihr, damit die Route den Preis
+        je Artist rechnen kann, ohne die Koordinaten erneut zu laden.
+        """
         current_app.logger.info(f"create_request called with client={client_name}, disciplines={show_discipline}, artists={[getattr(a, 'id', a) for a in artists]}")
 
         # Datum und Zeit konvertieren
@@ -193,7 +228,13 @@ class BookingRequestManager:
         # --- Distanzberechnung Event <-> Artists (rein serverseitig) ---
         # Ein vom Client mitgeschickter distance_km-Wert wird ignoriert; er ist
         # preisrelevant und damit manipulierbar (SPEC-2, Kriterium 6).
-        event_coord, travel_distance = self._compute_travel_distance(event_address, artists)
+        event_coord, distances = self._compute_travel_distance(event_address, artists)
+
+        # `distance_km` an der Anfrage ist ab jetzt die kürzeste Anreise unter
+        # den gematchten Artists, also die des nächstgelegenen. Sie dient der
+        # Übersicht und als Rückfall, wenn später Koordinaten fehlen. Gerechnet
+        # wird mit den Einzelentfernungen, nicht mit diesem Wert.
+        nearest = min(distances.values()) if distances else 0.0
 
         req = BookingRequest(
             client_name=client_name,
@@ -211,10 +252,17 @@ class BookingRequestManager:
             special_requests=special_requests,
             needs_light=needs_light,
             needs_sound=needs_sound,
-            distance_km=travel_distance,
+            needs_stage_floor=bool(needs_stage_floor),
+            needs_rigging=bool(needs_rigging),
+            distance_km=nearest,
             event_lat=event_coord[0] if event_coord else None,
             event_lon=event_coord[1] if event_coord else None,
-            newsletter_opt_in=newsletter_opt_in
+            newsletter_opt_in=newsletter_opt_in,
+            client_phone=client_phone,
+            client_company=client_company,
+            budget_range=budget_range,
+            planning_status=planning_status,
+            location_details=location_details
         )
 
         # 1) Request speichern (flush, um ID zu erhalten)
@@ -244,6 +292,9 @@ class BookingRequestManager:
 
         # 3) final commit
         self.db.session.commit()
+        # Die Einzelentfernungen anhängen: sie stecken in keiner Spalte, die
+        # Route braucht sie aber gleich für den Preis je Artist.
+        req._artist_distances = distances
         return req
 
     def set_offer(self, request_id, artist_id, price_offered):
@@ -299,11 +350,23 @@ class BookingRequestManager:
 
         Rückgabe: (Summe der Gagen, Anzahl der tatsächlich summierten Gagen).
         """
-        booked = team_size_to_people(getattr(req, 'team_size', 1))
+        gages, _ = self._booked_team(req, artist_id, offered_gage)
+        return sum(g for g, _ in gages), len(gages)
 
-        gages: List[float] = []
+    def _booked_team(self, req, artist_id=None, offered_gage=None):
+        """Die tatsächlich gebuchten Artists mit ihrer Gage, in Buchungsreihenfolge.
+
+        Rückgabe: (Liste aus (Gage, Artist), Anzahl der gebuchten Plätze).
+        Getrennt von `booked_team_gage`, weil der Kundenpreis nicht nur die
+        Gagen braucht, sondern auch, *wer* anreist: die Anfahrt wird je Artist
+        abgerechnet.
+        """
+        booked = team_size_to_people(getattr(req, 'team_size', 1))
+        by_id = {a.id: a for a in req.artists}
+
+        entries: List[Tuple[float, object]] = []
         if artist_id is not None and offered_gage is not None:
-            gages.append(float(offered_gage))
+            entries.append((float(offered_gage), by_id.get(artist_id)))
 
         pivot = {row['artist_id']: row for row in self.get_artist_statuses(req.id)}
         for a in req.artists:
@@ -314,33 +377,61 @@ class BookingRequestManager:
                 gage = getattr(a, 'price_min', None)
             if gage is None:
                 continue
-            gages.append(float(gage))
+            entries.append((float(gage), a))
 
-        used = gages[:booked]
+        used = entries[:booked]
         if len(used) < booked:
             current_app.logger.warning(
                 "booked_team_gage: request %s bucht %s Artists, es liegen aber nur %s Gagen vor",
                 req.id, booked, len(used)
             )
-        return sum(used), len(used)
+        return used, booked
+
+    def _booked_distances(self, req, booked, places) -> List[float]:
+        """Anreise je gebuchtem Artist, in Kilometern.
+
+        Gerechnet wird aus den gespeicherten Koordinaten von Event und Artist.
+        Fehlt eine davon, tritt `distance_km` der Anfrage als Rückfall ein: die
+        Anreise des nächstgelegenen gematchten Artists. Sind mehr Plätze gebucht
+        als Gagen vorliegen, wird für die offenen Plätze derselbe Rückfall
+        angesetzt, damit die Anfahrt nicht unter den Tisch fällt.
+        """
+        fallback = float(getattr(req, 'distance_km', 0) or 0)
+        event_lat = getattr(req, 'event_lat', None)
+        event_lon = getattr(req, 'event_lon', None)
+        event_coord = (float(event_lat), float(event_lon)) if event_lat is not None and event_lon is not None else None
+
+        legs: List[float] = []
+        for _, artist in booked:
+            coord = self._artist_coord(artist) if artist is not None else None
+            if event_coord and coord:
+                legs.append(round(haversine_km(coord, event_coord), 1))
+            else:
+                legs.append(fallback)
+
+        legs.extend([fallback] * max(0, places - len(legs)))
+        return legs
 
     def _persist_offer_price(self, req, artist_id, price_offered) -> None:
         """Schreibt Netto-Gage und Kundenpreis an die Anfrage.
 
         Ohne diesen Schritt blieb `price_offered` dauerhaft NULL, obwohl der
         Artist längst geboten hatte (SPEC-3, Kriterium 5).
+
+        Die Anfahrt wird für genau die Artists berechnet, deren Gagen hier auch
+        summiert werden, jede mit ihrer eigenen Entfernung zum Veranstaltungsort.
         """
         try:
-            total_gage, _ = self.booked_team_gage(req, artist_id, price_offered)
+            booked, places = self._booked_team(req, artist_id, price_offered)
+            total_gage = sum(g for g, _ in booked)
             req.artist_gage = int(round(total_gage))
             req.price_offered = client_price(
                 total_gage,
                 self._fee_pct(),
-                distance_km=getattr(req, 'distance_km', 0) or 0,
+                distances=self._booked_distances(req, booked, places),
                 needs_light=req.needs_light,
                 needs_sound=req.needs_sound,
                 event_address=req.event_address,
-                people=team_size_to_people(getattr(req, 'team_size', 1)),
             )
             req.artist_offer_date = datetime.utcnow()
             self.db.session.commit()

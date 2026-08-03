@@ -322,16 +322,6 @@ def create_request():
         current_app.logger.info(f"[BOOKING] After approval filter: {len(artist_objs)} artists: {[(a.id, a.name) for a in artist_objs]}")
         if target_ids is not None and not artist_objs:
             return error_response("forbidden", "No approved target artists available", 403)
-        # Für die UI: kompaktes Matched-Payload (max. MAX_MATCHED_ARTISTS Artists)
-        matched_payload = [
-            {
-                "id": getattr(a, 'id', None),
-                "name": getattr(a, 'name', None),
-                "price_min": getattr(a, 'price_min', None),
-                "price_max": getattr(a, 'price_max', None),
-            }
-            for a in (artist_objs[:MAX_MATCHED_ARTISTS] if artist_objs else [])
-        ]
         req = request_mgr.create_request(
             client_name       = data['client_name'],
             client_email      = data['client_email'],
@@ -351,8 +341,33 @@ def create_request():
             artists           = artist_objs,
             # distance_km kommt bewusst NICHT vom Client — der Manager berechnet
             # sie aus Event-Adresse und Artist-Koordinaten (SPEC-2, Kriterium 6).
-            newsletter_opt_in = data.get('newsletter_opt_in', False)
+            newsletter_opt_in = data.get('newsletter_opt_in', False),
+            client_phone      = data.get('client_phone'),
+            client_company    = data.get('client_company'),
+            budget_range      = data.get('budget_range'),
+            planning_status   = data.get('planning_status'),
+            location_details  = data.get('location_details'),
+            needs_stage_floor = data.get('needs_stage_floor', False),
+            needs_rigging     = data.get('needs_rigging', False)
         )
+
+        # Einzelentfernungen Artist <-> Event. Sie hängen an der frisch
+        # angelegten Anfrage und sind die Grundlage für den Preis je Artist.
+        distances = getattr(req, '_artist_distances', {}) or {}
+        # Der nächstgelegene zuerst: er ist die wahrscheinliche Besetzung, und
+        # bei einem Duo bestimmt die Reihenfolge, welche zwei gerechnet werden.
+        # Ohne bekannte Entfernung ans Ende, statt sie als null zu behandeln.
+        artist_objs.sort(key=lambda a: distances.get(getattr(a, 'id', None), float('inf')))
+        matched_payload = [
+            {
+                "id": getattr(a, 'id', None),
+                "name": getattr(a, 'name', None),
+                "price_min": getattr(a, 'price_min', None),
+                "price_max": getattr(a, 'price_max', None),
+                "distance_km": distances.get(getattr(a, 'id', None)),
+            }
+            for a in artist_objs[:MAX_MATCHED_ARTISTS]
+        ]
 
         # Preisspanne berechnen basierend auf ausgewählten Artists und Parametern
         duo_min = duo_max = None
@@ -375,55 +390,67 @@ def create_request():
             req.price_max = None
         else:
             fee_pct = _config_fee_pct()
-            # `req.distance_km` ist der geografisch berechnete Mittelwert
-            # Artist <-> Event. Die frühere Zusatzprüfung "wohnt der Artist in
-            # derselben Stadt?" verglich Adress-Strings und kippte schon bei
-            # einem angehängten "Deutschland" ins Gegenteil. Sie war zudem
-            # überflüssig: Wohnt der Artist am Ort, ist die Entfernung ohnehin
-            # nahe null.
-            travel_distance = req.distance_km or 0.0
 
-            # Basis definieren je Teamgröße. Gruppen (3+) sind hier bereits
-            # ausgeschlossen, es bleiben Solo und Duo.
-            if team_size == 2:
-                # Duo: exakt die ersten zwei aus der gematchten Liste — nur wenn
-                # überhaupt zwei Artists verfügbar sind.
-                if len(artist_objs) >= 2:
-                    pair = artist_objs[:2]
-                    duo_min = sum(getattr(a, 'price_min', 0) for a in pair)
-                    duo_max = sum(getattr(a, 'price_max', 0) for a in pair)
-                    base_min, base_max = duo_min, duo_max
-                else:
-                    base_min = base_max = None
-            else:
-                # Solo: min/max aus den verfügbaren Artists (bisheriges Verhalten)
-                base_min = min(a.price_min for a in artist_objs)
-                base_max = max(a.price_max for a in artist_objs)
+            # Die Anfahrt hängt am einzelnen Artist, nicht an der Anfrage. Ein
+            # Artist ohne auflösbare Adresse taucht in `distances` nicht auf; für
+            # ihn wird die Anreise mit 0 angesetzt, sonst würde eine fehlende
+            # Adresse den Preis nach oben verzerren.
+            def leg(artist) -> float:
+                return float(distances.get(getattr(artist, 'id', None), 0.0))
+
+            # Alles, was für jede Besetzung gleich ist. Was je Artist
+            # unterschiedlich ist (Gage, Anfahrt), kommt pro Aufruf dazu.
+            common = dict(
+                fee_pct         = fee_pct,
+                newsletter      = req.newsletter_opt_in,
+                event_type      = req.event_type,
+                num_guests      = req.number_of_guests,
+                is_weekend      = req.event_date.weekday() >= 5,
+                is_indoor       = req.is_indoor,
+                needs_light     = req.needs_light,
+                needs_sound     = req.needs_sound,
+                show_discipline = req.show_discipline,
+                duration        = req.duration_minutes,
+                event_address   = req.event_address,
+                distance_km     = 0,
+            )
 
             try:
-                if base_min is not None:
-                    pmin, pmax = calculate_price(
-                        base_min        = base_min,
-                        base_max        = base_max,
-                        distance_km     = travel_distance,
-                        fee_pct         = fee_pct,
-                        newsletter      = req.newsletter_opt_in,
-                        event_type      = req.event_type,
-                        num_guests      = req.number_of_guests,
-                        is_weekend      = req.event_date.weekday() >= 5,
-                        is_indoor       = req.is_indoor,
-                        needs_light     = req.needs_light,
-                        needs_sound     = req.needs_sound,
-                        show_discipline = req.show_discipline,
-                        # Die Basis ist bei Duo bereits die Summe beider Gagen;
-                        # team_count steuert nur noch die Anfahrt pro Kopf.
-                        team_count      = team_size,
-                        duration        = req.duration_minutes,
-                        event_address   = req.event_address,
-                    )
+                if team_size == 2:
+                    # Duo: die zwei nächstgelegenen Artists, jeder mit seiner
+                    # eigenen Gage und seiner eigenen Anreise.
+                    if len(artist_objs) >= 2:
+                        pair = artist_objs[:2]
+                        duo_min = sum(getattr(a, 'price_min', 0) for a in pair)
+                        duo_max = sum(getattr(a, 'price_max', 0) for a in pair)
+                        pmin, pmax = calculate_price(
+                            base_min  = duo_min,
+                            base_max  = duo_max,
+                            distances = [leg(a) for a in pair],
+                            team_count = 2,
+                            **common,
+                        )
+                    else:
+                        price_status = PRICE_STATUS_UNAVAILABLE
+                        price_reason = 'not_enough_artists'
                 else:
-                    price_status = PRICE_STATUS_UNAVAILABLE
-                    price_reason = 'not_enough_artists'
+                    # Solo: jeder Artist wird für sich durchgerechnet, mit seiner
+                    # Gage und seiner Anreise. Die angezeigte Spanne ist die
+                    # Hülle dieser Einzelpreise. Vorher lief eine Sammelspanne
+                    # aus dem billigsten Minimum und dem teuersten Maximum durch
+                    # die Rechnung — eine Kombination, die kein Artist anbietet.
+                    per_artist = [
+                        calculate_price(
+                            base_min  = a.price_min,
+                            base_max  = a.price_max,
+                            distances = [leg(a)],
+                            team_count = 1,
+                            **common,
+                        )
+                        for a in artist_objs
+                    ]
+                    pmin = min(p[0] for p in per_artist)
+                    pmax = max(p[1] for p in per_artist)
             except Exception as e:
                 current_app.logger.exception("calculate_price failed: %s", e)
                 pmin = pmax = None

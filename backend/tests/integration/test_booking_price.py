@@ -155,3 +155,127 @@ def test_client_supplied_distance_is_ignored(client, munich_artists):
 
     assert manipulated['price_min'] == honest['price_min']
     assert manipulated['price_max'] == honest['price_max']
+
+
+# --- Anfahrt je Artist -----------------------------------------------------
+
+@pytest.fixture
+def mixed_artists(artist_manager):
+    """Ein Künstler in München, einer in Hamburg, gleiche Gage."""
+    artists = []
+    for name, address, coord in (
+        ('MucMike', MUNICH_ADDRESS, MUNICH),
+        ('HansaHanna', HAMBURG_ADDRESS, HAMBURG),
+    ):
+        artist = artist_manager.create_artist(
+            name, f'{name.lower()}@price-test.de', 'pw', ['Zauberer'],
+            address=address, price_min=1200, price_max=1800,
+            approval_status='approved',
+        )
+        artist.lat, artist.lon = coord
+        artists.append(artist)
+    db.session.commit()
+    return artists
+
+
+def test_far_away_artist_does_not_inflate_a_local_solo_price(client, mixed_artists):
+    """Ein Solo-Kunde zahlt nicht die Anreise eines Künstlers, der nicht auftritt.
+
+    Vorher lief ein Mittelwert über alle gematchten Künstler in den Preis. Bei
+    einem Künstler in München und einem in Hamburg kamen für ein Event in
+    München rund 300 km heraus, obwohl der Münchner direkt vor Ort wohnt.
+    """
+    data = post(client, event_address=MUNICH_ADDRESS).get_json()
+    assert data['price_status'] == 'range'
+
+    # Die Untergrenze gehört dem Münchner: keine nennenswerte Anfahrt, dafür
+    # der München-Rabatt von 100 €.
+    assert data['price_min'] < 1200 * 1.2
+
+
+def test_solo_range_spans_the_individual_artist_prices(client, mixed_artists):
+    """Die Spanne ist die Hülle der Einzelpreise, inklusive der Anfahrten.
+
+    Der Hamburger muss anreisen, der Münchner nicht. Die Obergrenze trägt
+    deshalb seine Anfahrt, die Untergrenze nicht.
+    """
+    data = post(client, event_address=MUNICH_ADDRESS).get_json()
+
+    # ~613 km * 0,50 €/km + 300 € Zuschlag ab 600 km, die alle nur den
+    # Hamburger betreffen. Ohne Aufteilung je Artist läge beides gleichauf.
+    assert data['price_max'] - data['price_min'] > 600
+
+
+def test_matched_artists_are_sorted_by_distance(client, mixed_artists):
+    """Der nächstgelegene Künstler steht vorn — er ist die naheliegende Besetzung."""
+    data = post(client, event_address=MUNICH_ADDRESS).get_json()
+    matched = data['matched_artists']
+
+    assert [a['name'] for a in matched] == ['MucMike', 'HansaHanna']
+    assert matched[0]['distance_km'] == pytest.approx(0, abs=1)
+    assert matched[1]['distance_km'] == pytest.approx(600, rel=0.1)
+
+
+def test_duo_charges_both_journeys_separately(client, mixed_artists):
+    """Beim Duo fällt jede Anreise für sich an, nicht zweimal dieselbe.
+
+    Beide Künstler zusammen: einmal 0 km, einmal ~613 km. Zweimal den
+    Mittelwert zu rechnen käme zwar aufs gleiche Kilometergeld, würde die
+    Zuschlagsstufe ab 600 km aber verfehlen.
+    """
+    data = post(client, team_size=2, show_type='duo',
+                event_address=MUNICH_ADDRESS).get_json()
+
+    assert data['price_status'] == 'range'
+    assert data['duo_price_min'] == 2400   # 2 x 1200
+    # Kilometergeld nur für den Hamburger plus dessen 600-km-Zuschlag.
+    solo_gage_ceiling = 3600 * 1.2
+    assert data['price_max'] > solo_gage_ceiling
+
+
+# --- Kundenangaben ---------------------------------------------------------
+
+def test_contact_and_planning_fields_are_stored(client, munich_artists):
+    """Telefon, Firma, Budget, Planungsstand und Ortshinweise landen in der DB.
+
+    Die Telefonnummer ist im Formular Pflicht, wurde aber nie mitgeschickt und
+    hatte auch keine Spalte. Der Kunde gab sie an, niemand bekam sie zu sehen.
+    """
+    from models import BookingRequest
+
+    res = post(
+        client,
+        client_phone='+49 170 1234567',
+        client_company='Muster GmbH',
+        budget_range='2500-5000',
+        planning_status='urgent',
+        location_details='Hintereingang, 2. Stock, Saal B',
+        needs_stage_floor=True,
+        needs_rigging=True,
+    )
+    assert res.status_code == 201
+
+    req = db.session.get(BookingRequest, res.get_json()['request_id'])
+    assert req.client_phone == '+49 170 1234567'
+    assert req.client_company == 'Muster GmbH'
+    assert req.budget_range == '2500-5000'
+    assert req.planning_status == 'urgent'
+    assert req.location_details == 'Hintereingang, 2. Stock, Saal B'
+    assert req.needs_stage_floor is True
+    assert req.needs_rigging is True
+
+
+def test_admin_email_shows_the_phone_number(app, client, munich_artists):
+    """Die Admin-Mail nennt die Kontaktdaten, sonst nützt die Nummer niemandem."""
+    from helpers.emails import build_admin_new_request_email
+    from models import BookingRequest
+
+    res = post(client, client_phone='+49 170 1234567', client_company='Muster GmbH',
+               budget_range='2500-5000', planning_status='urgent')
+    req = db.session.get(BookingRequest, res.get_json()['request_id'])
+
+    html = build_admin_new_request_email(req)
+    assert '+49 170 1234567' in html
+    assert 'Muster GmbH' in html
+    assert '2.500 bis 5.000 €' in html
+    assert 'dringend' in html

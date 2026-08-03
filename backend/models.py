@@ -105,6 +105,14 @@ class BookingRequest(db.Model):
     id                 = db.Column(db.Integer, primary_key=True)
     client_name        = db.Column(db.String(100), nullable=False)
     client_email       = db.Column(db.String(120), nullable=False)
+    # Kontakt- und Planungsangaben aus dem Booking-Assistenten. Sie wurden im
+    # Formular abgefragt (die Telefonnummer sogar als Pflichtfeld) und danach
+    # verworfen, weil es keine Spalten dafür gab.
+    client_phone       = db.Column(db.String(40), nullable=True)
+    client_company     = db.Column(db.String(120), nullable=True)
+    budget_range       = db.Column(db.String(30), nullable=True)
+    planning_status    = db.Column(db.String(30), nullable=True)
+    location_details   = db.Column(db.Text, nullable=True)
 
     event_type         = db.Column(db.String(50), nullable=False)   # z.B. privat
     show_type          = db.Column(db.String(50), nullable=False)  # z.B. Walking Act oder Bühnen Show
@@ -122,6 +130,11 @@ class BookingRequest(db.Model):
 
     needs_light        = db.Column(db.Boolean, default=False)
     needs_sound        = db.Column(db.Boolean, default=False)
+    # Buehnenboden und Rigging gehen in kein Preisschema ein — dafuer gibt es
+    # keinen hinterlegten Satz. Sie werden erfasst und weitergegeben, damit
+    # Agentur und Artist vor der Zusage wissen, was der Ort hergeben muss.
+    needs_stage_floor  = db.Column(db.Boolean, default=False)
+    needs_rigging      = db.Column(db.Boolean, default=False)
 
     distance_km        = db.Column(db.Float, nullable=False, default=0.0)
     newsletter_opt_in  = db.Column(db.Boolean, default=False)

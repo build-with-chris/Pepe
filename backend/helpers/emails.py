@@ -77,6 +77,39 @@ def event_city(address) -> str:
     return ' '.join(tokens)
 
 
+# Formularwerte aus dem Booking-Assistenten in lesbaren Text. Unbekannte Werte
+# werden unverändert durchgereicht, statt sie zu verschlucken.
+_BUDGET_LABELS = {
+    '500-1000': '500 bis 1.000 €',
+    '1000-2500': '1.000 bis 2.500 €',
+    '2500-5000': '2.500 bis 5.000 €',
+    '5000-10000': '5.000 bis 10.000 €',
+    '10000+': 'über 10.000 €',
+    'flexible': 'flexibel, Beratung gewünscht',
+}
+
+_PLANNING_LABELS = {
+    'just_browsing': 'schaut sich nur um',
+    'early_planning': 'frühe Planungsphase',
+    'in_planning': 'konkret in Planung',
+    'urgent': 'dringend, Event steht kurz bevor',
+}
+
+
+def format_budget_range(value) -> str:
+    """Budgetrahmen als Text, z. B. '1000-2500' -> '1.000 bis 2.500 €'."""
+    if not value:
+        return ''
+    return _BUDGET_LABELS.get(str(value).strip(), str(value))
+
+
+def format_planning_status(value) -> str:
+    """Planungsstand als Text, z. B. 'urgent' -> 'dringend, Event steht kurz bevor'."""
+    if not value:
+        return ''
+    return _PLANNING_LABELS.get(str(value).strip(), str(value))
+
+
 def send_email(to_email: str, subject: str, html: str) -> bool:
     """Send an HTML email using SMTP settings from Flask config.
 
@@ -149,6 +182,23 @@ def build_artist_new_request_email(artist, req):
         artist_gage_range = None
 
     disciplines_str = format_disciplines(getattr(req, 'show_discipline', None))
+
+    # Was der Ort hergeben muss. Der Artist entscheidet daran, ob die Anfrage
+    # überhaupt spielbar ist; die Kontaktdaten des Kunden bleiben bewusst der
+    # Admin-Mail vorbehalten.
+    venue_parts = ['Indoor' if getattr(req, 'is_indoor', True) else 'Outdoor']
+    venue_parts += [
+        name for name, needed in (
+            ('Licht', getattr(req, 'needs_light', False)),
+            ('Ton', getattr(req, 'needs_sound', False)),
+            ('Bühnenboden', getattr(req, 'needs_stage_floor', False)),
+            ('Rigging', getattr(req, 'needs_rigging', False)),
+        ) if needed
+    ]
+    location_hint = (getattr(req, 'location_details', None) or '').strip()
+    if location_hint:
+        venue_parts.append(location_hint)
+    venue_summary = ', '.join(venue_parts)
 
     artist_name = getattr(artist, 'name', 'Künstler:in')
 
@@ -232,6 +282,11 @@ def build_artist_new_request_email(artist, req):
                   <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Dauer:</strong>
                   <span style="color: #451a03;">{req.duration_minutes or '—'} Minuten</span>
                 </div>
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">🔧</span>
+                  <strong style="color: #92400e; min-width: 100px; margin-right: 8px;">Vor Ort:</strong>
+                  <span style="color: #451a03;">{venue_summary}</span>
+                </div>
               </div>
             </div>
 
@@ -295,6 +350,38 @@ def build_admin_new_request_email(req):
         if special_requests else ''
     )
 
+    # Optionale Zeilen nur ausgeben, wenn etwas drinsteht. Eine Mail voller
+    # Striche liest sich schlechter als eine kurze.
+    def row(label, value):
+        return f'<strong>{label}:</strong> {value}<br/>' if value else ''
+
+    contact_extra = (
+        row('Telefon', getattr(req, 'client_phone', None))
+        + row('Unternehmen', getattr(req, 'client_company', None))
+    )
+
+    planning_extra = (
+        row('Budgetrahmen', format_budget_range(getattr(req, 'budget_range', None)))
+        + row('Planungsstand', format_planning_status(getattr(req, 'planning_status', None)))
+    )
+    planning_block = f'<p><strong>Planung:</strong><br/>{planning_extra}</p>' if planning_extra else ''
+
+    location_details = (getattr(req, 'location_details', None) or '').strip()
+    tech = [
+        name for name, needed in (
+            ('Licht', getattr(req, 'needs_light', False)),
+            ('Ton', getattr(req, 'needs_sound', False)),
+            ('Bühnenboden', getattr(req, 'needs_stage_floor', False)),
+            ('Rigging', getattr(req, 'needs_rigging', False)),
+        ) if needed
+    ]
+    venue_extra = (
+        row('Adresse', getattr(req, 'event_address', None))
+        + row('Hinweise zum Ort', location_details)
+        + row('Technik', ', '.join(tech))
+    )
+    venue_block = f'<p><strong>Veranstaltungsort:</strong><br/>{venue_extra}</p>' if venue_extra else ''
+
     return f"""
     <html>
       <body style="font-family: Arial, Helvetica, sans-serif; line-height:1.5;">
@@ -313,8 +400,11 @@ def build_admin_new_request_email(req):
         <p>
           <strong>Kundendaten:</strong><br/>
           <strong>Name:</strong> {getattr(req, 'client_name', None) or '—'}<br/>
-          <strong>E-Mail:</strong> {getattr(req, 'client_email', None) or '—'}
+          <strong>E-Mail:</strong> {getattr(req, 'client_email', None) or '—'}<br/>
+          {contact_extra}
         </p>
+        {venue_block}
+        {planning_block}
         {special_block}
         <p>
           <a href="{app_url}/admin/requests/{req.id}" style="background:#111;color:#fff;padding:10px 16px;text-decoration:none;border-radius:6px;">Anfrage verwalten</a>
