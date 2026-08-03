@@ -56,11 +56,36 @@ def requires_individual_offer(duration_minutes=None, team_size=None) -> str | No
     return None
 
 
+def _to_float(value) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _distance_tier(distance_km: float) -> int:
+    """Zuschlagsstufe für eine einzelne Anreise."""
+    if distance_km >= 600:
+        return 300
+    if distance_km >= 300:
+        return 200
+    return 0
+
+
 def surcharges(distance_km=0, needs_light=False, needs_sound=False,
-               event_address=None, people=1) -> float:
+               event_address=None, people=1, distances=None) -> float:
     """Feste Durchlaufposten in Euro: Technik, Distanzzuschlag und Anfahrt.
 
     Diese Posten sind keine Gage — auf sie wird keine Agenturgebühr erhoben.
+
+    `distances` ist die Liste der Einzelentfernungen der beteiligten Artists.
+    Ist sie gesetzt, zählt jede Anreise für sich: Kilometergeld und
+    Zuschlagsstufe fallen pro Artist an. Das ist der Normalfall, seit die
+    Entfernung je Artist bekannt ist.
+
+    `distance_km` zusammen mit `people` bleibt als Kurzform erhalten (eine
+    Entfernung, mehrfach gefahren) und wird nur benutzt, wenn `distances`
+    fehlt. Dort gilt die Zuschlagsstufe wie bisher genau einmal.
     """
     tech_fee = 0
     if needs_light:
@@ -68,25 +93,27 @@ def surcharges(distance_km=0, needs_light=False, needs_sound=False,
     if needs_sound:
         tech_fee += 450
 
-    try:
-        distance_km = float(distance_km or 0)
-    except (TypeError, ValueError):
-        distance_km = 0.0
+    rate = _env_float('RATE_PER_KM', 0.5)
 
-    surcharge = 0
+    if distances is not None:
+        legs = [_to_float(d) for d in distances]
+        travel_fee = sum(d * rate for d in legs)
+        surcharge = sum(_distance_tier(d) for d in legs)
+    else:
+        distance = _to_float(distance_km)
+        travel_fee = distance * rate * max(1, int(people or 1))
+        surcharge = _distance_tier(distance)
+
     city = None
     if event_address:
         raw_city = event_address.split(',')[-1].strip()
         parts = raw_city.split()
         city = parts[-1].lower() if parts else None
-    if distance_km >= 600:
-        surcharge += 300
-    elif distance_km >= 300:
-        surcharge += 200
+    # Der Ortsrabatt hängt am Veranstaltungsort, nicht an der Anreise, und
+    # wird deshalb genau einmal abgezogen.
     if city in ['münchen', 'muenchen', 'munich']:
         surcharge -= 100
 
-    travel_fee = distance_km * _env_float('RATE_PER_KM', 0.5) * max(1, int(people or 1))
     return tech_fee + surcharge + travel_fee
 
 
@@ -112,7 +139,8 @@ def calculate_price(base_min, base_max,
                     needs_light=False, needs_sound=False,
                     team_size='solo',
                     duration=0, event_address=None, team_count=None,
-                    tight_spread_pct: float | None = None):
+                    tight_spread_pct: float | None = None,
+                    distances=None):
     """Berechnet die Preisspanne (inkl. Agenturgebühr) für eine Buchungsanfrage.
 
     Ablauf:
@@ -131,6 +159,11 @@ def calculate_price(base_min, base_max,
        bleibt innerhalb der Artist-Spanne.
     5. Erst danach kommen Agenturgebühr (nur auf die Gage) und die festen
        Durchlaufposten Technik, Distanzzuschlag und Anfahrt dazu.
+
+    `distances` sind die Einzelentfernungen der beteiligten Artists. Ist die
+    Liste gesetzt, ersetzt sie `distance_km`: jede Anreise wird einzeln
+    abgerechnet, statt eine Sammelentfernung mit der Personenzahl zu
+    multiplizieren.
 
     `newsletter`, `show_discipline` und `tight_spread_pct` sind ohne Wirkung und
     bleiben nur erhalten, damit bestehende Aufrufer unverändert funktionieren.
@@ -203,7 +236,8 @@ def calculate_price(base_min, base_max,
 
     # --- Agenturgebühr auf die Gage, Zuschläge als Durchlaufposten ---------
     extras = dict(distance_km=distance_km, needs_light=needs_light,
-                  needs_sound=needs_sound, event_address=event_address, people=people)
+                  needs_sound=needs_sound, event_address=event_address,
+                  people=people, distances=distances)
     result = (client_price(gage_min, fee_pct, **extras),
               client_price(gage_max, fee_pct, **extras))
 
@@ -213,6 +247,7 @@ def calculate_price(base_min, base_max,
         "calculate_price: base=%s-%s, min_floor=%.0f, score=%.2f, gage=%.0f "
         "(%.0f-%.0f), fee=%s%%, people=%s, distance=%s => %s-%s",
         base_min, base_max, min_floor, score, gage, gage_min, gage_max,
-        fee_pct, people, distance_km, result[0], result[1],
+        fee_pct, people, distances if distances is not None else distance_km,
+        result[0], result[1],
     )
     return result

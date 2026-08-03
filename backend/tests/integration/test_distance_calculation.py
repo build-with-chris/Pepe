@@ -103,18 +103,54 @@ def test_artist_without_coordinates_is_geocoded_and_backfilled(app, stub_geocode
     assert artist.lat is None and artist.lon is None
 
     mgr = brm.BookingRequestManager()
-    event_coord, distance = mgr._compute_travel_distance("Rathausmarkt 1, Hamburg", [artist])
+    event_coord, distances = mgr._compute_travel_distance("Rathausmarkt 1, Hamburg", [artist])
 
     assert event_coord == pytest.approx(COORDS["hamburg"], abs=0.01)
-    assert distance == pytest.approx(600, rel=0.10)
+    assert distances[artist.id] == pytest.approx(600, rel=0.10)
     # nachgetragen, damit die nächste Anfrage keinen Netzaufruf mehr braucht
     assert artist.lat == pytest.approx(48.1351, abs=0.01)
     assert artist.lon == pytest.approx(11.5820, abs=0.01)
 
 
-def test_unresolvable_event_address_yields_zero(app, stub_geocode, munich_artist, get_artist):
-    """Keine Koordinate zur Event-Adresse -> 0 km, kein Absturz."""
+def test_unresolvable_event_address_yields_no_distances(app, stub_geocode, munich_artist, get_artist):
+    """Keine Koordinate zur Event-Adresse -> keine Entfernungen, kein Absturz."""
     mgr = brm.BookingRequestManager()
-    event_coord, distance = mgr._compute_travel_distance("Nirgendwo 1", [get_artist(munich_artist)])
+    event_coord, distances = mgr._compute_travel_distance("Nirgendwo 1", [get_artist(munich_artist)])
     assert event_coord is None
-    assert distance == 0.0
+    assert distances == {}
+
+
+def test_distances_are_per_artist_not_averaged(app, stub_geocode, munich_artist, get_artist):
+    """Jeder Artist bekommt seine eigene Entfernung, nicht den Mittelwert aller.
+
+    Der Mittelwert war als Preisbestandteil unbrauchbar: Für ein Event in
+    München kam derselbe Wert heraus wie für eines in Hamburg, sobald die
+    Artists auf beide Städte verteilt waren.
+    """
+    from tests.conftest import unique_email, unique_uid
+
+    hamburg = Artist(
+        name="Hansa Hanna",
+        email=unique_email("hh"),
+        supabase_user_id=unique_uid("hh"),
+        approval_status="approved",
+        address="Rathausmarkt 1, Hamburg",
+        price_min=900,
+        price_max=1300,
+    )
+    am.ArtistManager().geocode_and_set(hamburg)
+    db.session.add(hamburg)
+    db.session.commit()
+
+    mgr = brm.BookingRequestManager()
+    artists = [get_artist(munich_artist), hamburg]
+
+    _, in_munich = mgr._compute_travel_distance("Marienplatz 1, München", artists)
+    _, in_hamburg = mgr._compute_travel_distance("Rathausmarkt 1, Hamburg", artists)
+
+    # In München ist der Münchner da, der Hamburger muss anreisen.
+    assert in_munich[munich_artist] == pytest.approx(0, abs=1)
+    assert in_munich[hamburg.id] == pytest.approx(600, rel=0.10)
+    # In Hamburg genau andersherum. Beim Mittelwert war beides identisch.
+    assert in_hamburg[hamburg.id] == pytest.approx(0, abs=1)
+    assert in_hamburg[munich_artist] == pytest.approx(600, rel=0.10)

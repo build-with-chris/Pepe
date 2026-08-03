@@ -234,3 +234,25 @@ def test_surcharges_are_independent_of_the_gage():
     assert surcharges(needs_light=True, needs_sound=True) == 900
     assert surcharges(distance_km=100, people=2) == 100
     assert surcharges(distance_km=350) == 200 + 175
+
+
+def test_surcharges_bill_each_journey_on_its_own():
+    """Mit `distances` zählt jede Anreise für sich, nicht eine Sammelentfernung."""
+    # 0 km und 400 km: nur die zweite Fahrt löst die 300-km-Stufe aus.
+    assert surcharges(distances=[0, 400]) == 200 + 200
+    # Beide über 600 km: die Stufe fällt zweimal an.
+    assert surcharges(distances=[610, 610]) == 2 * 300 + 610
+    # Ohne Anreise bleibt nur die Technik übrig.
+    assert surcharges(distances=[0, 0], needs_light=True) == 450
+
+
+def test_local_discount_applies_once_per_event():
+    """Der München-Rabatt hängt am Ort, nicht an der Zahl der Anreisenden."""
+    munich = 'Leopoldstr. 1, 80802 München'
+    assert surcharges(distances=[0], event_address=munich) == -100
+    assert surcharges(distances=[0, 0], event_address=munich) == -100
+
+
+def test_distances_take_precedence_over_the_collective_distance():
+    """Ist `distances` gesetzt, spielen `distance_km` und `people` keine Rolle."""
+    assert surcharges(distances=[100], distance_km=9999, people=7) == 50
