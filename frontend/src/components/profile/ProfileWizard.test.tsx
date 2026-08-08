@@ -244,3 +244,42 @@ describe('ProfileWizard', () => {
     expect(within(kunde).getByText('@alexbeispiel')).toBeInTheDocument();
   });
 });
+
+describe('Profilbild: Ausschnitt vor dem Upload', () => {
+  /** Datei auswählen, so wie es der Browser meldet. */
+  async function pickFile(input: HTMLElement, file: File) {
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  it('oeffnet den Zuschnitt statt die Datei direkt zu uebernehmen', async () => {
+    // Der Kern der Aenderung: Vorher landete die Datei unmittelbar im Profil
+    // und damit im Upload. Der Browser entschied dann beim Anzeigen, was von
+    // einem Hochformat uebrig bleibt — meist auf Kosten von Kopf oder Fuessen.
+    render(<Harness initial={completeProfile} />);
+    expect(currentStep()).toBe('Bild, Text und Vorschau');
+
+    const file = new File([new Uint8Array([1, 2, 3])], 'portrait.jpg', { type: 'image/jpeg' });
+    await pickFile(document.getElementById('w-photo') as HTMLElement, file);
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Ausschnitt wählen')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: /Ausschnitt übernehmen/ })).toBeInTheDocument();
+  });
+
+  it('verwirft die Auswahl beim Abbrechen und uebernimmt nichts', async () => {
+    render(<Harness initial={completeProfile} />);
+
+    const file = new File([new Uint8Array([1, 2, 3])], 'portrait.jpg', { type: 'image/jpeg' });
+    await pickFile(document.getElementById('w-photo') as HTMLElement, file);
+    await click(within(screen.getByRole('dialog')).getByRole('button', { name: /Abbrechen/ }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    // Die Beschriftung wechselt erst, wenn ein Bild wirklich uebernommen wurde.
+    expect(screen.getByText('Bild wählen')).toBeInTheDocument();
+  });
+});

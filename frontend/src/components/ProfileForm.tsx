@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { User, MapPin, Music, Euro, FileText, ImageIcon, Images, Upload, X } from "lucide-react";
+import ImageCropDialog from "@/components/profile/ImageCropDialog";
 
 interface ProfileFormProps {
   profile: {
@@ -95,11 +96,26 @@ export function ProfileForm({
     };
   }, [galleryBlobUrls]);
 
+  // Die gewaehlte Datei geht nicht direkt in den Upload, sondern erst in den
+  // Zuschnitt-Dialog. Sonst entscheidet der Browser beim Anzeigen, was von
+  // einem Hochformat uebrig bleibt, und das trifft gern Kopf oder Fuesse.
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfile({ profileImageFile: file });
+      setPendingImage(file);
     }
+    // Zuruecksetzen, damit dieselbe Datei erneut gewaehlt werden kann, etwa
+    // nach einem Abbruch im Dialog.
+    e.target.value = "";
+  };
+
+  const handleCropConfirm = (blob: Blob) => {
+    setProfile({
+      profileImageFile: new File([blob], "profile.webp", { type: "image/webp" }),
+    });
+    setPendingImage(null);
   };
 
   const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -533,7 +549,9 @@ export function ProfileForm({
             )}>
               <Upload className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm text-gray-400">Bild auswählen oder hierher ziehen</span>
-              <span className="text-xs text-gray-500 mt-1">PNG, JPG bis 5MB</span>
+              <span className="text-xs text-gray-500 mt-1">
+                PNG oder JPG bis 5 MB. Den quadratischen Ausschnitt wählst du danach selbst.
+              </span>
               <input
                 type="file"
                 accept="image/*"
@@ -542,6 +560,11 @@ export function ProfileForm({
                 className="hidden"
               />
             </label>
+            <ImageCropDialog
+              file={pendingImage}
+              onConfirm={handleCropConfirm}
+              onCancel={() => setPendingImage(null)}
+            />
           </CardContent>
         </Card>
 

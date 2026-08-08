@@ -41,6 +41,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { ProfilePreview } from './PreviewCards';
+import ImageCropDialog from './ImageCropDialog';
 import {
   availableDisciplines,
   awardsOptions,
@@ -301,6 +302,9 @@ export function ProfileWizard({
   const [step, setStep] = useState(() => firstIncompleteStep(profile));
   const [maxReached, setMaxReached] = useState(() => firstIncompleteStep(profile));
   const [touched, setTouched] = useState(false);
+  // Gewaehltes Profilbild, das noch auf seinen Zuschnitt wartet. Es geht erst
+  // ins Profil, wenn der Artist den quadratischen Ausschnitt bestaetigt hat.
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
 
   const missing = useMemo(() => missingRequiredFields(profile), [profile]);
   const stepMissing = (REQUIRED_BY_STEP[step] ?? []).filter((f) => missing.includes(f));
@@ -616,7 +620,10 @@ export function ProfileWizard({
                       className="sr-only"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) setProfile({ profileImageFile: file });
+                        if (file) setPendingImage(file);
+                        // Zuruecksetzen, damit dieselbe Datei nach einem
+                        // Abbruch erneut gewaehlt werden kann.
+                        e.target.value = '';
                       }}
                     />
                     {profile.profileImageUrl && (
@@ -631,8 +638,19 @@ export function ProfileWizard({
                     )}
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    Ein Hochformat wirkt am besten. Maximal 4 MB.
+                    Maximal 4 MB. Den quadratischen Ausschnitt für die
+                    Künstlerkarte wählst du im nächsten Schritt selbst.
                   </p>
+                  <ImageCropDialog
+                    file={pendingImage}
+                    onConfirm={(blob) => {
+                      setProfile({
+                        profileImageFile: new File([blob], 'profile.webp', { type: 'image/webp' }),
+                      });
+                      setPendingImage(null);
+                    }}
+                    onCancel={() => setPendingImage(null)}
+                  />
                 </div>
 
               <div className="sm:col-span-2">

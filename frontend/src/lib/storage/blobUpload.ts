@@ -14,6 +14,8 @@
  * `backend/routes/upload_routes.py`), nicht dieses Modul.
  */
 
+import { PROFILE_IMAGE_SIZE } from '@/lib/imageCrop';
+
 export type UploadType = 'profile' | 'hero' | 'gallery' | 'invoice';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -146,11 +148,19 @@ export async function uploadProfileImage(
     return existingUrl;
   }
 
-  setDebug?.('Profilbild wird zu WebP umgewandelt...');
-  const webpBlob = await convertToWebP(file, 800, 800, 0.9);
+  // Profilbilder laufen durch den Zuschnitt-Dialog (ImageCropDialog) und
+  // kommen dort bereits quadratisch, verkleinert und als WebP heraus. Sie hier
+  // erneut umzuwandeln waere ein zweiter Verlustschritt ohne jeden Gewinn.
+  // Alles andere wird wie bisher umgewandelt, damit kein Weg offen bleibt, auf
+  // dem ein Kamera-Original in Originalgroesse durchrutscht.
+  let blob: Blob = file;
+  if (file.type !== 'image/webp') {
+    setDebug?.('Profilbild wird zu WebP umgewandelt...');
+    blob = await convertToWebP(file, PROFILE_IMAGE_SIZE, PROFILE_IMAGE_SIZE, 0.9);
+  }
 
   setDebug?.('Profilbild wird hochgeladen...');
-  const url = await uploadViaBackend(webpBlob, artistId, 'profile', authToken);
+  const url = await uploadViaBackend(blob, artistId, 'profile', authToken);
 
   setImageUrl(url);
   setDebug?.('Profilbild hochgeladen.');
