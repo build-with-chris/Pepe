@@ -27,8 +27,10 @@ def _fake_geocode(address, **kwargs):
 
 @pytest.fixture()
 def stub_geocode(monkeypatch):
-    monkeypatch.setattr(brm, "geocode_address", _fake_geocode)
-    monkeypatch.setattr(am, "geocode_address", _fake_geocode)
+    # Auf der untersten Ebene stubben, damit die Stufensuche darueber
+    # (voll -> ohne Hausnummer -> PLZ+Ort -> Ort) mitgetestet wird.
+    import services.geo as geo
+    monkeypatch.setattr(geo, "geocode_address", _fake_geocode)
     return _fake_geocode
 
 

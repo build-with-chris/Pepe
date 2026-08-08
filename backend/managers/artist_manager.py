@@ -7,7 +7,7 @@ from managers.discipline_manager import DisciplineManager
 from datetime import date, timedelta
 from managers.availability_manager import AvailabilityManager
 from services.gage_calculator import GageCalculator
-from services.geo import geocode_address
+from services.geo import geocode_address, geocode_address_cascade
 from sqlalchemy.exc import IntegrityError
 import logging
 logger = logging.getLogger(__name__)
@@ -25,23 +25,35 @@ class ArtistManager:
         self.availability_mgr = AvailabilityManager()
 
     def geocode_and_set(self, artist):
-        """If artist.address is set, geocode it and store the coordinates on lat/lon.
+        """Löst `artist.address` auf und schreibt lat/lon sowie die Genauigkeit.
 
         Die Spalten heißen `lat`/`lon` (siehe models.Artist) — frühere Versionen
         schrieben auf `latitude`/`longitude` und damit ins Leere.
         Fehlschläge werden nur geloggt, damit ein Nominatim-Ausfall kein
         Profil-Update blockiert.
+
+        Gesucht wird in Stufen: erst die Adresse wie eingegeben, dann ohne
+        Hausnummer, dann Postleitzahl und Ort, zuletzt nur der Ort. Ein
+        Tippfehler im Straßennamen kostet damit nicht mehr die gesamte
+        Anfahrtsberechnung, sondern nur ein paar hundert Meter Genauigkeit.
+        `geo_precision` hält fest, welche Stufe gegriffen hat.
         """
         try:
             address = (getattr(artist, 'address', None) or '').strip()
             if not address:
                 return
-            coords = geocode_address(address)
+            coords, precision = geocode_address_cascade(address)
             if not coords:
-                logger.warning('Geocoding: no result for %s', address)
+                # Koordinaten stehen lassen, falls schon welche da waren: ein
+                # Nominatim-Ausfall soll keine brauchbaren Werte wegwerfen.
+                logger.warning('Geocoding: keine Stufe fuehrte zu einem Treffer fuer %r', address)
                 return
             artist.lat, artist.lon = coords
-            logger.info('Geocoded artist address %r -> lat=%s lon=%s', address, artist.lat, artist.lon)
+            artist.geo_precision = precision
+            logger.info(
+                'Geocoded artist address %r -> lat=%s lon=%s (Genauigkeit %s)',
+                address, artist.lat, artist.lon, precision,
+            )
         except Exception:
             logger.exception('Geocoding exception for address: %s', getattr(artist, 'address', None))
 

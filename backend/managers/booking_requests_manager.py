@@ -7,7 +7,7 @@ from services.calculate_price import (
 from flask import current_app
 from datetime import date, datetime, time, timedelta
 from typing import Optional, List, Tuple
-from services.geo import geocode_address, haversine_km
+from services.geo import geocode_address_cascade, haversine_km
 from sqlalchemy import func
 
 # Zulässige Statuswerte für Buchungsanfragen
@@ -115,7 +115,7 @@ class BookingRequestManager:
         if not addr:
             return None
         try:
-            coord = geocode_address(addr)
+            coord, precision = geocode_address_cascade(addr)
         except Exception as e:
             current_app.logger.warning(f"artist geocoding failed: {e}")
             return None
@@ -123,6 +123,7 @@ class BookingRequestManager:
             return None
         try:
             artist.lat, artist.lon = coord
+            artist.geo_precision = precision
         except Exception:
             pass
         return coord
@@ -159,7 +160,7 @@ class BookingRequestManager:
         Rückgabe (None, {}), wenn die Event-Adresse nicht auflösbar ist.
         """
         try:
-            event_coord = geocode_address(event_address)
+            event_coord, _ = geocode_address_cascade(event_address)
         except Exception as e:
             current_app.logger.warning(f"event geocoding failed: {e}")
             return None, {}

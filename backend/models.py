@@ -42,6 +42,11 @@ class Artist(UserMixin, db.Model):
     address        = db.Column(db.String(200), nullable=True)
     lat            = db.Column(db.Float, nullable=True)
     lon            = db.Column(db.Float, nullable=True)
+    # Wie genau die Adresse auflösbar war: 'exact' | 'street' | 'postal' |
+    # 'city', oder NULL, wenn gar nichts gefunden wurde. Ein Tippfehler im
+    # Straßennamen landet auf 'postal' — die Anfahrt stimmt dann bis auf den
+    # Ortsmittelpunkt, aber man sieht, dass nachgebessert werden sollte.
+    geo_precision  = db.Column(db.String(10), nullable=True)
     password_hash  = db.Column(db.Text(), nullable=True)
     push_token     = db.Column(db.String(200), nullable=True)  # for push notifications
     is_admin       = db.Column(db.Boolean, default=False)

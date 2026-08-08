@@ -9,9 +9,6 @@ from datetime import date, timedelta
 
 import pytest
 
-import managers.artist_manager as am
-import managers.booking_requests_manager as brm
-import routes.request_routes as request_routes
 from models import db
 
 MUNICH = (48.1372, 11.5756)
@@ -32,13 +29,18 @@ def reset_rate_limit():
 
 @pytest.fixture(autouse=True)
 def stub_geocoding(monkeypatch):
-    """Kein Nominatim im Test: Adressen werden lokal aufgelöst."""
-    def fake_geocode(address):
+    """Kein Nominatim im Test: Adressen werden lokal aufgelöst.
+
+    Gestubbt wird `services.geo.geocode_address`, also die unterste Ebene.
+    Die Stufensuche darueber laeuft damit unveraendert mit.
+    """
+    import services.geo as geo
+
+    def fake_geocode(address, **kwargs):
         if address and 'hamburg' in address.lower():
             return HAMBURG
         return MUNICH
-    monkeypatch.setattr(brm, 'geocode_address', fake_geocode)
-    monkeypatch.setattr(am, 'geocode_address', fake_geocode)
+    monkeypatch.setattr(geo, 'geocode_address', fake_geocode)
 
 
 @pytest.fixture

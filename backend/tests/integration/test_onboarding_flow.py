@@ -59,7 +59,10 @@ def geocoder(monkeypatch):
     Nicht nur der Geschwindigkeit wegen: Ohne diese Fixture haengt der Test am
     Netz und der Schritt „Adresse gespeichert" waere nicht nachweisbar.
     """
-    import managers.artist_manager as artist_manager
+    # Gestubbt wird die unterste Ebene in `services.geo`, nicht der Manager.
+    # Damit laeuft die Stufensuche (voll -> ohne Hausnummer -> PLZ -> Ort) im
+    # Test wirklich mit, statt umgangen zu werden.
+    import services.geo as geo
 
     calls = []
 
@@ -67,7 +70,7 @@ def geocoder(monkeypatch):
         calls.append(address)
         return (48.1371, 11.5754)  # Muenchen
 
-    monkeypatch.setattr(artist_manager, 'geocode_address', _geocode)
+    monkeypatch.setattr(geo, 'geocode_address', _geocode)
     return calls
 
 

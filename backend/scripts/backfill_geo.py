@@ -6,7 +6,7 @@ try:
     # Preferred: run from project root with: python -m PepeBooking.scripts.backfill_geo
     from PepeBooking.app import app
     from PepeBooking.models import db, Artist, BookingRequest
-    from PepeBooking.services.geo import geocode_address
+    from PepeBooking.services.geo import geocode_address_cascade
 except ModuleNotFoundError:
     import sys, os
     # 1) Add project root (parent of 'PepeBooking') to sys.path
@@ -17,7 +17,7 @@ except ModuleNotFoundError:
         # Try again to import as a package
         from PepeBooking.app import app
         from PepeBooking.models import db, Artist, BookingRequest
-        from PepeBooking.services.geo import geocode_address
+        from PepeBooking.services.geo import geocode_address_cascade
     except ModuleNotFoundError:
         # 2) Fallback: import modules directly within the PepeBooking package dir
         pepe_dir = os.path.dirname(os.path.dirname(__file__))
@@ -25,7 +25,7 @@ except ModuleNotFoundError:
             sys.path.insert(0, pepe_dir)
         from app import app
         from models import db, Artist, BookingRequest
-        from services.geo import geocode_address
+        from services.geo import geocode_address_cascade
 
 BATCH_SLEEP = 1.0  # Respekt für Nominatim: 1 Request/Sekunde
 
@@ -51,21 +51,18 @@ with app.app_context():
             continue
 
         addr = str(a.address).strip()
-        coord = geocode_address(addr)
-        if not coord:
-            # Fallback: try appending country if missing
-            lower = addr.lower()
-            if "deutschland" not in lower and "germany" not in lower:
-                fallback_addr = f"{addr}, Deutschland"
-                print(f"[artist] {a.id} geocode miss; retry with country: '{fallback_addr}'")
-                time.sleep(0.5)  # be gentle to the API between attempts
-                coord = geocode_address(fallback_addr)
+        # Die Stufensuche probiert von genau nach grob: Adresse wie eingegeben,
+        # ohne Hausnummer, dann PLZ und Ort, zuletzt nur der Ort. Sie ersetzt
+        # den frueheren Handgriff, einfach ", Deutschland" anzuhaengen — der
+        # half bei einem vertippten Strassennamen naemlich gar nicht.
+        coord, precision = geocode_address_cascade(addr)
 
         if coord:
             a.lat, a.lon = coord
+            a.geo_precision = precision
             db.session.add(a)
             db.session.commit()
-            print(f"[artist] {a.id} {addr} -> {coord}")
+            print(f"[artist] {a.id} {addr} -> {coord} ({precision})")
         else:
             print(f"[artist] {a.id} FAILED to geocode: '{addr}'")
 
@@ -85,7 +82,7 @@ with app.app_context():
         r = BookingRequest.query.get(r_id)
         if not r or not r.event_address:
             continue
-        coord = geocode_address(r.event_address)
+        coord, _ = geocode_address_cascade(r.event_address)
         if coord:
             r.event_lat, r.event_lon = coord
             db.session.add(r)

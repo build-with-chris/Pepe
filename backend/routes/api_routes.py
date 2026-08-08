@@ -228,6 +228,9 @@ def artist_me_payload(artist) -> dict:
         'name': artist.name,
         'email': artist.email,
         'address': getattr(artist, 'address', None),
+        # Sagt dem Profil, ob die Adresse exakt getroffen wurde oder nur
+        # auf Ortsebene. Ohne das bleibt ein Tippfehler unsichtbar.
+        'geo_precision': getattr(artist, 'geo_precision', None),
         'phone_number': artist.phone_number,
         'disciplines': [d.name for d in artist.disciplines],
         'price_min': getattr(artist, 'price_min', None),
@@ -528,6 +531,7 @@ def update_my_profile():
             'name': artist.name,
             'email': artist.email,
             'address': getattr(artist, 'address', None),
+            'geo_precision': getattr(artist, 'geo_precision', None),
             'phone_number': artist.phone_number,
             'disciplines': [d.name for d in artist.disciplines],
             'price_min': getattr(artist, 'price_min', None),

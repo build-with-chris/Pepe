@@ -13,6 +13,7 @@ Notes:
 from __future__ import annotations
 
 import math
+import re
 import threading
 import time
 from collections import OrderedDict
@@ -133,6 +134,130 @@ def geocode_address(address: str, *, timeout: float = 8.0) -> Optional[Tuple[flo
         return None
 
 
+# --- Adresssuche mit Rückfallstufen ----------------------------------------
+#
+# Eine Adresse aus einem Formular ist selten fehlerfrei. Ein vertippter
+# Straßenname reicht, und Nominatim findet gar nichts — dann fehlt die
+# Entfernung, und der Kunde sieht einen Preis ohne Anfahrt, ohne dass jemand
+# etwas davon merkt. Genau so lag "Kiebtzweg 12a, 85464 Finsing" im Bestand:
+# ein fehlendes "i" im Straßennamen.
+#
+# Deshalb wird von genau nach grob gesucht. Für eine Anfahrtsberechnung ist der
+# Ortsmittelpunkt völlig ausreichend; ein paar hundert Meter fallen bei einer
+# Fahrt über Dutzende Kilometer nicht ins Gewicht. Wichtig ist nur, dass die
+# Ungenauigkeit benannt wird und nicht als exakter Treffer durchgeht.
+
+# Genauigkeitsstufen, absteigend. Der Wert wird am Artist gespeichert.
+GEO_PRECISION_EXACT = "exact"    # Adresse wie eingegeben gefunden
+GEO_PRECISION_STREET = "street"  # Straße ohne Hausnummer
+GEO_PRECISION_POSTAL = "postal"  # Postleitzahl und Ort
+GEO_PRECISION_CITY = "city"      # nur der Ort
+
+_COUNTRY_SUFFIXES = {
+    "deutschland", "germany", "de",
+    "österreich", "oesterreich", "austria", "at",
+    "schweiz", "switzerland", "ch",
+}
+
+_POSTAL_CITY = re.compile(r"^(\d{4,5})\s+(.+)$")
+
+
+def _split_address(address: str):
+    """Zerlegt eine Adresse in (Glieder ohne Land, Land oder None)."""
+    parts = [p.strip() for p in str(address).split(",") if p.strip()]
+    country = None
+    while parts and parts[-1].lower() in _COUNTRY_SUFFIXES:
+        country = parts.pop()
+    return parts, country
+
+
+def _looks_like_a_place(value: str) -> bool:
+    """Grober Plausibilitätstest für einen Ortsnamen.
+
+    Ohne diesen Test wird die Stufensuche zu gutmütig: Zur Eingabe
+    "ewergreg, 65456 4565445" fiel sie auf den "Ort" 4565445 zurück, und
+    Nominatim antwortete mit einer Koordinate mitten in München. Eine
+    offensichtlich unsinnige Adresse soll ohne Koordinate bleiben, statt eine
+    plausibel aussehende zu erfinden.
+    """
+    value = (value or "").strip()
+    return len(value) >= 2 and any(ch.isalpha() for ch in value)
+
+
+def _without_house_number(street: str) -> str:
+    """'Kiebitzweg 12a' -> 'Kiebitzweg'. Gibt '' zurück, wenn nichts übrig bleibt."""
+    tokens = street.split()
+    while tokens and any(ch.isdigit() for ch in tokens[-1]):
+        tokens.pop()
+    return " ".join(tokens)
+
+
+def address_variants(address: str) -> list:
+    """[(Suchtext, Genauigkeit), …] von genau nach grob, ohne Doppelte.
+
+    Erwartet das übliche Format "Straße Hausnr, PLZ Ort, Land". Weicht eine
+    Adresse davon ab, fallen die nicht ermittelbaren Stufen einfach weg.
+    """
+    address = (address or "").strip()
+    if not address:
+        return []
+
+    parts, country = _split_address(address)
+    tail = f", {country}" if country else ""
+
+    postal = city = None
+    for p in parts:
+        m = _POSTAL_CITY.match(p)
+        if m:
+            postal, city = m.group(1), m.group(2).strip()
+            break
+    # Kein "PLZ Ort"-Glied? Dann ist das letzte Glied nach der Straße der Ort.
+    if city is None and len(parts) > 1:
+        city = parts[-1]
+
+    variants = [(address, GEO_PRECISION_EXACT)]
+
+    if parts:
+        street = _without_house_number(parts[0])
+        if street and street != parts[0]:
+            rest = "".join(f", {p}" for p in parts[1:])
+            variants.append((f"{street}{rest}{tail}", GEO_PRECISION_STREET))
+
+    if city and _looks_like_a_place(city):
+        if postal:
+            variants.append((f"{postal} {city}{tail}", GEO_PRECISION_POSTAL))
+        variants.append((f"{city}{tail}", GEO_PRECISION_CITY))
+
+    seen = set()
+    unique = []
+    for query, precision in variants:
+        key = _cache_key(query)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append((query, precision))
+    return unique
+
+
+def geocode_address_cascade(address: str, *, timeout: float = 8.0):
+    """Sucht eine Adresse in Stufen und meldet mit, wie genau der Treffer war.
+
+    Rückgabe `((lat, lon), Genauigkeit)` oder `(None, None)`, wenn keine Stufe
+    etwas findet. `Genauigkeit` ist eine der GEO_PRECISION_*-Konstanten.
+    """
+    for query, precision in address_variants(address):
+        coord = geocode_address(query, timeout=timeout)
+        if coord:
+            if precision != GEO_PRECISION_EXACT:
+                current_app.logger.info(
+                    "Geocode: %r nicht gefunden, benutze %r (Genauigkeit %s)",
+                    address, query, precision,
+                )
+            return coord, precision
+    current_app.logger.warning("Geocode: keine Stufe fuehrte zu einem Treffer fuer %r", address)
+    return None, None
+
+
 def haversine_km(a: Tuple[float, float], b: Tuple[float, float]) -> float:
     """Great-circle distance between two (lat, lon) points in kilometers."""
     lat1, lon1 = a
@@ -149,4 +274,14 @@ def haversine_km(a: Tuple[float, float], b: Tuple[float, float]) -> float:
     return 2 * R * math.atan2(math.sqrt(s), math.sqrt(1 - s))
 
 
-__all__ = ["geocode_address", "haversine_km", "clear_geocode_cache"]
+__all__ = [
+    "geocode_address",
+    "geocode_address_cascade",
+    "address_variants",
+    "haversine_km",
+    "clear_geocode_cache",
+    "GEO_PRECISION_EXACT",
+    "GEO_PRECISION_STREET",
+    "GEO_PRECISION_POSTAL",
+    "GEO_PRECISION_CITY",
+]
