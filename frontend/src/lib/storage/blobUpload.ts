@@ -148,8 +148,8 @@ export async function uploadProfileImage(
     return existingUrl;
   }
 
-  // Profilbilder laufen durch den Zuschnitt-Dialog (ImageCropDialog) und
-  // kommen dort bereits quadratisch, verkleinert und als WebP heraus. Sie hier
+  // Profilbilder laufen durch den Zuschnitt-Dialog (ImageCropDialog) und kommen
+  // dort bereits im Zielformat, verkleinert und als WebP heraus. Sie hier
   // erneut umzuwandeln waere ein zweiter Verlustschritt ohne jeden Gewinn.
   // Alles andere wird wie bisher umgewandelt, damit kein Weg offen bleibt, auf
   // dem ein Kamera-Original in Originalgroesse durchrutscht.

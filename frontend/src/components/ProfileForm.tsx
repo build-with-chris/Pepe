@@ -535,10 +535,13 @@ export function ProfileForm({
           <CardContent className="space-y-4">
             {profile.profileImageUrl && (
               <div className="flex justify-center">
+                {/* 3 zu 4 wie der gewaehlte Ausschnitt. Quadratisch wuerde die
+                    Vorschau oben und unten wieder abschneiden und damit genau
+                    das verdecken, was der Artist eingestellt hat. */}
                 <img
                   src={profile.profileImageUrl}
                   alt="Profile"
-                  className="w-32 h-32 object-cover rounded-2xl border-2 border-white/10"
+                  className="w-24 h-32 object-cover rounded-2xl border-2 border-white/10"
                 />
               </div>
             )}
@@ -550,7 +553,8 @@ export function ProfileForm({
               <Upload className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm text-gray-400">Bild auswählen oder hierher ziehen</span>
               <span className="text-xs text-gray-500 mt-1">
-                PNG oder JPG bis 5 MB. Den quadratischen Ausschnitt wählst du danach selbst.
+                PNG oder JPG bis 5 MB. Den Ausschnitt wählst du danach selbst, im
+                Hochformat 3 zu 4.
               </span>
               <input
                 type="file"

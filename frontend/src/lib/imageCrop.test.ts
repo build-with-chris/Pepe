@@ -16,6 +16,23 @@ import {
   clampCrop,
 } from './imageCrop';
 
+describe('PROFILE_ASPECT', () => {
+  it('ist das Hochformat 3 zu 4', () => {
+    // Festgenagelt, weil das Verhaeltnis zu den Bildrahmen in PreviewCards und
+    // auf der Kuenstlerkarte passen muss. Wer es aendert, muss auch dort
+    // nachziehen, sonst schneidet die Anzeige den gewaehlten Ausschnitt wieder
+    // an — genau der Fehler, den der Zuschnitt beheben soll.
+    expect(PROFILE_ASPECT).toBeCloseTo(0.75);
+  });
+
+  it('erzeugt aus einem Querformat einen hochkant stehenden Ausschnitt', () => {
+    const crop = centeredCrop(2000, 1000, PROFILE_ASPECT);
+    expect(crop.height).toBe(1000);
+    expect(crop.width).toBe(750);
+    expect(crop.width).toBeLessThan(crop.height);
+  });
+});
+
 describe('centeredCrop', () => {
   it('nimmt bei einem Hochformat die volle Breite und sitzt mittig', () => {
     // 1000 breit, 2000 hoch, quadratisch gewuenscht.

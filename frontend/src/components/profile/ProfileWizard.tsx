@@ -638,8 +638,8 @@ export function ProfileWizard({
                     )}
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    Maximal 4 MB. Den quadratischen Ausschnitt für die
-                    Künstlerkarte wählst du im nächsten Schritt selbst.
+                    Maximal 4 MB. Den Ausschnitt für die Künstlerkarte wählst du
+                    im nächsten Schritt selbst, im Hochformat 3 zu 4.
                   </p>
                   <ImageCropDialog
                     file={pendingImage}

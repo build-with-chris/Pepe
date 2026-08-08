@@ -199,7 +199,9 @@ export function AdminPreviewCard({ profile }: { profile: PreviewProfile }) {
       tone="internal"
     >
       <div className="flex items-start gap-3">
-        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg">
+        {/* 3 zu 4 wie der gewaehlte Ausschnitt, sonst schneidet die Vorschau
+            oben und unten nach. */}
+        <div className="h-16 w-12 flex-shrink-0 overflow-hidden rounded-lg">
           {profile.profileImageUrl ? (
             <img
               src={profile.profileImageUrl}

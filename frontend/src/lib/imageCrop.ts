@@ -9,12 +9,12 @@
  * Deshalb wird der Ausschnitt jetzt beim Hochladen festgelegt, vom Artist
  * selbst, und das Bild kommt bereits im Zielformat im Speicher an.
  *
- * Das Seitenverhältnis ist bewusst eine Einstellung und keine feste Annahme:
- * Die Anzeigeorte sind sich im Bestand nicht einig. `PreviewCards` benutzt
- * `aspect-[3/4]`, die öffentliche `ArtistCardFinal` einen Rahmen von etwa
- * 0,9 zu 1, und die kleinen Vorschauen sind quadratisch. Solange das so ist,
- * schneidet jeder Rahmen noch etwas nach; über PROFILE_ASPECT lässt sich der
- * Zuschnitt an einer Stelle umstellen, sobald die Rahmen vereinheitlicht sind.
+ * Das Seitenverhältnis steht hier an einer Stelle und ist keine Annahme, die
+ * über die Komponenten verstreut liegt. Es ist auf 3 zu 4 gesetzt, passend zur
+ * Kundenvorschau in `PreviewCards`. Die öffentliche `ArtistCardFinal` hat einen
+ * Rahmen von etwa 0,9 zu 1 und schneidet deshalb noch rund ein Sechstel der
+ * Höhe nach; das lässt sich erst beheben, wenn dieser Rahmen ebenfalls auf
+ * 3 zu 4 geht.
  */
 
 /** Längste Kante des gespeicherten Profilbilds in Pixeln. */
@@ -22,9 +22,9 @@ export const PROFILE_IMAGE_SIZE = 800
 
 /**
  * Seitenverhältnis des Profilbilds als Breite geteilt durch Höhe.
- * 1 ist quadratisch, 0.75 wäre ein Hochformat im Verhältnis 3 zu 4.
+ * 0.75 ist ein Hochformat im Verhältnis 3 zu 4, 1 wäre quadratisch.
  */
-export const PROFILE_ASPECT = 1
+export const PROFILE_ASPECT = 3 / 4
 
 /**
  * Bildausschnitt in Pixeln des Originalbilds.

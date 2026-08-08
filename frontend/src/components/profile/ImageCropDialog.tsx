@@ -7,7 +7,7 @@
  * verschieben, Grösse über den Regler, fertig. Vorbelegt ist der grösstmögliche
  * mittige Ausschnitt, im Regelfall reicht also Bestätigen.
  *
- * Das Seitenverhältnis kommt aus `PROFILE_ASPECT` und ist derzeit quadratisch.
+ * Das Seitenverhältnis kommt aus `PROFILE_ASPECT` und ist 3 zu 4.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Check, RotateCcw, X, ZoomIn } from 'lucide-react'
