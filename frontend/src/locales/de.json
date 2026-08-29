@@ -142,7 +142,7 @@
     },
     "cta": {
       "body": "Mit ein paar Klicks zur perfekten Anfrage. Inklusive Preisvorstellung und Verfügbarkeitscheck.",
-      "btnStart": "Anfrage starten"
+      "btnStart": "Booking-Assistent starten"
     }
   },
   "booking": {
@@ -726,10 +726,10 @@
       "artistCount_plural": "{{count}} Künstler:innen",
       "artistCountFallback": "Künstler:innen aus unserem Netzwerk auf Anfrage"
     },
-    "findArtistTitle": "Finde den perfekten Showact",
-    "findArtistSubtitle": "Beantworte nur wenige kurze Fragen und erhalte unverbindlich erste Vorschläge und Preise.",
-    "findArtistButton": "Jetzt starten",
-    "findArtistTime": "Hast du eben 3 Minuten Zeit?",
+    "findArtistTitle": "Finden Sie den perfekten Showact",
+    "findArtistSubtitle": "Beantworten Sie ein paar kurze Fragen und erhalten Sie unverbindlich erste Vorschläge und Preise.",
+    "findArtistButton": "Booking-Assistent starten",
+    "findArtistTime": "Dauert etwa 3 Minuten.",
     "cta": {
       "heading": "PepeShows – mehr als eine Künstlervermittlung",
       "description": "Wir kreieren kommerzielle Shows, fördern Kultur und betreiben unsere eigene Base.\nSo vereinen wir Erfahrung, Netzwerk und Leidenschaft – und machen PepeShows zu echten Experten für unvergessliche Erlebnisse.",

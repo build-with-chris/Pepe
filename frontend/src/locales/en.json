@@ -139,7 +139,7 @@
     },
     "cta": {
       "body": "Get to the perfect enquiry in just a few clicks — including a price estimate and availability check.",
-      "btnStart": "Start enquiry"
+      "btnStart": "Start booking assistant"
     }
   },
     "booking": {
@@ -778,10 +778,10 @@
         "artistCount_plural": "{{count}} performers",
         "artistCountFallback": "Performers from our network upon request"
       },
-      "findArtistTitle": "Find the perfect showact now",
+      "findArtistTitle": "Find the perfect show act",
       "findArtistSubtitle": "Answer just a few short questions and receive non-binding initial suggestions and prices.",
-      "findArtistButton": "Start now",
-      "findArtistTime": "Do you have 3 minutes spare?",
+      "findArtistButton": "Start booking assistant",
+      "findArtistTime": "Takes about 3 minutes.",
       "cta": {
         "heading": "PepeShows – more than just an artist agency",
         "description": "We create commercial shows, promote culture, and run our own base.\nThis way we combine experience, network, and passion – making PepeShows true experts for unforgettable experiences.",

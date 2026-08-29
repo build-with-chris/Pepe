@@ -566,7 +566,7 @@ export default function Home() {
                 <h2 className="bento-title">{t('bento1.hero.title')}</h2>
               </div>
               <div className="bento-destination-tag">
-                <span>Booking Assistant</span>
+                <span>Booking-Assistent</span>
               </div>
             </Link>
 
@@ -585,7 +585,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="bento-destination-tag">
-                <span>Booking starten</span>
+                <span>Booking-Assistent</span>
               </div>
             </Link>
 
@@ -867,6 +867,16 @@ export default function Home() {
       </section>
 
 
+      {/* Mission Statement */}
+      <section className="section bg-pepe-ink">
+        <div className="stage-container">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="overline text-pepe-gold mb-4">{t('about1.mission.kicker')}</div>
+            <p className="h2 mb-0">{t('about1.mission.body')}</p>
+          </div>
+        </div>
+      </section>
+
       {/* Next Steps CTA */}
       <section className="section-large text-center bg-gradient-dark">
         <div className="stage-container">
@@ -886,35 +896,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Mission Statement */}
-      <section className="section bg-pepe-ink">
-        <div className="stage-container">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="overline text-pepe-gold mb-4">{t('about1.mission.kicker')}</div>
-            <p className="h2 mb-0">{t('about1.mission.body')}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA with Agency Info */}
-      <section className="section-large text-center">
-        <div className="stage-container">
-          <h2 className="display-2 mb-8">
-            {t('home.cta.heading')}
-          </h2>
-          <p className="lead mb-12 max-w-3xl mx-auto">
-            {t('home.cta.description')}
-          </p>
-          <div className="cta-actions">
-            <Link to="/anfragen" className="btn btn-primary btn-xl">
-              Jetzt anfragen
-            </Link>
-            <Link to="/kontakt" className="btn btn-ghost btn-lg">
-              {t('home.cta.button')}
-            </Link>
-          </div>
-        </div>
-      </section>
     </main>
   )
 }
