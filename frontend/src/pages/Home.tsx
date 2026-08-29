@@ -16,10 +16,35 @@ interface Artist {
   profile_image_url?: string
   bio?: string
   experience_years?: number
+  /** Platzhalter aus FALLBACK_ARTISTS, nicht aus der API */
+  isFallback?: boolean
+}
+
+/**
+ * Statische Vorschau, damit der Bereich nie leer bleibt.
+ * Das Backend laeuft auf einer Instanz, die nach Leerlauf einschlaeft;
+ * der erste Aufruf danach dauert laenger als jeder vertretbare Timeout.
+ * Bilder und Namen wie im Team-Bereich weiter oben auf der Seite.
+ */
+const FALLBACK_ARTISTS: Artist[] = [
+  { id: -1, name: 'Carmen', disciplines: [], profile_image_url: '/images/Slider/Artist1.webp', isFallback: true },
+  { id: -2, name: 'Jonas', disciplines: [], profile_image_url: '/images/Slider/Artist2.webp', isFallback: true },
+  { id: -3, name: 'Sophie', disciplines: [], profile_image_url: '/images/Slider/Artist3.webp', isFallback: true },
+  { id: -4, name: 'Dani', disciplines: [], profile_image_url: '/images/Slider/Artist4.webp', isFallback: true },
+]
+
+/** Zufaellige Auswahl ohne die Vorlage zu veraendern (Fisher-Yates). */
+function pickRandom<T>(items: T[], count: number): T[] {
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy.slice(0, count)
 }
 
 export default function Home() {
-  const [artists, setArtists] = useState<Artist[]>([])
+  const [artists, setArtists] = useState<Artist[]>(FALLBACK_ARTISTS)
   const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [loading, setLoading] = useState(true)
   const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
@@ -92,8 +117,8 @@ export default function Home() {
     }
   }, [expandedDiscipline]) // Reset animation when accordion changes
 
-  const handleArtistClick = (artistId: number) => {
-    navigate(`/kuenstler?flip=${artistId}`)
+  const handleArtistClick = (artist: Artist) => {
+    navigate(artist.isFallback ? '/kuenstler' : `/kuenstler?flip=${artist.id}`)
   }
 
   // Create disciplines from artists data
@@ -243,28 +268,28 @@ export default function Home() {
     setLoading(false)
 
     const fetchArtists = async () => {
-      try {
-        const baseUrl = getApiBaseUrl()
-        if (!baseUrl) return
-        const response = await fetch(`${baseUrl}/api/artists`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          signal: AbortSignal.timeout(5000) // Shorter timeout
-        })
+      const baseUrl = getApiBaseUrl()
+      if (!baseUrl) return
 
-        if (response.ok) {
-          const data = await response.json()
-          // Shuffle artists randomly and take only 4
-          const shuffled = data.sort(() => 0.5 - Math.random())
-          setArtists(shuffled.slice(0, 4))
+      // Zweiter Anlauf mit laengerem Timeout faengt den Kaltstart des Backends ab.
+      // Kein Content-Type, sonst loest der GET einen unnoetigen CORS-Preflight aus.
+      for (const timeoutMs of [8000, 25000]) {
+        try {
+          const response = await fetch(`${baseUrl}/api/artists`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(timeoutMs)
+          })
+          if (!response.ok) continue
+
+          const data: Artist[] = await response.json()
+          if (data.length > 0) setArtists(pickRandom(data, 4))
+          return
+        } catch {
+          // naechster Anlauf, sonst bleibt die statische Vorschau stehen
         }
-      } catch (error) {
-        // Silently fail - page works without artist preview
-        console.warn('Artists API unavailable:', error)
       }
+      console.warn('Artists API nicht erreichbar, statische Vorschau bleibt stehen.')
     }
 
     fetchArtists()
@@ -755,12 +780,12 @@ export default function Home() {
                 <div 
                   key={artist.id} 
                   className="artist-preview-item"
-                  onClick={() => handleArtistClick(artist.id)}
+                  onClick={() => handleArtistClick(artist)}
                 >
                   <div className="artist-preview-card-image">
                     {artist.profile_image_url ? (
                       <img 
-                        src={resolveImageUrl(artist.profile_image_url)}
+                        src={artist.isFallback ? artist.profile_image_url : resolveImageUrl(artist.profile_image_url)}
                         alt={artist.name}
                         className="artist-square-image"
                       />
@@ -773,11 +798,11 @@ export default function Home() {
                   <div className="artist-preview-info">
                     <h4 className="artist-preview-name">{artist.name}</h4>
                     <div className="artist-preview-badges">
-                      {artist.disciplines?.slice(0, 3).map((discipline, index) => (
+                      {artist.disciplines?.length ? artist.disciplines.slice(0, 3).map((discipline, index) => (
                         <span key={index} className="artist-discipline-tag">
                           {discipline}
                         </span>
-                      )) || <span className="artist-discipline-tag">Künstler</span>}
+                      )) : null}
                       {(artist.disciplines?.length || 0) > 3 && (
                         <span className="artist-discipline-tag-more">+{(artist.disciplines?.length || 0) - 3}</span>
                       )}
