@@ -263,3 +263,57 @@ def test_blob_token_loggt_den_wert_nicht(monkeypatch, caplog):
     with caplog.at_level(logging.DEBUG):
         _get_blob_token()
     assert geheim not in caplog.text
+
+
+# ---------------------------------------------------------------------------
+# Die Kopfzeilen an Vercel Blob. Fehlen sie, antwortet die Schnittstelle mit
+# 400 "Invalid pathname" — eine Meldung, die auf den Pfad zeigt und nicht auf
+# die fehlende Angabe. Deshalb hier festgehalten.
+# ---------------------------------------------------------------------------
+
+
+def test_blob_kopfzeilen_entsprechen_dem_offiziellen_paket(
+    client, user_headers, artist_approved_row, monkeypatch
+):
+    """Abgeglichen mit `createPutHeaders` aus @vercel/blob 2.8.0."""
+    import routes.upload_routes as upload_routes
+
+    gesendet = {}
+
+    class _Antwort:
+        status_code = 200
+        text = ''
+        url = 'https://blob.vercel-storage.com'
+        headers: dict = {}
+
+        @staticmethod
+        def json():
+            return {'url': 'https://blob.example.com/x.webp', 'pathname': 'x.webp'}
+
+    def _put(url, params=None, headers=None, data=None, timeout=None):
+        gesendet.update(headers or {})
+        gesendet['__params'] = params
+        return _Antwort()
+
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN', 'vercel_blob_rw_STORE123_geheim')
+    monkeypatch.setattr(upload_routes.http_requests, 'put', _put)
+
+    resp = client.post(
+        '/api/upload/image',
+        headers=user_headers,
+        data=_form(artist_approved_row['id']),
+        content_type='multipart/form-data',
+    )
+    assert resp.status_code == 200, resp.get_data(as_text=True)
+
+    # Der Ablagepfad gehoert in den Query-String, so macht es auch das Paket.
+    assert gesendet['__params']['pathname'].startswith('artists-')
+
+    assert gesendet['x-api-version'] == upload_routes.BLOB_API_VERSION
+    # Pflichtangabe; ohne sie weiss die Schnittstelle nichts ueber die Sichtbarkeit.
+    assert gesendet['x-vercel-blob-access'] == 'public'
+    # Ohne diese beiden haengt Vercel einen Zufallsteil an und lehnt das
+    # Ueberschreiben eines bestehenden Bildes ab.
+    assert gesendet['x-add-random-suffix'] == '0'
+    assert gesendet['x-allow-overwrite'] == '1'
+    assert gesendet['x-content-type'] == gesendet['Content-Type']

@@ -39,6 +39,11 @@ ALLOWED_CONTENT_TYPES = {
 # ohnehin auf WebP herunter und bleibt weit darunter.
 MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 
+# Fassung der Vercel-Blob-Schnittstelle. Der Wert stammt aus dem offiziellen
+# Paket @vercel/blob (dort `BLOB_API_VERSION`) und gehoert beim Aktualisieren
+# mitgezogen; die Schnittstelle selbst ist nicht dokumentiert.
+BLOB_API_VERSION = '12'
+
 
 def _get_blob_token():
     """Den Blob-Token aus der Umgebung holen, bereinigt und grob geprueft.
@@ -205,14 +210,36 @@ def upload_image():
         # Upload to Vercel Blob via REST API
         logger.info(f'Uploading to Vercel Blob: {pathname} ({len(file_data)} bytes)')
 
-        # Vercel Blob REST API: PUT with pathname in query param
+        # Vercel Blob REST API: PUT mit dem Ablagepfad im Query-String.
+        #
+        # Die Kopfzeilen sind aus dem offiziellen Paket @vercel/blob 2.8.0
+        # uebernommen (`createPutHeaders`), weil es fuer Python kein SDK gibt
+        # und die REST-Schnittstelle nicht dokumentiert ist. Vorher fehlten
+        # drei davon, und die Schnittstelle antwortete mit 400 `Invalid
+        # pathname` — eine Meldung, die auf den Pfad zeigt und nicht auf die
+        # fehlenden Angaben.
         resp = http_requests.put(
             'https://blob.vercel-storage.com',
             params={'pathname': pathname},
             headers={
                 'Authorization': f'Bearer {blob_token}',
                 'Content-Type': content_type,
-                'x-api-version': '7',
+                # Das Paket steht auf 12; mit der 7 von vorher laeuft die
+                # Anfrage in das Verhalten einer abgeloesten Fassung.
+                'x-api-version': BLOB_API_VERSION,
+                # Pflichtangabe. Ohne sie weiss die Schnittstelle nicht, ob die
+                # Datei oeffentlich lesbar sein soll.
+                'x-vercel-blob-access': 'public',
+                'x-content-type': content_type,
+                # Ohne diese Angabe haengt Vercel einen Zufallsteil an den
+                # Dateinamen. Die Pfade bildet hier `_get_storage_path`, und die
+                # Eigentumspruefung beim Loeschen liest die artist_id daraus
+                # zurueck — ein veraenderter Name bricht beides.
+                'x-add-random-suffix': '0',
+                # Profilbild und Titelbild liegen je Artist auf einem festen
+                # Pfad. Jeder Wechsel ueberschreibt das vorherige Bild, sonst
+                # scheitert schon der zweite Upload.
+                'x-allow-overwrite': '1',
             },
             data=file_data,
             timeout=30,
