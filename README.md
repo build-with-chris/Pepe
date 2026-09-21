@@ -19,7 +19,7 @@ A full-stack booking application for an artist agency with artist management, bo
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                         BACKEND                                  │
-│         (Flask/Python – z. B. Render, ~5 $/Monat Web Service)    │
+│      (Flask/Python – Vercel-Service, gleiche Domain wie das UI)  │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
 │  │ Clerk JWT   │  │ SQLAlchemy  │  │ REST API Routes         │  │
 │  │ Verification│  │ ORM         │  │ /api/* /auth/* /admin/* │  │
@@ -76,7 +76,7 @@ pepe-shows/
 │   ├── .env                  # Frontend env vars
 │   └── vercel.json           # Vercel config
 │
-├── backend/                  # Flask backend (Deploy z. B. via render.yaml im Repo-Root)
+├── backend/                  # Flask backend (Deploy als Vercel-Service, siehe vercel.json im Repo-Root)
 │   ├── routes/               # API route blueprints
 │   │   ├── api_routes.py     # /api/* endpoints
 │   │   ├── auth_routes.py    # /auth/* endpoints
@@ -138,22 +138,31 @@ npx vercel --prod
 ```
 
 **Vercel Environment Variables:**
-- `VITE_API_URL` = öffentliche Backend-URL (z. B. `https://pepe-backend-xxxx.onrender.com` oder eigene Domain)
+- `VITE_API_URL` = die eigene Domain, `https://pepeshows.de`
 - `VITE_CLERK_PUBLISHABLE_KEY` = Clerk public key
-- `BLOB_READ_WRITE_TOKEN` = Vercel Blob token
 
-### Backend → Render (empfohlen, einfach)
-Die API ist **Flask + Gunicorn**; die Datenbank liegt bei **Supabase** (`DATABASE_URL` in Render eintragen, nicht Render-Postgres nötig).
+### Backend → Vercel (gleiches Projekt, zweiter Service)
+Die API ist **Flask**; die Datenbank liegt bei **Supabase**. Frontend und Backend
+laufen als zwei Services in **einem** Vercel-Projekt (`pepe-services`,
+Framework-Preset "Services"):
 
-1. Im [Render Dashboard](https://dashboard.render.com) **New → Blueprint** (oder Web Service mit Root **`backend`**) mit Repo verbinden.
-2. Blueprint-Datei: **`render.yaml`** im **Repo-Root** (setzt `rootDir: backend`, Healthcheck `/healthz`).
-3. Im Dashboard alle als **`sync: false`** markierten Variablen setzen, v. a.:
-   - `DATABASE_URL` – Supabase Connection String (Session/Pooler, `sslmode=require` wie lokal)
-   - `FLASK_SECRET_KEY`, `CLERK_*`, `SUPABASE_*`, SMTP falls genutzt
-   - **`CORS_ORIGINS`** – z. B. `https://deine-vercel-app.vercel.app,https://pepeshows.de` (sonst blockt der Browser)
-4. **Kosten:** kleiner **Web Service** oft um **~5 $/Monat** (Stand je nach Render-Tarif) – durchgehend online, ohne Cold-Start wie bei reinem Serverless.
+```
+pepeshows.de/            -> Service "frontend" (Vite)
+pepeshows.de/api/...     -> Service "backend"  (Flask)
+```
 
-**Alternativen:** Railway, Fly.io, Cloud Run, VPS – gleicher Startbefehl `gunicorn app:app --bind 0.0.0.0:$PORT`.
+Beide liegen damit auf derselben Herkunft, CORS entfällt im Produktionsbetrieb.
+Die Aufstellung steht in **`vercel.json`** im Repo-Root, die vollständigen
+Umzugsschritte in `docs/ROLLOUT-3-vercel-backend.md`.
+
+Umgebungsvariablen im Vercel-Projekt setzen, mindestens:
+- `DATABASE_URL` – Supabase Connection String (Pooler, `sslmode=require` wie lokal)
+- `CLERK_JWKS_URL` – ohne den Wert wird jedes Token mit 401 abgelehnt
+- `BLOB_READ_WRITE_TOKEN` – ohne den Wert schlägt **jeder** Bildupload mit 500 fehl
+- `FLASK_SECRET_KEY`, `SUPABASE_*`, SMTP falls genutzt
+
+`render.yaml` liegt noch im Repo-Root, beschreibt aber kein laufendes Deployment
+mehr: Die Render-Dienste sind stillgelegt.
 
 Siehe auch `backend/docs/SUPABASE_MIGRATION.md`.
 

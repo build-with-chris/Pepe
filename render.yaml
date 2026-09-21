@@ -1,3 +1,17 @@
+# STILLGELEGT. Diese Datei beschreibt kein laufendes Deployment mehr.
+#
+# Beide Render-Dienste stehen auf "Suspended by Render". Backend und Frontend
+# laufen seit dem Umzug als zwei Services in einem Vercel-Projekt
+# (`pepe-services`, Framework-Preset "Services"); die Aufstellung steht in
+# `vercel.json` im Repo-Wurzelverzeichnis, die Schritte in
+# docs/ROLLOUT-3-vercel-backend.md. Die Datenbank liegt bei Supabase.
+#
+# Umgebungsvariablen gehören damit ins Vercel-Projekt, nicht mehr hierher. Wer
+# sie hier ergänzt, ändert an der laufenden Anwendung nichts.
+#
+# Die Datei bleibt vorerst als Beleg der alten Aufstellung liegen.
+#
+# --- alter Stand ---
 # Render Blueprint: Flask-Backend (Pepe)
 # Postgres läuft bei Supabase → DATABASE_URL manuell im Render-Dashboard setzen.
 # Repo verbinden: Blueprint wird aus dieser Datei gelesen (Repo-Root).

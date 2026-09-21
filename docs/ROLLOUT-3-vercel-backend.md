@@ -68,8 +68,15 @@ ADMIN_EMAIL           <Adresse für Anfrage-Benachrichtigungen>
 SMTP_HOST/PORT/USER/PASSWORD/SMTP_FROM
 GEO_USER_AGENT        echte Kontaktadresse, sonst blockt Nominatim
 SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_PROFILE_BUCKET
-BLOB_READ_WRITE_TOKEN falls die Upload-Routen genutzt werden
+BLOB_READ_WRITE_TOKEN Pflicht, sonst schlaegt jeder Bildupload fehl (siehe unten)
 ```
+
+Nachtrag zu `BLOB_READ_WRITE_TOKEN`: Beim Umzug ist genau dieser Wert liegen
+geblieben, weil hier "falls die Upload-Routen genutzt werden" stand. Das liest
+sich wie eine Option, ist aber Pflicht, sobald ein Artist sein Profil anlegt:
+Profilbild, Galerie und Rechnungen laufen alle über `/api/upload/image`. Ohne
+den Wert antwortet die Route mit 500 und im Runtime-Log steht
+`BLOB_READ_WRITE_TOKEN not set`.
 
 Dazu für das Frontend:
 
