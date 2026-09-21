@@ -146,7 +146,12 @@ export default function ArtistGuidlines() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    // `ui-surface`: Ohne diese Klasse greift die Grundregel aus typography.css,
+    // die jedem <h3> die Groesse eines Kapiteltitels gibt (--text-3xl, 30 px).
+    // Auf einer Karte ist das keine Kapitelueberschrift, sondern eine Zeile —
+    // und ein langes Wort wie "Kommunikation" lief damit ueber den Kartenrand
+    // hinaus. Groesse und Abstand kommen hier aus den Klassen am Element.
+    <div className="ui-surface min-h-screen bg-black text-white">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-white/10 bg-black/80 backdrop-blur-xl">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -191,9 +196,11 @@ export default function ArtistGuidlines() {
                   <div className="p-2.5 rounded-xl bg-[#D4A574]/10 group-hover:bg-[#D4A574]/15 transition-colors">
                     <Icon className="w-5 h-5 text-[#D4A574]" />
                   </div>
-                  <h3 className="font-semibold text-white">{section.title}</h3>
+                  <h3 className="min-w-0 break-words text-base font-semibold text-white">
+                    {section.title}
+                  </h3>
                 </div>
-                <ul className="space-y-2">
+                <ul className="list-none space-y-2">
                   {section.items.map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-gray-400 leading-relaxed">
                       <ChevronRight className="w-3.5 h-3.5 text-[#D4A574]/60 mt-0.5 flex-shrink-0" />
