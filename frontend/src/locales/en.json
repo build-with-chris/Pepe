@@ -1394,7 +1394,12 @@
       "month": "Current month",
       "year": "Current year",
       "acceptedCount": "{{count}} accepted gigs",
-      "note": "Note: The earnings are based on your entered fee (artist_gage) for accepted requests."
+      "note": "Note: The earnings are based on your entered fee (artist_gage) for accepted requests.",
+      "awaitingApproval": {
+        "pending": "Your profile is still under review. Once it is approved, your requests and fees will appear here automatically.",
+        "unsubmitted": "Once you submit your profile and we approve it, your requests and fees will appear here.",
+        "rejected": "Your profile is currently not approved. Until then you will not receive requests and the earnings overview stays empty."
+      }
     }
   },
   "notFound": {

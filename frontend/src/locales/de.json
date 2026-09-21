@@ -1229,7 +1229,12 @@
       "month": "Aktueller Monat",
       "year": "Aktuelles Jahr",
       "acceptedCount": "{{count}} angenommene Gigs",
-      "note": "Hinweis: Die Verdienstsummen basieren auf deiner angegebenen Gage (artist_gage) für akzeptierte Anfragen."
+      "note": "Hinweis: Die Verdienstsummen basieren auf deiner angegebenen Gage (artist_gage) für akzeptierte Anfragen.",
+      "awaitingApproval": {
+        "pending": "Dein Profil wird noch geprüft. Sobald es freigegeben ist, erscheinen deine Anfragen und Gagen hier automatisch.",
+        "unsubmitted": "Sobald du dein Profil abschickst und wir es freigegeben haben, erscheinen deine Anfragen und Gagen hier.",
+        "rejected": "Dein Profil ist derzeit nicht freigegeben. Solange bekommst du keine Anfragen, und die Verdienstübersicht bleibt leer."
+      }
     }
   },
   "notFound": {

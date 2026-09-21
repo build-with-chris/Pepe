@@ -37,10 +37,14 @@ const normalize = (s?: string | null) => (s ?? '').toString().trim().toLowerCase
 const parseISODate = (iso: string) => new Date(`${iso}T00:00:00`);
 
 export default function Buhaltung() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [artistId, setArtistId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Anfragen bekommt nur, wer freigegeben ist. Das Backend antwortet sonst mit
+  // 403 (`Artist not approved yet`). Das ist kein Fehler, sondern der normale
+  // Zustand waehrend der Pruefung — und muss hier auch so aussehen.
+  const [awaitingApproval, setAwaitingApproval] = useState(false);
 
   const [requests, setRequests] = useState<RequestItem[]>([]);
 
@@ -89,9 +93,19 @@ export default function Buhaltung() {
         const res = await fetch(`${baseUrl}/api/requests/requests`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        // 403 heisst hier: Profil noch nicht freigegeben. Vorher landete das
+        // als "HTTP 403" rot unter der Verdienstuebersicht, und der Artist
+        // sah einen Fehler, wo eigentlich nur die Freigabe fehlt.
+        if (res.status === 403) {
+          if (!mounted) return;
+          setAwaitingApproval(true);
+          setRequests([]);
+          return;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = (await res.json()) as RequestItem[];
         if (!mounted) return;
+        setAwaitingApproval(false);
         setRequests(Array.isArray(data) ? data : []);
       } catch (e: any) {
         if (!mounted) return;
@@ -271,7 +285,8 @@ export default function Buhaltung() {
           <EarningsSummary
             month={{ total: monthTotal, count: monthCount }}
             year={{ total: yearTotal, count: yearCount }}
-            error={error}
+            error={awaitingApproval ? null : error}
+            approvalStatus={awaitingApproval ? (user?.approval_status ?? 'pending') : null}
           />
         </DashboardCard>
 

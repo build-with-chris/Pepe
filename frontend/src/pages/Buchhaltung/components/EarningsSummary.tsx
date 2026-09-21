@@ -1,18 +1,42 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { Clock } from "lucide-react";
+
+type ApprovalStatus = 'approved' | 'pending' | 'rejected' | 'unsubmitted';
 
 type Props = {
   month: { total: number; count: number };
   year:  { total: number; count: number };
   error?: string | null;
+  /**
+   * Gesetzt, solange das Backend die Anfragen wegen fehlender Freigabe
+   * verweigert (403). Dann steht hier ein Hinweis statt einer Fehlermeldung:
+   * Der Artist hat nichts falsch gemacht, es fehlt nur die Freigabe.
+   */
+  approvalStatus?: ApprovalStatus | null;
 };
 
-export default function EarningsSummary({ month, year, error }: Props) {
+export default function EarningsSummary({ month, year, error, approvalStatus }: Props) {
   const { t } = useTranslation();
+
+  const waiting = Boolean(approvalStatus) && approvalStatus !== 'approved';
+  const noticeKey = approvalStatus === 'rejected' || approvalStatus === 'unsubmitted'
+    ? approvalStatus
+    : 'pending';
 
   return (
     <section>
       <h2 className="text-xl font-semibold mb-3">{t('accounting.earnings.title')}</h2>
+
+      {waiting && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-yellow-700 bg-yellow-900/20 p-4">
+          <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-300" aria-hidden="true" />
+          <p className="text-sm text-yellow-200">
+            {t(`accounting.earnings.awaitingApproval.${noticeKey}`)}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded p-4">
           <div className="text-sm text-gray-400">{t('accounting.earnings.month')}</div>
