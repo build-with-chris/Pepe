@@ -41,10 +41,50 @@ MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 
 
 def _get_blob_token():
-    """Get Vercel Blob token from environment."""
-    token = os.getenv('BLOB_READ_WRITE_TOKEN')
-    if not token:
+    """Den Blob-Token aus der Umgebung holen, bereinigt und grob geprueft.
+
+    `.strip()` ist kein Schoenheitsfehler-Fix. Wird der Wert im Vercel-Dashboard
+    eingefuegt, haengt schnell ein Leerzeichen oder ein Zeilenumbruch daran. Der
+    Wert steht damit unveraendert im `Authorization`-Header, und Vercel Blob
+    antwortet mit einem 403 und `Cannot get store id from token or header` —
+    eine Meldung, die nach einem Rechteproblem klingt und keines ist.
+
+    Die Formpruefung dient nur dem Log. Ein Blob-Token sieht so aus:
+    `vercel_blob_rw_<STORE_ID>_<ZUFALL>`; die Store-ID steckt also im Token
+    selbst. Fehlt sie, kann Vercel sie nicht herauslesen, und genau das meldet
+    der Fehler oben. Passt die Form nicht, steht der Grund in unserem Log, statt
+    dass man ihn aus einer fremden Fehlermeldung raten muss.
+
+    Geloggt wird nie der Token, nur Laenge und Form.
+    """
+    raw = os.getenv('BLOB_READ_WRITE_TOKEN')
+    if not raw:
         logger.error('BLOB_READ_WRITE_TOKEN not set')
+        return None
+
+    token = raw.strip()
+    if not token:
+        logger.error('BLOB_READ_WRITE_TOKEN enthaelt nur Leerzeichen')
+        return None
+
+    if token != raw:
+        logger.warning(
+            'BLOB_READ_WRITE_TOKEN hatte fuehrende oder abschliessende '
+            'Leerzeichen (%d Zeichen entfernt) — im Dashboard bereinigen',
+            len(raw) - len(token),
+        )
+
+    # `vercel_blob_rw_` + Store-ID + `_` + Zufall: mindestens drei Teile nach
+    # dem Praefix-Split, sonst fehlt die Store-ID.
+    if not token.startswith('vercel_blob_rw_') or len(token.split('_')) < 5:
+        logger.error(
+            'BLOB_READ_WRITE_TOKEN hat nicht die erwartete Form '
+            'vercel_blob_rw_<STORE_ID>_<ZUFALL> (Laenge %d). Vercel Blob wird '
+            'die Store-ID nicht herauslesen koennen. Wert im Vercel-Projekt '
+            'pepe-services pruefen, am besten den Store dort direkt verbinden.',
+            len(token),
+        )
+
     return token
 
 

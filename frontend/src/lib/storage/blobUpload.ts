@@ -85,6 +85,40 @@ async function convertToWebP(file: File, maxWidth = 1200, maxHeight = 1200, qual
 }
 
 /**
+ * Aus der Serverantwort einen Satz machen, mit dem der Artist etwas anfangen kann.
+ *
+ * Die Meldungen des Backends sind englisch und technisch. "Upload fehlgeschlagen
+ * (500): Storage not configured" sagt einem Artisten nicht, dass er hier nichts
+ * falsch gemacht hat und es auch mit einem anderen Bild nicht klappen wird.
+ * Die technische Meldung bleibt für die Fehlersuche in der Konsole.
+ */
+function describeUploadFailure(status: number, detail: string): string {
+  const d = detail.toLowerCase();
+
+  if (status === 401) {
+    return 'Deine Sitzung ist abgelaufen. Bitte melde dich neu an und versuche es noch einmal.';
+  }
+  if (status === 403) {
+    return 'Für dieses Profil darfst du keine Datei hochladen.';
+  }
+  if (status === 413 || d.includes('file too large')) {
+    return 'Das Bild ist zu gross. Erlaubt sind 4 MB. Verkleinere es und lade es erneut hoch.';
+  }
+  if (d.includes('content type') && d.includes('not allowed')) {
+    return 'Dieses Dateiformat können wir nicht verarbeiten. Erlaubt sind JPG, PNG, WebP und AVIF.';
+  }
+  if (d.includes('storage not configured')) {
+    return 'Der Bildspeicher ist gerade nicht erreichbar. Das liegt nicht an deinem Bild. '
+      + 'Bitte versuche es später noch einmal oder melde dich bei info@pepeshows.de.';
+  }
+  if (status >= 500) {
+    return 'Beim Hochladen ist auf unserer Seite etwas schiefgelaufen. '
+      + 'Bitte versuche es noch einmal oder melde dich bei info@pepeshows.de.';
+  }
+  return `Upload fehlgeschlagen (${status}): ${detail}`;
+}
+
+/**
  * Upload über den Backend-Endpunkt. Wirft bei jedem Fehlschlag.
  */
 async function uploadViaBackend(
@@ -119,11 +153,10 @@ async function uploadViaBackend(
   }
 
   if (!res.ok) {
-    // Die Servermeldung durchreichen — sie nennt Grösse, Inhaltstyp oder
-    // fehlende Berechtigung konkret.
     const body = await res.json().catch(() => null);
-    const detail = body?.message || body?.error || res.statusText;
-    throw new UploadError(`Upload fehlgeschlagen (${res.status}): ${detail}`, res.status);
+    const detail = String(body?.message || body?.error || res.statusText || '');
+    console.error(`Upload fehlgeschlagen (${res.status}): ${detail}`);
+    throw new UploadError(describeUploadFailure(res.status, detail), res.status);
   }
 
   const data = await res.json().catch(() => null);

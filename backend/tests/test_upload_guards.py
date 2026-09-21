@@ -11,6 +11,7 @@ Netzaufruf entschieden werden. Der Erfolgsfall haengt in
 """
 
 import io
+import logging
 
 import pytest
 
@@ -210,3 +211,55 @@ def test_filename_cannot_escape_the_invoice_prefix():
     assert path.startswith('invoices-7-'), path
     assert '/' not in path
     assert '..' not in path
+
+
+# ---------------------------------------------------------------------------
+# Der Blob-Token aus der Umgebung: bereinigen, bevor er in den Header geht.
+# ---------------------------------------------------------------------------
+
+
+def test_blob_token_wird_getrimmt(monkeypatch):
+    """Ein angehaengter Zeilenumbruch darf den Upload nicht unbrauchbar machen.
+
+    Beim Einfuegen im Vercel-Dashboard haengt schnell ein Leerzeichen oder ein
+    Zeilenumbruch am Wert. Ungetrimmt steht er so im Authorization-Header, und
+    Vercel Blob antwortet mit 403 `Cannot get store id from token or header` —
+    was nach einem Rechteproblem aussieht und keines ist.
+    """
+    from routes.upload_routes import _get_blob_token
+
+    monkeypatch.setenv(
+        'BLOB_READ_WRITE_TOKEN', '  vercel_blob_rw_STORE123_geheim\n'
+    )
+    assert _get_blob_token() == 'vercel_blob_rw_STORE123_geheim'
+
+
+def test_blob_token_nur_leerzeichen_gilt_als_fehlend(monkeypatch):
+    from routes.upload_routes import _get_blob_token
+
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN', '   ')
+    assert _get_blob_token() is None
+
+
+def test_blob_token_ohne_store_id_wird_bemaengelt(monkeypatch, caplog):
+    """Fehlt die Store-ID im Token, soll unser Log den Grund nennen.
+
+    Der Token wird trotzdem durchgereicht: Die Form ist eine Annahme ueber ein
+    fremdes Format, und daran soll ein sonst gueltiger Token nicht scheitern.
+    """
+    from routes.upload_routes import _get_blob_token
+
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN', 'vercel_blob_rw_abgeschnitten')
+    with caplog.at_level(logging.ERROR):
+        assert _get_blob_token() == 'vercel_blob_rw_abgeschnitten'
+    assert 'STORE_ID' in caplog.text
+
+
+def test_blob_token_loggt_den_wert_nicht(monkeypatch, caplog):
+    from routes.upload_routes import _get_blob_token
+
+    geheim = 'vercel_blob_rw_kaputt'
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN', geheim)
+    with caplog.at_level(logging.DEBUG):
+        _get_blob_token()
+    assert geheim not in caplog.text
