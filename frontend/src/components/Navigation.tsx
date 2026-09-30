@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth, UserButton } from '@clerk/clerk-react'
 import { useAuth as usePepeAuth } from '@/context/AuthContext'
@@ -12,6 +12,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
+  const [, setSearchParams] = useSearchParams()
   const { t, i18n } = useTranslation()
   const { isSignedIn, isLoaded } = useAuth()
   // Admin-Status kommt aus der DB (`artists.is_admin`), nicht aus Clerk-Metadaten
@@ -44,8 +45,18 @@ export default function Navigation({ className = '' }: NavigationProps) {
     { href: '/kontakt', label: t('nav.contact') },
   ]
 
+  // Die Sprache steht in der URL (?lang=en), damit jede Sprachfassung eine eigene,
+  // teilbare und fuer Suchmaschinen eindeutige Adresse hat.
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
+    setSearchParams(
+      (params) => {
+        if (lng === 'en') params.set('lang', 'en')
+        else params.delete('lang')
+        return params
+      },
+      { replace: true },
+    )
   }
 
   return (
@@ -61,7 +72,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
           <div className="nav-brand">
             <Link to="/" className="nav-brand-link">
               <img
-                src="/logos/SVG/PEPE_logos_shows.svg"
+                src="/logos/SVG/PEPE_logos_shows.svg" width={1024} height={1024}
                 alt="Pepe Shows Logo"
                 className="nav-logo-svg"
                 style={{ height: '80px', width: 'auto' }}
@@ -164,7 +175,7 @@ export default function Navigation({ className = '' }: NavigationProps) {
             <div className="mobile-menu-header">
               <Link to="/" className="nav-brand-link" onClick={() => setIsMobileMenuOpen(false)}>
                 <img
-                  src="/logos/SVG/PEPE_logos_shows.svg"
+                  src="/logos/SVG/PEPE_logos_shows.svg" width={1024} height={1024}
                   alt="Pepe Logo"
                   className="nav-logo-svg"
                   style={{ height: '40px' }}

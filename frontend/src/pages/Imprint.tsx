@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next'
+import SEO from '@/components/SEO'
 
 export default function Imprint() {
   const { t } = useTranslation()
 
   return (
     <main className="min-h-screen bg-pepe-dark py-16">
+      <SEO title="Impressum / Legal Notice" noindex />
       <div className="stage-container">
         <div className="max-w-4xl mx-auto">
           <h1 className="display-2 mb-8 text-center">Impressum / Legal Notice</h1>

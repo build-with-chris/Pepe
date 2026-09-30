@@ -21,7 +21,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="footer-brand">
             <img
-              src="/logos/SVG/PEPE_logos_shows.svg"
+              src="/logos/SVG/PEPE_logos_shows.svg" width={1024} height={1024}
               alt="Pepe Shows Logo"
               style={{ height: '96px', width: 'auto', marginBottom: '1.5rem' }}
             />

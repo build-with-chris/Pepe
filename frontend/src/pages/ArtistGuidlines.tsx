@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import SEO from "@/components/SEO";
 import {
   BookOpen,
   CheckCircle2,
@@ -152,6 +153,7 @@ export default function ArtistGuidlines() {
     // und ein langes Wort wie "Kommunikation" lief damit ueber den Kartenrand
     // hinaus. Groesse und Abstand kommen hier aus den Klassen am Element.
     <div className="ui-surface min-h-screen bg-black text-white">
+      <SEO title="Richtlinien für Artists" noindex />
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-white/10 bg-black/80 backdrop-blur-xl">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -161,7 +163,7 @@ export default function ArtistGuidlines() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              to="/home"
+              to="/"
               className="text-sm text-gray-400 hover:text-white transition-colors"
             >
               Startseite

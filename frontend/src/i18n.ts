@@ -6,7 +6,8 @@ import de from "./locales/de.json";
 import en from "./locales/en.json";
 
 // i18next Grundsetup für PepeShows
-// - Erkennung: Query, LocalStorage, Navigator
+// - Erkennung: Query, LocalStorage. Bewusst nicht die Browsersprache: Googlebot
+//   meldet sich als en-US und saehe sonst unter deutschen URLs englischen Inhalt.
 // - Fallback: Deutsch
 // - React: kein Suspense nötig
 
@@ -23,7 +24,7 @@ void i18n
     nonExplicitSupportedLngs: true,
     load: "languageOnly",
     detection: {
-      order: ["querystring", "localStorage", "navigator"],
+      order: ["querystring", "localStorage"],
       lookupQuerystring: "lang",
       caches: ["localStorage"],
     },

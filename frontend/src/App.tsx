@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
@@ -178,7 +178,7 @@ function AppLayout() {
 
           {/* Public routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
           <Route path="/kuenstler" element={<Kuenstler />} />
           <Route path="/shows" element={<Shows />} />
           <Route path="/galerie" element={<Galerie />} />

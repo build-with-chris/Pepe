@@ -21,4 +21,4 @@ Disallow: /demo/
 Disallow: /generate-pngs
 Disallow: /carousel
 
-Sitemap: https://www.pepeshows.com/sitemap.xml
+Sitemap: https://www.pepeshows.de/sitemap.xml

@@ -156,8 +156,9 @@ export default function Team() {
               {/* Community Image */}
               <div className="card overflow-hidden border-none shadow-2xl">
                 <img
-                  src="/images/Team_pic.png"
-                  alt="Das Pepe Shows Team"
+                  src="/images/Team_pic.webp" width={1400} height={934}
+                  alt="Artistinnen und Artisten aus der Pepe-Shows-Community posieren akrobatisch an einem roten Drehleiterwagen"
+                  loading="lazy"
                   className="w-full h-full object-cover aspect-[16/9]"
                 />
               </div>
@@ -204,7 +205,7 @@ export default function Team() {
                 {/* Michael Image */}
                 <div className="w-full aspect-square max-h-[300px] overflow-hidden flex-shrink-0 bg-[#161616]">
                   <img
-                    src="/images/Michi.webp"
+                    src="/images/Michi.webp" width={630} height={630}
                     alt="Michael Heiduk"
                     className="w-full h-full object-cover object-top scale-[1.1]"
                   />
@@ -225,7 +226,7 @@ export default function Team() {
                 {/* Christoph Image */}
                 <div className="w-full aspect-square max-h-[300px] overflow-hidden flex-shrink-0">
                   <img
-                    src="/images/Chris.webp"
+                    src="/images/Chris.webp" width={630} height={630}
                     alt="Christoph Hermann"
                     className="w-full h-full object-cover"
                   />

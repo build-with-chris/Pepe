@@ -4,34 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- SEO Meta Tags -->
-    <title>Pepe Shows - Artistenagentur &amp; Show-Booking aus München</title>
-    <meta name="description" content="Pepe Shows ist Ihre Artistenagentur aus München. Wir vermitteln erstklassige Akrobaten, Feuerkünstler, Jongleure und Zirkusartisten für Events, Messen und Galas. Jetzt Show buchen!" />
-    <meta name="keywords" content="Artistenagentur, Show buchen, Akrobatik, Feuershows, Zirkusartisten, München, Event-Entertainment, Gala-Shows, Messeunterhaltung, Künstlervermittlung" />
+    <!-- seo:start -->
+    <!-- Wird beim Build je Seite ersetzt (scripts/prerender-seo.mjs) und beim App-Start entfernt,
+         danach setzt die SEO-Komponente die Tags. So gibt es nie doppelte Canonicals. -->
+    <title data-prerender>Pepe Shows - Artistenagentur &amp; Show-Booking aus München</title>
+    <meta data-prerender name="description" content="Pepe Shows ist Ihre Artistenagentur aus München. Akrobaten, Feuerkünstler, Jongleure und Zirkusartisten für Events, Messen und Galas buchen." />
+    <link data-prerender rel="canonical" href="https://www.pepeshows.de/" />
+    <!-- seo:end -->
     <meta name="author" content="Pepe Shows" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://www.pepeshows.com/" />
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.pepeshows.com/" />
-    <meta property="og:title" content="Pepe Shows - Artistenagentur &amp; Show-Booking aus München" />
-    <meta property="og:description" content="Erstklassige Akrobaten, Feuerkünstler und Zirkusartisten für Ihr Event. Pepe Shows - Ihre Artistenagentur aus München." />
-    <meta property="og:image" content="https://www.pepeshows.com/images/og-image.jpg" />
-    <meta property="og:locale" content="de_DE" />
-    <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:site_name" content="Pepe Shows" />
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Pepe Shows - Artistenagentur &amp; Show-Booking aus München" />
-    <meta name="twitter:description" content="Erstklassige Akrobaten, Feuerkünstler und Zirkusartisten für Ihr Event. Pepe Shows aus München." />
-    <meta name="twitter:image" content="https://www.pepeshows.com/images/og-image.jpg" />
-
-    <!-- Language alternates -->
-    <link rel="alternate" hreflang="de" href="https://www.pepeshows.com/" />
-    <link rel="alternate" hreflang="en" href="https://www.pepeshows.com/?lang=en" />
-    <link rel="alternate" hreflang="x-default" href="https://www.pepeshows.com/" />
 
     <!-- Favicon with dark/light theme support -->
     <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
@@ -57,11 +39,13 @@
       "@graph": [
         {
           "@type": "Organization",
-          "@id": "https://www.pepeshows.com/#organization",
+          "@id": "https://www.pepeshows.de/#organization",
           "name": "Pepe Shows",
           "alternateName": "Pepe Shows Artistenagentur",
-          "url": "https://www.pepeshows.com",
-          "logo": "https://www.pepeshows.com/images/logo.png",
+          "url": "https://www.pepeshows.de",
+          "logo": "https://www.pepeshows.de/images/logo.png",
+          "email": "info@pepeshows.de",
+          "telephone": "+4915904891419",
           "description": "Artistenagentur aus München – wir vermitteln erstklassige Akrobaten, Feuerkünstler, Jongleure und Zirkusartisten für Events, Messen und Galas.",
           "address": {
             "@type": "PostalAddress",
@@ -85,12 +69,14 @@
           ]
         },
         {
-          "@type": "LocalBusiness",
-          "@id": "https://www.pepeshows.com/#localbusiness",
+          "@type": "EntertainmentBusiness",
+          "@id": "https://www.pepeshows.de/#localbusiness",
           "name": "Pepe Shows",
-          "image": "https://www.pepeshows.com/images/og-image.jpg",
-          "url": "https://www.pepeshows.com",
-          "priceRange": "$$",
+          "image": "https://www.pepeshows.de/images/og-image.jpg",
+          "url": "https://www.pepeshows.de",
+          "telephone": "+4915904891419",
+          "email": "info@pepeshows.de",
+          "parentOrganization": { "@id": "https://www.pepeshows.de/#organization" },
           "address": {
             "@type": "PostalAddress",
             "streetAddress": "Maria-Montessori-Str. 4",
@@ -106,11 +92,11 @@
         },
         {
           "@type": "WebSite",
-          "@id": "https://www.pepeshows.com/#website",
-          "url": "https://www.pepeshows.com",
+          "@id": "https://www.pepeshows.de/#website",
+          "url": "https://www.pepeshows.de",
           "name": "Pepe Shows",
           "description": "Artistenagentur aus München – erstklassige Show-Acts für Events, Messen und Galas",
-          "publisher": { "@id": "https://www.pepeshows.com/#organization" },
+          "publisher": { "@id": "https://www.pepeshows.de/#organization" },
           "inLanguage": ["de-DE", "en-US"]
         }
       ]

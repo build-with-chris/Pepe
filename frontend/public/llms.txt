@@ -1,0 +1,30 @@
+# Pepe Shows
+
+> Artistenagentur aus München. Pepe Shows vermittelt Akrobaten, Feuerkünstler, Jongleure, Luftakrobaten und Zirkusartisten für Firmenevents, Messen, Galas und Privatfeiern in Deutschland, Österreich und der Schweiz.
+
+Die Website gibt es auf Deutsch (Standard) und auf Englisch (Adresse mit `?lang=en`).
+
+## Angebot
+
+- [Künstler](https://www.pepeshows.de/kuenstler): Übersicht der Artisten und Disziplinen
+- [Shows](https://www.pepeshows.de/shows): Show-Formate von Solo-Act bis Ensemble
+- [Galerie](https://www.pepeshows.de/galerie): Fotos vergangener Auftritte
+- [Show anfragen](https://www.pepeshows.de/anfragen): Anfrageformular für ein Angebot
+
+## Agentur
+
+- [Über die Agentur](https://www.pepeshows.de/agentur)
+- [Team](https://www.pepeshows.de/team)
+- [Kontakt](https://www.pepeshows.de/kontakt)
+
+## Presse
+
+- [Mediamaterial](https://www.pepeshows.de/mediamaterial)
+- [Pressemappe](https://www.pepeshows.de/pressemappe)
+- [Technical Rider](https://www.pepeshows.de/technical-rider)
+
+## Kontakt
+
+- Pepe Shows, Maria-Montessori-Str. 4, 81829 München
+- Telefon: +49 159 04891419
+- E-Mail: info@pepeshows.de

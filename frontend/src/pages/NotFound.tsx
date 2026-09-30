@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 export default function NotFound() {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <SEO title={t('notFound.title')} noindex />
       <div className="text-center space-y-6 px-6">
         <div className="space-y-2">
           <h1 className="text-6xl md:text-8xl font-bold text-gray-500">404</h1>
@@ -18,7 +20,7 @@ export default function NotFound() {
         
         <div className="pt-6">
           <Link 
-            to="/home" 
+            to="/" 
             className="inline-flex items-center px-6 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-100 transition-colors"
           >
             {t('notFound.homeButton')}

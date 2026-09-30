@@ -1,0 +1,166 @@
+{
+  "home": {
+    "path": "/",
+    "de": {
+      "description": "Pepe Shows ist Ihre Artistenagentur aus München. Akrobaten, Feuerkünstler, Jongleure und Zirkusartisten für Events, Messen und Galas buchen."
+    },
+    "en": {
+      "title": "Artist Agency & Show Booking from Munich",
+      "description": "Pepe Shows is an artist agency from Munich. Book acrobats, fire performers, jugglers and circus artists for events, trade fairs and galas."
+    }
+  },
+  "kuenstler": {
+    "path": "/kuenstler",
+    "de": {
+      "title": "Unsere Künstler - Akrobaten, Feuerkünstler & Artisten",
+      "description": "Entdecken Sie unser Portfolio an Artisten: Akrobaten, Feuerkünstler, Jongleure, Luftakrobaten und mehr. Professionelle Künstler für Ihr Event."
+    },
+    "en": {
+      "title": "Our Artists - Acrobats, Fire Performers & Circus Acts",
+      "description": "Browse our artists: acrobats, fire performers, jugglers, aerialists and more. Professional performers for your event."
+    }
+  },
+  "shows": {
+    "path": "/shows",
+    "de": {
+      "title": "Shows & Programme - Maßgeschneiderte Event-Unterhaltung",
+      "description": "Show-Programme für Firmenevents, Galas, Messen und Privatfeiern. Von Feuershow bis Akrobatik stellen wir das passende Programm für Ihr Event zusammen."
+    },
+    "en": {
+      "title": "Shows & Programmes - Entertainment for Your Event",
+      "description": "Show programmes for corporate events, galas, trade fairs and private parties. From fire shows to acrobatics, we put together the right programme for your event."
+    }
+  },
+  "galerie": {
+    "path": "/galerie",
+    "de": {
+      "title": "Galerie - Impressionen unserer Auftritte",
+      "description": "Fotos und Impressionen vergangener Auftritte unserer Artisten. Akrobatik, Feuershows, Luftakrobatik und mehr in Aktion."
+    },
+    "en": {
+      "title": "Gallery - Photos from Our Performances",
+      "description": "Photos from past performances by our artists. Acrobatics, fire shows, aerial acts and more in action."
+    }
+  },
+  "kontakt": {
+    "path": "/kontakt",
+    "de": {
+      "title": "Kontakt - Jetzt Show anfragen",
+      "description": "Kontaktieren Sie Pepe Shows für Ihre nächste Veranstaltung. Wir beraten Sie gerne und erstellen ein individuelles Angebot für Ihr Event."
+    },
+    "en": {
+      "title": "Contact - Request a Show",
+      "description": "Get in touch with Pepe Shows about your next event. We will advise you and put together an individual offer."
+    }
+  },
+  "anfragen": {
+    "path": "/anfragen",
+    "de": {
+      "title": "Show anfragen - Unverbindliches Angebot",
+      "description": "Fragen Sie jetzt unverbindlich Ihre Wunsch-Show an. Wir erstellen Ihnen ein Angebot für Ihr Event."
+    },
+    "en": {
+      "title": "Request a Show - Free Quote",
+      "description": "Send us a no-obligation request for the show you have in mind. We will prepare an offer for your event."
+    }
+  },
+  "team": {
+    "path": "/team",
+    "de": {
+      "title": "Unser Team - Die Menschen hinter Pepe Shows",
+      "description": "Lernen Sie das Team hinter Pepe Shows kennen. Event-Profis und Künstlermanager aus München."
+    },
+    "en": {
+      "title": "Our Team - The People Behind Pepe Shows",
+      "description": "Meet the team behind Pepe Shows. Event professionals and artist managers from Munich."
+    }
+  },
+  "agentur": {
+    "path": "/agentur",
+    "de": {
+      "title": "Über die Agentur - Artistenagentur aus München",
+      "description": "Erfahren Sie mehr über Pepe Shows, Ihre Artistenagentur aus München. Unsere Geschichte, Werte und Vision."
+    },
+    "en": {
+      "title": "About the Agency - Artist Agency from Munich",
+      "description": "Learn more about Pepe Shows, an artist agency from Munich. Our story, values and vision."
+    }
+  },
+  "mediamaterial": {
+    "path": "/mediamaterial",
+    "de": {
+      "title": "Mediamaterial - Presse & Downloads",
+      "description": "Pressefotos, Logos und Mediamaterial von Pepe Shows zum Herunterladen. Hochauflösende Bilder für Ihre Berichterstattung."
+    },
+    "en": {
+      "title": "Media Material - Press & Downloads",
+      "description": "Download press photos, logos and media material from Pepe Shows. High-resolution images for your coverage."
+    }
+  },
+  "presskit": {
+    "path": "/presskit",
+    "de": {
+      "title": "Press Kit",
+      "description": "Pressematerial, hochauflösende Fotos und Medieninhalte der Artistenagentur Pepe Shows zum Herunterladen."
+    },
+    "en": {
+      "title": "Press Kit",
+      "description": "Download press materials, high-resolution photos and media assets from the Pepe Shows artist agency."
+    }
+  },
+  "pressemappe": {
+    "path": "/pressemappe",
+    "de": {
+      "title": "Pressemappe",
+      "description": "Pressemappe mit Informationen, Fotos und Fakten über Pepe Shows für Journalisten und Medienvertreter."
+    },
+    "en": {
+      "title": "Press Folder",
+      "description": "Press folder with information, photos and facts about Pepe Shows for journalists and media representatives."
+    }
+  },
+  "technicalRider": {
+    "path": "/technical-rider",
+    "de": {
+      "title": "Technical Rider - Technische Anforderungen",
+      "description": "Technische Anforderungen und Rider für Auftritte von Pepe Shows. Bühnenmaße, Licht, Ton und Sicherheitsanforderungen."
+    },
+    "en": {
+      "title": "Technical Rider - Technical Requirements",
+      "description": "Technical requirements and rider for Pepe Shows performances. Stage dimensions, lighting, sound and safety requirements."
+    }
+  },
+  "impressum": {
+    "path": "/impressum",
+    "de": {
+      "title": "Impressum",
+      "description": "Impressum und rechtliche Angaben der Pepe Shows Artistenagentur, München."
+    },
+    "en": {
+      "title": "Legal Notice",
+      "description": "Legal notice of the Pepe Shows artist agency, Munich."
+    }
+  },
+  "datenschutz": {
+    "path": "/datenschutz",
+    "de": {
+      "title": "Datenschutzerklärung",
+      "description": "Datenschutzerklärung der Pepe Shows Artistenagentur. Informationen zum Umgang mit Ihren personenbezogenen Daten."
+    },
+    "en": {
+      "title": "Privacy Policy",
+      "description": "Privacy policy of the Pepe Shows artist agency. How we handle your personal data."
+    }
+  },
+  "agb": {
+    "path": "/agb",
+    "de": {
+      "title": "Allgemeine Geschäftsbedingungen",
+      "description": "AGB der Pepe Shows Artistenagentur München. Allgemeine Geschäftsbedingungen für Buchungen und Auftritte."
+    },
+    "en": {
+      "title": "Terms and Conditions",
+      "description": "Terms and conditions of the Pepe Shows artist agency, Munich, for bookings and performances."
+    }
+  }
+}

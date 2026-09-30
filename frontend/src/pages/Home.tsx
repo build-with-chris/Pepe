@@ -579,7 +579,7 @@ export default function Home() {
             <Link to="/anfragen" className="bento-card-square bento-card-main-square bento-clickable">
               <div className="bento-card-bg">
                 <img 
-                  src="/images/Bento1/CircusTent.png" 
+                  src="/images/Bento1/CircusTent.png" width={1152} height={2048} 
                   alt="Circuszelt mit Luftartistin bei einer Pepe Shows Veranstaltung"
                   className="bento-main-image"
                 />
@@ -618,7 +618,7 @@ export default function Home() {
             <Link to="/shows" className="bento-card-square bento-card-image-square bento-clickable">
               <div className="bento-card-bg">
                 <img 
-                  src="/images/Bento1/Burn.webp" 
+                  src="/images/Bento1/Burn.webp" width={1000} height={1500} 
                   alt="Feuershow – innovative Showkonzepte von Pepe Shows"
                   className="bento-bg-image"
                 />
@@ -636,17 +636,17 @@ export default function Home() {
             <Link to="/kuenstler" className="bento-card-square bento-card-slider-square bento-clickable">
               <div className="bento-card-bg">
                 <img 
-                  src="/images/Bento1/Slider1.webp" 
+                  src="/images/Bento1/Slider1.webp" width={416} height={624} 
                   alt="Showimpression – Akrobatik auf der Bühne"
                   className="bento-bg-image active"
                 />
                 <img
-                  src="/images/Bento1/Slider2.webp"
+                  src="/images/Bento1/Slider2.webp" width={768} height={1024}
                   alt="Showimpression – Artistik bei einer Veranstaltung"
                   className="bento-bg-image"
                 />
                 <img
-                  src="/images/Bento1/Slider3.webp"
+                  src="/images/Bento1/Slider3.webp" width={768} height={1024}
                   alt="Showimpression – Künstler in Aktion"
                   className="bento-bg-image"
                 />
@@ -724,23 +724,23 @@ export default function Home() {
                 </p>
                 <div className="artist-avatars">
                   <div className="team-member">
-                    <img src="/images/Slider/Artist1.webp" alt="Carmen" className="avatar" />
+                    <img src="/images/Slider/Artist1.webp" width={780} height={624} alt="Carmen" className="avatar" />
                     <span className="team-member-name">Carmen</span>
                   </div>
                   <div className="team-member">
-                    <img src="/images/Slider/Artist2.webp" alt="Jonas" className="avatar" />
+                    <img src="/images/Slider/Artist2.webp" width={780} height={624} alt="Jonas" className="avatar" />
                     <span className="team-member-name">Jonas</span>
                   </div>
                   <div className="team-member">
-                    <img src="/images/Slider/Artist3.webp" alt="Sophie" className="avatar" />
+                    <img src="/images/Slider/Artist3.webp" width={780} height={624} alt="Sophie" className="avatar" />
                     <span className="team-member-name">Sophie</span>
                   </div>
                   <div className="team-member">
-                    <img src="/images/Slider/Artist4.webp" alt="Dani" className="avatar" />
+                    <img src="/images/Slider/Artist4.webp" width={780} height={624} alt="Dani" className="avatar" />
                     <span className="team-member-name">Dani</span>
                   </div>
                   <div className="team-member">
-                    <img src="/images/Slider/Artist5.webp" alt="Jakob" className="avatar" />
+                    <img src="/images/Slider/Artist5.webp" width={780} height={624} alt="Jakob" className="avatar" />
                     <span className="team-member-name">Jakob</span>
                   </div>
                 </div>
@@ -839,7 +839,7 @@ export default function Home() {
             <div className="order-1 lg:order-2">
               <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/5 group">
                 <img 
-                  src="/images/Brandguide/Header Pepe 16:9.jpg" 
+                  src="/images/Brandguide/Header Pepe 16:9.jpg" width={1920} height={1080} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                   alt="Pepe Shows – mehr als eine Künstleragentur"
                 />
@@ -870,22 +870,22 @@ export default function Home() {
           </div>
           <div className="logo-strip">
             <div className="logo-item">
-              <img src="/images/Logos/Porsche.png" alt="Porsche" className="client-logo" />
+              <img src="/images/Logos/Porsche.png" width={74} height={96} alt="Porsche" className="client-logo" />
             </div>
             <div className="logo-item">
-              <img src="/images/Logos/google.svg" alt="Google" className="client-logo" />
+              <img src="/images/Logos/google.svg" width={1559} height={514} alt="Google" className="client-logo" />
             </div>
             <div className="logo-item">
-              <img src="/images/Logos/mcdonalds.svg" alt="McDonald's" className="client-logo" />
+              <img src="/images/Logos/mcdonalds.svg" width={1561} height={1364} alt="McDonald's" className="client-logo" />
             </div>
             <div className="logo-item">
-              <img src="/images/Logos/astrazeneca.svg" alt="AstraZeneca" className="client-logo" />
+              <img src="/images/Logos/astrazeneca.svg" width={1673} height={418} alt="AstraZeneca" className="client-logo" />
             </div>
             <div className="logo-item">
-              <img src="/images/Logos/tollwood.svg" alt="Tollwood Festival" className="client-logo" />
+              <img src="/images/Logos/tollwood.svg" width={1134} height={313} alt="Tollwood Festival" className="client-logo" />
             </div>
             <div className="logo-item">
-              <img src="/images/Logos/european-championships.svg" alt="European Championships" className="client-logo" />
+              <img src="/images/Logos/european-championships.svg" width={1000} height={855} alt="European Championships" className="client-logo" />
             </div>
           </div>
         </div>
