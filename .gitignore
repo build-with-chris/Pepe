@@ -39,3 +39,6 @@ __pycache__/
 *.py[cod]
 backend/.venv/
 .pytest_cache/
+
+# Vertriebsunterlagen (Kundenportfolios), nicht oeffentlich
+sales/
