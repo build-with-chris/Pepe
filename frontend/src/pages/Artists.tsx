@@ -516,17 +516,7 @@ export default function KuenstlerVerwaltung() {
                     Ablehnen
                   </Button>
                 )}
-                {selected.approval_status !== 'rejected' && (
-                  <Button
-                    onClick={rejectSelected}
-                    disabled={actionLoading}
-                    className="bg-red-600 hover:bg-red-500 text-white"
-                    size="sm"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reject'}
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon" onClick={closeDetails} className="text-gray-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={closeDetails} aria-label="Schließen" className="text-gray-400 hover:text-white">
                   <X className="w-5 h-5" />
                 </Button>
               </div>

@@ -350,9 +350,10 @@ export default function OfferEditPage() {
     );
   }
 
-  // Fertig geladen, kein Fehler gemeldet und trotzdem keine Anfrage: Das
-  // passiert, wenn das Token beim Laden fehlte. Vorher stürzte die Seite hier
-  // beim Zugriff auf `requestData.client_name` ab.
+  // Fertig geladen, kein Fehler gemeldet und trotzdem keine Anfrage: Der
+  // Ladeeffekt lässt das heute nicht zu, er setzt beides zusammen. Die Abfrage
+  // steht hier, damit eine spätere Änderung dort eine Meldung zeigt statt beim
+  // Zugriff auf `requestData.client_name` abzustürzen.
   if (!requestData) {
     return (
       <DashboardLayout title="Angebot bearbeiten" actions={backButton}>

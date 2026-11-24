@@ -126,7 +126,9 @@ export default function AnstehendeGigs() {
       if (signal?.aborted) return;
       setGigs(list);
     } catch (e) {
-      if (signal?.aborted || (e instanceof Error && e.name === 'AbortError')) return;
+      // Ohne `instanceof`: Der Abbruch kommt als DOMException, und die erbt
+      // nicht in jeder Umgebung von Error.
+      if (signal?.aborted || (e as { name?: string } | null)?.name === 'AbortError') return;
       console.error('PendingGigs fetch failed:', e);
       setError(errorMessage(e) ?? 'Fehler beim Laden');
     } finally {

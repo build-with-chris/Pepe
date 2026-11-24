@@ -342,6 +342,7 @@ export default function AdminInvoicesPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => openInvoice(inv.id)}
+                            aria-label="Rechnung öffnen"
                             className="text-gray-400 hover:text-white"
                           >
                             <ExternalLink className="w-4 h-4" />
@@ -351,6 +352,7 @@ export default function AdminInvoicesPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => patchInvoice(inv.id, { status: 'paid' })}
+                              aria-label="Als bezahlt markieren"
                               className="text-emerald-400 hover:text-emerald-300"
                             >
                               <CheckCircle className="w-4 h-4" />
@@ -361,6 +363,7 @@ export default function AdminInvoicesPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => patchInvoice(inv.id, { status: 'rejected' })}
+                              aria-label="Rechnung ablehnen"
                               className="text-red-400 hover:text-red-300"
                             >
                               <XCircle className="w-4 h-4" />
