@@ -105,6 +105,9 @@ const CalendarPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const lastEnsuredIsoRef = useRef<string | null>(null);
+  // Erst wenn die Liste einmal vom Server kam, lässt sich sagen, ob ein Tag
+  // fehlt. Vorher ist `available` nur deshalb leer, weil noch nichts geladen ist.
+  const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
 
   const { backendArtistId, loadingArtistId, refreshArtistId } =
     useBackendArtistId(user, token);
@@ -134,6 +137,7 @@ const CalendarPage: React.FC = () => {
   
       const data = await res.json();
       setAvailable(Array.isArray(data) ? data : (data?.items ?? []));
+      setAvailabilityLoaded(true);
     } catch (e) {
       setError(errorMessage(e) || 'Fehler beim Laden der Verfügbarkeiten');
     } finally {
@@ -223,6 +227,9 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     if (!token) return;
     if (loadingArtistId) return;
+    // Ohne diese Zeile lief der Effekt, bevor die Verfügbarkeiten da waren,
+    // und trug den Tag in einem Jahr bei jedem Öffnen der Seite erneut ein.
+    if (!availabilityLoaded) return;
 
     const oneYearAhead = new Date(startOfToday);
     oneYearAhead.setDate(oneYearAhead.getDate() + 365);
@@ -253,7 +260,7 @@ const CalendarPage: React.FC = () => {
     })();
     // `addAvailability` entsteht bei jedem Rendern neu, siehe oben.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, loadingArtistId, startOfToday, available, backendArtistId]);
+  }, [token, loadingArtistId, startOfToday, available, backendArtistId, availabilityLoaded]);
 
   return (
     <DashboardLayout title={t('calendar.title')}>
