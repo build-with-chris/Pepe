@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
 import type { ReactNode } from 'react';
 
@@ -11,7 +11,8 @@ interface UserPayload {
   rejection_reason?: string | null;
   guidelines_accepted?: boolean;
   backend_id?: number | string;
-  [key: string]: any;
+  user_metadata?: { full_name?: string; name?: string };
+  [key: string]: unknown;
 }
 
 interface AuthContextValue {
@@ -182,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Die Clerk-Rolle ist nur noch informativ — `is_admin` kommt
           // ausschließlich aus der DB (artists.is_admin), siehe unten.
-          const clerkRole = (clerkUser.publicMetadata as any)?.role;
+          const clerkRole = (clerkUser.publicMetadata as { role?: string } | undefined)?.role;
 
           const userPayload: UserPayload = {
             sub: clerkUser.id,
@@ -298,6 +299,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Hook und Provider gehören zusammen und werden an rund vierzig Stellen von
+// hier importiert. Der Preis: Bei Änderungen an dieser Datei lädt Vite die
+// Seite neu, statt sie im laufenden Betrieb zu tauschen.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {

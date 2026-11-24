@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 interface GuideItem {
   id: string;
@@ -36,7 +35,6 @@ const defaultItems: GuideItem[] = [
 ];
 
 export default function GuideAccordion({ items = defaultItems }: GuideAccordionProps) {
-  const { t } = useTranslation();
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
   const toggleItem = (id: string) => {

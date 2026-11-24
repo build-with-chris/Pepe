@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import DotCloudImage from '@/components/ui/DotCloudImage';
 import PepeLogo from '@/assets/Logos/Logo PepeShows weiß.png';
 

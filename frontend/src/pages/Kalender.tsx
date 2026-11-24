@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Calendar } from "@/components/ui/calendar";
 import { useAuth } from '../context/AuthContext';
@@ -14,14 +14,21 @@ import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw } from "lucide-react";
 
 import { ProfileStatusBanner } from '@/components/ProfileStatusBanner';
+import { errorMessage } from '@/lib/errors';
 
 const baseUrl = import.meta.env.VITE_API_URL as string;
 
-function useBackendArtistId(user: any, token: string | null) {
+const startOfDay = (date: Date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+function useBackendArtistId(user: { email?: string } | null, token: string | null) {
   const [backendArtistId, setBackendArtistId] = useState<string | null>(null);
   const [loadingArtistId, setLoadingArtistId] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!token) { setLoadingArtistId(false); return; }
     setLoadingArtistId(true);
     try {
@@ -55,9 +62,10 @@ function useBackendArtistId(user: any, token: string | null) {
     } finally {
       setLoadingArtistId(false);
     }
-  };
+  }, [token]);
 
-  useEffect(() => { load(); }, [token, user?.email]);
+  // Auch bei einem Kontowechsel neu auflösen, nicht nur bei neuem Token.
+  useEffect(() => { load(); }, [load, user?.email]);
 
   return { backendArtistId, loadingArtistId, refreshArtistId: load };
 }
@@ -66,21 +74,17 @@ const CalendarPage: React.FC = () => {
   const { token, user } = useAuth();
   const { t } = useTranslation();
   const [available, setAvailable] = useState<AvailabilitySlot[]>([]);
-  const [todayTick, setTodayTick] = useState(0);
-
-  const startOfToday = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, [todayTick]);
+  // „Heute" als Zustand, damit der Kalender nach Mitternacht von selbst
+  // weiterrückt, wenn die Seite über Nacht offen bleibt.
+  const [startOfToday, setStartOfToday] = useState(() => startOfDay(new Date()));
 
   useEffect(() => {
     const now = new Date();
     const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
     const ms = nextMidnight.getTime() - now.getTime() + 1000;
-    const t = setTimeout(() => setTodayTick((x) => x + 1), ms);
-    return () => clearTimeout(t);
-  }, [todayTick]);
+    const timer = setTimeout(() => setStartOfToday(startOfDay(new Date())), ms);
+    return () => clearTimeout(timer);
+  }, [startOfToday]);
 
   const futureAvailable = useMemo(() => {
     return available.filter((s) => {
@@ -130,8 +134,8 @@ const CalendarPage: React.FC = () => {
   
       const data = await res.json();
       setAvailable(Array.isArray(data) ? data : (data?.items ?? []));
-    } catch (e: any) {
-      setError(e?.message || 'Fehler beim Laden der Verfügbarkeiten');
+    } catch (e) {
+      setError(errorMessage(e) || 'Fehler beim Laden der Verfügbarkeiten');
     } finally {
       setLoading(false);
     }
@@ -188,8 +192,8 @@ const CalendarPage: React.FC = () => {
       }
   
       await fetchAvailability();
-    } catch (e: any) {
-      setError(`Verfügbarkeit konnte nicht hinzugefügt werden. ${e?.message || e}`);
+    } catch (e) {
+      setError(`Verfügbarkeit konnte nicht hinzugefügt werden. ${errorMessage(e) || e}`);
     } finally {
       setLoading(false);
     }
@@ -200,9 +204,9 @@ const CalendarPage: React.FC = () => {
     setAvailable((prev) => (prev ?? []).filter((s) => s.id !== slot.id));
     try {
       await deleteAvailability({ token, slotId: slot.id, artistId: backendArtistId ?? undefined });
-    } catch (err: any) {
+    } catch (err) {
       let message = 'Verfügbarkeit konnte nicht entfernt werden.';
-      if (err && err.message) message += ' ' + err.message;
+      if (err && errorMessage(err)) message += ' ' + errorMessage(err);
       setError(message);
       setAvailable((prev) => [...(prev ?? []), slot]);
     }
@@ -211,6 +215,9 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     if (!token || !backendArtistId) return;
     fetchAvailability();
+    // `fetchAvailability` entsteht bei jedem Rendern neu. Als Abhängigkeit
+    // liefe der Abruf in einer Schleife.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, backendArtistId]);
 
   useEffect(() => {
@@ -244,12 +251,9 @@ const CalendarPage: React.FC = () => {
         lastEnsuredIsoRef.current = null;
       }
     })();
+    // `addAvailability` entsteht bei jedem Rendern neu, siehe oben.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, loadingArtistId, startOfToday, available, backendArtistId]);
-
-  const isAvailable = (date: Date) => {
-    const iso = formatISODate(date);
-    return (available ?? []).some((s) => s.date === iso);
-  };
 
   return (
     <DashboardLayout title={t('calendar.title')}>
@@ -321,7 +325,7 @@ const CalendarPage: React.FC = () => {
               <Calendar
                 mode="multiple"
                 numberOfMonths={1}
-                onDayClick={handleDayClick as any}
+                onDayClick={handleDayClick}
                 modifiers={modifiers}
                 disabled={disabledDays}
                 initialFocus

@@ -1,7 +1,6 @@
 import React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import {
-  BookOpen,
   CheckCircle2,
   Clock,
   Shield,

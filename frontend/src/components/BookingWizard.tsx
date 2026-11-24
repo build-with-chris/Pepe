@@ -10,7 +10,7 @@ import {
   type TeamSize,
 } from '@/constraints/booking'
 
-interface BookingData {
+export interface BookingData {
   // Step 1: Event Type
   eventType: string
   
@@ -313,7 +313,7 @@ export default function BookingWizard() {
     { value: 'flexible', label: 'Flexibel/Beratung' }
   ]
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 

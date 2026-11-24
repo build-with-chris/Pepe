@@ -30,7 +30,6 @@ export function getApiBaseUrl(): string {
   if (!/^https?:\/\//i.test(raw)) {
     const fixed = `https://${raw}`;
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.warn(
         `[Pepe] VITE_API_URL ohne Schema ("${raw}"), interpretiere als "${fixed}". ` +
         'Bitte in der Umgebungsvariable "https://" ergaenzen.'

@@ -159,15 +159,13 @@ function CalendarDayButton({
   style: _dayPickerStyle,
   ...rest
 }: React.ComponentProps<typeof DayButton>) {
-  const defaultClassNames = getDefaultClassNames()
-
   const ref = React.useRef<HTMLButtonElement>(null)
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
 
-  const isAvailable = (modifiers as any).available;
-  const isBlocked = (modifiers as any).blocked;
+  const isAvailable = modifiers.available;
+  const isBlocked = modifiers.blocked;
 
   // Merge DayPicker's style with our availability colors
   // DayPicker passes style: undefined which would override our styles if spread after

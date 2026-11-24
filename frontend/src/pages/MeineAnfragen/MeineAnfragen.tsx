@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { getReceivedAt } from '@/utils/dates';
+import { errorMessage } from '@/lib/errors';
 import { CheckCircle2, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,19 +13,9 @@ import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/
 
 import { ProfileStatusBanner } from '@/components/ProfileStatusBanner';
 
-function getReceivedAtTs(record: any): number {
-  const v =
-    record?.request_created_at ??
-    record?.booking_request_created_at ??
-    record?.request?.created_at ??
-    record?.created_at ??
-    record?.createdAt ??
-    record?.created ??
-    record?.received_at ??
-    record?.submitted_at ?? null;
-  if (!v) return 0;
-  const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+/** Eingangszeit als Zahl zum Sortieren. Ohne Datum 0, also ganz hinten. */
+function getReceivedAtTs(record: object): number {
+  return getReceivedAt(record)?.getTime() ?? 0;
 }
 
 type Status = 'angefragt' | 'angeboten' | 'akzeptiert' | 'abgelehnt' | 'storniert';
@@ -70,7 +62,7 @@ const MeineAnfragen: React.FC = () => {
     const freshToken = await getFreshToken() || token;
     if (freshToken) headers['Authorization'] = `Bearer ${freshToken}`;
     const res = await fetch(`${API_BASE}${path}`, {
-      headers: { ...headers, ...(options.headers as any) },
+      headers: { ...headers, ...(options.headers as Record<string, string> | undefined) },
       ...options,
     });
     if (!res.ok) {
@@ -96,17 +88,18 @@ const MeineAnfragen: React.FC = () => {
     try {
       const data = await apiFetch('/api/requests/requests');
       // Erwartet ein Array direkt oder in { requests: [...] }
-      const rawList: any[] = Array.isArray(data) ? data : data.requests || [];
-      const list: Anfrage[] = rawList.map((item: any) => ({
+      type RawAnfrage = Anfrage & { comment?: string; artist_comment?: string };
+      const rawList: RawAnfrage[] = Array.isArray(data) ? data : data.requests || [];
+      const list: Anfrage[] = rawList.map((item) => ({
         ...item,
         admin_comment: item.comment ?? item.artist_comment ?? undefined,
       }));
       // Sort by received/created date (newest first)
       list.sort((a, b) => getReceivedAtTs(b) - getReceivedAtTs(a));
       setAnfragen(list);
-    } catch (e: any) {
+    } catch (e) {
       console.error('Anfragen konnten nicht geladen werden:', e);
-      setError(e.message || t('requests.errors.loadFailed', { defaultValue: 'Die Anfragen konnten nicht geladen werden.' }));
+      setError(errorMessage(e) || t('requests.errors.loadFailed', { defaultValue: 'Die Anfragen konnten nicht geladen werden.' }));
     } finally {
       setLoading(false);
     }
@@ -172,14 +165,14 @@ const MeineAnfragen: React.FC = () => {
           defaultValue: 'Angebot gesendet. Die Agentur prüft es und meldet sich beim Kunden.',
         }),
       });
-    } catch (e: any) {
+    } catch (e) {
       console.error('Angebot konnte nicht gesendet werden:', e);
       setAnfragen(prev => prev.map(a => (a.id === id && before ? before : a)));
       setNotice(id, {
         kind: 'error',
         text:
           t('requests.offer.failed', { defaultValue: 'Das Angebot konnte nicht gesendet werden' }) +
-          (e?.message ? `: ${e.message}` : '. Bitte versuche es erneut.'),
+          (errorMessage(e) ? `: ${errorMessage(e)}` : '. Bitte versuche es erneut.'),
       });
     } finally {
       setSubmitting(null);

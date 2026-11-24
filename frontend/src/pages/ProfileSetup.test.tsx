@@ -15,7 +15,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ProfileSetup from './ProfileSetup';
 
 const authState = {
-  user: { email: 'alex@example.com' } as any,
+  user: { email: 'alex@example.com' } as { email: string } | null,
   token: 'test-token' as string | null,
   getFreshToken: async () => authState.token,
 };
@@ -78,9 +78,9 @@ function renderWithStatus(approvalStatus: string, overrides: Record<string, unkn
 
 /** Alle PATCH-Rümpfe, die an `/api/artists/me/profile` gingen. */
 function patchBodies() {
-  return fetchMock.mock.calls
-    .filter(([url, init]: any[]) => String(url).includes('/profile') && init?.method === 'PATCH')
-    .map(([, init]: any[]) => JSON.parse(init.body));
+  return (fetchMock.mock.calls as [url: unknown, init?: RequestInit][])
+    .filter(([url, init]) => String(url).includes('/profile') && init?.method === 'PATCH')
+    .map(([, init]) => JSON.parse(String(init?.body)));
 }
 
 const wizardBar = () => screen.queryByRole('progressbar', { name: 'Fortschritt der Anmeldung' });

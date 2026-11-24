@@ -11,8 +11,35 @@ import { useTranslation } from "react-i18next";
 import { fetchWithRetry, ValidationError, AuthError, ForbiddenError, ConflictError, NetworkError, NotFoundError } from "@/lib/http";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { errorMessage } from '@/lib/errors';
 
 const baseUrl = import.meta.env.VITE_API_URL;
+
+type ApprovalStatus = 'approved' | 'pending' | 'rejected' | 'unsubmitted';
+
+/** Antwort von /api/artists/me. Nur die Felder, die diese Seite liest. */
+interface ArtistMeResponse {
+  id?: number | string | null;
+  name?: string | null;
+  address?: string | null;
+  phone_number?: string | null;
+  disciplines?: string[] | null;
+  price_min?: number | null;
+  price_max?: number | null;
+  calculated_gage?: number | null;
+  stage_experience?: string | null;
+  employment_type?: string | null;
+  circus_education?: boolean | null;
+  awards_level?: string | null;
+  pepe_years?: number | null;
+  pepe_exclusivity?: boolean | null;
+  bio?: string | null;
+  instagram?: string | null;
+  profile_image_url?: string | null;
+  gallery_urls?: string[] | null;
+  approval_status?: ApprovalStatus | null;
+  rejection_reason?: string | null;
+}
 
 export default function Profile() {
   const { user, token, getFreshToken } = useAuth();
@@ -49,7 +76,7 @@ export default function Profile() {
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
-  const [approvalStatus, setApprovalStatus] = useState<'approved' | 'pending' | 'rejected' | 'unsubmitted'>('unsubmitted');
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>('unsubmitted');
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   // Der Assistent leitet seinen Einstiegsschritt aus den fehlenden
@@ -90,13 +117,13 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) navigate("/login");
-  }, [user]);
+  }, [user, navigate]);
 
   useEffect(() => {
     const loadProfile = async () => {
       if (!user || !token) return;
       try {
-        let me: any | null = null;
+        let me: ArtistMeResponse | null = null;
       try {
         const res = await fetchWithRetry(`${baseUrl}/api/artists/me`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -170,7 +197,7 @@ export default function Profile() {
           setProfileImageUrl(imageUrl);
         }
         setGalleryUrls(Array.isArray(me.gallery_urls) ? me.gallery_urls : []);
-        setApprovalStatus((me.approval_status as any) ?? 'unsubmitted');
+        setApprovalStatus(me.approval_status ?? 'unsubmitted');
         setRejectionReason(me.rejection_reason ?? null);
         setFieldErrors({});
         if (me.id) {
@@ -272,7 +299,7 @@ export default function Profile() {
       const effectiveId = await ensureArtistId(authToken);
 
       // Upload profile image via backend
-      let imageUrl = await uploadProfileImage(
+      const imageUrl = await uploadProfileImage(
         profileImageFile,
         effectiveId,
         setProfileImageUrl,
@@ -282,7 +309,7 @@ export default function Profile() {
       );
 
       // Upload gallery images via backend
-      let mergedGalleryUrls = await uploadGalleryImages(
+      const mergedGalleryUrls = await uploadGalleryImages(
         galleryFiles,
         effectiveId,
         galleryUrls,
@@ -300,7 +327,7 @@ export default function Profile() {
       const hasAddress = [street, postalCode, city, country].some((part) => part.trim());
       if (hasAddress) setAddress(fullAddress);
 
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         name,
         phone_number: phoneNumber,
         disciplines,
@@ -379,7 +406,7 @@ export default function Profile() {
         }
         setGalleryUrls(Array.isArray(saved.gallery_urls) ? saved.gallery_urls : mergedGalleryUrls);
         setGalleryFiles([]);
-        setApprovalStatus((saved.approval_status as any) ?? nextStatus ?? approvalStatus);
+        setApprovalStatus(saved.approval_status ?? nextStatus ?? approvalStatus);
         setRejectionReason(saved.rejection_reason ?? null);
       }
 
@@ -393,7 +420,7 @@ export default function Profile() {
         setLocked(true);
       }
       return true;
-    } catch (err: any) {
+    } catch (err) {
         if (err instanceof ValidationError) {
           const mapKey = (k: string) => ({
             name: 'name',
@@ -437,14 +464,12 @@ export default function Profile() {
           // Die Servermeldung nennt Grösse, Inhaltstyp oder fehlende
           // Berechtigung konkret — die ist hilfreicher als ein Sammeltext.
           setError(err.message);
-        } else if (err?.message) {
+        } else {
           // Auch der Abbruch aus `ensureArtistId` landet hier. Vorher lief der
           // Ablauf in diesem Fall stumm weiter (SPEC-4, Befund O4).
-          setError(err.message);
-        } else {
-          setError(t('profileSetup.errors.saveFailed'));
+          setError(errorMessage(err) ?? t('profileSetup.errors.saveFailed'));
         }
-        setBackendDebug(prev => `Sync error: ${err?.message || err}${prev ? "\n" + prev : ""}`);
+        setBackendDebug(prev => `Sync error: ${errorMessage(err) || err}${prev ? "\n" + prev : ""}`);
         return false;
       } finally {
       setLoading(false);
@@ -476,7 +501,7 @@ export default function Profile() {
         }).catch(() => {});
         const meRes = await fetchWithRetry(`${baseUrl}/api/artists/me`, {
           headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => null as any);
+        }).catch(() => null);
         if (meRes) {
           const me = await meRes.json().catch(() => null);
           if (me?.id) {
@@ -523,8 +548,8 @@ export default function Profile() {
       setSuccess(false);
       setError(null);
       setBackendDebug((prev) => `${t('profileSetup.delete.done')}.\n${prev || ''}`.trim());
-    } catch (err: any) {
-      setError(`${t('profileSetup.delete.failed')}: ${err?.message || err}`);
+    } catch (err) {
+      setError(`${t('profileSetup.delete.failed')}: ${errorMessage(err) || err}`);
     } finally {
       setLoading(false);
     }
@@ -561,14 +586,14 @@ export default function Profile() {
     priceMax,
   };
 
-  const setProfileAdapter = (next: any) => {
-    if (typeof next.name !== "undefined") setName(next.name);
-    if (typeof next.address !== "undefined") setAddress(next.address);
-    if (typeof next.street !== "undefined") setStreet(next.street);
-    if (typeof next.postalCode !== "undefined") setPostalCode(next.postalCode);
-    if (typeof next.city !== "undefined") setCity(next.city);
-    if (typeof next.country !== "undefined") setCountry(next.country);
-    if (typeof next.phoneNumber !== "undefined") setPhoneNumber(next.phoneNumber);
+  const setProfileAdapter = (next: Record<string, unknown>) => {
+    if (typeof next.name !== "undefined") setName(next.name as string);
+    if (typeof next.address !== "undefined") setAddress(next.address as string);
+    if (typeof next.street !== "undefined") setStreet(next.street as string);
+    if (typeof next.postalCode !== "undefined") setPostalCode(next.postalCode as string);
+    if (typeof next.city !== "undefined") setCity(next.city as string);
+    if (typeof next.country !== "undefined") setCountry(next.country as string);
+    if (typeof next.phoneNumber !== "undefined") setPhoneNumber(next.phoneNumber as string);
     if (typeof next.disciplines !== "undefined") setDisciplines(next.disciplines as string[]);
     if (typeof next.bio !== "undefined") setBio(next.bio as string);
     if (typeof next.instagram !== "undefined") setInstagram(next.instagram as string);

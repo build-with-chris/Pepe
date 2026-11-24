@@ -48,7 +48,7 @@ export function getFirstSentence(text: string | undefined | null): string {
   const t = (text ?? "").trim();
   if (!t) return "";
   // Match up to the first ., !, ?, or … followed by a space or end of string
-  const match = t.match(/^(.*?[\.!\?…])(\s|$)/u);
+  const match = t.match(/^(.*?[.!?…])(\s|$)/u);
   return (match && match[1]) ? match[1].trim() : t;
 }
 

@@ -1,9 +1,6 @@
-import { useTranslation } from 'react-i18next'
 import SEO from '@/components/SEO'
 
 export default function Privacy() {
-  const { t } = useTranslation()
-
   return (
     <main className="min-h-screen bg-pepe-dark py-16">
       <SEO title="Datenschutzerklärung / Privacy Policy" noindex />

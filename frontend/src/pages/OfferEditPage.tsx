@@ -6,6 +6,47 @@ import { useAuth } from '../context/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/dashboard/PageState';
 import { cn } from '@/lib/utils';
+import { errorMessage } from '@/lib/errors';
+
+/** Buchungsanfrage aus /api/admin/requests/all. Nur die Felder, die diese Seite liest. */
+interface AdminRequest {
+  id: number | string;
+  client_name?: string | null;
+  event_date?: string | null;
+  event_time?: string | null;
+  event_address?: string | null;
+  event_type?: string | null;
+  show_type?: string | null;
+  show_discipline?: string | null;
+  duration_minutes?: number | null;
+  number_of_guests?: number | null;
+  team_size?: number | string | null;
+  is_indoor?: boolean | null;
+  needs_light?: boolean | null;
+  needs_sound?: boolean | null;
+  special_requests?: string | null;
+  artist_ids?: number[] | null;
+  artist_gage?: number | null;
+  recommended_price_min?: number | null;
+  recommended_price_max?: number | null;
+  price_min?: number | null;
+  price_max?: number | null;
+}
+
+/** Admin-Angebot aus /api/admin/requests/<id>/admin_offers. */
+interface AdminOffer {
+  id: number | string;
+  request_id?: number | string | null;
+  override_price?: number | null;
+  notes?: string | null;
+}
+
+/** Zeile aus /api/admin/requests/<id>/artist_status. */
+interface ArtistStatusRow {
+  artist_id: number | string;
+  status: string;
+  requested_gage?: number | null;
+}
 
 export default function OfferEditPage() {
   const { reqId, offerId } = useParams<{ reqId: string; offerId: string }>();
@@ -19,7 +60,7 @@ export default function OfferEditPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [requestData, setRequestData] = useState<any>(null);
+  const [requestData, setRequestData] = useState<AdminRequest | null>(null);
 
   /**
    * Die *echte* ID des Admin-Angebots, oder null, wenn es noch keins gibt.
@@ -132,14 +173,14 @@ export default function OfferEditPage() {
         throw new Error(`HTTP ${res.status}`);
       }
       // Try to parse JSON even if text was already read
-      let json: any;
-      try { json = text ? JSON.parse(text) : []; } catch (e) { json = []; }
-      const list = Array.isArray(json)
+      let json: AdminRequest[] | { requests?: AdminRequest[] } | null;
+      try { json = text ? JSON.parse(text) : []; } catch { json = []; }
+      const list: AdminRequest[] = Array.isArray(json)
         ? json
         : (json && Array.isArray(json.requests))
           ? json.requests
           : [];
-      const ids = list.map((r:any) => r && r.id);
+      const ids = list.map((r) => r && r.id);
       console.log('🧾 admin requests count:', list.length, 'ids:', ids);
       if (!Array.isArray(list) || list.length === 0) {
         console.warn('⚠️ admin requests: leere Liste oder unbekanntes Format', json);
@@ -167,7 +208,7 @@ export default function OfferEditPage() {
     Promise.all([reqsPromise, offersPromise, artistStatusesPromise])
       .then(([reqList, offers, artistStatusesList]) => {
         const targetIdNum = Number(reqId);
-        const reqData = reqList.find((r: any) => Number(r.id) === targetIdNum);
+        const reqData = reqList.find((r) => Number(r.id) === targetIdNum);
         if (!reqData) {
           throw new Error(`Anfrage ${reqId} nicht gefunden.`);
         }
@@ -179,10 +220,10 @@ export default function OfferEditPage() {
         // Das Angebot dieser Anfrage. Erst nach der URL-ID suchen, falls doch
         // mal eine echte Angebots-ID verlinkt wird, sonst das Angebot der
         // Anfrage nehmen (es gibt hoechstens eins pro Anfrage).
-        const list: any[] = Array.isArray(offers) ? offers : [];
+        const list: AdminOffer[] = Array.isArray(offers) ? offers : [];
         const currentOffer =
-          list.find((o: any) => String(o.id) === offerId) ??
-          list.find((o: any) => String(o.request_id) === String(reqId)) ??
+          list.find((o) => String(o.id) === offerId) ??
+          list.find((o) => String(o.request_id) === String(reqId)) ??
           list[0] ??
           null;
         setResolvedOfferId(currentOffer ? Number(currentOffer.id) : null);
@@ -195,12 +236,12 @@ export default function OfferEditPage() {
         if (Array.isArray(artistStatusesList)) {
           const mapStatus: Record<number, string> = {};
           const mapGage: Record<number, number | null> = {};
-          for (const row of artistStatusesList) {
+          for (const row of artistStatusesList as (ArtistStatusRow | null)[]) {
             if (!row) continue;
-            const idNum = Number((row as any).artist_id);
+            const idNum = Number(row.artist_id);
             if (!Number.isFinite(idNum)) continue;
-            mapStatus[idNum] = (row as any).status;
-            mapGage[idNum] = ((row as any).requested_gage ?? null);
+            mapStatus[idNum] = row.status;
+            mapGage[idNum] = row.requested_gage ?? null;
           }
           setArtistStatuses(mapStatus);
           setArtistGages(mapGage);
@@ -209,7 +250,7 @@ export default function OfferEditPage() {
         if (reqData.artist_ids?.length) {
           fetch(`${import.meta.env.VITE_API_URL}/api/artists`)
             .then(res => res.json())
-            .then((allArtists: any[]) => {
+            .then((allArtists: { id: number; name: string }[]) => {
               const idsArr: number[] = Array.isArray(reqData.artist_ids) ? reqData.artist_ids : [];
               const nameMap: Record<number, string> = {};
               for (const a of allArtists) {
@@ -224,7 +265,7 @@ export default function OfferEditPage() {
         setLoading(false);
       })
       .catch(err => {
-        setError(err.message);
+        setError(errorMessage(err) ?? 'Die Anfrage konnte nicht geladen werden.');
         setLoading(false);
       });
   }, [token, reqId, offerId]);
@@ -275,8 +316,8 @@ export default function OfferEditPage() {
       }
 
       setSaveNotice('Angebot gespeichert.');
-    } catch (err: any) {
-      setSaveNotice(`Speichern fehlgeschlagen: ${err?.message ?? 'unbekannter Fehler'}`);
+    } catch (err) {
+      setSaveNotice(`Speichern fehlgeschlagen: ${errorMessage(err) ?? 'unbekannter Fehler'}`);
     } finally {
       setSaving(false);
     }
@@ -309,9 +350,19 @@ export default function OfferEditPage() {
     );
   }
 
-  // Typed artistIds to avoid implicit any in map
-  const artistIds: number[] = Array.isArray(requestData?.artist_ids)
-    ? (requestData.artist_ids as number[])
+  // Fertig geladen, kein Fehler gemeldet und trotzdem keine Anfrage: Das
+  // passiert, wenn das Token beim Laden fehlte. Vorher stürzte die Seite hier
+  // beim Zugriff auf `requestData.client_name` ab.
+  if (!requestData) {
+    return (
+      <DashboardLayout title="Angebot bearbeiten" actions={backButton}>
+        <ErrorState message="Die Anfrage konnte nicht geladen werden." />
+      </DashboardLayout>
+    );
+  }
+
+  const artistIds: number[] = Array.isArray(requestData.artist_ids)
+    ? requestData.artist_ids
     : [];
 
   const details: { label: string; value: React.ReactNode }[] = [
@@ -476,7 +527,7 @@ export default function OfferEditPage() {
           artistIds.map((artistId: number) => {
             const sentGage =
               artistGages[artistId] ??
-              (artistIds.length === 1 ? requestData?.artist_gage : null);
+              (artistIds.length === 1 ? requestData.artist_gage : null);
             const status = artistStatuses[artistId] ?? 'angefragt';
             const remark = artistRemarks[artistId] ?? '';
             const remarkMissing = status === 'abgelehnt' && !remark.trim();

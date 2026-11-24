@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle, Clock, XCircle, AlertCircle, Pencil, ExternalLink } from "lucide-react";
 

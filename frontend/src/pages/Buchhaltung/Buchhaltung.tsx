@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { errorMessage } from '@/lib/errors';
 import { useAuth } from '../../context/AuthContext';
 import { uploadInvoice } from '@/lib/storage/blobUpload';
 import UploadSection from "./components/UploadSection";
@@ -39,7 +40,7 @@ const parseISODate = (iso: string) => new Date(`${iso}T00:00:00`);
 export default function Buhaltung() {
   const { token, user } = useAuth();
   const [artistId, setArtistId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Anfragen bekommt nur, wer freigegeben ist. Das Backend antwortet sonst mit
   // 403 (`Artist not approved yet`). Das ist kein Fehler, sondern der normale
@@ -74,10 +75,10 @@ export default function Buhaltung() {
         const me = await res.json();
         if (!mounted) return;
         setArtistId(me.id);
-      } catch (e: any) {
+      } catch (e) {
         if (!mounted) return;
         console.error('❌ /api/artists/me failed', e);
-        setError(e?.message || 'Profil konnte nicht geladen werden');
+        setError(errorMessage(e) || 'Profil konnte nicht geladen werden');
       }
     })();
     return () => { mounted = false; };
@@ -107,10 +108,10 @@ export default function Buhaltung() {
         if (!mounted) return;
         setAwaitingApproval(false);
         setRequests(Array.isArray(data) ? data : []);
-      } catch (e: any) {
+      } catch (e) {
         if (!mounted) return;
         console.error('❌ /api/requests/requests failed', e);
-        setError(e?.message || 'Anfragen konnten nicht geladen werden');
+        setError(errorMessage(e) || 'Anfragen konnten nicht geladen werden');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -138,9 +139,9 @@ export default function Buhaltung() {
         created_at: r.created_at || undefined,
       }));
       setInvoices(items);
-    } catch (e: any) {
+    } catch (e) {
       console.error('❌ list registered invoices failed', e);
-      setRegError(e?.message || 'Registrierte Rechnungen konnten nicht geladen werden');
+      setRegError(errorMessage(e) || 'Registrierte Rechnungen konnten nicht geladen werden');
     }
   };
 
@@ -201,9 +202,9 @@ export default function Buhaltung() {
       setAmount('');
       setInvoiceDate('');
       setNote('');
-    } catch (e: any) {
+    } catch (e) {
       console.error('❌ upload failed', e);
-      setInvError(e?.message || 'Upload fehlgeschlagen');
+      setInvError(errorMessage(e) || 'Upload fehlgeschlagen');
     } finally {
       setUploading(false);
       e.currentTarget.value = '';

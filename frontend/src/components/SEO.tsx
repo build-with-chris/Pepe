@@ -81,6 +81,7 @@ export default function SEO({
 }
 
 // Kurzform fuer die oeffentlichen Seiten: <SEO {...pageSEO.kuenstler} />
+// eslint-disable-next-line react-refresh/only-export-components -- gehört zur Komponente; kostet nur das schnelle Nachladen dieser Datei
 export const pageSEO = Object.fromEntries(
   (Object.keys(pages) as PageKey[]).map((key) => [key, { page: key }]),
 ) as Record<PageKey, { page: PageKey }>

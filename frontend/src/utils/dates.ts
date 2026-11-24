@@ -1,5 +1,5 @@
 // src/utils/dates.ts
-export function formatDateTimeDE(value: any): string {
+export function formatDateTimeDE(value: Date | string | number | null | undefined): string {
   if (!value) return "—";
   try {
     const d = value instanceof Date ? value : new Date(value);
@@ -17,16 +17,28 @@ export function formatDateTimeDE(value: any): string {
  * Versucht aus verschiedenen möglichen Feldern das „Eingegangen am" Datum zu bestimmen.
  * Nutze überall die gleichen Feldnamen, und ergänze hier zentral neue Aliase.
  */
-export function getReceivedAt(offer: any): Date | null {
+export function getReceivedAt(record: object | null | undefined): Date | null {
+  // Die Endpunkte nennen das Feld unterschiedlich, und die Typen der Aufrufer
+  // führen es meist gar nicht. Darum wird hier nur gelesen, was da ist.
+  const offer = (record ?? {}) as {
+    request_created_at?: string | null;
+    booking_request_created_at?: string | null;
+    request?: { created_at?: string | null } | null;
+    created_at?: string | null;
+    createdAt?: string | null;
+    created?: string | null;
+    received_at?: string | null;
+    submitted_at?: string | null;
+  };
   const v =
-    offer?.request_created_at ||
-    offer?.booking_request_created_at ||
-    offer?.request?.created_at ||
-    offer?.created_at ||
-    offer?.createdAt ||
-    offer?.created ||
-    offer?.received_at ||
-    offer?.submitted_at;
+    offer.request_created_at ||
+    offer.booking_request_created_at ||
+    offer.request?.created_at ||
+    offer.created_at ||
+    offer.createdAt ||
+    offer.created ||
+    offer.received_at ||
+    offer.submitted_at;
   if (!v) return null;
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d;

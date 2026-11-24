@@ -73,7 +73,7 @@ describe('parseEventDate', () => {
 
 describe('formatMoney', () => {
   it('formatiert deutsch mit Euro und ohne Nachkommastellen', () => {
-    //   ist das geschuetzte Leerzeichen, das Intl vor das € setzt.
+    // U+00A0 ist das geschuetzte Leerzeichen, das Intl vor das € setzt.
     expect(formatMoney(1200)).toBe('1.200 €');
     expect(formatMoney(0)).toBe('0 €');
   });

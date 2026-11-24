@@ -35,7 +35,9 @@ interface ProfileFormProps {
     priceMin?: number | null;
     priceMax?: number | null;
   };
-  setProfile: (updates: any) => void;
+  // Bewusst lose wie beim Assistenten: Neben den Feldern oben kommen auch
+  // `profileImageFile` und `instagram` hier durch.
+  setProfile: (updates: Record<string, unknown>) => void;
   locked: boolean;
   onSubmit: (e: React.FormEvent) => void;
   fieldErrors: Record<string, string>;
@@ -608,7 +610,7 @@ export function ProfileForm({
                     )}
                   </div>
                 ))}
-                {profile.galleryFiles.map((file, index) => (
+                {profile.galleryFiles.map((_file, index) => (
                   <div key={`file-${index}`} className="relative group aspect-square">
                     <img
                       src={galleryBlobUrls[index]}

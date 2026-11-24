@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { errorMessage } from '@/lib/errors';
 import { CalendarCheck, CalendarClock, MapPin } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
@@ -124,10 +125,10 @@ export default function AnstehendeGigs() {
       const list: AdminGig[] = Array.isArray(json) ? json : (json?.requests ?? []);
       if (signal?.aborted) return;
       setGigs(list);
-    } catch (e: any) {
-      if (signal?.aborted || e?.name === 'AbortError') return;
+    } catch (e) {
+      if (signal?.aborted || (e instanceof Error && e.name === 'AbortError')) return;
       console.error('PendingGigs fetch failed:', e);
-      setError(e?.message ?? 'Fehler beim Laden');
+      setError(errorMessage(e) ?? 'Fehler beim Laden');
     } finally {
       if (!signal?.aborted) setLoading(false);
     }

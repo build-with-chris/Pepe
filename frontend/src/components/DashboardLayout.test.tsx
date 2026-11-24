@@ -15,7 +15,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardLayout } from './DashboardLayout';
 import { invalidatePendingArtistCount } from './dashboard/usePendingArtistCount';
 
-const authState = { user: null as any, token: 'test-token' as string | null };
+const authState = { user: null as { is_admin?: boolean } | null, token: 'test-token' as string | null };
 
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => authState,

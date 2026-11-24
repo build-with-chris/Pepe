@@ -28,8 +28,8 @@ const ArtistCard3Sided: React.FC<ArtistCard3SidedProps> = ({ artist, enableZoom 
   const flipToSide = () => setCurrentSide('side');
 
   useEffect(() => {
-    const handler = (e: any) => {
-      if (e.detail !== idRef.current) {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail !== idRef.current) {
         setCurrentSide('front');
       }
     };

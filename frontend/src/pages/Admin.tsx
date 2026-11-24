@@ -38,12 +38,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { errorMessage } from '@/lib/errors';
 
 const API_BASE: string = (import.meta.env.VITE_API_URL as string) || '';
 const api = (path: string) => `${API_BASE}${path}`.replace(/([^:]\/)\/+/g, '$1');
 
 // formatDate und getReceivedAt standen hier als eigene Kopien. Sie kommen jetzt
 // aus utils/dates, damit Künstler- und Admin-Ansicht dieselben Formate zeigen.
+
+/** Eine Buchungsanfrage, wie /api/admin/dashboard sie in `offers` liefert. */
+interface AdminOffer {
+  id: number;
+  status?: string | null;
+  client_name?: string | null;
+  client_email?: string | null;
+  event_date?: string | null;
+  event_time?: string | null;
+  event_address?: string | null;
+  show_discipline?: string | null;
+  price_offered?: number | null;
+  price_min?: number | null;
+  price_max?: number | null;
+}
+
+interface DashboardData {
+  offers?: AdminOffer[];
+}
 
 interface StatCardProps {
   title: string;
@@ -103,7 +123,7 @@ export default function Admin() {
   // Kein useNavigate mehr: Die Anfrage wird über einen sichtbaren
   // „Angebot"-Knopf geöffnet, der ein echter Link ist und damit per Tastatur
   // erreichbar.
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string>('receivedDesc');
@@ -121,15 +141,15 @@ export default function Admin() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setDashboardData((prev: any) => {
+      setDashboardData((prev) => {
         if (!prev?.offers) return prev;
-        return { ...prev, offers: prev.offers.map((o: any) => o.id === id ? { ...o, status: 'akzeptiert' } : o) };
+        return { ...prev, offers: prev.offers.map((o) => o.id === id ? { ...o, status: 'akzeptiert' } : o) };
       });
       setNotice({ kind: 'success', text: `Anfrage #${id} ist angenommen.` });
-    } catch (e: any) {
+    } catch (e) {
       setNotice({
         kind: 'error',
-        text: `Anfrage #${id} konnte nicht angenommen werden${e?.message ? `: ${e.message}` : '.'}`,
+        text: `Anfrage #${id} konnte nicht angenommen werden${errorMessage(e) ? `: ${errorMessage(e)}` : '.'}`,
       });
     }
   }
@@ -141,9 +161,9 @@ export default function Admin() {
     if (!ok) return;
 
     setNotice(null);
-    setDashboardData((prev: any) => {
+    setDashboardData((prev) => {
       if (!prev?.offers) return prev;
-      return { ...prev, offers: prev.offers.filter((o: any) => o.id !== id) };
+      return { ...prev, offers: prev.offers.filter((o) => o.id !== id) };
     });
 
     try {
@@ -155,13 +175,13 @@ export default function Admin() {
         throw new Error(`HTTP ${res.status}`);
       }
       setNotice({ kind: 'success', text: `Anfrage #${id} ist gelöscht.` });
-    } catch (e: any) {
+    } catch (e) {
       // Die Zeile war schon aus der Liste genommen — neu laden, damit sie
       // wieder erscheint und der Stand wieder dem Server entspricht.
       await loadDashboard();
       setNotice({
         kind: 'error',
-        text: `Anfrage #${id} konnte nicht gelöscht werden${e?.message ? `: ${e.message}` : '.'}`,
+        text: `Anfrage #${id} konnte nicht gelöscht werden${errorMessage(e) ? `: ${errorMessage(e)}` : '.'}`,
       });
     }
   }
@@ -180,12 +200,12 @@ export default function Admin() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
-      // slots und die Availability-Felder braucht diese Seite nicht.
-      const { availabilities, artistAvailability, slots, ...filtered } = data;
-      setDashboardData(filtered);
-    } catch (err: any) {
+      // Die Antwort enthält auch slots und Availability-Felder. Diese Seite
+      // braucht nur die Anfragen.
+      setDashboardData({ offers: Array.isArray(data?.offers) ? data.offers : undefined });
+    } catch (err) {
       console.error('[Admin] Dashboard load failed:', err);
-      setError(err.message);
+      setError(errorMessage(err) ?? 'Das Dashboard konnte nicht geladen werden.');
     } finally {
       setLoading(false);
     }
@@ -197,14 +217,14 @@ export default function Admin() {
   }, [loadDashboard]);
 
   const filteredAndSortedOffers = useMemo(() => {
-    if (!dashboardData?.offers) return [] as any[];
+    if (!dashboardData?.offers) return [] as AdminOffer[];
 
     let list = [...dashboardData.offers];
 
     // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      list = list.filter((o: any) =>
+      list = list.filter((o) =>
         o.client_name?.toLowerCase().includes(query) ||
         o.client_email?.toLowerCase().includes(query) ||
         String(o.id).includes(query)
@@ -214,23 +234,23 @@ export default function Admin() {
     // Filter by status
     if (statusFilter === 'offen') {
       // "Offen" = all active/pending statuses
-      list = list.filter((o: any) => {
+      list = list.filter((o) => {
         const st = (o.status || '').toLowerCase();
         return !st || st === 'offen' || st === 'angefragt' || st === 'angeboten' || st === 'pending';
       });
     } else if (statusFilter !== 'all') {
-      list = list.filter((o: any) => o.status === statusFilter);
+      list = list.filter((o) => o.status === statusFilter);
     }
 
     // Sort
-    const byReceived = (a: any, b: any) => {
+    const byReceived = (a: AdminOffer, b: AdminOffer) => {
       const da = getReceivedAt(a);
       const db = getReceivedAt(b);
       const ta = da ? da.getTime() : 0;
       const tb = db ? db.getTime() : 0;
       return ta - tb;
     };
-    const byEvent = (a: any, b: any) => {
+    const byEvent = (a: AdminOffer, b: AdminOffer) => {
       const ta = new Date(`${a.event_date}T${a.event_time || '00:00:00'}`).getTime();
       const tb = new Date(`${b.event_date}T${b.event_time || '00:00:00'}`).getTime();
       return ta - tb;
@@ -264,9 +284,9 @@ export default function Admin() {
 
     return {
       total: offers.length,
-      pending: offers.filter((o: any) => !o.status || o.status === 'offen' || o.status === 'pending' || o.status === 'angefragt' || o.status === 'angeboten').length,
-      accepted: offers.filter((o: any) => o.status === 'akzeptiert').length,
-      thisMonth: offers.filter((o: any) => {
+      pending: offers.filter((o) => !o.status || o.status === 'offen' || o.status === 'pending' || o.status === 'angefragt' || o.status === 'angeboten').length,
+      accepted: offers.filter((o) => o.status === 'akzeptiert').length,
+      thisMonth: offers.filter((o) => {
         const d = getReceivedAt(o);
         return d && d >= thisMonthStart;
       }).length,
@@ -412,7 +432,7 @@ export default function Admin() {
         {!loading && !error && filteredAndSortedOffers.length > 0 && (
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
             <ul className="list-none divide-y divide-white/10">
-              {filteredAndSortedOffers.map((offer: any) => (
+              {filteredAndSortedOffers.map((offer) => (
                 <li key={offer.id} className="relative transition-colors hover:bg-white/5">
                   <div className="flex items-start justify-between gap-3 p-4 lg:px-6 lg:py-5">
                     <div className="min-w-0 flex-1">
@@ -546,7 +566,7 @@ export default function Admin() {
 
         {/* Leerzustand */}
         {!loading && !error && filteredAndSortedOffers.length === 0 && (
-          dashboardData?.offers?.length > 0 ? (
+          dashboardData?.offers && dashboardData.offers.length > 0 ? (
             <EmptyState
               icon={Filter}
               title="Keine Anfrage passt zu diesem Filter"

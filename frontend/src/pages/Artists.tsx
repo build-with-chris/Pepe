@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, Users, CheckCircle, Clock, XCircle, FileQuestion, X, Loader2, Trash2 } from 'lucide-react';
+import { errorMessage } from '@/lib/errors';
 
 interface Artist {
   id: number;
@@ -68,7 +69,6 @@ export default function KuenstlerVerwaltung() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [slots, setSlots] = useState<any[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -86,7 +86,8 @@ export default function KuenstlerVerwaltung() {
   useEffect(() => {
     let cancelled = false;
 
-    const mapArtist = (a: any): Artist => ({
+    // Rohdaten aus der API: dieselben Felder wie `Artist`, aber jedes darf fehlen.
+    const mapArtist = (a: Partial<Artist> & Pick<Artist, 'id' | 'name'>): Artist => ({
       id: a.id,
       name: a.name,
       profile_image_url: a.profile_image_url ?? a.image_url ?? null,
@@ -124,10 +125,10 @@ export default function KuenstlerVerwaltung() {
           setArtists(merged);
           setLoading(false);
         }
-      } catch (e: any) {
+      } catch (e) {
         console.error(e);
         if (!cancelled) {
-          setError(e.message);
+          setError(errorMessage(e) ?? 'Die Artists konnten nicht geladen werden.');
           setLoading(false);
         }
       }
@@ -138,15 +139,15 @@ export default function KuenstlerVerwaltung() {
         const res = await fetch(`${baseUrl}/api/artists`);
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         const data = await res.json();
-        const rawList: any[] = data.artists ?? data ?? [];
+        const rawList: Parameters<typeof mapArtist>[0][] = data.artists ?? data ?? [];
         const list: Artist[] = rawList.map(mapArtist).map(a => ({ ...a, approval_status: a.approval_status ?? 'approved' }));
         if (!cancelled) {
           setArtists(list);
           setLoading(false);
         }
-      } catch (e: any) {
+      } catch (e) {
         if (!cancelled) {
-          setError(e.message);
+          setError(errorMessage(e) ?? 'Die Artists konnten nicht geladen werden.');
           setLoading(false);
         }
       }
@@ -165,18 +166,6 @@ export default function KuenstlerVerwaltung() {
     };
   }, [token, baseUrl]);
 
-  useEffect(() => {
-    if (!token) return;
-    fetch(`${baseUrl}/api/admin/dashboard`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        return res.json();
-      })
-      .then(data => setSlots(data.slots || []))
-      .catch(err => console.error('Fehler beim Laden der Slots:', err));
-  }, [token, baseUrl]);
 
   const filteredSorted = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -234,15 +223,19 @@ export default function KuenstlerVerwaltung() {
   };
 
   // Backend antwortet mit { id, status, rejection_reason, approved_at, email_sent }
-  const applyDecision = (data: any, fallbackStatus: string, patch: Partial<Artist> = {}) => {
+  const applyDecision = (
+    data: { status?: string; rejection_reason?: string | null; approved_at?: string | null; email_sent?: boolean } | null,
+    fallbackStatus: string,
+    patch: Partial<Artist> = {},
+  ) => {
     if (!selected) return;
-    const newStatus = (data?.status as string) || fallbackStatus;
+    const newStatus = data?.status || fallbackStatus;
     const updated: Artist = {
       ...selected,
       ...patch,
       approval_status: newStatus,
-      rejection_reason: (data?.rejection_reason ?? patch.rejection_reason ?? null) as string | null,
-      approved_at: (data?.approved_at as string) ?? null,
+      rejection_reason: data?.rejection_reason ?? patch.rejection_reason ?? null,
+      approved_at: data?.approved_at ?? null,
     };
     setSelected(updated);
     setArtists(prev => prev.map(a => (a.id === updated.id ? { ...a, ...updated } : a)));
@@ -273,8 +266,8 @@ export default function KuenstlerVerwaltung() {
       }
       const data = await res.json().catch(() => null);
       applyDecision(data, 'approved', { rejection_reason: null });
-    } catch (e: any) {
-      setActionError(e.message || 'Approve failed');
+    } catch (e) {
+      setActionError(errorMessage(e) || 'Approve failed');
     } finally {
       setActionLoading(false);
     }
@@ -307,8 +300,8 @@ export default function KuenstlerVerwaltung() {
       applyDecision(data, 'rejected', { rejection_reason: reason });
       setRejectOpen(false);
       setRejectReason('');
-    } catch (e: any) {
-      setActionError(e.message || 'Reject failed');
+    } catch (e) {
+      setActionError(errorMessage(e) || 'Reject failed');
     } finally {
       setActionLoading(false);
     }
@@ -332,8 +325,8 @@ export default function KuenstlerVerwaltung() {
       }
       setArtists(prev => prev.filter(a => a.id !== artist.id));
       if (selected?.id === artist.id) setSelected(null);
-    } catch (e: any) {
-      setActionError(e.message || 'Delete failed');
+    } catch (e) {
+      setActionError(errorMessage(e) || 'Delete failed');
     } finally {
       setDeletingId(null);
     }

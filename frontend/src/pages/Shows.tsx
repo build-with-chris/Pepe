@@ -16,16 +16,17 @@ interface Show {
   created_at?: string
 }
 
+// Auswahl für das wechselnde Symbol im Kopf der Seite.
+const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole']
+
 export default function Shows() {
-  const [shows, setShows] = useState<Show[]>([])
+  const [shows] = useState<Show[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [randomIcon, setRandomIcon] = useState('cyrwheel')
   const [autoAnimPosition, setAutoAnimPosition] = useState(0)
   const { t } = useTranslation()
 
-  // Available icons for random shuffling
-  const availableIcons = ['cyrwheel', 'juggling', 'magician', 'breakdance', 'handstand', 'pantomime', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole']
 
   // Shuffle random icon every 5 seconds
   useEffect(() => {
@@ -125,7 +126,10 @@ export default function Shows() {
 
           <div className="show-formats-grid">
             {Array.from({ length: 6 }, (_, i) => i + 1).map((num) => {
-              const item = t(`gallery34.items.${num}`, { returnObjects: true }) as any
+              const item = t(`gallery34.items.${num}`, { returnObjects: true }) as
+                | string
+                | { title?: string; desc?: string; details?: string[] }
+                | null
               if (!item || typeof item === 'string') return null
               
               // Map images based on show format number (matching old Gallery34)

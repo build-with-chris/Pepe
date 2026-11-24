@@ -148,8 +148,8 @@ async function uploadViaBackend(
       headers: { Authorization: `Bearer ${authToken}` },
       body: form,
     });
-  } catch (err: any) {
-    throw new UploadError(`Upload nicht erreichbar: ${err?.message || err}`);
+  } catch (err) {
+    throw new UploadError(`Upload nicht erreichbar: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   if (!res.ok) {

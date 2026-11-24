@@ -10,9 +10,21 @@ interface User {
   loginTime: string
 }
 
+/** Eine im Browser zwischengespeicherte Anfrage aus dem Buchungsassistenten. */
+interface StoredBookingRequest {
+  id?: string | number
+  status?: string
+  eventType?: string
+  eventDate?: string
+  guestCount?: string | number
+  teamSize?: string
+  performanceStyle?: string | string[]
+  timestamp: string
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
-  const [bookingRequests, setBookingRequests] = useState<any[]>([])
+  const [bookingRequests, setBookingRequests] = useState<StoredBookingRequest[]>([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -22,7 +34,7 @@ export default function Dashboard() {
       setUser(JSON.parse(authData))
       
       // Load booking requests from localStorage
-      const requests = []
+      const requests: StoredBookingRequest[] = []
       const lastRequest = localStorage.getItem('last-booking-request')
       const pendingRequest = localStorage.getItem('pending-booking-request')
       

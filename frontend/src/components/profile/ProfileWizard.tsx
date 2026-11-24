@@ -109,6 +109,7 @@ const REQUIRED_BY_STEP: Record<number, string[]> = {
  * Fortschritt irgendwo zusätzlich gespeichert werden muss. Ist alles Pflichtige
  * da, geht es zum letzten Schritt, denn dort wird eingereicht.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- exportiert für den Test; kostet nur das schnelle Nachladen dieser Datei
 export function firstIncompleteStep(profile: WizardProfile): number {
   const missing = missingRequiredFields(profile);
   if (missing.length === 0) return STEPS.length - 1;

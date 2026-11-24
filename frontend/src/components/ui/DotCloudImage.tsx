@@ -275,23 +275,6 @@ function DotCloudImage({
       }}
       data-scroll-progress={scrollProgress.toFixed(2)}
     >
-      {/* DEBUG: Visual indicator with actual rendered count */}
-      {(() => {
-        let visibleCount = 0;
-        const progressNormalized = formProgress / 0.98;
-        const exponentialProgress = Math.pow(progressNormalized, 8);
-        const keepRatio = 0.1 + (exponentialProgress * 0.9);
-        const threshold = Math.floor(keepRatio * 10);
-
-        if (dynamicDensity && reverseScroll && !isManualMode) {
-          visibleCount = particles.filter((_, idx) => (idx % 10) < threshold).length;
-        } else {
-          visibleCount = particles.length;
-        }
-
-        // Debug indicator disabled
-        return null;
-      })()}
       {shouldRenderParticles && particles.map((particle, index) => {
         // Dynamic density: EXTREME aggressive reduction - starts IMMEDIATELY!
         // At threshold 10: 100% particles

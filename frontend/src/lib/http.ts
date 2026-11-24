@@ -17,9 +17,9 @@ export class HttpError extends Error {
 }
 
 export class ValidationError extends HttpError {
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 
-  constructor(message: string, details: Record<string, any> = {}, status = 400,
+  constructor(message: string, details: Record<string, unknown> = {}, status = 400,
               code?: string, requestId?: string) {
     super(message, status, code, requestId);
     this.name = 'ValidationError';
@@ -125,7 +125,7 @@ export async function fetchWithRetry(
         switch (response.status) {
           case 400:
           case 422:
-            throw new ValidationError(message, body.details || body,
+            throw new ValidationError(message, body.details || { ...body },
                                       response.status, code, reqId);
           case 401:
             throw new AuthError(message, response.status, code, reqId);

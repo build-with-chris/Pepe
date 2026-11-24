@@ -20,4 +20,14 @@ export default tseslint.config([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn/ui legt Komponente und Varianten (buttonVariants, useSidebar)
+    // bewusst in dieselbe Datei. Die Regel schützt nur das schnelle Nachladen
+    // im Dev-Server; die Dateien umzubauen hiesse, sich vom Generator zu
+    // entfernen.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

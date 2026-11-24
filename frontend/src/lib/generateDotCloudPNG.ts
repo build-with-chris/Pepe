@@ -1,4 +1,4 @@
-import { imageToParticles, type Particle } from './imageToDots';
+import { imageToParticles } from './imageToDots';
 
 export interface DotCloudPNGConfig {
   /** Discipline ID or icon name (e.g., "cyrwheel") */

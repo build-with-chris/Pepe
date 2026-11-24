@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { errorMessage } from '@/lib/errors';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -38,13 +39,18 @@ const MyGigs: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [gigs, setGigs] = useState<Gig[]>([]);
 
+  // Als einfache Werte, damit der Effekt nicht bei jeder neuen Nutzer-Instanz
+  // neu lädt, wohl aber, wenn die Freigabe sich ändert.
+  const hasUser = Boolean(user);
+  const isApproved = user?.approval_status === 'approved';
+
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
-      if (!token || !user) return;
+      if (!token || !hasUser) return;
       
       // If artist is not approved, we can't fetch gigs
-      if (user.approval_status !== 'approved') {
+      if (!isApproved) {
         setLoading(false);
         return;
       }
@@ -62,17 +68,17 @@ const MyGigs: React.FC = () => {
         const data = (await res.json()) as Gig[];
         if (!isMounted) return;
         setGigs(Array.isArray(data) ? data : []);
-      } catch (e: any) {
+      } catch (e) {
         if (!isMounted) return;
         console.error('❌ MyGigs fetch failed:', e);
-        setError(e?.message ?? 'Fehler beim Laden');
+        setError(errorMessage(e) ?? 'Fehler beim Laden');
       } finally {
         if (isMounted) setLoading(false);
       }
     };
     load();
     return () => { isMounted = false; };
-  }, [token]);
+  }, [token, hasUser, isApproved]);
 
   const { upcoming, past } = useMemo(() => {
     const accepted = gigs.filter(g => normalize(g.status) === 'akzeptiert');

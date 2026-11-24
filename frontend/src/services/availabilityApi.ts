@@ -12,7 +12,7 @@ export interface DeleteAvailabilityParams {
   artistId?: string;
 }
 
-export const deleteAvailability = async ({ token, slotId, artistId }: DeleteAvailabilityParams): Promise<void> => {
+export const deleteAvailability = async ({ token, slotId }: DeleteAvailabilityParams): Promise<void> => {
   const baseUrl = import.meta.env.VITE_API_URL as string;
   
   const response = await fetch(`${baseUrl}/api/availability/${slotId}`, {

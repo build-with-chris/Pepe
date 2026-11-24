@@ -3,6 +3,7 @@
 import DotCloudImage from './ui/DotCloudImage'
 import { ArrowRight, Check, Home } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import type { BookingData } from './BookingWizard'
 import {
   DURATION_CUSTOM,
   DURATION_OPTIONS,
@@ -19,7 +20,6 @@ interface ChoiceCardProps {
   selected: boolean
   onSelect: (value: string) => void
   useDotIcon?: boolean
-  isActive?: boolean
 }
 
 // Map performance style values to doticon names
@@ -40,7 +40,7 @@ const dotIconMap: Record<string, string> = {
   'moderation': 'moderation'
 }
 
-export function ChoiceCard({ image, label, description, value, selected, onSelect, useDotIcon, isActive }: ChoiceCardProps) {
+export function ChoiceCard({ image, label, description, value, selected, onSelect, useDotIcon }: ChoiceCardProps) {
   const iconName = dotIconMap[value] || 'logo'
 
   return (
@@ -238,15 +238,23 @@ export function ResultStep({ result, onRestart }: { result: BookingResult; onRes
   )
 }
 
+/** Eine Auswahlkarte im Assistenten: Wert, Beschriftung, Bild und Unterzeile. */
+interface ChoiceOption {
+  value: string
+  label: string
+  image: string
+  description: string
+}
+
 interface StepContentProps {
   step: number
-  formData: any
-  onUpdate: (field: string, value: any) => void
-  eventTypes: any[]
-  teamSizes: any[]
-  performanceStyles: any[]
-  venueTypes: any[]
-  budgetRanges: any[]
+  formData: BookingData
+  onUpdate: (field: string, value: string | boolean | string[]) => void
+  eventTypes: ChoiceOption[]
+  teamSizes: ChoiceOption[]
+  performanceStyles: ChoiceOption[]
+  venueTypes: ChoiceOption[]
+  budgetRanges: { value: string; label: string }[]
 }
 
 export function StepContent({ 
@@ -320,7 +328,6 @@ export function StepContent({
                 value={style.value}
                 selected={Array.isArray(formData.performanceStyle) ? formData.performanceStyle.includes(style.value) : formData.performanceStyle === style.value}
                 useDotIcon={true}
-                isActive={step === 3}
                 onSelect={(value) => {
                   const currentStyles = Array.isArray(formData.performanceStyle) ? formData.performanceStyle : []
                   if (currentStyles.includes(value)) {

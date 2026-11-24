@@ -15,8 +15,9 @@ export async function initAnalytics() {
         });
         // Pageview NUR nach Interaktion, im Idle
         const onIdle = (cb: () => void, ms = 800) => {
-          const w: any = typeof window !== 'undefined' ? window : undefined;
-          if (w && 'requestIdleCallback' in w) return w.requestIdleCallback(cb, { timeout: ms });
+          if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+            return window.requestIdleCallback(cb, { timeout: ms });
+          }
           return setTimeout(cb, ms);
         };
         onIdle(() => posthog.capture('$pageview'));

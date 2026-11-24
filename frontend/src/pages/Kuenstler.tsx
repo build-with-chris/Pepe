@@ -13,7 +13,7 @@ export default function Kuenstler() {
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('')
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const { t } = useTranslation()
 
   // Get all artist images for backdrop

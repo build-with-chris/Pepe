@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { errorMessage } from '@/lib/errors';
 import { useAuth } from '../context/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Input } from '@/components/ui/input';
@@ -61,8 +62,8 @@ export default function AdminInvoicesPage() {
 
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortKey, setSortKey] = useState<SortKey>('created_at');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sortKey] = useState<SortKey>('created_at');
+  const [sortDir] = useState<'asc' | 'desc'>('desc');
 
   function fmtAmount(cents?: number | null, currency?: string | null) {
     if (cents == null) return '—';
@@ -126,7 +127,7 @@ export default function AdminInvoicesPage() {
     return arr;
   }, [filtered, sortKey, sortDir]);
 
-  async function fetchAll() {
+  const fetchAll = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     setError(null);
@@ -152,13 +153,13 @@ export default function AdminInvoicesPage() {
       }
       const data = await res.json();
       setInvoices(Array.isArray(data) ? data : []);
-    } catch (e: any) {
+    } catch (e) {
       console.error('[AdminInvoices] load error', e);
-      setError(e?.message || 'Konnte Rechnungen nicht laden');
+      setError(errorMessage(e) || 'Konnte Rechnungen nicht laden');
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
 
   async function patchInvoice(id: number, patch: Partial<AdminInvoice>) {
     if (!token) return;
@@ -181,13 +182,13 @@ export default function AdminInvoicesPage() {
         throw new Error(`HTTP ${res.status}: ${txt}`);
       }
       await fetchAll();
-    } catch (e: any) {
+    } catch (e) {
       console.error('[AdminInvoices] patch error', e);
-      setError(e?.message || 'Aktion fehlgeschlagen');
+      setError(errorMessage(e) || 'Aktion fehlgeschlagen');
     }
   }
 
-  useEffect(() => { fetchAll(); }, [token]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   async function openInvoice(id: number) {
     if (!token) return;
@@ -204,9 +205,9 @@ export default function AdminInvoicesPage() {
       const url = data?.url as string | undefined;
       if (!url) throw new Error('Keine URL erhalten');
       window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (e: any) {
+    } catch (e) {
       console.error('[AdminInvoices] open error', e);
-      setError(e?.message || 'Konnte Datei nicht öffnen');
+      setError(errorMessage(e) || 'Konnte Datei nicht öffnen');
     }
   }
 
