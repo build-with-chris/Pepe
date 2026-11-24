@@ -47,10 +47,6 @@ export default function Home() {
   const [artists, setArtists] = useState<Artist[]>(FALLBACK_ARTISTS)
   const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [loading, setLoading] = useState(true)
-  const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
-  const [isStackPaused, setIsStackPaused] = useState(false)
-  const [randomIcon1, setRandomIcon1] = useState('cyrwheel')
-  const [autoAnimPosition, setAutoAnimPosition] = useState(0)
   const [responsibilityWorldPosition, setResponsibilityWorldPosition] = useState(0)
   const [responsibilityWorldClicked, setResponsibilityWorldClicked] = useState(false)
   const { t } = useTranslation()
@@ -64,9 +60,6 @@ export default function Home() {
     mq.addEventListener('change', apply)
     return () => mq.removeEventListener('change', apply)
   }, [])
-
-  // Available icons for random shuffling
-  const availableIcons = ['cyrwheel', 'magician', 'breakdance', 'handstand', 'contemporary', 'partnerakrobatik', 'luftakrobatik', 'pole', 'hulahoop', 'flooracrobatics', 'moderation']
 
   // Map discipline names to icon names for DotCloudImage
   const disciplineToIcon: Record<string, string> = {
@@ -88,165 +81,8 @@ export default function Home() {
     'verantwortung': 'world'
   }
 
-  // Shuffle random icons every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newIcon1 = availableIcons[Math.floor(Math.random() * availableIcons.length)]
-      setRandomIcon1(newIcon1)
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
-
-  // Animation synced to accordion opening - starts from 0 when card becomes active
-  useEffect(() => {
-    let animationFrame: number
-    const startTime = performance.now()
-    const duration = 8000 // 8 seconds for slow animation
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime
-      const progress = (elapsed % duration) / duration
-      const position = Math.sin(progress * Math.PI * 2) * 50 + 50 // 0-100 oscillation
-      setAutoAnimPosition(position)
-      animationFrame = requestAnimationFrame(animate)
-    }
-
-    animationFrame = requestAnimationFrame(animate)
-    return () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame)
-    }
-  }, [expandedDiscipline]) // Reset animation when accordion changes
-
   const handleArtistClick = (artist: Artist) => {
     navigate(artist.isFallback ? '/kuenstler' : `/kuenstler?flip=${artist.id}`)
-  }
-
-  // Create disciplines from artists data
-  const createDisciplinesFromArtists = (artistsData: Artist[]) => {
-    const disciplineMap = new Map<string, { artists: Artist[], count: number }>()
-    
-    // Collect all unique disciplines with their artists
-    artistsData.forEach(artist => {
-      artist.disciplines?.forEach(discipline => {
-        const normalizedDiscipline = discipline.trim()
-        if (!disciplineMap.has(normalizedDiscipline)) {
-          disciplineMap.set(normalizedDiscipline, { artists: [], count: 0 })
-        }
-        const disciplineData = disciplineMap.get(normalizedDiscipline)!
-        disciplineData.artists.push(artist)
-        disciplineData.count += 1
-      })
-    })
-
-    // Convert to array and shuffle randomly
-    const allDisciplines = Array.from(disciplineMap.entries())
-    const shuffled = allDisciplines.sort(() => Math.random() - 0.5)
-    
-    // Take random 6 disciplines
-    const randomDisciplines = shuffled
-      .slice(0, 6)
-      .map(([discipline, data]) => {
-        // Create different versions for different purposes
-        const normalizedName = discipline.trim()
-        const lowerCaseName = normalizedName.toLowerCase()
-        
-        // Try different translation key formats
-        const possibleKeys = [
-          `artists.disciplines.${lowerCaseName.replace(/[\s-]+/g, '')}`,
-          `artists.disciplines.${normalizedName.replace(/[\s-]+/g, '')}`,
-          `artists.disciplines.${lowerCaseName}`,
-        ]
-        
-        // Find first working translation
-        let translatedName = normalizedName
-        for (const key of possibleKeys) {
-          const translation = t(key)
-          if (translation && translation !== key) {
-            translatedName = translation
-            break
-          }
-        }
-        
-        // Map to correct image path - check various naming conventions
-        let imagePath = ''
-        
-        // Common discipline to image mappings
-        const imageMapping: Record<string, string> = {
-          'contemporary dance': 'Contemporary_Dance',
-          'chinese pole': 'Chinese_Pole',
-          'cyr-wheel': 'Cyr-Wheel',
-          'cyr wheel': 'Cyr-Wheel',
-          'hula hoop': 'Hula_Hoop',
-          'bodenakrobatik': 'Bodenakrobatik',
-          'breakdance': 'Breakdance',
-          'handstand': 'Handstand',
-          'jonglage': 'Jonglage',
-          'luftakrobatik': 'Luftakrobatik',
-          'moderation': 'Moderation',
-          'pantomime': 'Pantomime',
-          'partnerakrobatik': 'Partnerakrobatik',
-          'zauberer': 'Zauberer',
-          'zauberei': 'Zauberer'
-        }
-        
-        // Try to find matching image
-        const searchKey = lowerCaseName
-        if (imageMapping[searchKey]) {
-          imagePath = `/images/disciplines/${imageMapping[searchKey]}.webp`
-        } else {
-          // Fallback: try with underscores for multi-word disciplines
-          const fallbackName = normalizedName.replace(/\s+/g, '_')
-          imagePath = `/images/disciplines/${fallbackName}.webp`
-        }
-
-        // Create dynamic description based on actual artists
-        const artistCount = data.count
-        const sampleArtists = data.artists.slice(0, 3).map(a => a.name).join(', ')
-        const description = `${artistCount} erfahrene Künstler in unserem Netzwerk beherrschen ${translatedName}. ${sampleArtists.length > 0 ? `Darunter: ${sampleArtists}` : ''}`
-        
-        return {
-          id: lowerCaseName.replace(/[\s-]+/g, ''),
-          name: translatedName,
-          image: imagePath,
-          description: description,
-          artistCount: artistCount
-        }
-      })
-
-    return randomDisciplines
-  }
-
-  // Auto-cycle through disciplines (pause when user interacts)
-  useEffect(() => {
-    if (isStackPaused || disciplines.length === 0) return
-    
-    const interval = setInterval(() => {
-      setExpandedDiscipline(prev => (prev + 1) % disciplines.length)
-    }, 3000)
-    
-    return () => clearInterval(interval)
-  }, [disciplines.length, isStackPaused])
-
-  // Reset expanded discipline when disciplines change
-  useEffect(() => {
-    if (disciplines.length > 0) {
-      setExpandedDiscipline(0)
-    }
-  }, [disciplines])
-
-  const handleDisciplineClick = (index: number) => {
-    setExpandedDiscipline(index)
-    setIsStackPaused(true)
-    // Resume auto-cycling after 8 seconds
-    setTimeout(() => setIsStackPaused(false), 8000)
-  }
-
-  const handleStackMouseEnter = () => {
-    setIsStackPaused(true)
-  }
-
-  const handleStackMouseLeave = () => {
-    setIsStackPaused(false)
   }
 
   useEffect(() => {
@@ -293,7 +129,7 @@ export default function Home() {
     }
 
     fetchArtists()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   const resolveImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return ''
@@ -301,37 +137,6 @@ export default function Home() {
     const baseUrl = getApiBaseUrl()
     if (!baseUrl) return ''
     return `${baseUrl}${imageUrl}`
-  }
-
-  // Helper functions for discipline accordion content
-  const getDisciplineSpecialties = (disciplineId: string): string => {
-    const specialties: Record<string, string> = {
-      'zauberer': 'Close-Up Magic, Bühnenillusionen, mentale Magie und interaktive Tricks',
-      'luftakrobatik': 'Vertikaltuch, Aerial Hoop, Trapez und freihängende Akrobatik',
-      'handstand': 'Ein-Hand-Handstand, Cane-Balance, Adagio und Kraft-Akrobatik',
-      'jonglage': 'Objekt-Manipulation, LED-Jonglage, Feuer-Jonglage und Comedy-Jonglage',
-      'pantomime': 'Stumme Komödie, Charakterspiel, Interaktion und emotionales Theater',
-      'partnerakrobatik': 'Adagio, Hebungen, menschliche Pyramiden und synchrone Bewegungen',
-      'bodenakrobatik': 'Akrobatische Sprünge, Rollen, Handstände und dynamische Sequenzen',
-      'contemporaryDance': 'Moderne Choreografie, expressive Bewegung und künstlerischer Tanz',
-      'breakdance': 'Power Moves, Freezes, Toprock und Battle-orientierte Performance'
-    }
-    return specialties[disciplineId] || 'Professionelle Technik, jahrelange Erfahrung und einzigartige Performance-Qualität'
-  }
-
-  const getDisciplineApplications = (disciplineId: string): string => {
-    const applications: Record<string, string> = {
-      'zauberer': 'Gala-Dinner, Firmenevents, Hochzeiten, Meet & Greet, Tischzauberei',
-      'luftakrobatik': 'Große Bühnen, Hotels, Messen, Gala-Shows, Outdoor-Events',
-      'handstand': 'Kompakte Räume, Cocktail-Empfänge, Gala-Highlights, Corporate Events',
-      'jonglage': 'Street Performance, Bühnen-Shows, Kinder-Events, LED-Shows, Outdoor',
-      'pantomime': 'Theater, Comedy-Shows, Straßenfeste, Kinder-Unterhaltung, Interaktives',
-      'partnerakrobatik': 'Romantische Events, Hochzeiten, Gala-Abende, Tanz-Performances',
-      'bodenakrobatik': 'Sport-Events, Jugend-Shows, Schulveranstaltungen, Competitions',
-      'contemporaryDance': 'Kulturelle Events, Kunstgalerien, moderne Hochzeiten, Corporate',
-      'breakdance': 'Urban Events, Jugend-Kultur, Battles, Street-Festivals, Hip-Hop-Shows'
-    }
-    return applications[disciplineId] || 'Vielseitig einsetzbar für Events aller Art - von intimen Feiern bis zu großen Shows'
   }
 
 

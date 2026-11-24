@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import DotCloudImage from '../components/ui/DotCloudImage'
 import ImageCarousel from '../components/ImageCarousel'
 import { Gallery25 } from '../components/gallery25'
 import { getApiBaseUrl } from '@/lib/apiBase'
@@ -23,61 +22,10 @@ interface Artist {
 export default function Galerie() {
   const { t } = useTranslation()
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
-  const [autoAnimPosition, setAutoAnimPosition] = useState(0)
-
   // Discipline stack state from Home page
   const [disciplines, setDisciplines] = useState<Array<{id: string, name: string, image: string, description: string, artistCount: number}>>([])
   const [expandedDiscipline, setExpandedDiscipline] = useState<number>(0)
   const [isStackPaused, setIsStackPaused] = useState(false)
-
-  // Map discipline names to icon names for DotCloudImage
-  const disciplineToIcon: Record<string, string> = {
-    'contemporary dance': 'contemporary',
-    'chinese pole': 'pole',
-    'cyr-wheel': 'cyrwheel',
-    'cyr wheel': 'cyrwheel',
-    'hula hoop': 'hulahoop',
-    'bodenakrobatik': 'flooracrobatics',
-    'breakdance': 'breakdance',
-    'handstand': 'handstand',
-    'jonglage': 'juggling',
-    'luftakrobatik': 'luftakrobatik',
-    'moderation': 'moderation',
-    'pantomime': 'pantomime',
-    'partnerakrobatik': 'partnerakrobatik',
-    'zauberer': 'magician',
-    'zauberei': 'magician'
-  }
-
-  // Slow auto-animation for disciplines accordion
-  useEffect(() => {
-    let animationFrame: number
-    const startTime = performance.now()
-    const duration = 8000 // 8 seconds for slow animation
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime
-      const progress = (elapsed % duration) / duration
-      const position = Math.sin(progress * Math.PI * 2) * 50 + 50 // 0-100 oscillation
-      setAutoAnimPosition(position)
-      animationFrame = requestAnimationFrame(animate)
-    }
-
-    animationFrame = requestAnimationFrame(animate)
-    return () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame)
-    }
-  }, [])
-  
-  // State for combined static and dynamic images
-  const [allImages, setAllImages] = useState<Array<{
-    id: number | string
-    src: string
-    alt: string
-    category: string
-    aspectRatio: number
-    source?: 'static' | 'database'
-  }>>([])
 
   // Static gallery images
   const staticGalleryImages = [
@@ -110,37 +58,6 @@ export default function Galerie() {
     { id: 20, src: '/images/gallery/performance6.jpg', alt: 'Show Atmosphere', category: 'PepeShows Impressions', aspectRatio: 3/4, source: 'static' as const }
   ]
 
-
-  // Helper functions from Home page for discipline accordion content
-  const getDisciplineSpecialties = (disciplineId: string): string => {
-    const specialties: Record<string, string> = {
-      'zauberer': 'Close-Up Magic, Bühnenillusionen, mentale Magie und interaktive Tricks',
-      'luftakrobatik': 'Vertikaltuch, Aerial Hoop, Trapez und freihängende Akrobatik',
-      'handstand': 'Ein-Hand-Handstand, Cane-Balance, Adagio und Kraft-Akrobatik',
-      'jonglage': 'Objekt-Manipulation, LED-Jonglage, Feuer-Jonglage und Comedy-Jonglage',
-      'pantomime': 'Stumme Komödie, Charakterspiel, Interaktion und emotionales Theater',
-      'partnerakrobatik': 'Adagio, Hebungen, menschliche Pyramiden und synchrone Bewegungen',
-      'bodenakrobatik': 'Akrobatische Sprünge, Rollen, Handstände und dynamische Sequenzen',
-      'contemporaryDance': 'Moderne Choreografie, expressive Bewegung und künstlerischer Tanz',
-      'breakdance': 'Power Moves, Freezes, Toprock und Battle-orientierte Performance'
-    }
-    return specialties[disciplineId] || 'Professionelle Technik, jahrelange Erfahrung und einzigartige Performance-Qualität'
-  }
-
-  const getDisciplineApplications = (disciplineId: string): string => {
-    const applications: Record<string, string> = {
-      'zauberer': 'Gala-Dinner, Firmenevents, Hochzeiten, Meet & Greet, Tischzauberei',
-      'luftakrobatik': 'Große Bühnen, Hotels, Messen, Gala-Shows, Outdoor-Events',
-      'handstand': 'Kompakte Räume, Cocktail-Empfänge, Gala-Highlights, Corporate Events',
-      'jonglage': 'Street Performance, Bühnen-Shows, Kinder-Events, LED-Shows, Outdoor',
-      'pantomime': 'Theater, Comedy-Shows, Straßenfeste, Kinder-Unterhaltung, Interaktives',
-      'partnerakrobatik': 'Romantische Events, Hochzeiten, Gala-Abende, Tanz-Performances',
-      'bodenakrobatik': 'Sport-Events, Jugend-Shows, Schulveranstaltungen, Competitions',
-      'contemporaryDance': 'Kulturelle Events, Kunstgalerien, moderne Hochzeiten, Corporate',
-      'breakdance': 'Urban Events, Jugend-Kultur, Battles, Street-Festivals, Hip-Hop-Shows'
-    }
-    return applications[disciplineId] || 'Vielseitig einsetzbar für Events aller Art - von intimen Feiern bis zu großen Shows'
-  }
 
 
   // Create disciplines from artists data
@@ -256,9 +173,6 @@ export default function Galerie() {
 
   // Fetch artists and create disciplines + combine gallery images
   React.useEffect(() => {
-    // Set static images immediately
-    setAllImages(staticGalleryImages)
-
     const fetchArtistsAndImages = async () => {
       try {
         const baseUrl = getApiBaseUrl()
@@ -333,43 +247,6 @@ export default function Galerie() {
               artistCount: 0
             }
           ])
-
-          // Extract gallery images from artists
-          const dynamicImages: Array<{
-            id: string
-            src: string
-            alt: string
-            category: string
-            aspectRatio: number
-            source: 'database'
-          }> = []
-          
-          data.forEach((artist: Artist, artistIndex: number) => {
-            if (artist.gallery_urls && artist.gallery_urls.length > 0) {
-              artist.gallery_urls.forEach((url, imageIndex) => {
-                // Determine category based on artist disciplines
-                const primaryDiscipline = artist.disciplines?.[0] || 'General'
-                const category = mapDisciplineToCategory(primaryDiscipline)
-                
-                dynamicImages.push({
-                  id: `artist-${artistIndex}-${imageIndex}`,
-                  src: url,
-                  alt: `${artist.name} - ${primaryDiscipline}`,
-                  category: category,
-                  aspectRatio: 4/3, // Default aspect ratio for database images
-                  source: 'database'
-                })
-              })
-            }
-          })
-
-          // Combine static and dynamic images
-          const combinedImages = [...staticGalleryImages, ...dynamicImages]
-          setAllImages(combinedImages)
-          
-        } else {
-          // Fallback to static images only
-          setAllImages(staticGalleryImages)
         }
       } catch (error) {
         // Silently fail - page works with static images and fallback disciplines
@@ -386,24 +263,10 @@ export default function Galerie() {
     }
 
     fetchArtistsAndImages()
+    // Nur beim Sprachwechsel neu laden. `createDisciplinesFromArtists` entsteht
+    // bei jedem Rendern neu und würde den Abruf sonst in eine Schleife schicken.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t])
-
-  // Helper function to map discipline to gallery category
-  const mapDisciplineToCategory = (discipline: string): string => {
-    const mapping: Record<string, string> = {
-      'Zauberer': 'Magie',
-      'Zauberei': 'Magie',
-      'Handstand': 'Akrobatik',
-      'Luftakrobatik': 'Akrobatik',
-      'Bodenakrobatik': 'Akrobatik',
-      'Partnerakrobatik': 'Akrobatik',
-      'Jonglage': 'Artistik',
-      'Pantomime': 'Theater',
-      'Contemporary Dance': 'Artistik',
-      'Breakdance': 'Artistik'
-    }
-    return mapping[discipline] || 'General'
-  }
 
   return (
     <main>
