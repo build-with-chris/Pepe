@@ -12,6 +12,7 @@ import { act } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ValidationError } from '@/lib/http';
 import ProfileSetup from './ProfileSetup';
 
 const authState = {
@@ -91,6 +92,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   authState.user = { email: 'alex@example.com' };
   authState.token = 'test-token';
+  authState.getFreshToken = async () => authState.token;
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 });
 
@@ -181,5 +183,65 @@ describe('ProfileSetup', () => {
     const body = patchBodies()[0];
     expect(body.approval_status).toBe('pending');
     expect(body.instagram).toBe('@alexbeispiel');
+  });
+
+  it('speichert mit einem frischen Token statt mit dem aus dem letzten Render', async () => {
+    // Ein Clerk-Token gilt rund eine Minute. Wer den Assistenten in Ruhe
+    // ausfüllt, hat im Kontext längst ein abgelaufenes.
+    authState.getFreshToken = async () => 'fresh-token';
+    renderWithStatus('unsubmitted');
+    await waitFor(() => expect(wizardBar()).toBeInTheDocument());
+
+    await act(async () => {
+      screen.getByRole('button', { name: /Zur Prüfung einreichen/ }).click();
+    });
+
+    await waitFor(() => expect(patchBodies()).toHaveLength(1));
+    const patch = (fetchMock.mock.calls as [url: unknown, init?: RequestInit][]).find(
+      ([, init]) => init?.method === 'PATCH',
+    );
+    expect((patch?.[1]?.headers as Record<string, string>).Authorization).toBe('Bearer fresh-token');
+  });
+
+  it('zeigt die Meldung des Servers, wenn das Einreichen scheitert', async () => {
+    fetchMock.mockImplementation(async (_url: unknown, init?: RequestInit) => {
+      if (init?.method === 'PATCH') throw new Error('Speichern gerade nicht möglich');
+      return new Response(JSON.stringify(meResponse('unsubmitted')));
+    });
+    render(
+      <MemoryRouter>
+        <ProfileSetup />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(wizardBar()).toBeInTheDocument());
+
+    await act(async () => {
+      screen.getByRole('button', { name: /Zur Prüfung einreichen/ }).click();
+    });
+
+    expect((await screen.findAllByText('Speichern gerade nicht möglich')).length).toBeGreaterThan(0);
+    // Nichts eingereicht, also bleibt der Assistent stehen.
+    expect(wizardBar()).toBeInTheDocument();
+  });
+
+  it('bittet um die Pflichtangaben, wenn der Server Felder beanstandet', async () => {
+    fetchMock.mockImplementation(async (_url: unknown, init?: RequestInit) => {
+      if (init?.method === 'PATCH') {
+        throw new ValidationError('Ungültige Angaben', { phone_number: ['Pflichtfeld'] }, 422);
+      }
+      return new Response(JSON.stringify(meResponse('unsubmitted')));
+    });
+    render(
+      <MemoryRouter>
+        <ProfileSetup />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(wizardBar()).toBeInTheDocument());
+
+    await act(async () => {
+      screen.getByRole('button', { name: /Zur Prüfung einreichen/ }).click();
+    });
+
+    expect((await screen.findAllByText('profileSetup.errors.fillRequired')).length).toBeGreaterThan(0);
   });
 });
