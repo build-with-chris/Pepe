@@ -2,17 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
-import { ClerkProvider } from '@clerk/clerk-react'
+import { ClerkWithRouter } from './components/ClerkWithRouter'
 import { AuthProvider } from './context/AuthContext'
 import './index.css'
 import './i18n'
 import App from './App.tsx'
-
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-
-if (!CLERK_PUBLISHABLE_KEY) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY')
-}
 
 // Die vorgerenderten SEO-Tags aus index.html weichen denen der SEO-Komponente,
 // sonst stuenden Titel, Beschreibung und Canonical doppelt im Kopf.
@@ -21,13 +15,13 @@ document.querySelectorAll('[data-prerender]').forEach((el) => el.remove())
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HelmetProvider>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-        <BrowserRouter>
+      <BrowserRouter>
+        <ClerkWithRouter>
           <AuthProvider>
             <App />
           </AuthProvider>
-        </BrowserRouter>
-      </ClerkProvider>
+        </ClerkWithRouter>
+      </BrowserRouter>
     </HelmetProvider>
   </StrictMode>,
 )

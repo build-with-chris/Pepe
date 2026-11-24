@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 const baseUrl = import.meta.env.VITE_API_URL;
 
 export default function Profile() {
-  const { user, token } = useAuth();
+  const { user, token, getFreshToken } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -196,13 +196,13 @@ export default function Profile() {
    * hochladen und nichts speichern: Ohne ID gibt es keinen Datensatz, an dem
    * Bild oder Profil hängen könnten.
    */
-  const ensureArtistId = async (): Promise<string> => {
+  const ensureArtistId = async (authToken: string): Promise<string> => {
     if (backendArtistId) return backendArtistId;
 
     setBackendDebug('Artist-Datensatz wird angelegt...');
     const res = await fetchWithRetry(`${baseUrl}/api/artists/me/ensure`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
     });
     const me = await res.json().catch(() => null);
     const id = me?.id;
@@ -257,6 +257,11 @@ export default function Profile() {
     try {
       if (!user?.email) throw new Error(t('profileSetup.errors.userEmailMissing'));
 
+      // Frisches Token statt des Werts aus dem letzten Render. Ein Clerk-Token
+      // gilt rund eine Minute; das aus dem Kontext kann davon schon 50
+      // Sekunden verbraucht haben.
+      const authToken = (await getFreshToken()) ?? token;
+
       // Erst die Artist-ID sichern, dann hochladen, dann speichern.
       //
       // Vorher lief `ensure` mit `.catch(() => null)` und der Ablauf ging mit
@@ -264,7 +269,7 @@ export default function Profile() {
       // landeten Bilder unter `artists/new-id/…` und das Profil wurde trotzdem
       // gespeichert — eine halbe Anmeldung, die niemandem auffiel
       // (SPEC-4, Befund O4). Jetzt bricht es hier ab, mit Grund.
-      const effectiveId = await ensureArtistId();
+      const effectiveId = await ensureArtistId(authToken);
 
       // Upload profile image via backend
       let imageUrl = await uploadProfileImage(
@@ -273,7 +278,7 @@ export default function Profile() {
         setProfileImageUrl,
         setBackendDebug,
         profileImageUrl,
-        token
+        authToken
       );
 
       // Upload gallery images via backend
@@ -283,7 +288,7 @@ export default function Profile() {
         galleryUrls,
         setGalleryUrls,
         setBackendDebug,
-        token
+        authToken
       );
 
       const nextStatus = submit ? (approvalStatus === 'approved' ? 'approved' : 'pending') : undefined;
@@ -318,11 +323,16 @@ export default function Profile() {
         payload.profile_image_url = imageUrl;
       }
 
+      // Noch einmal frisch: Mehrere Galeriebilder umzuwandeln und hochzuladen
+      // dauert auf dem Handy leicht länger, als das Token von oben noch gilt.
+      // Dann scheiterte ausgerechnet das Einreichen mit „nicht angemeldet".
+      const saveToken = (await getFreshToken()) ?? authToken;
+
       const saveRes = await fetchWithRetry(`${baseUrl}/api/artists/me/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${saveToken}`,
         },
         body: JSON.stringify(payload),
       });

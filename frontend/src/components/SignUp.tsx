@@ -82,7 +82,10 @@ export function SignUp() {
                 identityPreviewEditButton: "text-[#D4A574] hover:text-[#E6B887]",
                 formFieldInputShowPasswordButton: "text-gray-400 hover:text-white",
                 otpCodeFieldInput: "bg-white/5 border-white/10 text-white",
-                footer: "hidden",
+                // Clerks eigene Zeile "Schon ein Konto?" ausblenden, der Link
+                // steht direkt darunter schon einmal. Als Style-Objekt, weil
+                // die Tailwind-Klasse `hidden` gegen Clerks CSS verliert.
+                footerAction: { display: "none" },
                 formFieldAction: "text-[#D4A574] hover:text-[#E6B887]",
                 alert: "bg-red-500/10 border border-red-500/30 text-red-300 p-4 rounded-xl mb-4",
                 alertText: "text-red-300",

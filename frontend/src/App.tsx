@@ -28,6 +28,11 @@ const DASHBOARD_ROUTES = [
   '/registrieren',
   '/carousel',
   '/richtlinien',
+  // Die Richtlinien-Abfrage gehört zur Anmeldung. Mit der öffentlichen
+  // Navigation darüber lag deren Leiste auf der Überschrift der Seite.
+  '/kuenstler-richtlinien',
+  '/onboarding',
+  '/artist-guidelines',
 ]
 
 // Check if current path is a dashboard route
@@ -200,9 +205,9 @@ function AppLayout() {
 
           {/* SSO and onboarding routes */}
           <Route path="/sso-callback" element={<SSOCallback />} />
-          <Route path="/kuenstler-richtlinien" element={<ArtistGuidlines />} />
-          <Route path="/onboarding" element={<ArtistGuidlines />} />
-          <Route path="/artist-guidelines" element={<ArtistGuidlines />} />
+          <Route path="/kuenstler-richtlinien" element={<ProtectedRoute><ArtistGuidlines /></ProtectedRoute>} />
+          <Route path="/onboarding" element={<ProtectedRoute><ArtistGuidlines /></ProtectedRoute>} />
+          <Route path="/artist-guidelines" element={<ProtectedRoute><ArtistGuidlines /></ProtectedRoute>} />
 
           {/* Legal pages */}
           <Route path="/impressum" element={<Impressum />} />

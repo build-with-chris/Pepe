@@ -14,7 +14,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ProfileSetup from './ProfileSetup';
 
-const authState = { user: { email: 'alex@example.com' } as any, token: 'test-token' as string | null };
+const authState = {
+  user: { email: 'alex@example.com' } as any,
+  token: 'test-token' as string | null,
+  getFreshToken: async () => authState.token,
+};
 
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => authState,

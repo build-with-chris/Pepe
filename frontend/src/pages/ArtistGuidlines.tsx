@@ -5,7 +5,6 @@ import SEO from "@/components/SEO";
 import {
   BookOpen,
   CheckCircle2,
-  Clock,
   Shield,
   CreditCard,
   Camera,
@@ -15,7 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const API_BASE = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || '';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 interface GuideSection {
   id: string;
@@ -112,7 +111,7 @@ const sections: GuideSection[] = [
 ];
 
 export default function ArtistGuidlines() {
-  const { token, refreshUser } = useAuth();
+  const { token, getFreshToken, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [checked, setChecked] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
@@ -123,24 +122,37 @@ export default function ArtistGuidlines() {
     setSubmitting(true);
     setError(null);
     try {
+      // Frisches Token holen: Wer die Richtlinien in Ruhe liest, sitzt länger
+      // auf der Seite, als ein Clerk-Token gilt.
+      const authToken = (await getFreshToken()) ?? token;
       const url = `${API_BASE}/api/artists/me/accept_guidelines`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({ ok: true }),
       });
       if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || `HTTP ${res.status}`);
+        // Die Serverantwort ist JSON für Entwickler. Im Kasten soll stehen,
+        // was man jetzt tun kann.
+        console.warn('[Richtlinien] accept_guidelines HTTP', res.status, await res.text().catch(() => ''));
+        throw new Error(
+          res.status === 401
+            ? 'Deine Sitzung ist abgelaufen. Bitte melde dich neu an und bestätige die Richtlinien noch einmal.'
+            : 'Das hat gerade nicht geklappt. Bitte versuche es in einem Moment noch einmal.'
+        );
       }
       await refreshUser();
-      try { window.dispatchEvent(new Event('artist:guidelines-accepted')); } catch {}
-      navigate('/profile');
-    } catch (e: any) {
-      setError(e?.message || 'Konnte nicht speichern');
+      try { window.dispatchEvent(new Event('artist:guidelines-accepted')); } catch { /* nur ein Signal, darf fehlen */ }
+      navigate('/profil');
+    } catch (e) {
+      setError(
+        e instanceof TypeError
+          ? 'Keine Verbindung zum Server. Bitte prüfe deine Internetverbindung und versuche es noch einmal.'
+          : (e as Error)?.message || 'Das hat gerade nicht geklappt. Bitte versuche es noch einmal.'
+      );
     } finally {
       setSubmitting(false);
     }
