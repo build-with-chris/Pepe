@@ -281,3 +281,20 @@ def test_admin_email_shows_the_phone_number(app, client, munich_artists):
     assert 'Muster GmbH' in html
     assert '2.500 bis 5.000 €' in html
     assert 'dringend' in html
+
+
+def test_new_request_is_mailed_to_admin_and_agency_inbox(app, client, munich_artists, monkeypatch):
+    """Eine neue Anfrage geht an ADMIN_EMAIL und zusaetzlich an info@pepe-dome.de."""
+    from routes import request_routes
+
+    sent = []
+    monkeypatch.setattr(request_routes, 'send_email',
+                        lambda to, subject, html: sent.append((to, subject)) or True)
+    monkeypatch.setitem(app.config, 'ADMIN_EMAIL', 'buero@example.com')
+    monkeypatch.setitem(app.config, 'REQUEST_NOTIFY_EMAILS', 'info@pepe-dome.de')
+
+    res = post(client)
+    assert res.status_code == 201
+
+    admin_mails = [to for to, subject in sent if 'Neue Buchungsanfrage #' in subject]
+    assert admin_mails == ['buero@example.com', 'info@pepe-dome.de']

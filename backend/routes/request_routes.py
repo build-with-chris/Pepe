@@ -19,6 +19,7 @@ from helpers.emails import (
     event_city,
     format_event_date,
     is_deliverable_address,
+    request_notification_recipients,
     send_email,
 )
 
@@ -484,16 +485,26 @@ def create_request():
             # Do not fail the API if email sending has issues; just log it.
             current_app.logger.exception(f"Error while sending artist notification emails: {e}")
 
-        # Send admin notification email
+        # Agentur benachrichtigen: ADMIN_EMAIL und die Weiterleitung
+        # (REQUEST_NOTIFY_EMAILS, Standard info@pepe-dome.de).
         try:
-            admin_email = current_app.config.get('ADMIN_EMAIL')
-            if admin_email:
+            recipients = request_notification_recipients()
+            if recipients:
                 admin_subject = f"[Pepe Shows] Neue Buchungsanfrage #{req.id}"
                 admin_html = build_admin_new_request_email(req)
-                send_email(admin_email, admin_subject, admin_html)
-                current_app.logger.info(f"Admin notification sent for request {req.id} to {admin_email}")
+                for recipient in recipients:
+                    # Einzeln senden: Scheitert eine Adresse, geht die Mail an
+                    # die anderen trotzdem raus. `send_email` faengt selbst ab.
+                    send_email(recipient, admin_subject, admin_html)
+                current_app.logger.info(
+                    "Admin notification for request %s sent to %s",
+                    req.id, ', '.join(recipients),
+                )
             else:
-                current_app.logger.warning("Admin email notification skipped - ADMIN_EMAIL not configured")
+                current_app.logger.warning(
+                    "Admin email notification skipped - neither ADMIN_EMAIL nor "
+                    "REQUEST_NOTIFY_EMAILS configured"
+                )
         except Exception as e:
             # Do not fail the API if admin email sending has issues; just log it.
             current_app.logger.exception(f"Error while sending admin notification email: {e}")

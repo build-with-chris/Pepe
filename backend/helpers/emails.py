@@ -164,6 +164,30 @@ def is_deliverable_address(email: str | None) -> bool:
     return not (domain.endswith('.placeholder') or domain.endswith('.invalid'))
 
 
+def request_notification_recipients() -> list[str]:
+    """Wer von einer neuen Buchungsanfrage erfaehrt.
+
+    `ADMIN_EMAIL` plus `REQUEST_NOTIFY_EMAILS`, beide duerfen mehrere Adressen
+    mit Komma oder Semikolon enthalten. Doppelte fallen weg, sonst bekaeme ein
+    Postfach, das in beiden steht, jede Anfrage zweimal. Die Reihenfolge
+    bleibt: zuerst ADMIN_EMAIL.
+    """
+    raw = [
+        current_app.config.get('ADMIN_EMAIL') or '',
+        current_app.config.get('REQUEST_NOTIFY_EMAILS') or '',
+    ]
+    recipients: list[str] = []
+    seen: set[str] = set()
+    for chunk in raw:
+        for part in str(chunk).replace(';', ',').split(','):
+            addr = part.strip()
+            if not is_deliverable_address(addr) or addr.lower() in seen:
+                continue
+            seen.add(addr.lower())
+            recipients.append(addr)
+    return recipients
+
+
 def build_artist_new_request_email(artist, req):
     """Build a beautifully styled HTML email for a new booking request."""
     app_url = current_app.config.get('APP_URL', 'https://app.example.com')
@@ -542,6 +566,7 @@ def build_artist_rejected_email(artist, reason: str | None = None):
 __all__ = [
     "send_email",
     "is_deliverable_address",
+    "request_notification_recipients",
     "format_event_date",
     "format_disciplines",
     "event_city",

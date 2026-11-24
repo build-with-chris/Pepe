@@ -16,6 +16,7 @@ from helpers.emails import (
     format_disciplines,
     format_event_date,
     is_deliverable_address,
+    request_notification_recipients,
 )
 from models import Artist, BookingRequest, db
 
@@ -160,3 +161,33 @@ class TestIsDeliverableAddress:
     def test_missing_address_is_not(self):
         assert is_deliverable_address(None) is False
         assert is_deliverable_address('keine-mail') is False
+
+
+# --- Empfaenger der Anfrage-Benachrichtigung --------------------------------
+
+def test_requests_are_forwarded_to_the_agency_inbox_by_default(app, monkeypatch):
+    """Ohne jede Konfiguration geht die Anfrage an das Postfach der Agentur.
+
+    `monkeypatch.setitem` statt direkter Zuweisung: Die App lebt ueber mehrere
+    Tests, ein gesetzter Wert bliebe sonst fuer alle folgenden stehen.
+    """
+    monkeypatch.setitem(app.config, 'ADMIN_EMAIL', None)
+    assert request_notification_recipients() == ['info@pepe-dome.de']
+
+
+def test_admin_address_and_forwarding_are_both_notified(app, monkeypatch):
+    monkeypatch.setitem(app.config, 'ADMIN_EMAIL', 'buero@example.com')
+    monkeypatch.setitem(app.config, 'REQUEST_NOTIFY_EMAILS', 'info@pepe-dome.de')
+    assert request_notification_recipients() == ['buero@example.com', 'info@pepe-dome.de']
+
+
+def test_duplicate_recipients_get_one_mail_only(app, monkeypatch):
+    monkeypatch.setitem(app.config, 'ADMIN_EMAIL', 'Info@pepe-dome.de, buero@example.com')
+    monkeypatch.setitem(app.config, 'REQUEST_NOTIFY_EMAILS', 'info@pepe-dome.de; buero@example.com')
+    assert request_notification_recipients() == ['Info@pepe-dome.de', 'buero@example.com']
+
+
+def test_forwarding_can_be_switched_off(app, monkeypatch):
+    monkeypatch.setitem(app.config, 'ADMIN_EMAIL', 'buero@example.com')
+    monkeypatch.setitem(app.config, 'REQUEST_NOTIFY_EMAILS', '')
+    assert request_notification_recipients() == ['buero@example.com']

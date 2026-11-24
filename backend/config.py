@@ -78,6 +78,12 @@ class Config:
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
     SMTP_FROM = os.getenv("SMTP_FROM") or SMTP_USER
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+    # Weitere Empfaenger fuer neue Buchungsanfragen, kommasepariert. Sie
+    # bekommen dieselbe Mail wie ADMIN_EMAIL. Der Standardwert ist das
+    # Postfach der Agentur, damit eine Anfrage auch dann jemanden erreicht,
+    # wenn ADMIN_EMAIL im Dashboard fehlt oder auf eine tote Adresse zeigt.
+    # Leer gesetzt (REQUEST_NOTIFY_EMAILS=) schaltet die Weiterleitung ab.
+    REQUEST_NOTIFY_EMAILS = os.getenv("REQUEST_NOTIFY_EMAILS", "info@pepe-dome.de")
 
 
     # --- Swagger / OpenAPI Settings ---
